@@ -4,12 +4,14 @@ from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, permission_required
 from django.utils.decorators import method_decorator
+
 from .models import Cliente, Segmento, CustomUser
 from .forms import CustomUserCreationForm, CustomUserChangeForm, ClienteForm
 
+# Obtén el modelo de usuario personalizado
 CustomUser = get_user_model()
 
-# Vistas para la gestión de usuarios (Refactorizadas a CBV)
+# Vistas para la gestión de usuarios
 @method_decorator(login_required, name='dispatch')
 @method_decorator(permission_required('users.view_customuser', raise_exception=True), name='dispatch')
 class CustomUserListView(ListView):
