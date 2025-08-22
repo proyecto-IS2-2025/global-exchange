@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+  <!--h1>LOGIN</h1-->
+  <!--img src="{% static 'images/Lobo_aveces.jpg'%}" alt="Global Exchange" class="img-fluid mt-4" style="max-width: 500px;"-->
+  <div class="container mt-5">
+    <h2 class="mb-4">Iniciar Sesión</h2>
+      {% if form.errors %}
+        <div class="alert alert-danger">
+          Usuario o contraseña incorrectos, o cuenta no verificada.
+        </div>
+      {% endif %}
+      <form method="POST" action="{% url 'login' %}">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="username" class="form-label">Correo electrónico</label>
+          <input type="text" class="form-control" id="username" name="username" required>
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label">Contraseña</label>
+          <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Ingresar</button>
+      </form>
+
+  </div>
+{% endblock %}
+
+
