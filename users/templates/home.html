@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Página Principal</title>
+</head>
+<body>
+    <h1>¡Bienvenido a Global Exchange!</h1>
+    {% if request.user.is_authenticated %}
+        <p>Hola, {{ request.user.username }}.</p>
+        {% if cliente_actual %}
+            <p>Estás operando con el cliente: <strong>{{ cliente_actual.nombre_completo }}</strong>.</p>
+        {% endif %}
+    {% else %}
+        <p>Por favor, <a href="{% url 'login' %}">inicia sesión</a>.</p>
+    {% endif %}
+</body>
+</html>

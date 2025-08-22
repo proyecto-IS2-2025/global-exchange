@@ -2,6 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
 # El modelo Cliente representa a un cliente de tu negocio.
 class Cliente(models.Model):
     # La relación ManyToManyField vincula a un cliente con múltiples usuarios.
@@ -15,8 +16,12 @@ class Cliente(models.Model):
     direccion = models.CharField(max_length=255, blank=True, null=True, verbose_name="Dirección")
     telefono = models.CharField(max_length=20, blank=True, null=True, verbose_name="Teléfono")
 
+
+    tipo_cliente = models.CharField(max_length=50, verbose_name="Tipo de Cliente", default='minorista')
+
     def __str__(self):
         return self.nombre_completo
+
 
 # El modelo AsignacionCliente es la tabla intermedia que gestiona la
 # relación N:M entre User y Cliente.
