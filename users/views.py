@@ -1,20 +1,15 @@
-# users/views.py
-
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, permission_required
 from django.utils.decorators import method_decorator
-
-# Importa los modelos y formularios necesarios de ambas ramas
-from .models import Cliente, CustomUser, Segmento
+from .models import Cliente, Segmento, CustomUser
 from .forms import CustomUserCreationForm, CustomUserChangeForm, ClienteForm
 
-# Obtén el modelo de usuario personalizado
 CustomUser = get_user_model()
 
-# Vistas para la gestión de usuarios
+# Vistas para la gestión de usuarios (Refactorizadas a CBV)
 @method_decorator(login_required, name='dispatch')
 @method_decorator(permission_required('users.view_customuser', raise_exception=True), name='dispatch')
 class CustomUserListView(ListView):
@@ -44,8 +39,6 @@ class CustomUserDeleteView(DeleteView):
     model = CustomUser
     template_name = 'users/user_confirm_delete.html'
     success_url = reverse_lazy('user_list')
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------------
 
 # Vistas para la gestión de clientes (Refactorizadas a CBV)
 @method_decorator(login_required, name='dispatch')

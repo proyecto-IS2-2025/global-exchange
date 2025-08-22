@@ -1,5 +1,3 @@
-# users/urls.py
-
 from django.urls import path
 from .views import (
     CustomUserCreateView,
@@ -13,13 +11,13 @@ from .views import (
 )
 
 urlpatterns = [
-    # URLs for user management
+    # URLs para la gestión de usuarios
     path('users/', CustomUserListView.as_view(), name='user_list'),
     path('users/add/', CustomUserCreateView.as_view(), name='user_create'),
     path('users/<int:pk>/edit/', CustomUserUpdateView.as_view(), name='user_update'),
     path('users/<int:pk>/delete/', CustomUserDeleteView.as_view(), name='user_delete'),
 
-    # URLs for client management
+    # URLs para la gestión de clientes
     path('clientes/', ClienteListView.as_view(), name='cliente_list'),
     path('clientes/add/', ClienteCreateView.as_view(), name='cliente_create'),
     path('clientes/<int:pk>/edit/', ClienteUpdateView.as_view(), name='cliente_update'),
