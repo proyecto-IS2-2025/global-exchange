@@ -1,4 +1,5 @@
 # users/models.py
+from django.contrib.auth.models import User
 from django.db import models
 from django.contrib.auth.models import User, Permission, Group
 from django.contrib.auth.models import AbstractUser
@@ -18,6 +19,7 @@ class CustomUser(AbstractUser):
 
 
 
+from django.contrib.auth.models import User
 # El modelo Cliente representa a un cliente de tu negocio.
 class Cliente(models.Model):
     # La relación ManyToManyField vincula a un cliente con múltiples usuarios.
