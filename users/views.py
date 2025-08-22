@@ -1,50 +1,79 @@
-from django.shortcuts import render
+# users/views.py
 
-# Create your views here.
-# En tu_aplicacion/views.py
+from django.shortcuts import render, get_object_or_404, redirect
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.views.generic import (
-    CreateView,
-    ListView,
-    UpdateView,
-    DeleteView
-)
+from django.contrib.auth.decorators import login_required, permission_required
+from django.utils.decorators import method_decorator
 
-# Importa tu formulario de usuario personalizado
-# (este formulario lo crearás en forms.py)
-from .forms import CustomUserCreationForm
+# Importa los modelos y formularios necesarios de ambas ramas
+from .models import Cliente, CustomUser, Segmento
+from .forms import CustomUserCreationForm, CustomUserChangeForm, ClienteForm
 
 # Obtén el modelo de usuario personalizado
 CustomUser = get_user_model()
 
-
-class CustomUserCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
-    model = CustomUser
-    form_class = CustomUserCreationForm
-    template_name = 'users/user_form.html'
-    success_url = reverse_lazy('user_list')
-    permission_required = 'tu_aplicacion.add_customuser'  # Permiso requerido para crear usuarios
-
-
-class CustomUserListView(LoginRequiredMixin, ListView):
+# Vistas para la gestión de usuarios
+@method_decorator(login_required, name='dispatch')
+@method_decorator(permission_required('users.view_customuser', raise_exception=True), name='dispatch')
+class CustomUserListView(ListView):
     model = CustomUser
     template_name = 'users/user_list.html'
     context_object_name = 'users'
 
-
-class CustomUserUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+@method_decorator(login_required, name='dispatch')
+@method_decorator(permission_required('users.add_customuser', raise_exception=True), name='dispatch')
+class CustomUserCreateView(CreateView):
     model = CustomUser
     form_class = CustomUserCreationForm
     template_name = 'users/user_form.html'
     success_url = reverse_lazy('user_list')
-    permission_required = 'tu_aplicacion.change_customuser' # Permiso para editar
 
+@method_decorator(login_required, name='dispatch')
+@method_decorator(permission_required('users.change_customuser', raise_exception=True), name='dispatch')
+class CustomUserUpdateView(UpdateView):
+    model = CustomUser
+    form_class = CustomUserChangeForm
+    template_name = 'users/user_form.html'
+    success_url = reverse_lazy('user_list')
 
-class CustomUserDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+@method_decorator(login_required, name='dispatch')
+@method_decorator(permission_required('users.delete_customuser', raise_exception=True), name='dispatch')
+class CustomUserDeleteView(DeleteView):
     model = CustomUser
     template_name = 'users/user_confirm_delete.html'
     success_url = reverse_lazy('user_list')
-    permission_required = 'tu_aplicacion.delete_customuser' # Permiso para eliminar
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Vistas para la gestión de clientes (Refactorizadas a CBV)
+@method_decorator(login_required, name='dispatch')
+@method_decorator(permission_required('users.view_cliente', raise_exception=True), name='dispatch')
+class ClienteListView(ListView):
+    model = Cliente
+    template_name = 'users/cliente_list.html'
+    context_object_name = 'clientes'
+
+@method_decorator(login_required, name='dispatch')
+@method_decorator(permission_required('users.add_cliente', raise_exception=True), name='dispatch')
+class ClienteCreateView(CreateView):
+    model = Cliente
+    form_class = ClienteForm
+    template_name = 'users/cliente_form.html'
+    success_url = reverse_lazy('cliente_list')
+
+@method_decorator(login_required, name='dispatch')
+@method_decorator(permission_required('users.change_cliente', raise_exception=True), name='dispatch')
+class ClienteUpdateView(UpdateView):
+    model = Cliente
+    form_class = ClienteForm
+    template_name = 'users/cliente_form.html'
+    success_url = reverse_lazy('cliente_list')
+
+@method_decorator(login_required, name='dispatch')
+@method_decorator(permission_required('users.delete_cliente', raise_exception=True), name='dispatch')
+class ClienteDeleteView(DeleteView):
+    model = Cliente
+    template_name = 'users/cliente_confirm_delete.html'
+    success_url = reverse_lazy('cliente_list')
