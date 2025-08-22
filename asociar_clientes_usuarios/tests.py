@@ -1,6 +1,6 @@
 from django.test import TestCase
-from django.contrib.auth import get_user_model # Importación corregida
-from .models import Cliente, AsignacionCliente
+from django.contrib.auth import get_user_model
+from .models import Cliente, AsignacionCliente, Segmento
 
 # Obtén el modelo de usuario personalizado
 User = get_user_model()
@@ -18,9 +18,20 @@ class AdminAsociacionTestCase(TestCase):
             username='user1',
             password='password123'
         )
+        # Crear un segmento de prueba, necesario para crear un cliente
+        self.segmento_prueba = Segmento.objects.create(name='Minorista')
+
         # Crear clientes de prueba
-        self.cliente1 = Cliente.objects.create(nombre_completo='Cliente Uno', cedula='1111')
-        self.cliente2 = Cliente.objects.create(nombre_completo='Cliente Dos', cedula='2222')
+        self.cliente1 = Cliente.objects.create(
+            nombre_completo='Cliente Uno',
+            cedula='1111',
+            segmento=self.segmento_prueba
+        )
+        self.cliente2 = Cliente.objects.create(
+            nombre_completo='Cliente Dos',
+            cedula='2222',
+            segmento=self.segmento_prueba
+        )
 
     def test_admin_asociar_clientes(self):
         # Iniciar sesión como administrador
@@ -28,8 +39,8 @@ class AdminAsociacionTestCase(TestCase):
 
         # Simular una solicitud POST a la vista de asociación
         response = self.client.post(
-            # Corregimos la URL para que apunte a 'nueva_app' en lugar de 'nueva_ruta'
-            '/nueva_app/admin/asociar/',
+            # La URL corregida debe coincidir con la definida en urls.py
+            '/asociar_clientes_usuarios/admin/asociar/',
             {
                 'usuario': self.normal_user.id,
                 'clientes': [self.cliente1.id, self.cliente2.id],
@@ -40,4 +51,4 @@ class AdminAsociacionTestCase(TestCase):
         self.assertEqual(response.status_code, 302)  # 302 es el código de redirección
         self.assertTrue(AsignacionCliente.objects.filter(usuario=self.normal_user, cliente=self.cliente1).exists())
         self.assertTrue(AsignacionCliente.objects.filter(usuario=self.normal_user, cliente=self.cliente2).exists())
-        self.assertEqual(self.normal_user.nueva_app_clientes.count(), 2)
+        self.assertEqual(self.normal_user.asociar_clientes_usuarios_clientes.count(), 2)
