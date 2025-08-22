@@ -1,16 +1,15 @@
-from django.shortcuts import render
-
-#Para backend
-from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .models import PerfilUsuario
-#Verificación email
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
-from .utils import enviar_verificacion
-#Inicio de sesión
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import get_user_model # <-- Importación correcta
+
+from .models import PerfilUsuario
+from .utils import enviar_verificacion
+
+# Obtiene el modelo de usuario configurado en settings.py
+User = get_user_model()
 
 
 def menu_principal(request):
@@ -28,8 +27,7 @@ def registro_view(request):
 def contacto(request):
     return render(request, 'contacto.html')
 
-#Registro de usuario
-
+# Registro de usuario
 def registro_usuario(request):
     if request.method == 'POST':
         nombre = request.POST.get('nombre')
@@ -37,7 +35,7 @@ def registro_usuario(request):
         telefono = request.POST.get('telefono')
         password = request.POST.get('password')
 
-        if User.objects.filter(email=email).exists():
+        if User.objects.filter(email=email).exists(): # <-- Uso de la variable User
             messages.error(request, "Ya existe un usuario con ese correo.")
             return render(request, 'registro.html')
 
@@ -61,7 +59,7 @@ def verificar_correo(request, token):
     signer = TimestampSigner()
     try:
         email = signer.unsign(token, max_age=86400)  # 24 horas
-        usuario = User.objects.get(email=email)
+        usuario = User.objects.get(email=email) # <-- Uso de la variable User
         usuario.is_active = True
         usuario.save()
         messages.success(request, "Correo verificado correctamente.")

@@ -1,9 +1,11 @@
 # users/views.py
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model # Importación corregida
 from .models import Cliente, AsignacionCliente
 
+# Obtén el modelo de usuario personalizado
+User = get_user_model()
 
 @login_required
 def seleccion_cliente_view(request):
@@ -40,7 +42,7 @@ def asociar_admin_view(request):
         clientes_ids = request.POST.getlist('clientes')
 
         try:
-            usuario = User.objects.get(id=usuario_id)
+            usuario = User.objects.get(id=usuario_id) # <-- Cambio aquí
             # Elimina asociaciones anteriores
             AsignacionCliente.objects.filter(usuario=usuario).delete()
 
@@ -56,12 +58,21 @@ def asociar_admin_view(request):
 
     else:
         # Muestra formulario de asignación
-        usuarios = User.objects.all()
+        usuarios = User.objects.all() # <-- Cambio aquí
         clientes = Cliente.objects.all()
         return render(request, 'admin_asociar.html', {'usuarios': usuarios, 'clientes': clientes})
 
 
-# new_app/views.py
+# new_app/views.py (Este código debe estar en un archivo separado)
+# from django.shortcuts import render, redirect, get_object_or_404
+# from django.contrib.auth import get_user_model
+# from .models import Cliente
+# ...
+# User = get_user_model()
+# ...
+# Las correcciones para este archivo ya se dieron en una respuesta anterior.
+# Por favor, asegúrate de que el archivo views.py de 'nueva_app' también use 'get_user_model()'.
+# ...
 
 def home_view(request):
     """

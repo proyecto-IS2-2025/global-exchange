@@ -1,7 +1,9 @@
 from django.test import TestCase
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model # Importación corregida
 from .models import Cliente, AsignacionCliente
 
+# Obtén el modelo de usuario personalizado
+User = get_user_model()
 
 class AdminAsociacionTestCase(TestCase):
     def setUp(self):
