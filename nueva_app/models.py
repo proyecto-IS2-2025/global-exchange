@@ -8,7 +8,6 @@ class Cliente(models.Model):
     # La relación ManyToManyField vincula a un cliente con múltiples usuarios.
     # El parámetro `through` indica que se utilizará el modelo 'AsignacionCliente'
     # para gestionar esta relación.
-
     usuarios = models.ManyToManyField(User, through='AsignacionCliente')
 
     cedula = models.CharField(max_length=20, unique=True, verbose_name="Cédula de Identidad")
@@ -39,4 +38,3 @@ class AsignacionCliente(models.Model):
 
     def __str__(self):
         return f"{self.usuario.username} asignado a {self.cliente.nombre_completo}"
-

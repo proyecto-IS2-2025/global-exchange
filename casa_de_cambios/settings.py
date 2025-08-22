@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Django settings for casa_de_cambios project.
 
@@ -39,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'users.apps.UsersConfig',
     'interfaz'
+    'nueva_app'
 ]
 
 MIDDLEWARE = [

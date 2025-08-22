@@ -1,23 +1,13 @@
-"""
-URL configuration for casa_de_cambios project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
+# global-exchange/urls.py
 from django.contrib import admin
 from django.urls import path, include
+from django.shortcuts import redirect
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path('admin/', admin.site.urls),
     path("", include("interfaz.urls")),
+    path('usuarios/', include('users.urls')),  # URLs de la app users
+    path('', lambda request: redirect('seleccionar_cliente')),  # raíz redirige a seleccionar cliente
+    path('nueva_ruta/', include('nueva_app.urls')),  # Incluye las URLs de la nueva app
+    path('', lambda request: redirect('nueva_ruta/')),  # Redirige a la nueva app
 ]

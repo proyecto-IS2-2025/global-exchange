@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Seleccionar Cliente</title>
+</head>
+<body>
+    <h1>Selecciona un cliente</h1>
+    <ul>
+        {% for cliente in clientes %}
+            <li>{{ cliente.nombre_completo }} (Cédula: {{ cliente.cedula }})</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
