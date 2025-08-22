@@ -1,3 +1,5 @@
+# users/tests.py
+
 from django.contrib.auth.models import Permission
 from django.test import TestCase, Client
 from django.urls import reverse
@@ -12,9 +14,10 @@ class CustomUserModelTest(TestCase):
     def setUp(self):
         # Esta función se ejecuta antes de cada prueba
         self.user_data = {
+            'username': 'testuser',
             'email': 'test@example.com',
             'password': 'password123',
-            'is-active': True,
+            'is_active': True, # <-- Cambiado de 'is-active' a 'is_active'
             'is_cambista': True
         }
 
@@ -47,7 +50,6 @@ class RoleModelTest(TestCase):
         self.assertEqual(role.name, 'Administrador')
         self.assertEqual(role.description, 'Administrador de sistema')
         self.assertEqual(str(role), 'Administrador')
-
 
 
 #Prueba unitaria de vistas
@@ -97,4 +99,3 @@ class UserViewsTest(TestCase):
         response = self.client.get(reverse('user_delete', args=[self.user.pk]))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'users/user_confirm_delete.html')
-
