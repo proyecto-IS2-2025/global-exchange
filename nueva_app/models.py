@@ -1,21 +1,17 @@
-# users/models.py
 from django.db import models
 from django.contrib.auth.models import User
-
 
 # El modelo Cliente representa a un cliente de tu negocio.
 class Cliente(models.Model):
     # La relación ManyToManyField vincula a un cliente con múltiples usuarios.
     # El parámetro `through` indica que se utilizará el modelo 'AsignacionCliente'
     # para gestionar esta relación.
-    usuarios = models.ManyToManyField(User, through='AsignacionCliente')
+    usuarios = models.ManyToManyField(User, through='AsignacionCliente', related_name='nueva_app_clientes')
 
     cedula = models.CharField(max_length=20, unique=True, verbose_name="Cédula de Identidad")
     nombre_completo = models.CharField(max_length=255, verbose_name="Nombre Completo")
     direccion = models.CharField(max_length=255, blank=True, null=True, verbose_name="Dirección")
     telefono = models.CharField(max_length=20, blank=True, null=True, verbose_name="Teléfono")
-
-
     tipo_cliente = models.CharField(max_length=50, verbose_name="Tipo de Cliente", default='minorista')
 
     def __str__(self):
@@ -26,7 +22,7 @@ class Cliente(models.Model):
 # relación N:M entre User y Cliente.
 # Aquí puedes añadir información adicional sobre la asignación.
 class AsignacionCliente(models.Model):
-    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='nueva_app_asignaciones')
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     fecha_asignacion = models.DateTimeField(auto_now_add=True)
 
