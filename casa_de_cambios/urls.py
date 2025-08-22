@@ -8,4 +8,4 @@ urlpatterns = [
     path("", include("interfaz.urls")),
     path("nueva_app/", include("nueva_app.urls")),
     path('users/', include('users.urls')),
-]
+]   
