@@ -1,3 +1,4 @@
+# asociar_clientes_usuarios/urls.py
 from django.urls import path
 from . import views
 
@@ -7,6 +8,3 @@ urlpatterns = [
     path('seleccionar_cliente/<int:cliente_id>/', views.guardar_seleccion_cliente, name='guardar_seleccion_cliente'),
     path('', views.home_view, name='home'),
 ]
-
-
-
