@@ -1,30 +1,39 @@
-{% extends 'base.html' %}
-{% load static %}
-
+{% extends "base.html" %}
 {% block content %}
-  <!--h1>LOGIN</h1-->
-  <!--img src="{% static 'images/Lobo_aveces.jpg'%}" alt="Global Exchange" class="img-fluid mt-4" style="max-width: 500px;"-->
-  <div class="container mt-5">
-    <h2 class="mb-4">Iniciar Sesión</h2>
-      {% if form.errors %}
-        <div class="alert alert-danger">
-          Usuario o contraseña incorrectos, o cuenta no verificada.
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h1 class="card-title text-center">Iniciar Sesión</h1>
+          <hr>
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-{{ message.tags }} text-center" role="alert">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+          <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="id_email" class="form-label">Correo electrónico</label>
+              <input type="email" class="form-control" id="id_email" name="email" placeholder="ejemplo@correo.com" required>
+            </div>
+            <div class="mb-3">
+              <label for="id_password" class="form-label">Contraseña</label>
+              <input type="password" class="form-control" id="id_password" name="password" required>
+            </div>
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary">Ingresar</button>
+            </div>
+          </form>
+          <div class="text-center mt-3">
+            <small class="text-muted">¿No tienes una cuenta? <a href="{% url 'registro' %}">Regístrate</a></small>
+          </div>
         </div>
-      {% endif %}
-      <form method="POST" action="{% url 'login' %}">
-        {% csrf_token %}
-        <div class="mb-3">
-          <label for="username" class="form-label">Correo electrónico</label>
-          <input type="text" class="form-control" id="username" name="username" required>
-        </div>
-        <div class="mb-3">
-          <label for="password" class="form-label">Contraseña</label>
-          <input type="password" class="form-control" id="password" name="password" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Ingresar</button>
-      </form>
-
+      </div>
+    </div>
   </div>
+</div>
 {% endblock %}
-
-

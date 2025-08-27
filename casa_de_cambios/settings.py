@@ -131,7 +131,6 @@ STATICFILES_DIRS = [
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-#email de verificación
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
@@ -146,6 +145,10 @@ EMAIL_HOST_PASSWORD = 'tpsh yedw lthc oprs'
 LOGIN_REDIRECT_URL = 'inicio'
 LOGOUT_REDIRECT_URL = 'inicio'
 
-
+# --- Configuración crucial para el modelo de usuario y el backend de autenticación ---
 AUTH_USER_MODEL = 'users.CustomUser'
-
+AUTHENTICATION_BACKENDS = [
+    'interfaz.backends.EmailBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+# --- Fin de la configuración crucial ---

@@ -1,43 +1,35 @@
 # asociar_clientes_usuarios/views.py
+
 from django.shortcuts import render, redirect
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib import messages
 from .models import Cliente, AsignacionCliente
 
 User = get_user_model()
 
+@login_required
+@user_passes_test(lambda u: u.is_staff)
 def asociar_admin_view(request):
     if request.method == 'POST':
         usuario_id = request.POST.get('usuario')
         clientes_ids = request.POST.getlist('clientes')
-
-        usuario = User.objects.get(id=usuario_id)
-
+        
         # Eliminar asignaciones existentes para este usuario
-        usuario.asociar_clientes_usuarios_asignaciones.all().delete()
-
+        AsignacionCliente.objects.filter(usuario_id=usuario_id).delete()
+        
         # Crear nuevas asignaciones
         for cliente_id in clientes_ids:
-            cliente = Cliente.objects.get(id=cliente_id)
-            AsignacionCliente.objects.create(usuario=usuario, cliente=cliente)
+            AsignacionCliente.objects.create(usuario_id=usuario_id, cliente_id=cliente_id)
 
-        return redirect('home')  # Redirigir a la página de inicio o a donde sea necesario
+        messages.success(request, 'Asociación de clientes actualizada correctamente.')
+        return redirect('asociar_admin')  # Redirige a la misma página para ver el mensaje
 
-    # Si es una solicitud GET, renderizar el formulario
+    # Si es una solicitud GET
     usuarios = User.objects.all()
     clientes = Cliente.objects.all()
     context = {
         'usuarios': usuarios,
-        'clientes': clientes
+        'clientes': clientes,
     }
-    return render(request, 'asociar_clientes_usuarios/asociar_admin.html', context)
-
-
-# Placeholder views to satisfy the URLs
-def seleccion_cliente_view(request):
-    return render(request, 'asociar_clientes_usuarios/seleccionar_cliente.html')
-
-def guardar_seleccion_cliente(request, cliente_id):
-    return redirect('home')
-
-def home_view(request):
-    return render(request, 'asociar_clientes_usuarios/home.html')
+    return render(request, 'asociar_clientes_usuarios/admin_asociar.html', context)
