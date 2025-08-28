@@ -12,6 +12,7 @@
     <div class="row">
         <div class="col-12">
             <h3 class="text-center mb-4">Asociar Usuarios y Clientes</h3>
+
             {% if messages %}
                 {% for message in messages %}
                     <div class="alert alert-{{ message.tags }} text-center">
@@ -21,6 +22,7 @@
             {% endif %}
         </div>
     </div>
+
     <form method="post" action="{% url 'asociar_admin' %}">
         {% csrf_token %}
         <div class="row">
@@ -39,6 +41,7 @@
                     </div>
                 </div>
             </div>
+            
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
@@ -55,8 +58,10 @@
                 </div>
             </div>
         </div>
-        <div class="text-center mt-4">
-            <button type="submit" class="btn btn-primary btn-lg">Asociar</button>
+        
+        <div class="d-flex flex-column align-items-center mt-4 gap-2">
+            <button type="submit" class="btn btn-primary btn-lg w-50">Asociar</button>
+            <a href="{% url 'listar_asociaciones' %}" class="btn btn-primary btn-lg w-50">Ver y Eliminar Asociaciones</a>
         </div>
     </form>
 </div>
