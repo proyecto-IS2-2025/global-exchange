@@ -10,7 +10,6 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
 from pathlib import Path
 import os
 from decouple import config
@@ -43,6 +42,7 @@ INSTALLED_APPS = [
     'interfaz',
     'asociar_clientes_usuarios',
     'clientes',
+    'autenticacion',
 ]
 
 MIDDLEWARE = [
@@ -82,8 +82,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'global_exchange',
-        'USER': 'django_user',
-        'PASSWORD': 'django123',
+        'USER': 'postgres',
+        'PASSWORD': '1234',
         'HOST': 'localhost',
         'PORT': '5432',
     }
