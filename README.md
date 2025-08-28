@@ -119,6 +119,7 @@ make s: Igual a shell.
 make l: Igual a logs.
 make t: Igual a test.
 
+
 🌐 Acceso y Pruebas
 Una vez que los contenedores estén en ejecución, puedes interactuar con la aplicación.
 
@@ -127,6 +128,7 @@ Abre tu navegador web y ve a la siguiente dirección:
 
 http://localhost:8000
 La terminal te mostrará que el servidor de Django está escuchando en http://0.0.0.0:8000/, lo cual es normal dentro del contenedor. El mapeo de puertos de Docker te permite acceder a este servicio desde tu máquina local usando localhost.
+
 Consejos Útiles
 
 Problemas comunes:
