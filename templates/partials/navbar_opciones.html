@@ -1,0 +1,19 @@
+<ul class="dropdown-menu dropdown-menu-end">
+  <li><a class="dropdown-item" href="#">Cotizaciones</a></li>
+  <li><a class="dropdown-item" href="#">Información</a></li>
+  <li><a class="dropdown-item" href="{% url 'contacto' %}">Contacto</a></li>
+
+  {% if user.is_authenticated and user.is_superuser %}
+    <li><hr class="dropdown-divider"></li>
+    <li>
+      <a class="dropdown-item fw-bold text-primary" href="{% url 'admin_dashboard' %}">
+        Asignar Cliente a usuario
+      </a>
+    </li>
+    <li>
+      <a class="dropdown-item fw-bold text-success" href="{% url 'crear_cliente_admin' %}">
+        Crear nuevo cliente
+      </a>
+    </li>
+  {% endif %}
+</ul>

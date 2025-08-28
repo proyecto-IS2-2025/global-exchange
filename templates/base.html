@@ -51,14 +51,10 @@
           {% endif %}
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" role="button"
-               data-bs-toggle="dropdown" aria-expanded="false">
+              data-bs-toggle="dropdown" aria-expanded="false">
               Opciones
             </a>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li><a class="dropdown-item" href="#">Cotizaciones</a></li>
-              <li><a class="dropdown-item" href="#">Información</a></li>
-              <li><a class="dropdown-item" href="{% url 'contacto' %}">Contacto</a></li>
-            </ul>
+            {% include "partials/navbar_opciones.html" %}
           </li>
         </ul>
       </div>
