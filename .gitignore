@@ -18,9 +18,9 @@ venv
 *.bak
 *.swp
 Thumbs.db
-.DS_Store
+.DS_Stor
 
-# Archivos de caché de Python
+# Ignore Python compiled files
 __pycache__/
+*.py[cod]
 *.pyc
-
