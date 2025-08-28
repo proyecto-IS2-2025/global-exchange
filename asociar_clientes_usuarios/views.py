@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from .models import AsignacionCliente
-from users.models import Cliente
+from clientes.models import Cliente
 
 User = get_user_model()
 
