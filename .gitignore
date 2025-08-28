@@ -1,5 +1,10 @@
 # Entorno virtual
 venv/
+.venv/
+env/
+.env 
+env
+venv
 
 # Archivos de bases de datos
 *.sqlite3
@@ -18,3 +23,4 @@ Thumbs.db
 # Archivos de caché de Python
 __pycache__/
 *.pyc
+
