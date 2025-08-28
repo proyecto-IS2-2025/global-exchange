@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.db.utils import IntegrityError
-from ..models import Cliente, Segmento
+from ...users.models import Cliente, Segmento
 
 CustomUser = get_user_model()
 

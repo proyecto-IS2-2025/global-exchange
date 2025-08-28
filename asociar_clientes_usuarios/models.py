@@ -1,6 +1,7 @@
 # asociar_clientes_usuarios/models.py
 from django.db import models
-from users.models import CustomUser, Cliente
+from users.models import CustomUser
+from clientes.models import Cliente
 
 class AsignacionCliente(models.Model):
     usuario = models.ForeignKey(CustomUser, on_delete=models.CASCADE)

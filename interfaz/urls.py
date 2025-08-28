@@ -3,6 +3,7 @@
 from django.urls import path
 from . import views
 from django.contrib.auth.views import LogoutView
+from .views import crear_cliente_admin
 
 urlpatterns = [
     path("", views.inicio, name="inicio"),
@@ -15,6 +16,11 @@ urlpatterns = [
     
     # Rutas para los dashboards
     path('cliente/dashboard/', views.cliente_dashboard, name='cliente_dashboard'),
-    path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    #path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('panel_admin/', views.dashboard, name='admin_dashboard'),
+    path("dashboard/", views.dashboard, name="dashboard_admin"),
     path('cambista/dashboard/', views.cambista_dashboard, name='cambista_dashboard'),
+
+    #Opciones de administrador
+    path('admin/crear-cliente/', crear_cliente_admin, name='crear_cliente_admin'),
 ]

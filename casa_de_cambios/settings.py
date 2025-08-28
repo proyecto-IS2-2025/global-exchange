@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'interfaz',
     'asociar_clientes_usuarios',
+    'clientes',
 ]
 
 MIDDLEWARE = [
