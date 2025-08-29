@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import Group, Permission
 from django.http import JsonResponse
-from .forms import GroupForm
+from .forms import GroupForm, PermissionForm
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 
@@ -109,3 +109,26 @@ def search_users(request):
         data = [{'id': u.id, 'email': u.email, 'username': u.username} for u in users]
         return JsonResponse(data, safe=False)
     return JsonResponse([], safe=False)
+
+# Nueva vista para crear permisos
+@user_passes_test(is_admin)
+def permission_create(request):
+    if request.method == 'POST':
+        form = PermissionForm(request.POST)
+        if form.is_valid():
+            content_type = form.cleaned_data.get('content_type')
+            codename = form.cleaned_data.get('codename')
+            name = form.cleaned_data.get('name')
+            
+            # Crea el permiso
+            Permission.objects.create(
+                codename=codename,
+                name=name,
+                content_type=content_type,
+            )
+            messages.success(request, f"Permiso '{name}' creado exitosamente.")
+            return redirect('permission_create')  # Redirige para limpiar el formulario
+    else:
+        form = PermissionForm()
+    
+    return render(request, 'permissions/permission_create.html', {'form': form})
