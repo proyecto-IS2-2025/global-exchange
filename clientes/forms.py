@@ -1,40 +1,53 @@
-"""
-VIEJO
 # clientes/forms.py
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from .models import Cliente
-
+from .models import Cliente, AsignacionCliente
 
 class ClienteForm(forms.ModelForm):
+    """
+    Formulario para crear/editar clientes.
+    No incluye la asignación de usuario: eso se gestiona aparte.
+    """
     class Meta:
         model = Cliente
         fields = ['cedula', 'nombre_completo', 'direccion', 'telefono', 'segmento']
-"""
-#NUEVO
-# clientes/forms.py
-from django import forms
-from .models import Cliente
-from users.models import CustomUser 
-from asociar_clientes_usuarios.models import AsignacionCliente
+        widgets = {
+            'cedula': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ingrese cédula'
+            }),
+            'nombre_completo': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ingrese nombre completo'
+            }),
+            'direccion': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ingrese dirección'
+            }),
+            'telefono': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ingrese teléfono'
+            }),
+            'segmento': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+        }
 
-class ClienteForm(forms.ModelForm):
-    usuario = forms.ModelChoiceField(
-        queryset=CustomUser.objects.all(),
-        required=True,
-        label="Usuario asociado"
+
+class SeleccionClienteForm(forms.Form):
+    """
+    Formulario para que un usuario seleccione entre sus clientes asignados.
+    """
+    cliente = forms.ModelChoiceField(
+        queryset=None,
+        empty_label="Seleccione un cliente",
+        label="Cliente asignado"
     )
 
-    class Meta:
-        model = Cliente
-        fields = ['cedula', 'nombre_completo', 'direccion', 'telefono', 'segmento', 'usuario']
-
-    def save(self, commit=True):
-        cliente = super().save(commit=False)
-        if commit:
-            cliente.save()
-            AsignacionCliente.objects.create(
-                cliente=cliente,
-                usuario=self.cleaned_data['usuario']
-            )
-        return cliente
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Solo mostrar los clientes asociados al usuario
+        self.fields['cliente'].queryset = (
+            AsignacionCliente.objects.filter(usuario=user)
+                                     .select_related('cliente')
+        )
+        self.fields['cliente'].label_from_instance = lambda obj: obj.cliente.nombre_completo

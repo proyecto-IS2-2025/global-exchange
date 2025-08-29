@@ -1,7 +1,0 @@
-<h1>{{ action }} Cliente</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">{{ action }}</button>
-</form>
-<a href="{% url 'cliente_list' %}">Cancelar</a>
