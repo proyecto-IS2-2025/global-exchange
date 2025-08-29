@@ -36,8 +36,8 @@
                             <tbody>
                                 {% for asignacion in asignaciones %}
                                 <tr>
-                                    <td>{{ asignacion.usuario.email }}</td>
-                                    <td>{{ asignacion.cliente.nombre_completo }}</td>
+                                    <td>{{ asignacion.usuario.email|default:"(sin usuario)" }}</td>
+                                    <td>{{ asignacion.cliente.nombre_completo|default:"(sin cliente)" }}</td>
                                     <td>
                                         <form method="post" action="{% url 'listar_asociaciones' %}" onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta asociación?');">
                                             {% csrf_token %}

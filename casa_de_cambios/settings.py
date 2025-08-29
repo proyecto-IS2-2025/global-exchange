@@ -25,9 +25,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'users.apps.UsersConfig',
     'interfaz',
-    'asociar_clientes_usuarios',
-    'clientes', 
-    'roles'
+    'clientes',
+    'roles',
 ]
 
 MIDDLEWARE = [
@@ -67,8 +66,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('DB_NAME', 'global_exchange'),
-        'USER': os.environ.get('DB_USER', 'postgres'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'postgres'),
+        'USER': os.environ.get('DB_USER', 'django_user'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'django123'),
         'HOST': os.environ.get('DB_HOST', 'localhost'),  # ¡CORREGIDO!
         'PORT': int(os.environ.get('DB_PORT', '5432')),
     }
@@ -136,3 +135,5 @@ LOGOUT_REDIRECT_URL = 'inicio'
 
 
 AUTH_USER_MODEL = 'users.CustomUser'
+
+DEBUG = True
