@@ -7,4 +7,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('clientes/', include('clientes.urls')),
     #path("adminpanel/", include("admin_app.urls")),
+    path('', include('roles.urls')),
 ]

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">Crear Nuevo Permiso</h3>
+            <p class="text-muted">Asocia el permiso a un tipo de contenido existente.</p>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary">Crear Permiso</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
