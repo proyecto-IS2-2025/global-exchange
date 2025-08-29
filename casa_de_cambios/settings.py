@@ -5,7 +5,8 @@ import os
 # BASE_DIR = Path(__file__).resolve().parent.parent  # Duplicate definition removed
 
 # Configuración adicional
-DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes', 'on')
+#DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes', 'on')
+DEBUG = True
 SECRET_KEY = os.environ.get('SECRET_KEY', 'tu-clave-por-defecto-para-desarrollo')
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
@@ -25,7 +26,8 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'interfaz',
     'asociar_clientes_usuarios',
-    'clientes'
+    'clientes', 
+    'roles'
 ]
 
 MIDDLEWARE = [

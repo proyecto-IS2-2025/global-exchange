@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <div class="card-body">
+    <h3 class="card-title">Rol: {{ group.name }}</h3>
+    <p class="text-muted">Gestión de permisos y usuarios.</p>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <h5>Permisos</h5>
+        {{ form.permissions }}
+      </div>
+      <div class="mb-3">
+        <h5>Usuarios</h5>
+        {{ form.users }}
+      </div>
+      <button type="submit" class="btn btn-success">Guardar cambios</button>
+      <a href="{% url 'group_list' %}" class="btn btn-secondary">Volver</a>
+    </form>
+
+    <hr>
+    <h5>Resumen</h5>
+    <p><strong>Permisos actuales:</strong></p>
+    <ul>
+      {% for perm in group.permissions.all %}
+        <li>{{ perm.name }}</li>
+      {% empty %}
+        <li class="text-muted">Este grupo no tiene permisos asignados.</li>
+      {% endfor %}
+    </ul>
+
+    <p><strong>Usuarios en este grupo:</strong></p>
+    <ul>
+      {% for user in group.user_set.all %}
+        <li>{{ user.username }} ({{ user.email }})</li>
+      {% empty %}
+        <li class="text-muted">No hay usuarios en este grupo.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

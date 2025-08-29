@@ -15,5 +15,16 @@
         Crear nuevo cliente
       </a>
     </li>
+    <li>
+      <a class="dropdown-item fw-bold text-success" href="{% url 'group_list' %}">
+        Ver roles
+      </a>
+    </li>
+    <li>
+      <a class="dropdown-item fw-bold text-success" href="{% url 'permission_create' %}">
+        Crear permisos
+      </a>
+    </li>
+    
   {% endif %}
 </ul>

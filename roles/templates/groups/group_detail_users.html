@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">Rol: {{ group.name }}</h3>
+            <p class="text-muted">Gestión de usuarios del Rol.</p>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <h5>Usuarios en este Rol</h5>
+                <ul id="selected-users-list" class="list-group mb-3">
+                    {% for user in current_users %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center" data-id="{{ user.id }}">
+                            {{ user.email }}
+                            <button type="button" class="btn btn-danger btn-sm remove-user">
+                                &times;
+                            </button>
+                            <input type="hidden" name="users" value="{{ user.id }}">
+                        </li>
+                    {% endfor %}
+                </ul>
+
+                <hr>
+
+                <h5>Añadir Usuarios</h5>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="user-search" placeholder="Buscar usuario por correo...">
+                </div>
+
+                <ul id="search-results" class="list-group mb-3" style="max-height: 250px; overflow-y: auto;">
+                    </ul>
+
+                <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                <a href="{% url 'group_list' %}" class="btn btn-secondary">Volver</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('user-search');
+        const searchResults = document.getElementById('search-results');
+        const selectedList = document.getElementById('selected-users-list');
+
+        function addUser(id, email) {
+            // Evita duplicados
+            if (!document.querySelector(`#selected-users-list [data-id='${id}']`)) {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.dataset.id = id;
+                li.innerHTML = `
+                    ${email}
+                    <button type="button" class="btn btn-danger btn-sm remove-user">
+                        &times;
+                    </button>
+                    <input type="hidden" name="users" value="${id}">
+                `;
+                selectedList.appendChild(li);
+
+                // Asocia el evento para eliminar al nuevo botón
+                li.querySelector('.remove-user').addEventListener('click', function() {
+                    li.remove();
+                });
+            }
+        }
+
+        searchInput.addEventListener('input', function() {
+            const query = this.value;
+            if (query.length > 2) {
+                fetch(`{% url 'search_users' %}?q=${query}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        searchResults.innerHTML = '';
+                        data.forEach(user => {
+                            const li = document.createElement('li');
+                            li.className = 'list-group-item list-group-item-action';
+                            li.style.cursor = 'pointer';
+                            li.innerHTML = `
+                                <strong>${user.email}</strong>
+                                <small class="text-muted d-block">${user.username}</small>
+                            `;
+                            li.addEventListener('click', () => {
+                                addUser(user.id, user.email);
+                                searchInput.value = '';
+                                searchResults.innerHTML = '';
+                            });
+                            searchResults.appendChild(li);
+                        });
+                    });
+            } else {
+                searchResults.innerHTML = '';
+            }
+        });
+
+        // Asocia el evento para eliminar a los botones de usuarios existentes
+        document.querySelectorAll('.remove-user').forEach(button => {
+            button.addEventListener('click', function() {
+                this.closest('li').remove();
+            });
+        });
+    });
+</script>
+{% endblock %}

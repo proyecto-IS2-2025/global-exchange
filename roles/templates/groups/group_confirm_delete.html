@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Eliminar Rol</h2>
+<p>¿Seguro que quieres eliminar el rol <strong>{{ group.name }}</strong>?</p>
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+  <a href="{% url 'group_list' %}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}
