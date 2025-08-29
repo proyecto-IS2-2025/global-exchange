@@ -1,0 +1,19 @@
+[project]
+name = "casa-de-cambios"
+version = "0.1.0"
+description = "Sistema de casa de cambios con Django"
+authors = [
+    {name = "Ropechi",email = "josezaavedra7@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "django (>=5.2.5,<6.0.0)",
+    "psycopg2-binary (>=2.9.10,<3.0.0)",
+    "python-dotenv (>=1.1.1,<2.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

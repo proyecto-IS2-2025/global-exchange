@@ -1,13 +1,13 @@
 from pathlib import Path
 import os
+from dotenv import load_dotenv  # Si usas python-dotenv, agrégalo arriba
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-# BASE_DIR = Path(__file__).resolve().parent.parent  # Duplicate definition removed
+load_dotenv()  # Carga .env (agrega poetry add python-dotenv si no tienes)
 
 # Configuración adicional
 DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes', 'on')
 SECRET_KEY = os.environ.get('SECRET_KEY', 'tu-clave-por-defecto-para-desarrollo')
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
+ALLOWED_HOSTS = ['*']
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -64,11 +64,11 @@ WSGI_APPLICATION = 'casa_de_cambios.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'global_exchange'),
-        'USER': os.environ.get('DB_USER', 'postgres'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'postgres'),
-        'HOST': os.environ.get('DB_HOST', 'db'),  # ¡CORREGIDO!
-        'PORT': int(os.environ.get('DB_PORT', '5432')),
+        'NAME': os.getenv('DB_NAME', 'global_exchange'),
+        'USER': os.getenv('DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'postgres'),
+        'HOST': os.getenv('DB_HOST', 'localhost'),  # Localhost para híbrido
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 

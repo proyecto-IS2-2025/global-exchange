@@ -1,0 +1,21 @@
+services:
+  glx-db:  # Nombre del servicio (cámbialo si quieres)
+    image: postgres:17  # Versión de PostgreSQL
+    env_file:
+      - ./.env  # Carga variables de .env
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Persiste datos
+    ports:
+      - "5432:5432"  # Expone puerto para conexión local
+    healthcheck:  # Verifica si lista
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  postgres_data:
