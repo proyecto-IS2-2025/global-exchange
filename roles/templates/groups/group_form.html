@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>{% if form.instance.pk %}Editar Grupo{% else %}Crear Grupo{% endif %}</h2>
+<h2>{% if form.instance.pk %}Editar Rol{% else %}Crear rol{% endif %}</h2>
 <form method="post" class="card p-3">
   {% csrf_token %}
   {{ form.as_p }}

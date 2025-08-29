@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Eliminar Grupo</h2>
-<p>¿Seguro que quieres eliminar el grupo <strong>{{ group.name }}</strong>?</p>
+<h2>Eliminar Rol</h2>
+<p>¿Seguro que quieres eliminar el rol <strong>{{ group.name }}</strong>?</p>
 <form method="post">
   {% csrf_token %}
   <button type="submit" class="btn btn-danger">Sí, eliminar</button>
