@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">Grupo: {{ group.name }}</h3>
+            <p class="text-muted">Gestión de permisos del grupo.</p>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="id_name" class="form-label">Nombre del Grupo</label>
+                    <input type="text" name="name" id="id_name" class="form-control" value="{{ group.name }}" required>
+                </div>
+                <hr>
+
+                <h5>Permisos Asignados</h5>
+                <ul id="selected-permissions-list" class="list-group mb-3">
+                    {% for perm in current_permissions %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center" data-id="{{ perm.id }}">
+                            {{ perm.codename }}
+                            <button type="button" class="btn btn-danger btn-sm remove-permission">
+                                &times;
+                            </button>
+                            <input type="hidden" name="permissions" value="{{ perm.id }}">
+                        </li>
+                    {% endfor %}
+                </ul>
+
+                <hr>
+
+                <h5>Añadir Permisos</h5>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="permission-search" placeholder="Buscar permiso por codename...">
+                </div>
+
+                <ul id="search-results" class="list-group mb-3" style="max-height: 250px; overflow-y: auto;">
+                    </ul>
+
+                <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                <a href="{% url 'group_list' %}" class="btn btn-secondary">Volver</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('permission-search');
+        const searchResults = document.getElementById('search-results');
+        const selectedList = document.getElementById('selected-permissions-list');
+
+        function addPermission(id, codename) {
+            if (!document.querySelector(`#selected-permissions-list [data-id='${id}']`)) {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.dataset.id = id;
+                li.innerHTML = `
+                    ${codename}
+                    <button type="button" class="btn btn-danger btn-sm remove-permission">
+                        &times;
+                    </button>
+                    <input type="hidden" name="permissions" value="${id}">
+                `;
+                selectedList.appendChild(li);
+
+                // Re-attach event listener for the new button
+                li.querySelector('.remove-permission').addEventListener('click', function() {
+                    li.remove();
+                });
+            }
+        }
+
+        searchInput.addEventListener('input', function() {
+            const query = this.value;
+            if (query.length > 2) {
+                fetch(`{% url 'search_permissions' %}?q=${query}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        searchResults.innerHTML = '';
+                        data.forEach(perm => {
+                            const li = document.createElement('li');
+                            li.className = 'list-group-item list-group-item-action';
+                            li.style.cursor = 'pointer';
+                            li.innerHTML = `
+                                <strong>${perm.codename}</strong>
+                                <small class="text-muted d-block">${perm.name}</small>
+                            `;
+                            li.addEventListener('click', () => {
+                                addPermission(perm.id, perm.codename);
+                                searchInput.value = ''; // Limpia el input
+                                searchResults.innerHTML = ''; // Limpia los resultados de búsqueda
+                            });
+                            searchResults.appendChild(li);
+                        });
+                    });
+            } else {
+                searchResults.innerHTML = '';
+            }
+        });
+
+        // Event listener para los botones de eliminar ya existentes
+        document.querySelectorAll('.remove-permission').forEach(button => {
+            button.addEventListener('click', function() {
+                this.closest('li').remove();
+            });
+        });
+    });
+</script>
+{% endblock %}
