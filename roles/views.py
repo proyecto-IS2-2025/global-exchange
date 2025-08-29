@@ -3,6 +3,11 @@ from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import Group, Permission
 from django.http import JsonResponse
 from .forms import GroupForm
+from django.contrib import messages
+from django.contrib.auth import get_user_model
+
+# Get the custom user model
+CustomUser = get_user_model()
 
 # Función auxiliar: solo admin
 def is_admin(user):
@@ -70,10 +75,37 @@ def group_detail_permissions(request, pk):
     })
 
 @user_passes_test(is_admin)
+def group_detail_users(request, pk):
+    group = get_object_or_404(Group, pk=pk)
+    
+    if request.method == 'POST':
+        selected_user_ids = request.POST.getlist('users')
+        users_to_add = CustomUser.objects.filter(id__in=selected_user_ids)
+        group.user_set.set(users_to_add)
+        messages.success(request, f"Usuarios del grupo '{group.name}' actualizados correctamente.")
+        return redirect('group_detail_users', pk=group.pk)
+    
+    current_users = group.user_set.all()
+    return render(request, 'groups/group_detail_users.html', {
+        'group': group,
+        'current_users': current_users,
+    })
+
+@user_passes_test(is_admin)
 def search_permissions(request):
     query = request.GET.get('q', '')
     if query:
         permissions = Permission.objects.filter(codename__icontains=query)[:10]  # Limita los resultados
         data = [{'id': p.id, 'name': p.name, 'codename': p.codename} for p in permissions]
+        return JsonResponse(data, safe=False)
+    return JsonResponse([], safe=False)
+
+@user_passes_test(is_admin)
+def search_users(request):
+    query = request.GET.get('q', '')
+    if query:
+        # Busca usuarios que coincidan con la consulta en el email
+        users = CustomUser.objects.filter(email__icontains=query).distinct()
+        data = [{'id': u.id, 'email': u.email, 'username': u.username} for u in users]
         return JsonResponse(data, safe=False)
     return JsonResponse([], safe=False)
