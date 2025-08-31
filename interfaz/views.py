@@ -6,11 +6,21 @@ from users.models import CustomUser
 from clientes.models import Cliente
 from clientes.forms import ClienteForm
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 
 User = get_user_model()
 
 def inicio(request):
-    return render(request, 'inicio.html')
+    grupo_cliente = request.user.groups.filter(name="cliente").exists() if request.user.is_authenticated else False
+    grupo_operador = request.user.groups.filter(name="operador").exists() if request.user.is_authenticated else False
+    grupo_admin = request.user.groups.filter(name="admin").exists() if request.user.is_authenticated else False
+
+    context = {
+        "grupo_cliente": grupo_cliente,
+        "grupo_operador": grupo_operador,
+        "grupo_admin": grupo_admin,
+    }
+    return render(request, "inicio.html", context)
 
 def contacto(request):
     return render(request, 'contacto.html')
@@ -19,37 +29,6 @@ def contacto(request):
 @login_required
 def cliente_dashboard(request):
     return render(request, 'cliente/dashboard.html')
-
-
-@login_required
-def admin_dashboard(request):
-    if not request.user.is_staff:
-        messages.error(request, "No tienes permiso para acceder a esta página.")
-        return redirect('cliente_dashboard')
-    
-    # MODIFICACIÓN: Obtener solo usuarios que NO son superusuarios.
-    usuarios = CustomUser.objects.exclude(is_superuser=True)
-    clientes = Cliente.objects.all()
-    
-    context = {
-        'usuarios': usuarios,
-        'clientes': clientes,
-    }
-    return render(request, 'admin/dashboard.html', context)
-
-
-@login_required
-def dashboard(request):
-    if request.user.rol != "admin":   # o request.user.is_staff
-        return HttpResponseForbidden("No tienes permiso para ver esta página.")
-    return render(request, "admin/dashboard.html")
-    
-@login_required
-def cambista_dashboard(request):
-    if not hasattr(request.user, 'is_cambista') or not request.user.is_cambista:
-        messages.error(request, "No tienes permiso para acceder a esta página.")
-        return redirect('cliente_dashboard')
-    return render(request, 'cambista/dashboard.html')
 
 
 @login_required
@@ -65,3 +44,24 @@ def crear_cliente_admin(request):
         form = ClienteForm()
 
     return render(request, 'admin/crear_cliente.html', {'form': form})
+
+#Redirect
+@login_required
+def redireccion_por_grupo(request):
+    grupos = list(request.user.groups.values_list('name', flat=True))
+    print("Grupos del usuario:", grupos)  # Esto se verá en la consola del servidor
+
+    if 'admin' in grupos:
+        return redirect('admin_dashboard')
+    elif 'operador' in grupos:
+        return redirect('cambista_dashboard')
+    elif 'cliente' in grupos:
+        return redirect('cliente_dashboard')
+    else:
+        messages.warning(request, "Tu cuenta no tiene un grupo asignado.")
+        return redirect('inicio')
+
+
+@login_required
+def asociar_clientes_usuarios(request):
+    return render(request, "admin/asociar_clientes_usuarios.html")

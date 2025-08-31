@@ -53,15 +53,22 @@ def login_view(request):
             if user.is_active:
                 login(request, user)
 
-                if user.is_staff:
+                # 🚀 Redirección según el grupo
+                grupos = list(user.groups.values_list('name', flat=True))
+
+                if "admin" in grupos:
                     messages.success(request, "Inicio de sesión como Administrador exitoso.")
-                    return redirect('admin_dashboard')
-                elif hasattr(user, 'is_cambista') and user.is_cambista:
-                    messages.success(request, "Inicio de sesión como Cambista exitoso.")
-                    return redirect('cambista_dashboard')
+                    return redirect('inicio')
+                elif "operador" in grupos:
+                    messages.success(request, "Inicio de sesión como Operador exitoso.")
+                    return redirect('inicio')
+                elif "cliente" in grupos:
+                    messages.success(request, "Inicio de sesión como Cliente exitoso.")
+                    return redirect('inicio')
                 else:
-                    messages.success(request, "Inicio de sesión exitoso. Bienvenido.")
-                    return redirect('cliente_dashboard')
+                    messages.warning(request, "No tienes un grupo asignado. Contacta con un administrador.")
+                    return redirect('inicio')
+
             else:
                 messages.error(request, 'Tu cuenta no ha sido activada.')
         else:

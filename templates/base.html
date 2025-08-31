@@ -16,12 +16,25 @@
 
   <!-- Tu CSS (opcional) -->
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-light">
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-      <a class="navbar-brand fw-bold" href="#">Global Exchange</a>
+      <a class="navbar-brand fw-bold" href="{% url 'inicio' %}">
+        Global Exchange
+        {% if user.is_authenticated %}
+          {% if grupo_admin %}
+            <small class="text-white">(Admin)</small>
+          {% elif grupo_operador %}
+            <small class="text-white">(Operador)</small>
+          {% elif grupo_cliente %}
+            <small class="text-white">(Cliente)</small>
+          {% endif %}
+        {% endif %}
+      </a>
+
       <button
         class="navbar-toggler"
         type="button"
@@ -49,12 +62,14 @@
             <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Iniciar sesión</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'registro' %}">Registrarse</a></li>
           {% endif %}
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button"
-              data-bs-toggle="dropdown" aria-expanded="false">
-              Opciones
-            </a>
-            {% include "partials/navbar_opciones.html" %}
+          {% if not grupo_admin %}
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" role="button"
+                data-bs-toggle="dropdown" aria-expanded="false">
+                Opciones
+              </a>
+              {% include "partials/navbar_opciones.html" %}
+            {% endif %}
           </li>
         </ul>
       </div>

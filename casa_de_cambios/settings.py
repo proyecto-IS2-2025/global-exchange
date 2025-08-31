@@ -51,6 +51,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'roles.context_processors.grupo_usuario',
             ],
         },
     },
@@ -130,8 +131,11 @@ EMAIL_HOST_USER = 'glex.globalexchange@gmail.com'
 EMAIL_HOST_PASSWORD = 'tpsh yedw lthc oprs'
 
 #login y logout redirect
-LOGIN_REDIRECT_URL = 'inicio'
+#LOGIN_REDIRECT_URL = 'inicio'
 LOGOUT_REDIRECT_URL = 'inicio'
+LOGIN_REDIRECT_URL = '/redirect-dashboard/'
+
+
 
 
 AUTH_USER_MODEL = 'users.CustomUser'
