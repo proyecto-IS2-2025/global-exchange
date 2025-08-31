@@ -3,10 +3,11 @@
   <li><a class="dropdown-item" href="#">Información</a></li>
   <li><a class="dropdown-item" href="{% url 'contacto' %}">Contacto</a></li>
 
-  {% if user.is_authenticated and user.is_superuser %}
-    <li><hr class="dropdown-divider"></li>
+{% if user.is_authenticated %}
+
+  {% if grupo_usuario == "admin" %}
     <li>
-      <a class="dropdown-item fw-bold text-primary" href="{% url 'admin_dashboard' %}">
+      <a class="dropdown-item fw-bold text-primary" href="{% url 'asociar_clientes_usuarios' %}">
         Asignar Cliente a usuario
       </a>
     </li>
@@ -25,6 +26,32 @@
         Crear permisos
       </a>
     </li>
-    
+
+  {% elif grupo_usuario == "operador" %}
+    <li><hr class="dropdown-divider"></li>
+    <li>
+      <a class="dropdown-item fw-bold text-black text-info" href="#">
+        Ver clientes
+      </a>
+    </li>
+    <li>
+      <a class="dropdown-item fw-bold text-black text-info" href="#">
+        Reportes rápidos
+      </a>
+    </li>
+
+  {% elif grupo_usuario == "cliente" %}
+    <li><hr class="dropdown-divider"></li>
+    <li>
+      <a class="dropdown-item fw-bold text-secondary" href="#">
+        Mi perfil
+      </a>
+    </li>
+    <li>
+      <a class="dropdown-item fw-bold text-secondary" href="#">
+        Historial de operaciones
+      </a>
+    </li>
   {% endif %}
+{% endif %}
 </ul>
