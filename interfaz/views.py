@@ -31,20 +31,6 @@ def cliente_dashboard(request):
     return render(request, 'cliente/dashboard.html')
 
 
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
-def crear_cliente_admin(request):
-    if request.method == 'POST':
-        form = ClienteForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Cliente creado correctamente.")
-            return redirect('crear_cliente_admin')
-    else:
-        form = ClienteForm()
-
-    return render(request, 'admin/crear_cliente.html', {'form': form})
-
 #Redirect
 @login_required
 def redireccion_por_grupo(request):
