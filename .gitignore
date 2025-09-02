@@ -1,29 +1,25 @@
 # Entorno virtual
-venv/
 .venv/
+venv/
 env/
-.env 
-env
-venv
 
-# Archivos de bases de datos
+# Archivos de entorno
+.env
+
+# Archivos de caché de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Bases de datos y logs
 *.sqlite3
+*.log
+
+# Archivos generados del sistema operativo
+.DS_Store
+Thumbs.db
 
 # Archivos de configuración de IDE
 .vscode/
 .idea/
-
-# Archivos generados por el sistema operativo
-*.log
-*.bak
-*.swp
-Thumbs.db
-.DS_Stor
-
-# Ignore Python compiled files
-__pycache__/
-*.pyc
-*.py[cod]
-
-# Archivos de configuración de entorno
-.env
