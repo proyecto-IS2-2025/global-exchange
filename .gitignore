@@ -24,3 +24,6 @@ Thumbs.db
 __pycache__/
 *.pyc
 *.py[cod]
+
+# Archivos de configuración de entorno
+.env
