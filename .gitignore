@@ -1,25 +1,21 @@
-# Entorno virtual
+# Ignorar directorios y archivos de entorno virtual
 .venv/
-venv/
 env/
-
-# Archivos de entorno
+venv/
 .env
 
-# Archivos de caché de Python
+# Ignorar archivos de caché
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 
-# Bases de datos y logs
+# Archivos de la base de datos y logs
 *.sqlite3
 *.log
 
-# Archivos generados del sistema operativo
+# Archivos de sistema y de IDE
 .DS_Store
 Thumbs.db
-
-# Archivos de configuración de IDE
 .vscode/
 .idea/
