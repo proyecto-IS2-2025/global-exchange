@@ -1,6 +1,10 @@
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 
+# Ya tenés BASE_DIR definido más abajo; si lo preferís aquí, usa:
+# BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(os.path.join(Path(__file__).resolve().parent.parent, '.env'))
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 # BASE_DIR = Path(__file__).resolve().parent.parent  # Duplicate definition removed
 
@@ -27,6 +31,7 @@ INSTALLED_APPS = [
     'interfaz',
     'clientes',
     'roles',
+    'divisas',
 ]
 
 MIDDLEWARE = [

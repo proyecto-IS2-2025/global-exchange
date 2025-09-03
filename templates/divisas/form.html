@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Formulario de Divisa</title></head>
+<body>
+  <h1>{% if object %}Editar divisa{% else %}Nueva divisa{% endif %}</h1>
+  <form method="post">
+    {% csrf_token %}
+    <p>Nombre:<br>{{ form.nombre }}</p>
+    <p>Código:<br>{{ form.code }}</p>
+    <p>Símbolo:<br>{{ form.simbolo }}</p>
+    <p><button type="submit">Guardar</button> <a href="{% url 'divisas:lista' %}">Volver</a></p>
+    {% if form.errors %}
+      <div style="color:red">
+        {{ form.errors }}
+      </div>
+    {% endif %}
+  </form>
+</body>
+</html>
