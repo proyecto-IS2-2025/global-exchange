@@ -63,6 +63,14 @@
               <a href="{% url 'permission_create' %}" class="stretched-link"></a>
             </div>
           </div>
+          <!-- Opción: Monedas -->
+          <div class="col">
+            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
+              <div class="display-3 mb-3"><i class="fas fa-coins"></i></div>
+              <h6 class="fw-bold">Monedas</h6>
+              <a href="{% url 'divisas:lista' %}" class="stretched-link"></a>
+            </div>
+          </div>
         </div>
       {% else %}
         <!-- Usuario autenticado pero sin grupo -->
