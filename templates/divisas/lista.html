@@ -31,6 +31,13 @@
             <button type="submit">{% if d.is_active %}Deshabilitar{% else %}Activar{% endif %}</button>
           </form>
           <a href="{% url 'divisas:editar' d.id %}">Editar</a>
+
+          {# Ocultar "Ver Tasas" si es moneda base: usa is_base si existe; si no, usa código PYG #}
+          {% if d.is_base or d.code == 'PYG' %}
+            <!-- Moneda base: no muestra link de tasas -->
+          {% else %}
+            <a href="{% url 'divisas:tasas' d.id %}">Ver Tasas</a>
+          {% endif %}
         </td>
       </tr>
     {% empty %}
