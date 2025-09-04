@@ -1,54 +1,57 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load widget_tweaks %}
 
 {% block content %}
-    <div class="container mt-5">
-        <h2 class="mb-4">
-            {% if object %}<i class="fas fa-edit me-2"></i>Editar Divisa{% else %}<i class="fas fa-plus-circle me-2"></i>Nueva Divisa{% endif %}
-        </h2>
-        
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <form method="post">
-                    {% csrf_token %}
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.nombre.id_for_label }}" class="form-label">Nombre:</label>
-                        {{ form.nombre }}
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow border-0 rounded-4">
+                    <div class="card-header bg-primary text-white text-center rounded-top-4">
+                        <h4 class="mb-0">
+                            {% if object %}
+                            <i class="fas fa-edit me-2"></i>Editar Divisa
+                            {% else %}
+                            <i class="fas fa-plus-circle me-2"></i>Añadir Nueva Divisa
+                            {% endif %}
+                        </h4>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.code.id_for_label }}" class="form-label">Código:</label>
-                        {{ form.code }}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.simbolo.id_for_label }}" class="form-label">Símbolo:</label>
-                        {{ form.simbolo }}
-                    </div>
+                    <div class="card-body bg-light">
+                        <form method="post" novalidate>
+                            {% csrf_token %}
+                            
+                            {% for field in form %}
+                            <div class="form-floating mb-4">
+                                {{ field|add_class:"form-control" }}
+                                <label for="{{ field.id_for_label }}">
+                                    <i class="fas fa-pencil-alt me-1 text-primary"></i> {{ field.label }}
+                                </label>
+                                {% if field.errors %}
+                                <div class="form-text text-danger">
+                                    {{ field.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
 
-                    {% if form.errors %}
-                        <div class="alert alert-danger" role="alert">
-                            <strong>¡Error en el formulario!</strong> Por favor, corrige los siguientes campos:
-                            <ul>
-                                {% for field, errors in form.errors.items %}
-                                    {% for error in errors %}
-                                        <li>{{ field|capfirst }}: {{ error }}</li>
-                                    {% endfor %}
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger mt-3" role="alert">
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
                                 {% endfor %}
-                            </ul>
-                        </div>
-                    {% endif %}
-                    
-                    <div class="d-flex justify-content-end mt-4">
-                        <a href="{% url 'divisas:lista' %}" class="btn btn-secondary me-2">
-                            <i class="fas fa-arrow-left me-2"></i>Volver
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-2"></i>Guardar
-                        </button>
+                            </div>
+                            {% endif %}
+
+                            <div class="d-flex justify-content-end mt-4">
+                                <a href="{% url 'divisas:lista' %}" class="btn btn-secondary me-2">
+                                    <i class="fas fa-arrow-left me-2"></i>Volver
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Guardar
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
