@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Tasas de {{ divisa.code }}</title></head>
+<body>
+  <h1>Tasas de {{ divisa.nombre }} ({{ divisa.code }})</h1>
+
+  <form method="get">
+    <label>Desde: <input type="date" name="inicio" value="{{ request.GET.inicio }}"></label>
+    <label>Hasta: <input type="date" name="fin" value="{{ request.GET.fin }}"></label>
+    <button type="submit">Filtrar</button>
+  </form>
+
+  <p><a href="{% url 'divisas:tasa_nueva' divisa.id %}">Añadir nueva tasa</a></p>
+
+  <table border="1" cellpadding="6" cellspacing="0">
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Valor Compra</th>
+        <th>Valor Venta</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in tasas %}
+        <tr>
+          <td>{{ t.fecha|date:"d/m/Y" }}</td>
+          <td>{{ t.valor_compra }}</td>
+          <td>{{ t.valor_venta }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="3">No hay tasas registradas</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

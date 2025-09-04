@@ -1,0 +1,13 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Nueva Tasa</title></head>
+<body>
+  <h1>Nueva Tasa para {{ divisa.nombre }} ({{ divisa.code }})</h1>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Guardar</button>
+    <a href="{% url 'divisas:tasas' divisa.id %}">Volver</a>
+  </form>
+</body>
+</html>
