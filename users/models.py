@@ -9,12 +9,6 @@ class Role(models.Model):
     def __str__(self):
         return self.name
 
-class Segmento(models.Model):
-    name = models.CharField(max_length=50, unique=True)
-
-    def __str__(self):
-        return self.name
-
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     is_cambista = models.BooleanField(default=False)
