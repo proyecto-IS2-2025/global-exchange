@@ -1,19 +1,55 @@
-<!doctype html>
-<html>
-<head><meta charset="utf-8"><title>Formulario de Divisa</title></head>
-<body>
-  <h1>{% if object %}Editar divisa{% else %}Nueva divisa{% endif %}</h1>
-  <form method="post">
-    {% csrf_token %}
-    <p>Nombre:<br>{{ form.nombre }}</p>
-    <p>Código:<br>{{ form.code }}</p>
-    <p>Símbolo:<br>{{ form.simbolo }}</p>
-    <p><button type="submit">Guardar</button> <a href="{% url 'divisas:lista' %}">Volver</a></p>
-    {% if form.errors %}
-      <div style="color:red">
-        {{ form.errors }}
-      </div>
-    {% endif %}
-  </form>
-</body>
-</html>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h2 class="mb-4">
+            {% if object %}<i class="fas fa-edit me-2"></i>Editar Divisa{% else %}<i class="fas fa-plus-circle me-2"></i>Nueva Divisa{% endif %}
+        </h2>
+        
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.nombre.id_for_label }}" class="form-label">Nombre:</label>
+                        {{ form.nombre }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.code.id_for_label }}" class="form-label">Código:</label>
+                        {{ form.code }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.simbolo.id_for_label }}" class="form-label">Símbolo:</label>
+                        {{ form.simbolo }}
+                    </div>
+
+                    {% if form.errors %}
+                        <div class="alert alert-danger" role="alert">
+                            <strong>¡Error en el formulario!</strong> Por favor, corrige los siguientes campos:
+                            <ul>
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <li>{{ field|capfirst }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-end mt-4">
+                        <a href="{% url 'divisas:lista' %}" class="btn btn-secondary me-2">
+                            <i class="fas fa-arrow-left me-2"></i>Volver
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
