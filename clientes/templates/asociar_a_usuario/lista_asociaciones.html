@@ -10,6 +10,7 @@
 
     {% if messages %}
         <div class="row">
+            <!--
             <div class="col-12">
                 {% for message in messages %}
                     <div class="alert alert-{{ message.tags }} text-center">
@@ -17,6 +18,7 @@
                     </div>
                 {% endfor %}
             </div>
+            -->
         </div>
     {% endif %}
 
@@ -39,7 +41,7 @@
                                     <td>{{ asignacion.usuario.email|default:"(sin usuario)" }}</td>
                                     <td>{{ asignacion.cliente.nombre_completo|default:"(sin cliente)" }}</td>
                                     <td>
-                                        <form method="post" action="{% url 'listar_asociaciones' %}" onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta asociación?');">
+                                        <form method="post" action="{% url 'clientes:listar_asociaciones' %}" onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta asociación?');">
                                             {% csrf_token %}
                                             <input type="hidden" name="delete_id" value="{{ asignacion.id }}">
                                             <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
@@ -62,7 +64,7 @@
     <!-- Botón Volver abajo -->
     <div class="row mt-4">
         <div class="col-12 text-center">
-            <a href="{% url 'asociar_admin' %}" class="btn btn-primary">Volver a Asociar Clientes</a>
+            <a href="{% url 'clientes:asociar_clientes_usuarios' %}" class="btn btn-primary">Volver a Asociar Clientes</a>
         </div>
     </div>
 </div>

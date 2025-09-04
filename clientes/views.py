@@ -11,39 +11,6 @@ from .forms import ClienteForm
 from django.contrib import messages
 from .models import AsignacionCliente
 
-
-# Vistas para la gestión de clientes (Refactorizadas a CBV)
-@method_decorator(login_required, name='dispatch')
-@method_decorator(permission_required('users.view_cliente', raise_exception=True), name='dispatch')
-class ClienteListView(ListView):
-    model = Cliente
-    template_name = 'users/cliente_list.html'
-    context_object_name = 'clientes'
-
-@method_decorator(login_required, name='dispatch')
-@method_decorator(permission_required('users.add_cliente', raise_exception=True), name='dispatch')
-class ClienteCreateView(CreateView):
-    model = Cliente
-    form_class = ClienteForm
-    template_name = 'users/cliente_form.html'
-    success_url = reverse_lazy('cliente_list')
-
-@method_decorator(login_required, name='dispatch')
-@method_decorator(permission_required('users.change_cliente', raise_exception=True), name='dispatch')
-class ClienteUpdateView(UpdateView):
-    model = Cliente
-    form_class = ClienteForm
-    template_name = 'users/cliente_form.html'
-    success_url = reverse_lazy('cliente_list')
-
-@method_decorator(login_required, name='dispatch')
-@method_decorator(permission_required('users.delete_cliente', raise_exception=True), name='dispatch')
-class ClienteDeleteView(DeleteView):
-    model = Cliente
-    template_name = 'users/cliente_confirm_delete.html'
-    success_url = reverse_lazy('cliente_list')
-
-
 #Asociar clientes-usuarios
 
 User = get_user_model()
@@ -52,7 +19,7 @@ User = get_user_model()
 # Vista para asociar usuarios y clientes
 @login_required
 @user_passes_test(lambda u: u.is_staff)
-def asociar_admin_view(request):
+def asociar_clientes_usuarios_view(request):
     if request.method == 'POST':
         usuario_id = request.POST.get('usuario')
         clientes_ids = request.POST.getlist('clientes')
@@ -69,9 +36,9 @@ def asociar_admin_view(request):
                     messages.info(request, f'La asociación entre {usuario.email} y {cliente.nombre_completo} ya existe.')
             except (User.DoesNotExist, Cliente.DoesNotExist):
                 messages.error(request, 'Error: No se pudo encontrar el usuario o cliente.')
-                return redirect('asociar_admin')
+                return redirect('clientes:asociar_clientes_usuarios')
 
-        return redirect('asociar_admin')
+        return redirect('clientes:asociar_clientes_usuarios')
 
     usuarios = User.objects.filter(is_superuser=False)
     clientes = Cliente.objects.all()
@@ -81,7 +48,7 @@ def asociar_admin_view(request):
     }
     # 🔴 Antes: 'asociar_clientes_usuarios/admin_asociar.html'
     # ✅ Ahora: usamos el template unificado
-    return render(request, 'admin/dashboard.html', context)
+    return render(request, 'asociar_a_usuario/asociar_clientes_usuarios.html', context)
 
 
 # Vista para listar y eliminar asociaciones
@@ -96,7 +63,7 @@ def listar_asociaciones(request):
             messages.success(request, 'Asociación eliminada correctamente.')
         except Exception as e:
             messages.error(request, f'Error al eliminar la asociación: {e}')
-        return redirect('listar_asociaciones')
+        return redirect('clientes:listar_asociaciones')
 
     asignaciones = AsignacionCliente.objects.all().order_by('usuario__email')
     context = {'asignaciones': asignaciones}
@@ -104,14 +71,21 @@ def listar_asociaciones(request):
     #return render(request, 'asociar_clientes_usuarios/test.html', context)
 
 
-#Creación Cliente exitosa
-class ClienteCreateView(CreateView):
-    model = Cliente
-    form_class = ClienteForm
-    template_name = 'users/cliente_form.html'
-    success_url = reverse_lazy('cliente_list')
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def crear_cliente_view(request):
+    if request.method == 'POST':
+        form = ClienteForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Cliente creado correctamente.")
+            return redirect('clientes:crear_cliente')
+    else:
+        form = ClienteForm()
 
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        messages.success(self.request, "✅ Cliente creado con éxito.")
-        return response
+    return render(request, 'crear_cliente.html', {'form': form})
+
+@login_required
+def lista_clientes(request):
+    return render(request, 'clientes/lista_clientes.html')
+

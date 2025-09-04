@@ -6,17 +6,6 @@
 {% if user.is_authenticated %}
 
   {% if grupo_usuario == "admin" %}
-    <li>
-      <a class="dropdown-item fw-bold text-primary" href="{% url 'asociar_clientes_usuarios' %}">
-        Asignar Cliente a usuario
-      </a>
-    </li>
-    <li>
-      <a class="dropdown-item fw-bold text-success" href="{% url 'crear_cliente_admin' %}">
-        Crear nuevo cliente
-      </a>
-    </li>
-    <li>
       <a class="dropdown-item fw-bold text-success" href="{% url 'group_list' %}">
         Ver roles
       </a>

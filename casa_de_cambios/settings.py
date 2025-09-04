@@ -143,6 +143,8 @@ LOGIN_REDIRECT_URL = '/redirect-dashboard/'
 
 
 
+
+
 AUTH_USER_MODEL = 'users.CustomUser'
 
 DEBUG = True
