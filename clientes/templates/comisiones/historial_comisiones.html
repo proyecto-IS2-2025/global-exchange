@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Historial de Comisiones</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Segmento</th>
+                <th>Compra Anterior (%)</th>
+                <th>Venta Anterior (%)</th>
+                <th>Compra Nueva (%)</th>
+                <th>Venta Nueva (%)</th>
+                <th>Fecha de Cambio</th>
+                <th>Modificado Por</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for registro in historial_comisiones %}
+            <tr>
+                <td>{{ registro.comision.segmento.name }}</td>
+                <td>{{ registro.valor_compra_anterior }}</td>
+                <td>{{ registro.valor_venta_anterior }}</td>
+                <td>{{ registro.valor_compra_nuevo }}</td>
+                <td>{{ registro.valor_venta_nuevo }}</td>
+                <td>{{ registro.fecha_cambio|date:"Y-m-d H:i:s" }}</td>
+                <td>{{ registro.modificado_por.username }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7">No hay registros de historial de comisiones.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'clientes:lista_comisiones' %}" class="btn btn-secondary">Volver a Comisiones</a>
+</div>
+{% endblock %}
