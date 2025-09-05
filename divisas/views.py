@@ -14,6 +14,12 @@ from django.db.models import OuterRef, Subquery
 # DIVISAS
 # ----------------------------
 class DivisaListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    """
+    Vista de lista para mostrar todas las divisas.
+
+    Requiere que el usuario esté autenticado y tenga el permiso `divisas.view_divisa`.
+    Muestra las divisas en una tabla paginada.
+    """
     permission_required = 'divisas.view_divisa'
     model = Divisa
     template_name = 'divisas/lista.html'
@@ -22,6 +28,12 @@ class DivisaListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
 
 
 class DivisaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    """
+    Vista para crear una nueva divisa.
+
+    Requiere que el usuario esté autenticado y tenga el permiso `divisas.add_divisa`.
+    Asigna `is_active` a `False` por defecto al guardar la nueva divisa.
+    """
     permission_required = 'divisas.add_divisa'
     model = Divisa
     form_class = DivisaForm
@@ -29,6 +41,16 @@ class DivisaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     success_url = reverse_lazy('divisas:lista')
 
     def form_valid(self, form):
+        """
+        Maneja el guardado del formulario válido.
+
+        Establece `is_active` a `False` antes de guardar el objeto.
+        
+        :param form: El formulario de la divisa.
+        :type form: :class:`~divisas.forms.DivisaForm`
+        :return: Un objeto de respuesta HTTP.
+        :rtype: django.http.HttpResponse
+        """
         obj = form.save(commit=False)
         obj.is_active = False  # TODA nueva divisa nace deshabilitada
         obj.save()
@@ -36,6 +58,10 @@ class DivisaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
 
 
 class DivisaUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    """
+    Vista para editar una divisa existente.
+    Requiere que el usuario esté autenticado y tenga el permiso 'divisas.change_divisa'
+    """
     permission_required = 'divisas.change_divisa'
     model = Divisa
     form_class = DivisaForm
@@ -58,8 +84,13 @@ class DivisaToggleActivaView(LoginRequiredMixin, PermissionRequiredMixin, View):
 # ----------------------------
 class TasaCambioListView(LoginRequiredMixin, ListView):
     """
-    Lista de tasas para UNA divisa, filtrable por fecha.
-    URL: /divisas/<divisa_id>/tasas/?inicio=YYYY-MM-DD&fin=YYYY-MM-DD
+    Vista de lista para las tasas de cambio de una divisa específica.
+
+    Requiere que el usuario esté autenticado y tenga el permiso `divisas.view_tasacambio`.
+    Muestra una tabla con las tasas de cambio históricas de una divisa.
+
+    :param divisa_id: ID de la divisa. Se pasa a través de la URL.
+    :type divisa_id: int
     """
     model = TasaCambio
     template_name = 'divisas/tasa_list.html'
@@ -67,6 +98,12 @@ class TasaCambioListView(LoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
+        """
+        Filtra el queryset para mostrar solo las tasas de la divisa especificada.
+
+        :return: El queryset filtrado de tasas de cambio.
+        :rtype: django.db.models.query.QuerySet
+        """
         divisa_id = self.kwargs['divisa_id']
         qs = TasaCambio.objects.filter(divisa_id=divisa_id).order_by('fecha')
 
@@ -79,6 +116,9 @@ class TasaCambioListView(LoginRequiredMixin, ListView):
         return qs
 
     def get_context_data(self, **kwargs):
+        """
+        Agrega la divisa al contexto de la plantilla.
+        """
         ctx = super().get_context_data(**kwargs)
         ctx['divisa'] = get_object_or_404(Divisa, pk=self.kwargs['divisa_id'])
         return ctx
@@ -116,8 +156,9 @@ class TasaCambioCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateVi
 
 class TasaCambioAllListView(LoginRequiredMixin, ListView):
     """
-    Tabla histórica GLOBAL (todas las divisas) con filtros:
-    /divisas/tasas/?divisa=<id|CODE>&inicio=YYYY-MM-DD&fin=YYYY-MM-DD
+    Vista para ver todas las tasas de cambio de todas las divisas.
+
+    Permite filtrar por divisa y rango de fechas.
     """
     model = TasaCambio
     template_name = 'tasa_list_global.html'
@@ -125,6 +166,17 @@ class TasaCambioAllListView(LoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
+        """
+        Filtra el queryset de tasas de cambio basado en los parámetros de la URL.
+
+        Los filtros disponibles son:
+        * `divisa`: ID o código de la divisa.
+        * `inicio`: Fecha de inicio del rango (formato YYYY-MM-DD).
+        * `fin`: Fecha de fin del rango (formato YYYY-MM-DD).
+        
+        :return: El queryset filtrado de tasas de cambio.
+        :rtype: django.db.models.query.QuerySet
+        """
         qs = TasaCambio.objects.select_related('divisa').order_by('fecha')
 
         divisa_param = self.request.GET.get('divisa')
