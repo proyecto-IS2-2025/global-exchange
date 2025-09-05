@@ -7,17 +7,15 @@ from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
 from django.utils.decorators import method_decorator
-
-from .models import Cliente
-from .forms import ClienteForm
-
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib import messages
-from .models import AsignacionCliente
 
-#Asociar clientes-usuarios
+from .models import Cliente, AsignacionCliente, Comision, Segmento, HistorialComision
+from .forms import ClienteForm, ComisionForm
+
+# Asociar clientes-usuarios
 
 User = get_user_model()
-
 
 # Vista para asociar usuarios y clientes
 @login_required
@@ -49,10 +47,7 @@ def asociar_clientes_usuarios_view(request):
         'usuarios': usuarios,
         'clientes': clientes,
     }
-    # 🔴 Antes: 'asociar_clientes_usuarios/admin_asociar.html'
-    # ✅ Ahora: usamos el template unificado
     return render(request, 'asociar_a_usuario/asociar_clientes_usuarios.html', context)
-
 
 # Vista para listar y eliminar asociaciones
 @login_required
@@ -71,8 +66,6 @@ def listar_asociaciones(request):
     asignaciones = AsignacionCliente.objects.all().order_by('usuario__email')
     context = {'asignaciones': asignaciones}
     return render(request, 'asociar_a_usuario/lista_asociaciones.html', context)
-    #return render(request, 'asociar_clientes_usuarios/test.html', context)
-
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
@@ -129,4 +122,68 @@ class ClienteUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView)
     form_class = ClienteForm
     template_name = "clientes/form.html"
     success_url = reverse_lazy("clientes:lista_clientes")
-    permission_required = "clientes.change_cliente"
+    permission_required = "clientes.change_cliente"# Nuevas vistas para la gestión de comisiones
+@method_decorator(login_required, name='dispatch')
+class ComisionListView(UserPassesTestMixin, ListView):
+    model = Comision
+    template_name = 'comisiones/lista_comisiones.html'
+    context_object_name = 'comisiones'
+
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.is_superuser
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        for segmento in Segmento.objects.all():
+            Comision.objects.get_or_create(
+                segmento=segmento,
+                defaults={'valor_compra': 0.0, 'valor_venta': 0.0}
+            )
+        return context
+
+@method_decorator(login_required, name='dispatch')
+class ComisionUpdateView(UserPassesTestMixin, UpdateView):
+    model = Comision
+    form_class = ComisionForm
+    template_name = 'comisiones/editar_comision.html'
+    success_url = reverse_lazy('clientes:lista_comisiones')
+
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.is_superuser
+
+    def form_valid(self, form):
+        # 1. Obtener los valores del objeto ANTES de guardar el formulario.
+        #    'self.object' es el objeto que se está editando, con los valores originales.
+            # 1. Obtener una copia de la instancia actual desde la BD para asegurar
+            #    que leemos los valores anteriores exactamente como están persistidos.
+            pk = self.get_object().pk
+            anterior = Comision.objects.get(pk=pk)
+
+            # 2. Dejar que la vista haga el guardado normal (super().form_valid) y
+            #    así `self.object` quedará con los nuevos valores.
+            response = super().form_valid(form)
+
+            # 3. Crear el registro en el historial usando los valores leídos antes
+            #    y los valores actuales ya guardados en `self.object`.
+            HistorialComision.objects.create(
+                comision=self.object,
+                valor_compra_anterior=anterior.valor_compra,
+                valor_venta_anterior=anterior.valor_venta,
+                valor_compra_nuevo=self.object.valor_compra,
+                valor_venta_nuevo=self.object.valor_venta,
+                modificado_por=self.request.user
+            )
+
+            messages.success(self.request, f"Comisión para {self.object.segmento.name} actualizada correctamente.")
+
+            return response
+
+
+@method_decorator(login_required, name='dispatch')
+class HistorialComisionListView(UserPassesTestMixin, ListView):
+    model = HistorialComision
+    template_name = 'comisiones/historial_comisiones.html'
+    context_object_name = 'historial_comisiones'
+    
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.is_superuser
