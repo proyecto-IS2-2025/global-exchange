@@ -1,6 +1,7 @@
-# forms.py - REEMPLAZA TODO EL CONTENIDO
+# forms.py - Versión corregida para soft delete
 from django import forms
 from django.forms import inlineformset_factory
+from django.core.exceptions import ValidationError
 from .models import MedioDePago, CampoMedioDePago
 
 
@@ -45,15 +46,80 @@ class CampoMedioDePagoForm(forms.ModelForm):
             raise forms.ValidationError('El nombre del campo es requerido.')
         return nombre
 
+    def clean(self):
+        cleaned_data = super().clean()
+        nombre_campo = cleaned_data.get('nombre_campo')
+        
+        # Solo validar si tenemos un nombre de campo y una instancia padre
+        if nombre_campo and hasattr(self, 'instance') and hasattr(self.instance, 'medio_de_pago') and self.instance.medio_de_pago:
+            # Buscar campos existentes con el mismo nombre (excluyendo eliminados)
+            existing = CampoMedioDePago.objects.filter(
+                medio_de_pago=self.instance.medio_de_pago,
+                nombre_campo__iexact=nombre_campo,
+                deleted_at__isnull=True  # Solo considerar campos NO eliminados
+            )
+            
+            # Excluir el objeto actual si está siendo editado
+            if self.instance.pk:
+                existing = existing.exclude(pk=self.instance.pk)
+            
+            if existing.exists():
+                raise forms.ValidationError({
+                    'nombre_campo': f'Ya existe un campo activo con el nombre "{nombre_campo}" en este medio de pago.'
+                })
+        
+        return cleaned_data
 
-# UN SOLO FORMSET - sin can_delete dinámico
+
+# Formset personalizado que maneja soft delete correctamente
+class CampoMedioDePagoFormSet(forms.BaseInlineFormSet):
+    def clean(self):
+        """Validación a nivel de formset"""
+        if any(self.errors):
+            return
+        
+        nombres_campos = []
+        for form in self.forms:
+            if not form.cleaned_data:
+                continue
+                
+            # Solo considerar formularios que no serán eliminados
+            if form.cleaned_data.get('DELETE', False):
+                continue
+                
+            nombre = form.cleaned_data.get('nombre_campo')
+            if nombre:
+                nombre_lower = nombre.lower().strip()
+                if nombre_lower in nombres_campos:
+                    raise forms.ValidationError(f'No puede haber campos duplicados con el nombre "{nombre}".')
+                nombres_campos.append(nombre_lower)
+
+    def save(self, commit=True):
+        """Override save para manejar soft delete correctamente"""
+        instances = super().save(commit=False)
+        
+        # Para formularios marcados como DELETE en edición, hacer soft delete
+        for form in self.deleted_forms:
+            if form.instance.pk:
+                # En lugar de eliminar, hacer soft delete
+                form.instance.soft_delete()
+        
+        if commit:
+            for instance in instances:
+                instance.save()
+        
+        return instances
+
+
+# Crear el formset usando la clase personalizada
 CampoMedioDePagoFormSet = inlineformset_factory(
     MedioDePago,
     CampoMedioDePago,
     form=CampoMedioDePagoForm,
+    formset=CampoMedioDePagoFormSet,  # Usar nuestro formset personalizado
     fields=('nombre_campo', 'tipo_dato', 'is_required'),
-    extra=1,  # Un campo extra
-    can_delete=True,  # Siempre True, pero lo controlamos en el template
+    extra=0,
+    can_delete=True,
     validate_max=True,
     max_num=10,
 )

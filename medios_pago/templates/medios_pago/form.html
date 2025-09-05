@@ -4,7 +4,6 @@
 {% block content %}
 <h1 class="h3 mb-4 text-center">{{ action }} Medio de Cobro</h1>
 
-<!-- Mostrar mensajes -->
 {% if messages %}
     {% for message in messages %}
         <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
@@ -19,21 +18,18 @@
         <form method="post" novalidate>
             {% csrf_token %}
 
-            <!-- Errores generales del formulario principal -->
             {% if form.non_field_errors %}
                 <div class="alert alert-danger" role="alert">
                     {{ form.non_field_errors }}
                 </div>
             {% endif %}
 
-            <!-- Errores generales del formset -->
             {% if campos_formset.non_form_errors %}
                 <div class="alert alert-danger" role="alert">
                     {{ campos_formset.non_form_errors }}
                 </div>
             {% endif %}
 
-            <!-- Campos del medio de pago -->
             <div class="row">
                 <div class="col-md-8">
                     <div class="mb-3">
@@ -75,7 +71,6 @@
 
             <hr class="my-4">
 
-            <!-- Campos específicos -->
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4 class="mb-0">Campos Específicos</h4>
                 <button type="button" id="add-campo" class="btn btn-outline-primary btn-sm">
@@ -89,50 +84,52 @@
             </div>
 
             {% if is_edit %}
-                <div class="alert alert-info alert-sm mb-3">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <strong>Nota:</strong> Los campos existentes no pueden eliminarse para mantener la integridad de los datos. Solo puedes agregar nuevos campos.
-                </div>
+                {% if can_edit_freely %}
+                    <div class="alert alert-success alert-sm mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Modo edición completa:</strong> Puedes agregar, modificar o eliminar campos libremente.
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning alert-sm mb-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Edición restringida:</strong> Este medio de pago tiene transacciones asociadas. Solo puedes agregar nuevos campos.
+                    </div>
+                {% endif %}
             {% endif %}
+
+            <div class="alert alert-info alert-sm mb-3">
+                <i class="fas fa-lightbulb me-2"></i>
+                <strong>Para eliminar campos:</strong> Marca el checkbox "Eliminar" y luego presiona "Guardar" para aplicar los cambios. Puedes desmarcar si cambias de opinión.
+            </div>
 
             <div id="campos-formset-container">
                 {{ campos_formset.management_form }}
                 
                 {% for form_campo in campos_formset %}
-                    <div class="card mb-3 form-campo {% if form_campo.DELETE.value %}d-none{% endif %}">
+                    <div class="card mb-3 form-campo {% if form_campo.DELETE.value %}d-none{% endif %}" data-campo-id="{{ form_campo.instance.pk|default:'' }}">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h6 class="card-title mb-0">Campo #<span class="field-number">{{ forloop.counter }}</span></h6>
-                                
-                                {% if is_edit %}
+                                <div class="d-flex align-items-center gap-2">
                                     {% if form_campo.instance.pk %}
                                         <span class="badge bg-info">Campo existente</span>
                                     {% else %}
                                         <span class="badge bg-success">Nuevo campo</span>
-                                        {% if form_campo.DELETE %}
-                                            <div class="form-check ms-2">
-                                                {{ form_campo.DELETE }}
-                                                <label class="form-check-label text-danger" for="{{ form_campo.DELETE.id_for_label }}">
-                                                    <i class="fas fa-trash"></i> Eliminar
-                                                </label>
-                                            </div>
-                                        {% endif %}
                                     {% endif %}
-                                {% else %}
+                                    
                                     {% if form_campo.DELETE %}
-                                        <div class="form-check">
+                                        <div class="form-check m-0">
                                             {{ form_campo.DELETE }}
                                             <label class="form-check-label text-danger" for="{{ form_campo.DELETE.id_for_label }}">
                                                 <i class="fas fa-trash"></i> Eliminar
                                             </label>
                                         </div>
                                     {% endif %}
-                                {% endif %}
+                                </div>
                             </div>
                             
                             {{ form_campo.id }}
                             
-                            <!-- Errores del formulario del campo -->
                             {% if form_campo.non_field_errors %}
                                 <div class="alert alert-danger alert-sm">
                                     {{ form_campo.non_field_errors }}
@@ -143,12 +140,10 @@
                                 <div class="col-md-5">
                                     <div class="mb-2">
                                         <label for="{{ form_campo.nombre_campo.id_for_label }}" class="form-label small">{{ form_campo.nombre_campo.label }}</label>
-                                        {% if is_edit and form_campo.instance.pk %}
-                                            <!-- Campo existente: solo lectura -->
+                                        {% if is_edit and form_campo.instance.pk and not can_edit_freely %}
                                             <input type="text" class="form-control" value="{{ form_campo.nombre_campo.value }}" readonly>
                                             {{ form_campo.nombre_campo.as_hidden }}
                                         {% else %}
-                                            <!-- Campo nuevo o modo creación: editable -->
                                             {{ form_campo.nombre_campo }}
                                         {% endif %}
                                         {% if form_campo.nombre_campo.errors %}
@@ -161,12 +156,10 @@
                                 <div class="col-md-4">
                                     <div class="mb-2">
                                         <label for="{{ form_campo.tipo_dato.id_for_label }}" class="form-label small">{{ form_campo.tipo_dato.label }}</label>
-                                        {% if is_edit and form_campo.instance.pk %}
-                                            <!-- Campo existente: solo lectura -->
+                                        {% if is_edit and form_campo.instance.pk and not can_edit_freely %}
                                             <input type="text" class="form-control" value="{{ form_campo.instance.get_tipo_dato_display }}" readonly>
                                             {{ form_campo.tipo_dato.as_hidden }}
                                         {% else %}
-                                            <!-- Campo nuevo o modo creación: editable -->
                                             {{ form_campo.tipo_dato }}
                                         {% endif %}
                                         {% if form_campo.tipo_dato.errors %}
@@ -179,8 +172,7 @@
                                 <div class="col-md-3">
                                     <div class="mb-2">
                                         <label class="form-label small">&nbsp;</label>
-                                        {% if is_edit and form_campo.instance.pk %}
-                                            <!-- Campo existente: solo lectura -->
+                                        {% if is_edit and form_campo.instance.pk and not can_edit_freely %}
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" {% if form_campo.is_required.value %}checked{% endif %} disabled>
                                                 <label class="form-check-label small">
@@ -189,7 +181,6 @@
                                             </div>
                                             {{ form_campo.is_required.as_hidden }}
                                         {% else %}
-                                            <!-- Campo nuevo o modo creación: editable -->
                                             <div class="form-check">
                                                 {{ form_campo.is_required }}
                                                 <label class="form-check-label small" for="{{ form_campo.is_required.id_for_label }}">
@@ -209,19 +200,22 @@
                     </div>
                 {% endfor %}
                 
-                <!-- Template para nuevos campos -->
                 <div id="empty-form-template" class="card mb-3 form-campo d-none">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
                             <h6 class="card-title mb-0">Campo #<span class="field-number"></span></h6>
-                            {% if campos_formset.empty_form.DELETE %}
-                                <div class="form-check">
-                                    {{ campos_formset.empty_form.DELETE }}
-                                    <label class="form-check-label text-danger">
-                                        <i class="fas fa-trash"></i> Eliminar
-                                    </label>
-                                </div>
-                            {% endif %}
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-success">Nuevo campo</span>
+                                
+                                {% if campos_formset.empty_form.DELETE %}
+                                    <div class="form-check m-0">
+                                        {{ campos_formset.empty_form.DELETE }}
+                                        <label class="form-check-label text-danger" title="Marcar para eliminar al guardar">
+                                            <i class="fas fa-trash"></i> Eliminar
+                                        </label>
+                                    </div>
+                                {% endif %}
+                            </div>
                         </div>
                         
                         {{ campos_formset.empty_form.id }}
@@ -268,77 +262,121 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const addButton = document.getElementById('add-campo');
-    const container = document.getElementById('campos-formset-container');
-    const managementForm = document.querySelector('input[name$="TOTAL_FORMS"]');
-    const emptyFormTemplate = document.getElementById('empty-form-template');
-    const isEdit = "{{ is_edit|yesno:'true,false' }}" === "true";
+    document.addEventListener('DOMContentLoaded', function() {
+        const addButton = document.getElementById('add-campo');
+        const container = document.getElementById('campos-formset-container');
+        const managementForm = document.querySelector('input[name$="TOTAL_FORMS"]');
+        const emptyFormTemplate = document.getElementById('empty-form-template');
+        const isEdit = "{{ is_edit|yesno:'true,false' }}" === "true";
+        const canEditFreely = "{{ can_edit_freely|yesno:'true,false' }}" === "true";
 
-    if (!managementForm) {
-        console.error('Management form not found');
-        return;
-    }
+        if (!managementForm) {
+            console.error('Management form not found');
+            return;
+        }
 
-    // Función para actualizar numeración de campos
-    function updateFieldNumbers() {
-        const campos = container.querySelectorAll('.form-campo:not(#empty-form-template):not(.d-none)');
-        campos.forEach(function(campo, index) {
-            const numberSpan = campo.querySelector('.field-number');
-            if (numberSpan) {
-                numberSpan.textContent = index + 1;
-            }
-        });
-    }
+        // Función para actualizar numeración de campos
+        function updateFieldNumbers() {
+            const campos = container.querySelectorAll('.form-campo:not(#empty-form-template):not(.marked-for-deletion)');
+            campos.forEach(function(campo, index) {
+                const numberSpan = campo.querySelector('.field-number');
+                if (numberSpan) {
+                    numberSpan.textContent = index + 1;
+                }
+            });
+        }
 
-    // Agregar nuevo campo
-    if (addButton && emptyFormTemplate) {
-        addButton.addEventListener('click', function() {
-            const totalForms = parseInt(managementForm.value);
-            let newFormHtml = emptyFormTemplate.innerHTML.replace(/__prefix__/g, totalForms);
-            
-            const newDiv = document.createElement('div');
-            newDiv.className = 'card mb-3 form-campo';
-            newDiv.innerHTML = newFormHtml;
+        // Agregar nuevo campo
+        if (addButton && emptyFormTemplate) {
+            addButton.addEventListener('click', function() {
+                const totalForms = parseInt(managementForm.value);
+                let newFormHtml = emptyFormTemplate.innerHTML.replace(/__prefix__/g, totalForms);
+                
+                const newDiv = document.createElement('div');
+                newDiv.className = 'card mb-3 form-campo';
+                newDiv.innerHTML = newFormHtml;
 
-            // Actualizar el número del campo
-            const numberSpan = newDiv.querySelector('.field-number');
-            if (numberSpan) {
-                numberSpan.textContent = totalForms + 1;
-            }
+                // Actualizar el número del campo
+                const numberSpan = newDiv.querySelector('.field-number');
+                if (numberSpan) {
+                    numberSpan.textContent = totalForms + 1;
+                }
 
-            // En modo edición, agregar badge de "Nuevo campo"
-            if (isEdit) {
-                const cardTitle = newDiv.querySelector('.card-title');
-                if (cardTitle && cardTitle.parentElement) {
-                    const badge = document.createElement('span');
-                    badge.className = 'badge bg-success ms-2';
-                    badge.textContent = 'Nuevo campo';
-                    cardTitle.parentElement.appendChild(badge);
+                // Insertar antes del template
+                container.insertBefore(newDiv, emptyFormTemplate);
+                managementForm.value = totalForms + 1;
+                
+                updateFieldNumbers();
+            });
+        }
+
+        // Manejar marcado/desmarcado para eliminación
+        document.body.addEventListener('change', function(e) {
+            if (e.target && e.target.name && e.target.name.indexOf('DELETE') > -1) {
+                const formDiv = e.target.closest('.form-campo');
+                if (formDiv) {
+                    if (e.target.checked) {
+                        // Marcar visualmente como "pendiente de eliminación"
+                        formDiv.classList.add('marked-for-deletion');
+                        formDiv.style.opacity = '0.6';
+                        formDiv.style.backgroundColor = '#fff3cd'; // Color amarillo suave
+                        formDiv.style.border = '2px dashed #ffc107';
+                        
+                        // Agregar indicador visual
+                        let indicator = formDiv.querySelector('.delete-indicator');
+                        if (!indicator) {
+                            indicator = document.createElement('div');
+                            indicator.className = 'delete-indicator alert alert-warning alert-sm mt-2 mb-0';
+                            indicator.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i><strong>Campo marcado para eliminar.</strong> Los cambios se aplicarán al guardar. Puedes desmarcar si cambias de opinión.';
+                            formDiv.querySelector('.card-body').appendChild(indicator);
+                        }
+                    } else {
+                        // Restaurar apariencia normal
+                        formDiv.classList.remove('marked-for-deletion');
+                        formDiv.style.opacity = '1';
+                        formDiv.style.backgroundColor = '';
+                        formDiv.style.border = '';
+                        
+                        // Remover indicador
+                        const indicator = formDiv.querySelector('.delete-indicator');
+                        if (indicator) {
+                            indicator.remove();
+                        }
+                    }
+                    updateFieldNumbers();
                 }
             }
-
-            // Insertar antes del template
-            container.insertBefore(newDiv, emptyFormTemplate);
-            managementForm.value = totalForms + 1;
-            
-            updateFieldNumbers();
         });
-    }
 
-    // Manejar eliminación de campos
-    document.body.addEventListener('change', function(e) {
-        if (e.target && e.target.name && e.target.name.indexOf('DELETE') > -1) {
-            const formDiv = e.target.closest('.form-campo');
-            if (formDiv) {
-                formDiv.classList.toggle('d-none', e.target.checked);
-                updateFieldNumbers();
+        // Advertencia al salir sin guardar si hay cambios pendientes
+        window.addEventListener('beforeunload', function(e) {
+            const markedFields = document.querySelectorAll('.marked-for-deletion').length;
+            
+            if (markedFields > 0) {
+                const message = 'Tienes campos marcados para eliminar. Los cambios se perderán si no guardas.';
+                e.returnValue = message;
+                return message;
             }
-        }
-    });
+        });
 
-    // Inicializar numeración
-    updateFieldNumbers();
-});
+        // Inicializar numeración y estado visual de campos ya marcados
+        updateFieldNumbers();
+        
+        // Revisar campos ya marcados para eliminación al cargar la página
+        document.querySelectorAll('input[name*="DELETE"]:checked').forEach(function(checkbox) {
+            const formDiv = checkbox.closest('.form-campo');
+            if (formDiv) {
+                formDiv.classList.add('marked-for-deletion');
+                formDiv.style.opacity = '0.6';
+                formDiv.style.backgroundColor = '#fff3cd';
+                formDiv.style.border = '2px dashed #ffc107';
+                
+                const indicator = document.createElement('div');
+                indicator.className = 'delete-indicator alert alert-warning alert-sm mt-2 mb-0';
+                indicator.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i><strong>Campo marcado para eliminar.</strong> Los cambios se aplicarán al guardar.';
+                formDiv.querySelector('.card-body').appendChild(indicator);
+            }
+        });
+    });
 </script>
 {% endblock %}
