@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'clientes',
     'roles',
     'divisas',
+    'widget_tweaks'
 ]
 
 MIDDLEWARE = [

@@ -1,0 +1,44 @@
+{% load static %}
+
+<div class="container py-4">
+  <h2 class="mb-4 text-center">
+    <i class="bi bi-currency-exchange me-2"></i>
+    Tasas de Cambio | Divisas activas
+  </h2>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-hover align-middle shadow-sm rounded-3 overflow-hidden">
+      <thead class="table-dark text-center">
+        <tr>
+          <th scope="col">Divisa</th>
+          <th scope="col">Código</th>
+          <th scope="col">Compra</th>
+          <th scope="col">Venta</th>
+          <th scope="col">Fecha</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in divisas %}
+          <tr class="text-center">
+            <td class="fw-bold">{{ d.nombre }}</td>
+            <td><span class="badge bg-secondary">{{ d.code }}</span></td>
+            
+            {% if d.ultima_fecha %}
+              <td class="text-success fw-semibold">{{ d.ultima_compra }}</td>
+              <td class="text-primary fw-semibold">{{ d.ultima_venta }}</td>
+              <td class="text-muted small">{{ d.ultima_fecha }}</td>
+            {% else %}
+              <td colspan="3" class="text-muted">Sin tasas registradas</td>
+            {% endif %}
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="5" class="text-center text-muted py-3">
+              No hay divisas activas para mostrar.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
