@@ -6,6 +6,8 @@ from django.db.models import Q
 from .models import Divisa, TasaCambio
 from .forms import DivisaForm, TasaCambioForm
 import datetime
+from django.db.models import Max
+from django.db.models import OuterRef, Subquery
 
 
 # ----------------------------
@@ -118,7 +120,7 @@ class TasaCambioAllListView(LoginRequiredMixin, ListView):
     /divisas/tasas/?divisa=<id|CODE>&inicio=YYYY-MM-DD&fin=YYYY-MM-DD
     """
     model = TasaCambio
-    template_name = 'divisas/tasa_list_global.html'
+    template_name = 'tasa_list_global.html'
     context_object_name = 'tasas'
     paginate_by = 20
 
@@ -149,3 +151,21 @@ class TasaCambioAllListView(LoginRequiredMixin, ListView):
         ctx['f_inicio'] = self.request.GET.get('inicio', '')
         ctx['f_fin'] = self.request.GET.get('fin', '')
         return ctx
+
+
+
+def visualizador_tasas(request):
+    latest = TasaCambio.objects.filter(divisa=OuterRef('pk')).order_by('-fecha')
+
+    divisas = (
+        Divisa.objects
+        .filter(is_active=True)
+        .annotate(
+            ultima_fecha=Subquery(latest.values('fecha')[:1]),
+            ultima_compra=Subquery(latest.values('valor_compra')[:1]),
+            ultima_venta=Subquery(latest.values('valor_venta')[:1]),
+        )
+        .order_by('code')
+    )
+
+    return render(request, 'visualizador.html', {'divisas': divisas})

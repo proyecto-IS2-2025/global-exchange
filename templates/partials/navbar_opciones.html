@@ -1,6 +1,6 @@
 <ul class="dropdown-menu dropdown-menu-end">
   <li><a class="dropdown-item" href="#">Cotizaciones</a></li>
-  <li><a class="dropdown-item" href="#">Información</a></li>
+  <li><a class="dropdown-item" href="{% url 'divisas:visualizador_tasas' %}">Visualizar Tasas</a></li>
   <li><a class="dropdown-item" href="{% url 'contacto' %}">Contacto</a></li>
 
 {% if user.is_authenticated %}
@@ -37,8 +37,8 @@
       </a>
     </li>
     <li>
-      <a class="dropdown-item fw-bold text-secondary" href="#">
-        Historial de operaciones
+      <a class="dropdown-item fw-bold text-secondary" href="{% url 'divisas:visualizador_tasas' %}">
+        Visualizar tasas
       </a>
     </li>
   {% endif %}

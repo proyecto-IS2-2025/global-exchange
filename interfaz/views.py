@@ -7,6 +7,8 @@ from clientes.models import Cliente
 from clientes.forms import ClienteForm
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from divisas.models import Divisa, TasaCambio
+from django.db.models import OuterRef, Subquery
 
 User = get_user_model()
 
@@ -15,12 +17,28 @@ def inicio(request):
     grupo_operador = request.user.groups.filter(name="operador").exists() if request.user.is_authenticated else False
     grupo_admin = request.user.groups.filter(name="admin").exists() if request.user.is_authenticated else False
 
+    # Subquery: última fila (por fecha) de TasaCambio para cada divisa
+    latest = TasaCambio.objects.filter(divisa=OuterRef('pk')).order_by('-fecha')
+
+    divisas = (
+        Divisa.objects
+        .filter(is_active=True)
+        .annotate(
+            ultima_fecha=Subquery(latest.values('fecha')[:1]),
+            ultima_compra=Subquery(latest.values('valor_compra')[:1]),
+            ultima_venta=Subquery(latest.values('valor_venta')[:1]),
+        )
+        .order_by('code')
+    )
+
     context = {
         "grupo_cliente": grupo_cliente,
         "grupo_operador": grupo_operador,
         "grupo_admin": grupo_admin,
+        "divisas": divisas,  # 👈 acá agregamos las divisas
     }
     return render(request, "inicio.html", context)
+
 
 def contacto(request):
     return render(request, 'contacto.html')

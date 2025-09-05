@@ -9,7 +9,7 @@ class ClienteForm(forms.ModelForm):
     """
     class Meta:
         model = Cliente
-        fields = ['cedula', 'nombre_completo', 'direccion', 'telefono', 'segmento']
+        fields = ['cedula', 'nombre_completo', 'direccion', 'telefono', 'segmento', 'tipo_cliente', 'esta_activo']
         widgets = {
             'cedula': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -29,6 +29,13 @@ class ClienteForm(forms.ModelForm):
             }),
             'segmento': forms.Select(attrs={
                 'class': 'form-select'
+            }),
+            'tipo_cliente': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ejemplo: minorista / mayorista'
+            }),
+            'esta_activo': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
             }),
         }
 
