@@ -15,13 +15,5 @@ Esta documentación incluye información detallada sobre los módulos, modelos y
    :caption: Contenidos:
 
    clientes
-
-Módulos Principales
-====================
-
-El sistema está organizado en los siguientes módulos principales:
-
-* **Clientes**: Gestión de información de clientes, segmentos y asignaciones
-* **Usuarios**: Sistema de autenticación y perfiles de usuario  
-* **Transacciones**: Procesamiento de operaciones de cambio de moneda
-
+   vistas_cliente
+   form_cliente
