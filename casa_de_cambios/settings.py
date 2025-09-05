@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'roles',
     'divisas',
     'medios_pago',
+    'widget_tweaks'
 ]
 
 MIDDLEWARE = [

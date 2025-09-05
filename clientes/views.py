@@ -1,5 +1,8 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, CreateView
+#Restringir si no está logueado y no tiene los permisos
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.db.models import Q
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
@@ -85,7 +88,45 @@ def crear_cliente_view(request):
 
     return render(request, 'crear_cliente.html', {'form': form})
 
+"""
 @login_required
 def lista_clientes(request):
     return render(request, 'clientes/lista_clientes.html')
+"""
 
+from .models import Segmento
+
+class ClienteListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    model = Cliente
+    template_name = "clientes/lista_clientes.html"
+    context_object_name = "clientes"
+    paginate_by = 20
+    permission_required = "clientes.view_cliente"
+
+    def get_queryset(self):
+        qs = Cliente.objects.all().select_related("segmento")
+
+        # filtros
+        tipo_cliente = self.request.GET.get("tipo_cliente")
+        segmento_id = self.request.GET.get("segmento_id")
+
+        if tipo_cliente:
+            qs = qs.filter(tipo_cliente__iexact=tipo_cliente)
+        if segmento_id:
+            qs = qs.filter(segmento_id=segmento_id)
+
+        return qs.order_by("nombre_completo")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["segmentos"] = Segmento.objects.all()  # 👈 ahora se pasan al template
+        return context
+
+
+
+class ClienteUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    model = Cliente
+    form_class = ClienteForm
+    template_name = "clientes/form.html"
+    success_url = reverse_lazy("clientes:lista_clientes")
+    permission_required = "clientes.change_cliente"

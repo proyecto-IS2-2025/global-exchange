@@ -4,17 +4,17 @@ env/
 venv/
 .env
 
-Ignorar archivos de caché de Python,
-pycache/
+# Ignorar archivos de caché de Python
+__pycache__/
 *.py[cod]
 *$py.class
 *.so
 
-Archivos de la base de datos y logs,
+# Archivos de la base de datos y logs
 *.sqlite3
 *.log
 
-Archivos de distribución / empaquetado,
+# Archivos de distribución / empaquetado
 .Python
 build/
 develop-eggs/
@@ -28,3 +28,5 @@ parts/
 sdist/
 var/
 wheels/
+
+#FIN DEL GITINORE
