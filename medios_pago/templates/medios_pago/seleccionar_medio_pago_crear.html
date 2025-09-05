@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h1 class="h3 mb-4 text-center">{{ action }} Medio de Pago</h1>
+        <div class="row row-cols-2 row-cols-md-4 g-4 mt-4 justify-content-center"></div>
+          <!-- Opción: Monedas -->
+          <div class="col">
+            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
+              <div class="display-3 mb-3"><i class="fas fa-coins"></i></div>
+              <h6 class="fw-bold">Tarjeta de Credito</h6>
+              <a href="#" class="stretched-link"></a>
+            </div>
+          </div>
+                    <!-- Opción: Monedas -->
+          <div class="col">
+            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
+              <div class="display-3 mb-3"><i class="fas fa-coins"></i></div>
+              <h6 class="fw-bold">Transferencia Bancaria</h6>
+              <a href="#" class="stretched-link"></a>
+            </div>
+          </div>
+                    <!-- Opción: Monedas -->
+          <div class="col">
+            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
+              <div class="display-3 mb-3"><i class="fas fa-coins"></i></div>
+              <h6 class="fw-bold">Cheque</h6>
+              <a href="{% url 'medios_pago:crear_cheque' %}" class="stretched-link"></a>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
+              <div class="display-3 mb-3"><i class="fas fa-coins"></i></div>
+              <h6 class="fw-bold">Billetera Digital</h6>
+              <a href="#" class="stretched-link"></a>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
+              <div class="display-3 mb-3"><i class="fas fa-coins"></i></div>
+              <h6 class="fw-bold">Medios de pago registrados</h6>
+              <a href="#" class="stretched-link"></a>
+            </div>
+          </div>
+{% endblock %}
