@@ -1,4 +1,6 @@
+# divisas/urls.py
 from django.urls import path
+from . import views
 from .views import (
     DivisaListView, DivisaCreateView, DivisaUpdateView, DivisaToggleActivaView,
     TasaCambioListView, TasaCambioCreateView, TasaCambioAllListView
@@ -17,4 +19,7 @@ urlpatterns = [
 
     # Tabla histórica global (filtros por divisa y fechas)
     path('tasas/', TasaCambioAllListView.as_view(), name='tasas_global'),
+
+    #Visualizador tasas
+    path("tasas/actuales", views.visualizador_tasas, name="visualizador_tasas"),
 ]

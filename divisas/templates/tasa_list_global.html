@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+  <h2 class="text-center mb-4"><i class="bi bi-currency-exchange me-2"></i> TEST</h2>
+
+  <div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for divisa in divisas %}
+      {% with tasa=ultimas_tasas.divisa.id %}
+      <div class="col">
+        <div class="card shadow-sm border-0 rounded-4 h-100 text-center">
+          <div class="card-body">
+            <h5 class="card-title fw-bold">{{ divisa.nombre }} ({{ divisa.code }})</h5>
+            <p class="text-muted mb-1">Última actualización: {{ ultimas_tasas.divisa.id.fecha }}</p>
+            <hr>
+            <p><span class="fw-bold text-success">Compra:</span> {{ ultimas_tasas.divisa.id.valor_compra }}</p>
+            <p><span class="fw-bold text-danger">Venta:</span> {{ ultimas_tasas.divisa.id.valor_venta }}</p>
+          </div>
+        </div>
+      </div>
+      {% endwith %}
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
