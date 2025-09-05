@@ -14,7 +14,7 @@
     {% endfor %}
 {% endif %}
 
-<div class="card shadow-sm mx-auto" style="max-width: 800px;">
+<div class="card shadow-sm mx-auto" style="max-width: 800px;" data-is-edit="{% if is_edit %}true{% else %}false{% endif %}">
     <div class="card-body">
         <form method="post" novalidate>
             {% csrf_token %}
@@ -79,9 +79,21 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4 class="mb-0">Campos Específicos</h4>
                 <button type="button" id="add-campo" class="btn btn-outline-primary btn-sm">
-                    <i class="fas fa-plus me-1"></i>Agregar Campo
+                    <i class="fas fa-plus me-1"></i>
+                    {% if is_edit %}
+                        Agregar Nuevo Campo
+                    {% else %}
+                        Agregar Campo
+                    {% endif %}
                 </button>
             </div>
+
+            {% if is_edit %}
+                <div class="alert alert-info alert-sm mb-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Nota:</strong> Los campos existentes no pueden eliminarse para mantener la integridad de los datos. Solo puedes agregar nuevos campos.
+                </div>
+            {% endif %}
 
             <div id="campos-formset-container">
                 {{ campos_formset.management_form }}
@@ -91,13 +103,30 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <h6 class="card-title mb-0">Campo #<span class="field-number">{{ forloop.counter }}</span></h6>
-                                {% if form_campo.DELETE %}
-                                    <div class="form-check">
-                                        {{ form_campo.DELETE }}
-                                        <label class="form-check-label text-danger" for="{{ form_campo.DELETE.id_for_label }}">
-                                            <i class="fas fa-trash"></i> Eliminar
-                                        </label>
-                                    </div>
+                                
+                                {% if is_edit %}
+                                    {% if form_campo.instance.pk %}
+                                        <span class="badge bg-info">Campo existente</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Nuevo campo</span>
+                                        {% if form_campo.DELETE %}
+                                            <div class="form-check ms-2">
+                                                {{ form_campo.DELETE }}
+                                                <label class="form-check-label text-danger" for="{{ form_campo.DELETE.id_for_label }}">
+                                                    <i class="fas fa-trash"></i> Eliminar
+                                                </label>
+                                            </div>
+                                        {% endif %}
+                                    {% endif %}
+                                {% else %}
+                                    {% if form_campo.DELETE %}
+                                        <div class="form-check">
+                                            {{ form_campo.DELETE }}
+                                            <label class="form-check-label text-danger" for="{{ form_campo.DELETE.id_for_label }}">
+                                                <i class="fas fa-trash"></i> Eliminar
+                                            </label>
+                                        </div>
+                                    {% endif %}
                                 {% endif %}
                             </div>
                             
@@ -114,7 +143,14 @@
                                 <div class="col-md-5">
                                     <div class="mb-2">
                                         <label for="{{ form_campo.nombre_campo.id_for_label }}" class="form-label small">{{ form_campo.nombre_campo.label }}</label>
-                                        {{ form_campo.nombre_campo }}
+                                        {% if is_edit and form_campo.instance.pk %}
+                                            <!-- Campo existente: solo lectura -->
+                                            <input type="text" class="form-control" value="{{ form_campo.nombre_campo.value }}" readonly>
+                                            {{ form_campo.nombre_campo.as_hidden }}
+                                        {% else %}
+                                            <!-- Campo nuevo o modo creación: editable -->
+                                            {{ form_campo.nombre_campo }}
+                                        {% endif %}
                                         {% if form_campo.nombre_campo.errors %}
                                             <div class="text-danger small">
                                                 {{ form_campo.nombre_campo.errors }}
@@ -125,7 +161,14 @@
                                 <div class="col-md-4">
                                     <div class="mb-2">
                                         <label for="{{ form_campo.tipo_dato.id_for_label }}" class="form-label small">{{ form_campo.tipo_dato.label }}</label>
-                                        {{ form_campo.tipo_dato }}
+                                        {% if is_edit and form_campo.instance.pk %}
+                                            <!-- Campo existente: solo lectura -->
+                                            <input type="text" class="form-control" value="{{ form_campo.instance.get_tipo_dato_display }}" readonly>
+                                            {{ form_campo.tipo_dato.as_hidden }}
+                                        {% else %}
+                                            <!-- Campo nuevo o modo creación: editable -->
+                                            {{ form_campo.tipo_dato }}
+                                        {% endif %}
                                         {% if form_campo.tipo_dato.errors %}
                                             <div class="text-danger small">
                                                 {{ form_campo.tipo_dato.errors }}
@@ -136,12 +179,24 @@
                                 <div class="col-md-3">
                                     <div class="mb-2">
                                         <label class="form-label small">&nbsp;</label>
-                                        <div class="form-check">
-                                            {{ form_campo.is_required }}
-                                            <label class="form-check-label small" for="{{ form_campo.is_required.id_for_label }}">
-                                                {{ form_campo.is_required.label }}
-                                            </label>
-                                        </div>
+                                        {% if is_edit and form_campo.instance.pk %}
+                                            <!-- Campo existente: solo lectura -->
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" {% if form_campo.is_required.value %}checked{% endif %} disabled>
+                                                <label class="form-check-label small">
+                                                    {{ form_campo.is_required.label }}
+                                                </label>
+                                            </div>
+                                            {{ form_campo.is_required.as_hidden }}
+                                        {% else %}
+                                            <!-- Campo nuevo o modo creación: editable -->
+                                            <div class="form-check">
+                                                {{ form_campo.is_required }}
+                                                <label class="form-check-label small" for="{{ form_campo.is_required.id_for_label }}">
+                                                    {{ form_campo.is_required.label }}
+                                                </label>
+                                            </div>
+                                        {% endif %}
                                         {% if form_campo.is_required.errors %}
                                             <div class="text-danger small">
                                                 {{ form_campo.is_required.errors }}
@@ -213,16 +268,22 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
     const addButton = document.getElementById('add-campo');
     const container = document.getElementById('campos-formset-container');
-    const managementForm = document.querySelector('input[name="form-TOTAL_FORMS"]');
+    const managementForm = document.querySelector('input[name$="TOTAL_FORMS"]');
     const emptyFormTemplate = document.getElementById('empty-form-template');
+    const isEdit = "{{ is_edit|yesno:'true,false' }}" === "true";
+
+    if (!managementForm) {
+        console.error('Management form not found');
+        return;
+    }
 
     // Función para actualizar numeración de campos
     function updateFieldNumbers() {
         const campos = container.querySelectorAll('.form-campo:not(#empty-form-template):not(.d-none)');
-        campos.forEach((campo, index) => {
+        campos.forEach(function(campo, index) {
             const numberSpan = campo.querySelector('.field-number');
             if (numberSpan) {
                 numberSpan.textContent = index + 1;
@@ -231,30 +292,43 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Agregar nuevo campo
-    addButton.addEventListener('click', () => {
-        const totalForms = parseInt(managementForm.value);
-        let newFormHtml = emptyFormTemplate.innerHTML.replace(new RegExp('__prefix__', 'g'), totalForms);
-        
-        const newDiv = document.createElement('div');
-        newDiv.className = 'card mb-3 form-campo';
-        newDiv.innerHTML = newFormHtml;
+    if (addButton && emptyFormTemplate) {
+        addButton.addEventListener('click', function() {
+            const totalForms = parseInt(managementForm.value);
+            let newFormHtml = emptyFormTemplate.innerHTML.replace(/__prefix__/g, totalForms);
+            
+            const newDiv = document.createElement('div');
+            newDiv.className = 'card mb-3 form-campo';
+            newDiv.innerHTML = newFormHtml;
 
-        // Actualizar el número del campo
-        const numberSpan = newDiv.querySelector('.field-number');
-        if (numberSpan) {
-            numberSpan.textContent = totalForms + 1;
-        }
+            // Actualizar el número del campo
+            const numberSpan = newDiv.querySelector('.field-number');
+            if (numberSpan) {
+                numberSpan.textContent = totalForms + 1;
+            }
 
-        // Insertar antes del template
-        container.insertBefore(newDiv, emptyFormTemplate);
-        managementForm.value = totalForms + 1;
-        
-        updateFieldNumbers();
-    });
+            // En modo edición, agregar badge de "Nuevo campo"
+            if (isEdit) {
+                const cardTitle = newDiv.querySelector('.card-title');
+                if (cardTitle && cardTitle.parentElement) {
+                    const badge = document.createElement('span');
+                    badge.className = 'badge bg-success ms-2';
+                    badge.textContent = 'Nuevo campo';
+                    cardTitle.parentElement.appendChild(badge);
+                }
+            }
+
+            // Insertar antes del template
+            container.insertBefore(newDiv, emptyFormTemplate);
+            managementForm.value = totalForms + 1;
+            
+            updateFieldNumbers();
+        });
+    }
 
     // Manejar eliminación de campos
-    document.body.addEventListener('change', (e) => {
-        if (e.target.matches('input[name*="DELETE"]')) {
+    document.body.addEventListener('change', function(e) {
+        if (e.target && e.target.name && e.target.name.indexOf('DELETE') > -1) {
             const formDiv = e.target.closest('.form-campo');
             if (formDiv) {
                 formDiv.classList.toggle('d-none', e.target.checked);

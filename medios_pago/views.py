@@ -1,3 +1,4 @@
+# views.py - REEMPLAZA TODO EL CONTENIDO
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, View
@@ -27,15 +28,16 @@ class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, Cr
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['action'] = 'Crear'
+        ctx['is_edit'] = False
         
         if self.request.POST:
             ctx['campos_formset'] = CampoMedioDePagoFormSet(
                 self.request.POST,
-                queryset=CampoMedioDePago.objects.none()
+                instance=None
             )
         else:
             ctx['campos_formset'] = CampoMedioDePagoFormSet(
-                queryset=CampoMedioDePago.objects.none()
+                instance=None
             )
         return ctx
 
@@ -44,7 +46,7 @@ class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, Cr
         form = self.get_form()
         campos_formset = CampoMedioDePagoFormSet(
             request.POST,
-            queryset=CampoMedioDePago.objects.none()
+            instance=None
         )
         
         if form.is_valid() and campos_formset.is_valid():
@@ -55,20 +57,9 @@ class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, Cr
     def form_valid(self, form, campos_formset):
         try:
             with transaction.atomic():
-                # Guardar el medio de pago
                 self.object = form.save()
-                
-                # Procesar los campos del formset
-                for campos_form in campos_formset:
-                    if campos_form.cleaned_data and not campos_form.cleaned_data.get('DELETE', False):
-                        # Solo guardar si tiene datos y no está marcado para eliminación
-                        nombre_campo = campos_form.cleaned_data.get('nombre_campo', '').strip()
-                        tipo_dato = campos_form.cleaned_data.get('tipo_dato')
-                        
-                        if nombre_campo and tipo_dato:
-                            campo = campos_form.save(commit=False)
-                            campo.medio_de_pago = self.object
-                            campo.save()
+                campos_formset.instance = self.object
+                campos_formset.save()
                 
                 messages.success(self.request, f'Medio de pago "{self.object.nombre}" creado exitosamente.')
                 return redirect(self.success_url)
@@ -94,15 +85,16 @@ class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateV
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['action'] = 'Editar'
+        ctx['is_edit'] = True
         
         if self.request.POST:
             ctx['campos_formset'] = CampoMedioDePagoFormSet(
                 self.request.POST,
-                queryset=self.object.campos.all()
+                instance=self.object
             )
         else:
             ctx['campos_formset'] = CampoMedioDePagoFormSet(
-                queryset=self.object.campos.all()
+                instance=self.object
             )
         return ctx
     
@@ -111,7 +103,7 @@ class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateV
         form = self.get_form()
         campos_formset = CampoMedioDePagoFormSet(
             request.POST,
-            queryset=self.object.campos.all()
+            instance=self.object
         )
         
         if form.is_valid() and campos_formset.is_valid():
@@ -122,11 +114,7 @@ class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateV
     def form_valid(self, form, campos_formset):
         try:
             with transaction.atomic():
-                # Guardar el medio de pago
                 self.object = form.save()
-                
-                # Guardar el formset de campos
-                campos_formset.instance = self.object
                 campos_formset.save()
                 
                 messages.success(self.request, f'Medio de pago "{self.object.nombre}" actualizado exitosamente.')

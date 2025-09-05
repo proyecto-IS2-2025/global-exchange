@@ -1,5 +1,6 @@
+# forms.py - REEMPLAZA TODO EL CONTENIDO
 from django import forms
-from django.forms import modelformset_factory
+from django.forms import inlineformset_factory
 from .models import MedioDePago, CampoMedioDePago
 
 
@@ -43,24 +44,16 @@ class CampoMedioDePagoForm(forms.ModelForm):
         if not nombre:
             raise forms.ValidationError('El nombre del campo es requerido.')
         return nombre
-    
-    def clean(self):
-        cleaned_data = super().clean()
-        # Solo validar si no está marcado para eliminación
-        if not cleaned_data.get('DELETE', False):
-            if not cleaned_data.get('nombre_campo'):
-                raise forms.ValidationError('El nombre del campo es requerido.')
-            if not cleaned_data.get('tipo_dato'):
-                raise forms.ValidationError('El tipo de dato es requerido.')
-        return cleaned_data
 
 
-CampoMedioDePagoFormSet = modelformset_factory(
+# UN SOLO FORMSET - sin can_delete dinámico
+CampoMedioDePagoFormSet = inlineformset_factory(
+    MedioDePago,
     CampoMedioDePago,
     form=CampoMedioDePagoForm,
     fields=('nombre_campo', 'tipo_dato', 'is_required'),
-    extra=1,
-    can_delete=True,
+    extra=1,  # Un campo extra
+    can_delete=True,  # Siempre True, pero lo controlamos en el template
     validate_max=True,
-    max_num=10,  # Limitar a máximo 10 campos por medio de pago
+    max_num=10,
 )
