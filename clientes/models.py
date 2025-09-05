@@ -45,26 +45,21 @@ class AsignacionCliente(models.Model):
     def __str__(self):
         return f"{self.usuario.username} asignado a {self.cliente.nombre_completo}"
 
-# Nuevo modelo para las comisiones, relacionado con el Segmento
-class Comision(models.Model):
+# Nuevo modelo para las descuentos, relacionado con el Segmento
+class Descuento(models.Model):
     segmento = models.OneToOneField(
         'Segmento',
         on_delete=models.CASCADE,
         primary_key=True,
         verbose_name="Segmento de Cliente"
     )
-    valor_compra = models.DecimalField(
+    porcentaje_descuento = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         validators=[MinValueValidator(0.00), MaxValueValidator(100.00)],
-        verbose_name="Comisión por Compra (%)"
+        verbose_name="Descuento aplicado (%)"
     )
-    valor_venta = models.DecimalField(
-        max_digits=5,
-        decimal_places=2,
-        validators=[MinValueValidator(0.00), MaxValueValidator(100.00)],
-        verbose_name="Comisión por Venta (%)"
-    )
+    
     fecha_modificacion = models.DateTimeField(
         auto_now=True,
         verbose_name="Fecha de Modificación"
@@ -77,18 +72,16 @@ class Comision(models.Model):
     )
 
     class Meta:
-        verbose_name = "Comisión"
-        verbose_name_plural = "Comisiones"
+        verbose_name = "Descuento"
+        verbose_name_plural = "Descuentos"
 
     def __str__(self):
-        return f"Comisión para {self.segmento.name}"
+        return f"Descuento para {self.segmento.name}"
     
-class HistorialComision(models.Model):
-    comision = models.ForeignKey(Comision, on_delete=models.CASCADE, verbose_name="Comisión")
-    valor_compra_anterior = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Compra Anterior (%)")
-    valor_venta_anterior = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Venta Anterior (%)")
-    valor_compra_nuevo = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Compra Nueva (%)")
-    valor_venta_nuevo = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Venta Nueva (%)")
+class HistorialDescuentos(models.Model):
+    descuento = models.ForeignKey(Descuento, on_delete=models.CASCADE, verbose_name="Descuento")
+    porcentaje_descuento_anterior = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Descuento anterior (%)")
+    porcentaje_descuento_nuevo = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Nuevo descuento (%)")
     fecha_cambio = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Cambio")
     modificado_por = models.ForeignKey(
         CustomUser,
@@ -98,9 +91,9 @@ class HistorialComision(models.Model):
     )
 
     class Meta:
-        verbose_name = "Historial de Comisión"
-        verbose_name_plural = "Historial de Comisiones"
+        verbose_name = "Historial de Descuento"
+        verbose_name_plural = "Historial de Descuentos"
         ordering = ['-fecha_cambio']
 
     def __str__(self):
-        return f"Cambio en comisión de {self.comision.segmento.name} el {self.fecha_cambio.strftime('%Y-%m-%d')}"
+        return f"Cambio en descuento de {self.descuento.segmento.name} el {self.fecha_cambio.strftime('%Y-%m-%d')}"
