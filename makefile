@@ -26,3 +26,7 @@ migrate:
 db-check:
 	@echo "Chequeando conexión a la base de datos..."
 	poetry run python db_check.py
+
+dbshell:
+	@echo "Abriendo shell de la base de datos..."
+	poetry run python manage.py dbshell
