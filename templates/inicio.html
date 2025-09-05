@@ -2,18 +2,17 @@
 {% load static %}
 
 {% block content %}
-  <div class="container mt-5">
-    {% if not grupo_operador %}
-        {% if not grupo_admin %}
-    <div class="text-center">
-      <img src="{% static 'images/Global_Exchange_Logo.png' %}" alt="Global Exchange" class="img-fluid mt-4" style="max-width: 500px;">
-    </div>        
-    <h1 class="h3 text-center">Bienvenido a Global Exchange</h1>
-    <p class="text-center">Usa el menú superior para navegar.</p>
-    <hr class="my-5">
-      {% endif %}
-    {% endif %}
-
+  <div class="container mt-5">
+    {% if not grupo_operador %}
+        {% if not grupo_admin %}
+    <div class="text-center">
+      <img src="{% static 'images/Global_Exchange_Logo.png' %}" alt="Global Exchange" class="img-fluid mt-4" style="max-width: 500px;">
+    </div>        
+    <h1 class="h3 text-center">Bienvenido a Global Exchange</h1>
+    <p class="text-center">Usa el menú superior para navegar.</p>
+    <hr class="my-5">
+      {% endif %}
+    {% endif %}
 
     {% if user.is_authenticated %} 
       {% if grupo_cliente %}
@@ -21,6 +20,7 @@
           Bienvenido, <strong>{{ user.get_full_name|default:user.username }}</strong>
           <i class="fas fa-hand-paper"></i>
         </p>
+        {% include "partials/visualizador.html" %}
         {% include "partials/simulador_conversion.html" %}
       {% elif grupo_operador %}
         <h2 class="h4 mb-4 text-center">Bienvenido Operador</h2>
@@ -34,43 +34,47 @@
           <div class="col">
             <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
               <div class="display-3 mb-3"><i class="fas fa-users"></i></div>              <h6 class="fw-bold">Ver Clientes</h6>
-              <a href="#" class="stretched-link"></a>
+              <a href="{% url 'clientes:lista_clientes' %}" class="stretched-link"></a>
             </div>
           </div>
 
-          <!-- Opción: Asignar Cliente a Usuario -->
-          <div class="col">
-            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
-              <div class="display-3 mb-3"><i class="fas fa-user-friends"></i></div>              <h6 class="fw-bold">Asignar Cliente a Usuario</h6>
-              <a href="{% url 'clientes:asociar_clientes_usuarios' %}" class="stretched-link"></a>
-            </div>
-          </div>
+                    <div class="col">
+            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
+              <div class="display-3 mb-3"><i class="fas fa-user-friends"></i></div>              <h6 class="fw-bold">Asignar Cliente a Usuario</h6>
+              <a href="{% url 'clientes:asociar_clientes_usuarios' %}" class="stretched-link"></a>
+            </div>
+          </div>
 
-          <!-- Opción: Crear nuevo cliente -->
-          <div class="col">
-            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
-              <div class="display-3 mb-3"><i class="fas fa-user-plus"></i></div>              <h6 class="fw-bold">Nuevo Cliente</h6>
-              <a href="{% url 'clientes:crear_cliente' %}" class="stretched-link"></a>
-            </div>
-          </div>
+                    <div class="col">
+            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
+              <div class="display-3 mb-3"><i class="fas fa-user-plus"></i></div>              <h6 class="fw-bold">Nuevo Cliente</h6>
+              <a href="{% url 'clientes:crear_cliente' %}" class="stretched-link"></a>
+            </div>
+          </div>
 
-          <!-- Opción: Ver roles -->
-          <div class="col">
-            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
-              <div class="display-3 mb-3"><i class="fas fa-shield-alt"></i></div>
-              <h6 class="fw-bold">Roles</h6>
-              <a href="{% url 'group_list' %}" class="stretched-link"></a>
-            </div>
-          </div>
+                    <div class="col">
+            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
+              <div class="display-3 mb-3"><i class="fas fa-shield-alt"></i></div>
+              <h6 class="fw-bold">Roles</h6>
+              <a href="{% url 'group_list' %}" class="stretched-link"></a>
+            </div>
+          </div>
 
-          <!-- Opción: Crear permisos -->
-          <div class="col">
-            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
-              <div class="display-3 mb-3"><i class="fas fa-key"></i></div>
-              <h6 class="fw-bold">Permisos</h6>
-              <a href="{% url 'permission_create' %}" class="stretched-link"></a>
-            </div>
-          </div>
+                    <div class="col">
+            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
+              <div class="display-3 mb-3"><i class="fas fa-key"></i></div>
+              <h6 class="fw-bold">Permisos</h6>
+              <a href="{% url 'permission_create' %}" class="stretched-link"></a>
+            </div>
+          </div>
+
+                    <div class="col">
+            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
+              <div class="display-3 mb-3"><i class="fas fa-percent"></i></div>
+              <h6 class="fw-bold">Comisiones</h6>
+              <a href="{% url 'clientes:lista_comisiones' %}" class="stretched-link"></a>
+            </div>
+          </div>
 
           <!-- Opción: Monedas -->
           <div class="col">
@@ -80,16 +84,6 @@
               <a href="{% url 'divisas:lista' %}" class="stretched-link"></a>
             </div>
           </div>
-
-          <!-- Test -->
-          <div class="col">
-            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
-              <div class="display-3 mb-3"><i class="fab fa-angellist"></i></div>              <h6 class="fw-bold">Test</h6>
-              <a href="{% url 'clientes:lista_clientes' %}" class="stretched-link"></a>
-            </div>
-          </div>
-        </div>
-
         
       {% else %}
         <!-- Usuario autenticado pero sin grupo -->
@@ -97,13 +91,16 @@
           Bienvenido, <strong>{{ user.get_full_name|default:user.username }}</strong>
           <i class="fas fa-hand-paper"></i>
         </p>
+        {% include "partials/visualizador.html" %}
         {% include "partials/simulador_conversion.html" %}
         {{ block.super }}
       {% endif %}
     {% else %}
       <!-- Usuarios sin iniciar sesión -->
+       {% include "partials/visualizador.html" %}
        {% include "partials/simulador_conversion.html" %}
     {% endif %}
   </div>
+
 
 {% endblock %}
