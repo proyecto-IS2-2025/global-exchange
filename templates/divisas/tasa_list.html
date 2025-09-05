@@ -43,22 +43,22 @@
                 <thead class="table-dark">
                     <tr>
                         <th scope="col">Fecha</th>
-                        <th scope="col">Valor Compra</th>
-                        <th scope="col">Valor Venta</th>
+                        <th scope="col">Precio base</th>
                     </tr>
                 </thead>
                 <tbody>
+                    {% with d=divisa.decimales|default:2 %}
                     {% for t in tasas %}
                     <tr>
                         <td>{{ t.fecha|date:"d/m/Y" }}</td>
-                        <td>{{ t.valor_compra }}</td>
-                        <td>{{ t.valor_venta }}</td>
+                        <td>{{ t.precio_base|floatformat:d }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="3" class="text-center">No hay tasas registradas para este rango de fechas.</td>
+                        <td colspan="2" class="text-center">No hay tasas registradas para este rango de fechas.</td>
                     </tr>
                     {% endfor %}
+                    {% endwith %}
                 </tbody>
             </table>
         </div>

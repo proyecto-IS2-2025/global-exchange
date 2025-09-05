@@ -85,9 +85,6 @@ class TasaCambioListView(LoginRequiredMixin, ListView):
 
 
 class TasaCambioCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
-    """
-    Crear tasa para UNA divisa.
-    """
     permission_required = 'divisas.add_tasacambio'
     model = TasaCambio
     form_class = TasaCambioForm
@@ -98,20 +95,25 @@ class TasaCambioCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateVi
         initial['fecha'] = datetime.date.today()
         return initial
 
-    def get_success_url(self):
-        return reverse_lazy('divisas:tasas', kwargs={'divisa_id': self.kwargs['divisa_id']})
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['divisa'] = get_object_or_404(Divisa, pk=self.kwargs['divisa_id'])
+        return kwargs
 
     def form_valid(self, form):
-        divisa = get_object_or_404(Divisa, pk=self.kwargs['divisa_id'])
         tasa = form.save(commit=False)
-        tasa.divisa = divisa
+        tasa.divisa = form.divisa  # viene desde get_form_kwargs
         tasa.save()
         return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('divisas:tasas', kwargs={'divisa_id': self.kwargs['divisa_id']})
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['divisa'] = get_object_or_404(Divisa, pk=self.kwargs['divisa_id'])
         return ctx
+
 
 
 class TasaCambioAllListView(LoginRequiredMixin, ListView):
