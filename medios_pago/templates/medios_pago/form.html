@@ -3,34 +3,268 @@
 
 {% block content %}
 <h1 class="h3 mb-4 text-center">{{ action }} Medio de Cobro</h1>
-<div class="card shadow-sm mx-auto" style="max-width: 600px;">
+
+<!-- Mostrar mensajes -->
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="card shadow-sm mx-auto" style="max-width: 800px;">
     <div class="card-body">
-        <form method="post">
+        <form method="post" novalidate>
             {% csrf_token %}
 
+            <!-- Errores generales del formulario principal -->
             {% if form.non_field_errors %}
-            <div class="alert alert-danger" role="alert">
-                {{ form.non_field_errors }}
-            </div>
+                <div class="alert alert-danger" role="alert">
+                    {{ form.non_field_errors }}
+                </div>
             {% endif %}
 
-            {% for field in form %}
-            <div class="mb-3">
-                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}
-                <div class="alert alert-danger mt-1">
-                    {{ field.errors }}
+            <!-- Errores generales del formset -->
+            {% if campos_formset.non_form_errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ campos_formset.non_form_errors }}
                 </div>
+            {% endif %}
+
+            <!-- Campos del medio de pago -->
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label for="{{ form.nombre.id_for_label }}" class="form-label">{{ form.nombre.label }}</label>
+                        {{ form.nombre }}
+                        {% if form.nombre.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.nombre.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.comision_porcentaje.id_for_label }}" class="form-label">{{ form.comision_porcentaje.label }}</label>
+                        {{ form.comision_porcentaje }}
+                        {% if form.comision_porcentaje.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.comision_porcentaje.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <div class="form-check">
+                    {{ form.is_active }}
+                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                        {{ form.is_active.label }}
+                    </label>
+                </div>
+                {% if form.is_active.errors %}
+                    <div class="text-danger small mt-1">
+                        {{ form.is_active.errors }}
+                    </div>
                 {% endif %}
             </div>
-            {% endfor %}
+
+            <hr class="my-4">
+
+            <!-- Campos específicos -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0">Campos Específicos</h4>
+                <button type="button" id="add-campo" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i>Agregar Campo
+                </button>
+            </div>
+
+            <div id="campos-formset-container">
+                {{ campos_formset.management_form }}
+                
+                {% for form_campo in campos_formset %}
+                    <div class="card mb-3 form-campo {% if form_campo.DELETE.value %}d-none{% endif %}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="card-title mb-0">Campo #<span class="field-number">{{ forloop.counter }}</span></h6>
+                                {% if form_campo.DELETE %}
+                                    <div class="form-check">
+                                        {{ form_campo.DELETE }}
+                                        <label class="form-check-label text-danger" for="{{ form_campo.DELETE.id_for_label }}">
+                                            <i class="fas fa-trash"></i> Eliminar
+                                        </label>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            {{ form_campo.id }}
+                            
+                            <!-- Errores del formulario del campo -->
+                            {% if form_campo.non_field_errors %}
+                                <div class="alert alert-danger alert-sm">
+                                    {{ form_campo.non_field_errors }}
+                                </div>
+                            {% endif %}
+
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <div class="mb-2">
+                                        <label for="{{ form_campo.nombre_campo.id_for_label }}" class="form-label small">{{ form_campo.nombre_campo.label }}</label>
+                                        {{ form_campo.nombre_campo }}
+                                        {% if form_campo.nombre_campo.errors %}
+                                            <div class="text-danger small">
+                                                {{ form_campo.nombre_campo.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-2">
+                                        <label for="{{ form_campo.tipo_dato.id_for_label }}" class="form-label small">{{ form_campo.tipo_dato.label }}</label>
+                                        {{ form_campo.tipo_dato }}
+                                        {% if form_campo.tipo_dato.errors %}
+                                            <div class="text-danger small">
+                                                {{ form_campo.tipo_dato.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-2">
+                                        <label class="form-label small">&nbsp;</label>
+                                        <div class="form-check">
+                                            {{ form_campo.is_required }}
+                                            <label class="form-check-label small" for="{{ form_campo.is_required.id_for_label }}">
+                                                {{ form_campo.is_required.label }}
+                                            </label>
+                                        </div>
+                                        {% if form_campo.is_required.errors %}
+                                            <div class="text-danger small">
+                                                {{ form_campo.is_required.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                
+                <!-- Template para nuevos campos -->
+                <div id="empty-form-template" class="card mb-3 form-campo d-none">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title mb-0">Campo #<span class="field-number"></span></h6>
+                            {% if campos_formset.empty_form.DELETE %}
+                                <div class="form-check">
+                                    {{ campos_formset.empty_form.DELETE }}
+                                    <label class="form-check-label text-danger">
+                                        <i class="fas fa-trash"></i> Eliminar
+                                    </label>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        {{ campos_formset.empty_form.id }}
+                        
+                        <div class="row">
+                            <div class="col-md-5">
+                                <div class="mb-2">
+                                    <label class="form-label small">{{ campos_formset.empty_form.nombre_campo.label }}</label>
+                                    {{ campos_formset.empty_form.nombre_campo }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-2">
+                                    <label class="form-label small">{{ campos_formset.empty_form.tipo_dato.label }}</label>
+                                    {{ campos_formset.empty_form.tipo_dato }}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-2">
+                                    <label class="form-label small">&nbsp;</label>
+                                    <div class="form-check">
+                                        {{ campos_formset.empty_form.is_required }}
+                                        <label class="form-check-label small">
+                                            {{ campos_formset.empty_form.is_required.label }}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div class="d-grid gap-2 mt-4">
-                <button type="submit" class="btn btn-success">{{ action }}</button>
-                <a href="{% url 'medios_pago:lista' %}" class="btn btn-outline-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save me-2"></i>{{ action }}
+                </button>
+                <a href="{% url 'medios_pago:lista' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-2"></i>Cancelar
+                </a>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const addButton = document.getElementById('add-campo');
+    const container = document.getElementById('campos-formset-container');
+    const managementForm = document.querySelector('input[name="form-TOTAL_FORMS"]');
+    const emptyFormTemplate = document.getElementById('empty-form-template');
+
+    // Función para actualizar numeración de campos
+    function updateFieldNumbers() {
+        const campos = container.querySelectorAll('.form-campo:not(#empty-form-template):not(.d-none)');
+        campos.forEach((campo, index) => {
+            const numberSpan = campo.querySelector('.field-number');
+            if (numberSpan) {
+                numberSpan.textContent = index + 1;
+            }
+        });
+    }
+
+    // Agregar nuevo campo
+    addButton.addEventListener('click', () => {
+        const totalForms = parseInt(managementForm.value);
+        let newFormHtml = emptyFormTemplate.innerHTML.replace(new RegExp('__prefix__', 'g'), totalForms);
+        
+        const newDiv = document.createElement('div');
+        newDiv.className = 'card mb-3 form-campo';
+        newDiv.innerHTML = newFormHtml;
+
+        // Actualizar el número del campo
+        const numberSpan = newDiv.querySelector('.field-number');
+        if (numberSpan) {
+            numberSpan.textContent = totalForms + 1;
+        }
+
+        // Insertar antes del template
+        container.insertBefore(newDiv, emptyFormTemplate);
+        managementForm.value = totalForms + 1;
+        
+        updateFieldNumbers();
+    });
+
+    // Manejar eliminación de campos
+    document.body.addEventListener('change', (e) => {
+        if (e.target.matches('input[name*="DELETE"]')) {
+            const formDiv = e.target.closest('.form-campo');
+            if (formDiv) {
+                formDiv.classList.toggle('d-none', e.target.checked);
+                updateFieldNumbers();
+            }
+        }
+    });
+
+    // Inicializar numeración
+    updateFieldNumbers();
+});
+</script>
 {% endblock %}

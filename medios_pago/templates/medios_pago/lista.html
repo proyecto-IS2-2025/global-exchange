@@ -17,7 +17,6 @@
             <thead class="table-dark">
                 <tr>
                     <th scope="col">Nombre</th>
-                    <th scope="col">Tipo</th>
                     <th scope="col">Comisión (%)</th>
                     <th scope="col">Estado</th>
                     <th scope="col">Acciones</th>
@@ -27,7 +26,6 @@
                 {% for medio in medios_pago %}
                 <tr>
                     <td>{{ medio.nombre }}</td>
-                    <td>{{ medio.get_tipo_display }}</td>
                     <td>{{ medio.comision_porcentaje|default:"0"|intcomma }}%</td>
                     <td>
                         {% if medio.is_active %}
@@ -58,5 +56,4 @@
         No hay medios de cobro registrados.
     </div>
 {% endif %}
-
 {% endblock %}

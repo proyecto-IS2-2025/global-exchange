@@ -1,21 +1,30 @@
-# Ignorar directorios y archivos de entorno virtual
+Ignorar directorios y archivos de entorno virtual,
 .venv/
 env/
 venv/
 .env
 
-# Ignorar archivos de caché
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+Ignorar archivos de caché de Python,
+pycache/
+*.py[cod]
+*$py.class
+*.so
 
-# Archivos de la base de datos y logs
+Archivos de la base de datos y logs,
 *.sqlite3
 *.log
 
-# Archivos de sistema y de IDE
-.DS_Store
-Thumbs.db
-.vscode/
-.idea/
+Archivos de distribución / empaquetado,
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
