@@ -17,3 +17,5 @@ Esta documentación incluye información detallada sobre los módulos, modelos y
    clientes
    vistas_cliente
    form_cliente
+   divisas
+   roles

@@ -20,6 +20,17 @@ User = get_user_model()
 @login_required
 @user_passes_test(lambda u: u.is_staff)
 def asociar_clientes_usuarios_view(request):
+    """
+    Vista para asociar clientes a usuarios del sistema.
+
+    Solo accesible para usuarios de tipo staff. Permite a un usuario con los
+    permisos adecuados asignar clientes a otros usuarios.
+
+    :param request: Objeto de solicitud HTTP.
+    :type request: django.http.HttpRequest
+    :return: Redirección a la URL 'clientes:asociar_clientes_usuarios' o renderiza el formulario.
+    :rtype: django.http.HttpResponse
+    """
     if request.method == 'POST':
         usuario_id = request.POST.get('usuario')
         clientes_ids = request.POST.getlist('clientes')
@@ -55,6 +66,17 @@ def asociar_clientes_usuarios_view(request):
 @login_required
 @user_passes_test(lambda u: u.is_staff)
 def listar_asociaciones(request):
+    """
+    Vista para listar y eliminar asociaciones de clientes con usuarios.
+
+    Permite a los usuarios de tipo staff ver una lista de todas las
+    asignaciones existentes y eliminarlas si es necesario.
+
+    :param request: Objeto de solicitud HTTP.
+    :type request: django.http.HttpRequest
+    :return: Redirección a la URL 'clientes:listar_asociaciones' o renderiza la lista de asignaciones.
+    :rtype: django.http.HttpResponse
+    """
     if request.method == 'POST' and 'delete_id' in request.POST:
         try:
             asignacion_id = request.POST.get('delete_id')
@@ -74,6 +96,17 @@ def listar_asociaciones(request):
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def crear_cliente_view(request):
+    """
+    Vista para crear un nuevo cliente.
+
+    Solo accesible para superusuarios. Maneja la lógica de validación
+    y guardado del formulario de creación de clientes.
+
+    :param request: Objeto de solicitud HTTP.
+    :type request: django.http.HttpRequest
+    :return: Redirección a la URL 'clientes:crear_cliente' o renderiza el formulario.
+    :rtype: django.http.HttpResponse
+    """
     if request.method == 'POST':
         form = ClienteForm(request.POST)
         if form.is_valid():
@@ -87,5 +120,16 @@ def crear_cliente_view(request):
 
 @login_required
 def lista_clientes(request):
+    """
+    Vista para listar los clientes asignados a un usuario.
+
+    Solo los usuarios autenticados pueden acceder a esta vista. Muestra los
+    clientes que han sido asignados al usuario actual.
+
+    :param request: Objeto de solicitud HTTP.
+    :type request: django.http.HttpRequest
+    :return: Renderiza la lista de clientes del usuario.
+    :rtype: django.http.HttpResponse
+    """
     return render(request, 'clientes/lista_clientes.html')
 

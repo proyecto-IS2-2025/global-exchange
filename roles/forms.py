@@ -6,12 +6,26 @@ from django.conf import settings
 User = settings.AUTH_USER_MODEL
 
 class GroupForm(forms.ModelForm):
-    # Ya no se gestionan los permisos desde el formulario
+    """
+    Formulario para la creación y edición de grupos (roles).
+
+    Permite a los administradores gestionar los nombres de los grupos
+    de usuarios en el sistema.
+    """
     class Meta:
+        """
+        Clase interna que define los metadatos del formulario.
+        """
         model = Group
         fields = ['name']
 
 class PermissionForm(forms.Form):
+    """
+    Formulario para la creación de permisos.
+
+    Permite a un administrador crear nuevos permisos personalizados
+    asociados a un tipo de contenido (modelo) específico.
+    """
     content_type = forms.ModelChoiceField(
         queryset= ContentType.objects.all(),
         label="Tipo de Contenido",
