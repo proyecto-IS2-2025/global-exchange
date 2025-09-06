@@ -6,6 +6,11 @@ from .models import MedioDePago, CampoMedioDePago
 
 
 class MedioDePagoForm(forms.ModelForm):
+    """
+    Formulario para la creación y edición de un Medio de Pago.
+
+    Incluye validación personalizada para el nombre y la comisión.
+    """
     class Meta:
         model = MedioDePago
         fields = ['nombre', 'comision_porcentaje', 'is_active']
@@ -16,12 +21,26 @@ class MedioDePagoForm(forms.ModelForm):
         }
     
     def clean_nombre(self):
+        """
+        Valida que el nombre del medio de pago no esté vacío.
+
+        :raises ValidationError: Si el nombre está vacío.
+        :returns: El nombre limpio y sin espacios.
+        :rtype: str
+        """
         nombre = (self.cleaned_data.get('nombre') or '').strip()
         if not nombre:
             raise forms.ValidationError('El nombre del medio de pago es requerido.')
         return nombre
 
     def clean_comision_porcentaje(self):
+        """
+        Valida que el porcentaje de comisión esté en el rango de 0 a 100.
+
+        :raises ValidationError: Si la comisión está fuera del rango.
+        :returns: El valor de la comisión.
+        :rtype: float
+        """
         comision = self.cleaned_data.get('comision_porcentaje')
         if comision is None:
             return 0
@@ -31,6 +50,9 @@ class MedioDePagoForm(forms.ModelForm):
 
 
 class CampoMedioDePagoForm(forms.ModelForm):
+    """
+    Formulario para los campos dinámicos de un Medio de Pago.
+    """
     class Meta:
         model = CampoMedioDePago
         fields = ['nombre_campo', 'tipo_dato', 'is_required']
@@ -73,6 +95,11 @@ class CampoMedioDePagoForm(forms.ModelForm):
 
 # Formset personalizado que maneja soft delete correctamente
 class CampoMedioDePagoFormSet(forms.BaseInlineFormSet):
+    """
+    Formset base para manejar la validación de los campos de Medio de Pago.
+    
+    Asegura que no haya nombres de campo duplicados en el mismo formulario.
+    """
     def clean(self):
         """Validación a nivel de formset"""
         if any(self.errors):
@@ -117,6 +144,11 @@ def create_campo_formset(is_edit=False):
     Factory para crear formsets con configuración específica:
     - Creación: extra=1 (un campo por defecto)
     - Edición: extra=0 (sin campos por defecto)
+
+    :param is_edit: Indica si se está en modo de edición.
+    :type is_edit: bool
+    :returns: El formset de `CampoMedioDePago`.
+    :rtype: inlineformset_factory
     """
     extra_forms = 0 if is_edit else 1
     

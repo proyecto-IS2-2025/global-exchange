@@ -15,7 +15,7 @@
     <script src="_static/translations.js?v=f85f4cfb"></script>
     <link rel="index" title="Índice" href="genindex.html" />
     <link rel="search" title="Búsqueda" href="search.html" />
-    <link rel="next" title="Módulos de Clientes" href="clientes.html" />
+    <link rel="next" title="Modulo de Autenticacion" href="autenticacion.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -40,13 +40,28 @@
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Contenidos:</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="autenticacion.html">Modulo de Autenticacion</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="autenticacion.html#autenticacion.views.login_view"><code class="docutils literal notranslate"><span class="pre">login_view()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="autenticacion.html#autenticacion.views.registro_usuario"><code class="docutils literal notranslate"><span class="pre">registro_usuario()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="autenticacion.html#autenticacion.views.verificar_correo"><code class="docutils literal notranslate"><span class="pre">verificar_correo()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="autenticacion.html#autenticacion.utils.enviar_verificacion"><code class="docutils literal notranslate"><span class="pre">enviar_verificacion()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="autenticacion.html#autenticacion.utils.generar_token"><code class="docutils literal notranslate"><span class="pre">generar_token()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="clientes.html">Módulos de Clientes</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="clientes.html#clientes.models.AsignacionCliente"><code class="docutils literal notranslate"><span class="pre">AsignacionCliente</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="clientes.html#clientes.models.Cliente"><code class="docutils literal notranslate"><span class="pre">Cliente</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="clientes.html#clientes.models.Descuento"><code class="docutils literal notranslate"><span class="pre">Descuento</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="clientes.html#clientes.models.HistorialDescuentos"><code class="docutils literal notranslate"><span class="pre">HistorialDescuentos</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="clientes.html#clientes.models.Segmento"><code class="docutils literal notranslate"><span class="pre">Segmento</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="vistas_cliente.html">Vistas de Clientes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.ClienteListView"><code class="docutils literal notranslate"><span class="pre">ClienteListView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.ClienteUpdateView"><code class="docutils literal notranslate"><span class="pre">ClienteUpdateView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.DescuentoListView"><code class="docutils literal notranslate"><span class="pre">DescuentoListView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.DescuentoUpdateView"><code class="docutils literal notranslate"><span class="pre">DescuentoUpdateView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.HistorialDescuentoListView"><code class="docutils literal notranslate"><span class="pre">HistorialDescuentoListView</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.asociar_clientes_usuarios_view"><code class="docutils literal notranslate"><span class="pre">asociar_clientes_usuarios_view()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.crear_cliente_view"><code class="docutils literal notranslate"><span class="pre">crear_cliente_view()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.lista_clientes"><code class="docutils literal notranslate"><span class="pre">lista_clientes()</span></code></a></li>
@@ -55,6 +70,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="form_cliente.html">Formularios de Clientes</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="form_cliente.html#clientes.forms.ClienteForm"><code class="docutils literal notranslate"><span class="pre">ClienteForm</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="form_cliente.html#clientes.forms.DescuentoForm"><code class="docutils literal notranslate"><span class="pre">DescuentoForm</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="form_cliente.html#clientes.forms.SeleccionClienteForm"><code class="docutils literal notranslate"><span class="pre">SeleccionClienteForm</span></code></a></li>
 </ul>
 </li>
@@ -68,6 +84,7 @@
 <li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.TasaCambioAllListView"><code class="docutils literal notranslate"><span class="pre">TasaCambioAllListView</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.TasaCambioCreateView"><code class="docutils literal notranslate"><span class="pre">TasaCambioCreateView</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.TasaCambioListView"><code class="docutils literal notranslate"><span class="pre">TasaCambioListView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.visualizador_tasas"><code class="docutils literal notranslate"><span class="pre">visualizador_tasas()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.forms.DivisaForm"><code class="docutils literal notranslate"><span class="pre">DivisaForm</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.forms.TasaCambioForm"><code class="docutils literal notranslate"><span class="pre">TasaCambioForm</span></code></a></li>
 </ul>
@@ -85,6 +102,39 @@
 <li class="toctree-l2"><a class="reference internal" href="roles.html#roles.forms.GroupForm"><code class="docutils literal notranslate"><span class="pre">GroupForm</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="roles.html#roles.forms.PermissionForm"><code class="docutils literal notranslate"><span class="pre">PermissionForm</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="roles.html#roles.context_processors.grupo_usuario"><code class="docutils literal notranslate"><span class="pre">grupo_usuario()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="medios_pago.html">Modulo de Medios de Pago</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.models.ActiveManager"><code class="docutils literal notranslate"><span class="pre">ActiveManager</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.models.CampoMedioDePago"><code class="docutils literal notranslate"><span class="pre">CampoMedioDePago</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.models.MedioDePago"><code class="docutils literal notranslate"><span class="pre">MedioDePago</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.forms.CampoMedioDePagoForm"><code class="docutils literal notranslate"><span class="pre">CampoMedioDePagoForm</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.forms.MedioDePagoForm"><code class="docutils literal notranslate"><span class="pre">MedioDePagoForm</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.forms.create_campo_formset"><code class="docutils literal notranslate"><span class="pre">create_campo_formset()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.views.CampoSoftDeleteView"><code class="docutils literal notranslate"><span class="pre">CampoSoftDeleteView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.views.MedioDePagoCreateAdminView"><code class="docutils literal notranslate"><span class="pre">MedioDePagoCreateAdminView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.views.MedioDePagoDeletedListView"><code class="docutils literal notranslate"><span class="pre">MedioDePagoDeletedListView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.views.MedioDePagoHardDeleteView"><code class="docutils literal notranslate"><span class="pre">MedioDePagoHardDeleteView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.views.MedioDePagoListView"><code class="docutils literal notranslate"><span class="pre">MedioDePagoListView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.views.MedioDePagoRestoreView"><code class="docutils literal notranslate"><span class="pre">MedioDePagoRestoreView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.views.MedioDePagoSoftDeleteView"><code class="docutils literal notranslate"><span class="pre">MedioDePagoSoftDeleteView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.views.MedioDePagoToggleActivoView"><code class="docutils literal notranslate"><span class="pre">MedioDePagoToggleActivoView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.views.MedioDePagoUpdateView"><code class="docutils literal notranslate"><span class="pre">MedioDePagoUpdateView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.tests.CampoMedioDePagoModelTest"><code class="docutils literal notranslate"><span class="pre">CampoMedioDePagoModelTest</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.tests.EdgeCasesTest"><code class="docutils literal notranslate"><span class="pre">EdgeCasesTest</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.tests.IntegrationTest"><code class="docutils literal notranslate"><span class="pre">IntegrationTest</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.tests.MedioDePagoFormsTest"><code class="docutils literal notranslate"><span class="pre">MedioDePagoFormsTest</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.tests.MedioDePagoModelTest"><code class="docutils literal notranslate"><span class="pre">MedioDePagoModelTest</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.tests.MedioDePagoViewsTest"><code class="docutils literal notranslate"><span class="pre">MedioDePagoViewsTest</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.tests.PerformanceTest"><code class="docutils literal notranslate"><span class="pre">PerformanceTest</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.tests.run_all_tests"><code class="docutils literal notranslate"><span class="pre">run_all_tests()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="users.html">Gestión de Usuarios</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="users.html#users.models.CustomUser"><code class="docutils literal notranslate"><span class="pre">CustomUser</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="users.html#users.models.Role"><code class="docutils literal notranslate"><span class="pre">Role</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="users.html#users.forms.CustomUserChangeForm"><code class="docutils literal notranslate"><span class="pre">CustomUserChangeForm</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="users.html#users.forms.CustomUserCreationForm"><code class="docutils literal notranslate"><span class="pre">CustomUserCreationForm</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -119,18 +169,21 @@
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navegación</h3>
 <p class="caption" role="heading"><span class="caption-text">Contenidos:</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="autenticacion.html">Modulo de Autenticacion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="clientes.html">Módulos de Clientes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vistas_cliente.html">Vistas de Clientes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="form_cliente.html">Formularios de Clientes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="divisas.html">Módulos de Divisas</a></li>
 <li class="toctree-l1"><a class="reference internal" href="roles.html">Módulo de Roles y Permisos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="medios_pago.html">Modulo de Medios de Pago</a></li>
+<li class="toctree-l1"><a class="reference internal" href="users.html">Gestión de Usuarios</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="#">Documentation overview</a><ul>
-      <li>Next: <a href="clientes.html" title="próximo capítulo">Módulos de Clientes</a></li>
+      <li>Next: <a href="autenticacion.html" title="próximo capítulo">Modulo de Autenticacion</a></li>
   </ul></li>
 </ul>
 </div>

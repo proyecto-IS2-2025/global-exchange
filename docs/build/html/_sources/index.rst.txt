@@ -14,8 +14,11 @@ Esta documentación incluye información detallada sobre los módulos, modelos y
    :maxdepth: 2
    :caption: Contenidos:
 
+   autenticacion
    clientes
    vistas_cliente
    form_cliente
    divisas
    roles
+   medios_pago
+   users 

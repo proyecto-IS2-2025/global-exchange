@@ -5,6 +5,20 @@ from django.utils import timezone
 
 
 class MedioDePago(models.Model):
+    """
+    Representa un medio de pago, como tarjeta de crédito, transferencia, etc.
+
+    Los medios de pago pueden tener una comisión asociada y pueden ser
+    desactivados. Utiliza un sistema de "soft delete" para
+    mantener un registro histórico.
+
+    :ivar nombre: Nombre único del medio de pago.
+    :ivar comision_porcentaje: Porcentaje de comisión a aplicar.
+    :ivar is_active: Booleano que indica si el medio de pago está activo.
+    :ivar deleted_at: Fecha y hora en que el medio de pago fue "eliminado" (soft delete).
+    :ivar creado: Fecha de creación del registro.
+    :ivar actualizado: Fecha de la última actualización del registro.
+    """
     nombre = models.CharField('Nombre del medio', max_length=100, unique=True)
     comision_porcentaje = models.DecimalField(
         'Comisión (%)',
@@ -24,12 +38,18 @@ class MedioDePago(models.Model):
         ordering = ['nombre']
 
     def clean(self):
+        """
+        Valida que el porcentaje de comisión esté en el rango correcto.
+        """
         if self.comision_porcentaje < 0 or self.comision_porcentaje > 100:
             raise ValidationError({
                 'comision_porcentaje': 'La comisión debe estar entre 0 y 100.'
             })
 
     def save(self, *args, **kwargs):
+        """
+        Override del método save para realizar la validación del modelo.
+        """
         self.nombre = self.nombre.strip() if self.nombre else ''
         if not self.nombre:
             raise ValidationError('El nombre del medio de pago no puede estar vacío.')
@@ -66,6 +86,9 @@ class MedioDePago(models.Model):
 
     @property
     def is_deleted(self):
+        """
+        Indica si el medio de pago está eliminado.
+        """
         return self.deleted_at is not None
 
     @property
@@ -79,6 +102,20 @@ class MedioDePago(models.Model):
 
 
 class CampoMedioDePago(models.Model):
+    """
+    Representa un campo dinámico asociado a un MedioDePago.
+
+    Estos campos adicionales permiten a los usuarios ingresar información
+    específica para cada medio de pago (ej. CBU para transferencia).
+
+    :ivar medio_de_pago: Medio de pago al que pertenece el campo.
+    :ivar nombre_campo: Nombre del campo.
+    :ivar tipo_dato: Tipo de dato del campo (ej. texto, número, fecha).
+    :ivar is_required: Booleano que indica si el campo es obligatorio.
+    :ivar deleted_at: Fecha de eliminación suave.
+    :ivar creado: Fecha de creación del registro.
+    :ivar actualizado: Fecha de la última actualización del registro.
+    """
     TIPO_DATO_CHOICES = [
         ('TEXTO', 'Texto'),
         ('NUMERO', 'Número'),
@@ -114,6 +151,9 @@ class CampoMedioDePago(models.Model):
         ordering = ['orden', 'id']
 
     def clean(self):
+        """
+        Valida que el nombre del campo no esté duplicado dentro del mismo medio de pago.
+        """
         if not self.nombre_campo or not self.nombre_campo.strip():
             raise ValidationError({
                 'nombre_campo': 'El nombre del campo no puede estar vacío.'
@@ -143,6 +183,9 @@ class CampoMedioDePago(models.Model):
                 })
 
     def save(self, *args, **kwargs):
+        """
+        Override del método save para limpiar el nombre del campo y ejecutar la validación.
+        """
         self.nombre_campo = self.nombre_campo.strip() if self.nombre_campo else ''
         if not self.nombre_campo:
             raise ValidationError('El nombre del campo no puede estar vacío.')
@@ -171,6 +214,9 @@ class CampoMedioDePago(models.Model):
 
 # Managers personalizados
 class ActiveManager(models.Manager):
+    """
+    Manager personalizado para filtrar objetos que no han sido eliminados.
+    """
     def get_queryset(self):
         return super().get_queryset().filter(deleted_at__isnull=True)
 
