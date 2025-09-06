@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Historial de Descuentos</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Segmento</th>
+                <th>Descuento Anterior (%)</th>
+                <th>Descuento Nuevo (%)</th>
+                <th>Fecha de Cambio</th>
+                <th>Modificado Por</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for registro in historial_comisiones %}
+            <tr>
+                <td>{{ registro.descuento.segmento.name }}</td>
+                <td>{{ registro.porcentaje_descuento_anterior }}</td>
+                <td>{{ registro.porcentaje_descuento_nuevo }}</td>
+                <td>{{ registro.fecha_cambio|date:"Y-m-d H:i:s" }}</td>
+                <td>{{ registro.modificado_por.username }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">No hay registros de historial de descuentos.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'clientes:lista_descuentos' %}" class="btn btn-secondary">Volver</a>
+</div>
+{% endblock %}

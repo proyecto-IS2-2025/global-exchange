@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow border-0 rounded-4">
+                <div class="card-header bg-primary text-white text-center rounded-top-4">
+                    <h4 class="mb-0"><i class="fas fa-edit me-2"></i> Editar Descuento</h4>
+                </div>
+                <div class="card-body bg-light">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" id="descuentoForm" novalidate>
+                        {% csrf_token %}
+
+                        <h5 class="text-center text-dark mb-4">
+                            Segmento: <strong>{{ form.instance.segmento.name }}</strong>
+                        </h5>
+
+                        <div class="form-floating mb-4">
+                            {{ form.porcentaje_descuento }}
+                            <label for="{{ form.porcentaje_descuento.id_for_label }}">
+                                <i class="bi bi-percent me-1 text-primary"></i> {{ form.porcentaje_descuento.label }}
+                            </label>
+                            {% if form.porcentaje_descuento.errors %}
+                                <div class="form-text text-danger">{{ form.porcentaje_descuento.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2 col-8 mx-auto">
+                            <button type="button" class="btn btn-primary btn-lg shadow-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#confirmModal">
+                                <i class="bi bi-check-circle-fill me-2"></i> Guardar Cambios
+                            </button>
+                            <a href="{% url 'clientes:lista_descuentos' %}" class="btn btn-secondary btn-lg shadow-sm rounded-pill mt-2">
+                                <i class="fas fa-arrow-left me-2"></i> Volver
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">Confirmar Cambios</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que quieres guardar los cambios en el descuento?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmSaveBtn">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('confirmSaveBtn').addEventListener('click', function() {
+        document.getElementById('descuentoForm').submit();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+
+<html lang="es" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Módulos de Divisas &#8212; documentación de Global_Exchange - 1.0</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=4936afed"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/translations.js?v=f85f4cfb"></script>
+    <link rel="index" title="Índice" href="genindex.html" />
+    <link rel="search" title="Búsqueda" href="search.html" />
+    <link rel="prev" title="Formularios de Clientes" href="form_cliente.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-divisas.models">
+<span id="modulos-de-divisas"></span><h1>Módulos de Divisas<a class="headerlink" href="#module-divisas.models" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="divisas.models.Divisa">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">divisas.models.</span></span><span class="sig-name descname"><span class="pre">Divisa</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.models.Divisa" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></p>
+<p>Modelo que representa una divisa o moneda en el sistema.</p>
+<p>Almacena información como el código, nombre, símbolo y estado de la divisa.
+El campo <cite>code</cite> tiene una restricción de unicidad que no distingue entre mayúsculas y minúsculas.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>code</strong> (<em>str</em>) – Código único de la divisa (ej. USD, EUR).</p></li>
+<li><p><strong>nombre</strong> (<em>str</em>) – Nombre completo de la divisa (ej. Dólar Americano).</p></li>
+<li><p><strong>simbolo</strong> (<em>str</em>) – Símbolo de la divisa (ej. $, €).</p></li>
+<li><p><strong>is_active</strong> (<em>bool</em>) – Estado de la divisa, <cite>False</cite> por defecto.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="divisas.models.Divisa.DoesNotExist">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#divisas.models.Divisa.DoesNotExist" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectDoesNotExist</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="divisas.models.Divisa.MultipleObjectsReturned">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#divisas.models.Divisa.MultipleObjectsReturned" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MultipleObjectsReturned</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.models.Divisa.actualizado">
+<span class="sig-name descname"><span class="pre">actualizado</span></span><a class="headerlink" href="#divisas.models.Divisa.actualizado" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.models.Divisa.code">
+<span class="sig-name descname"><span class="pre">code</span></span><a class="headerlink" href="#divisas.models.Divisa.code" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.models.Divisa.creado">
+<span class="sig-name descname"><span class="pre">creado</span></span><a class="headerlink" href="#divisas.models.Divisa.creado" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="divisas.models.Divisa.get_next_by_actualizado">
+<span class="sig-name descname"><span class="pre">get_next_by_actualizado</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">actualizado&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.models.Divisa.get_next_by_actualizado" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="divisas.models.Divisa.get_next_by_creado">
+<span class="sig-name descname"><span class="pre">get_next_by_creado</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">creado&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.models.Divisa.get_next_by_creado" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="divisas.models.Divisa.get_previous_by_actualizado">
+<span class="sig-name descname"><span class="pre">get_previous_by_actualizado</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">actualizado&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.models.Divisa.get_previous_by_actualizado" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="divisas.models.Divisa.get_previous_by_creado">
+<span class="sig-name descname"><span class="pre">get_previous_by_creado</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">creado&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.models.Divisa.get_previous_by_creado" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.models.Divisa.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#divisas.models.Divisa.id" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.models.Divisa.is_active">
+<span class="sig-name descname"><span class="pre">is_active</span></span><a class="headerlink" href="#divisas.models.Divisa.is_active" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.models.Divisa.nombre">
+<span class="sig-name descname"><span class="pre">nombre</span></span><a class="headerlink" href="#divisas.models.Divisa.nombre" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.models.Divisa.objects">
+<span class="sig-name descname"><span class="pre">objects</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;django.db.models.manager.Manager</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#divisas.models.Divisa.objects" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="divisas.models.Divisa.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.models.Divisa.save" title="Link to this definition">¶</a></dt>
+<dd><p>Sobreescribe el método save para formatear el código y el símbolo antes de guardar.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.models.Divisa.simbolo">
+<span class="sig-name descname"><span class="pre">simbolo</span></span><a class="headerlink" href="#divisas.models.Divisa.simbolo" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.models.Divisa.tasas">
+<span class="sig-name descname"><span class="pre">tasas</span></span><a class="headerlink" href="#divisas.models.Divisa.tasas" title="Link to this definition">¶</a></dt>
+<dd><p>Accessor to the related objects manager on the reverse side of a
+many-to-one relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Child</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Parent</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;children&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Parent.children</span></code> is a <code class="docutils literal notranslate"><span class="pre">ReverseManyToOneDescriptor</span></code> instance.</p>
+<p>Most of the implementation is delegated to a dynamically defined manager
+class built by <code class="docutils literal notranslate"><span class="pre">create_forward_many_to_many_manager()</span></code> defined below.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="divisas.models.TasaCambio">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">divisas.models.</span></span><span class="sig-name descname"><span class="pre">TasaCambio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.models.TasaCambio" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></p>
+<p>Modelo que almacena las tasas de cambio de una divisa en una fecha específica.</p>
+<p>Cada instancia de este modelo está ligada a una <a class="reference internal" href="#divisas.models.Divisa" title="divisas.models.Divisa"><code class="xref py py-class docutils literal notranslate"><span class="pre">Divisa</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>divisa</strong> (<a class="reference internal" href="#divisas.models.Divisa" title="divisas.models.Divisa"><code class="xref py py-class docutils literal notranslate"><span class="pre">Divisa</span></code></a>) – La divisa a la que se aplica esta tasa de cambio.</p></li>
+<li><p><strong>fecha</strong> (<em>date</em>) – La fecha en la que la tasa es válida.</p></li>
+<li><p><strong>valor_compra</strong> (<em>Decimal</em>) – El valor de compra de la divisa.</p></li>
+<li><p><strong>valor_venta</strong> (<em>Decimal</em>) – El valor de venta de la divisa.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="divisas.models.TasaCambio.DoesNotExist">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#divisas.models.TasaCambio.DoesNotExist" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectDoesNotExist</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="divisas.models.TasaCambio.MultipleObjectsReturned">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#divisas.models.TasaCambio.MultipleObjectsReturned" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MultipleObjectsReturned</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.models.TasaCambio.creado">
+<span class="sig-name descname"><span class="pre">creado</span></span><a class="headerlink" href="#divisas.models.TasaCambio.creado" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.models.TasaCambio.divisa">
+<span class="sig-name descname"><span class="pre">divisa</span></span><a class="headerlink" href="#divisas.models.TasaCambio.divisa" title="Link to this definition">¶</a></dt>
+<dd><p>Accessor to the related object on the forward side of a many-to-one or
+one-to-one (via ForwardOneToOneDescriptor subclass) relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Child</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Parent</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;children&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Child.parent</span></code> is a <code class="docutils literal notranslate"><span class="pre">ForwardManyToOneDescriptor</span></code> instance.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.models.TasaCambio.divisa_id">
+<span class="sig-name descname"><span class="pre">divisa_id</span></span><a class="headerlink" href="#divisas.models.TasaCambio.divisa_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.models.TasaCambio.fecha">
+<span class="sig-name descname"><span class="pre">fecha</span></span><a class="headerlink" href="#divisas.models.TasaCambio.fecha" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="divisas.models.TasaCambio.get_next_by_creado">
+<span class="sig-name descname"><span class="pre">get_next_by_creado</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">creado&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.models.TasaCambio.get_next_by_creado" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="divisas.models.TasaCambio.get_next_by_fecha">
+<span class="sig-name descname"><span class="pre">get_next_by_fecha</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateField:</span> <span class="pre">fecha&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.models.TasaCambio.get_next_by_fecha" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="divisas.models.TasaCambio.get_previous_by_creado">
+<span class="sig-name descname"><span class="pre">get_previous_by_creado</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">creado&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.models.TasaCambio.get_previous_by_creado" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="divisas.models.TasaCambio.get_previous_by_fecha">
+<span class="sig-name descname"><span class="pre">get_previous_by_fecha</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateField:</span> <span class="pre">fecha&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.models.TasaCambio.get_previous_by_fecha" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.models.TasaCambio.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#divisas.models.TasaCambio.id" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.models.TasaCambio.objects">
+<span class="sig-name descname"><span class="pre">objects</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;django.db.models.manager.Manager</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#divisas.models.TasaCambio.objects" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.models.TasaCambio.valor_compra">
+<span class="sig-name descname"><span class="pre">valor_compra</span></span><a class="headerlink" href="#divisas.models.TasaCambio.valor_compra" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.models.TasaCambio.valor_venta">
+<span class="sig-name descname"><span class="pre">valor_venta</span></span><a class="headerlink" href="#divisas.models.TasaCambio.valor_venta" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class" id="module-divisas.views">
+<dt class="sig sig-object py" id="divisas.views.DivisaCreateView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">divisas.views.</span></span><span class="sig-name descname"><span class="pre">DivisaCreateView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.views.DivisaCreateView" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">LoginRequiredMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">PermissionRequiredMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">CreateView</span></code></p>
+<p>Vista para crear una nueva divisa.</p>
+<p>Requiere que el usuario esté autenticado y tenga el permiso <cite>divisas.add_divisa</cite>.
+Asigna <cite>is_active</cite> a <cite>False</cite> por defecto al guardar la nueva divisa.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.DivisaCreateView.form_class">
+<span class="sig-name descname"><span class="pre">form_class</span></span><a class="headerlink" href="#divisas.views.DivisaCreateView.form_class" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="#divisas.forms.DivisaForm" title="divisas.forms.DivisaForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">DivisaForm</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="divisas.views.DivisaCreateView.form_valid">
+<span class="sig-name descname"><span class="pre">form_valid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">form</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.views.DivisaCreateView.form_valid" title="Link to this definition">¶</a></dt>
+<dd><p>Maneja el guardado del formulario válido.</p>
+<p>Establece <cite>is_active</cite> a <cite>False</cite> antes de guardar el objeto.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>form</strong> (<a class="reference internal" href="#divisas.forms.DivisaForm" title="divisas.forms.DivisaForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">DivisaForm</span></code></a>) – El formulario de la divisa.</p>
+</dd>
+<dt class="field-even">Devuelve<span class="colon">:</span></dt>
+<dd class="field-even"><p>Un objeto de respuesta HTTP.</p>
+</dd>
+<dt class="field-odd">Tipo del valor devuelto<span class="colon">:</span></dt>
+<dd class="field-odd"><p>django.http.HttpResponse</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.DivisaCreateView.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#divisas.views.DivisaCreateView.model" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="#divisas.models.Divisa" title="divisas.models.Divisa"><code class="xref py py-class docutils literal notranslate"><span class="pre">Divisa</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.DivisaCreateView.permission_required">
+<span class="sig-name descname"><span class="pre">permission_required</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'divisas.add_divisa'</span></em><a class="headerlink" href="#divisas.views.DivisaCreateView.permission_required" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.DivisaCreateView.success_url">
+<span class="sig-name descname"><span class="pre">success_url</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'/divisas/'</span></em><a class="headerlink" href="#divisas.views.DivisaCreateView.success_url" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.DivisaCreateView.template_name">
+<span class="sig-name descname"><span class="pre">template_name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'divisas/form.html'</span></em><a class="headerlink" href="#divisas.views.DivisaCreateView.template_name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="divisas.views.DivisaListView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">divisas.views.</span></span><span class="sig-name descname"><span class="pre">DivisaListView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.views.DivisaListView" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">LoginRequiredMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">PermissionRequiredMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ListView</span></code></p>
+<p>Vista de lista para mostrar todas las divisas.</p>
+<p>Requiere que el usuario esté autenticado y tenga el permiso <cite>divisas.view_divisa</cite>.
+Muestra las divisas en una tabla paginada.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.DivisaListView.context_object_name">
+<span class="sig-name descname"><span class="pre">context_object_name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'divisas'</span></em><a class="headerlink" href="#divisas.views.DivisaListView.context_object_name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.DivisaListView.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#divisas.views.DivisaListView.model" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="#divisas.models.Divisa" title="divisas.models.Divisa"><code class="xref py py-class docutils literal notranslate"><span class="pre">Divisa</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.DivisaListView.paginate_by">
+<span class="sig-name descname"><span class="pre">paginate_by</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">20</span></em><a class="headerlink" href="#divisas.views.DivisaListView.paginate_by" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.DivisaListView.permission_required">
+<span class="sig-name descname"><span class="pre">permission_required</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'divisas.view_divisa'</span></em><a class="headerlink" href="#divisas.views.DivisaListView.permission_required" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.DivisaListView.template_name">
+<span class="sig-name descname"><span class="pre">template_name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'divisas/lista.html'</span></em><a class="headerlink" href="#divisas.views.DivisaListView.template_name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="divisas.views.DivisaToggleActivaView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">divisas.views.</span></span><span class="sig-name descname"><span class="pre">DivisaToggleActivaView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.views.DivisaToggleActivaView" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">LoginRequiredMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">PermissionRequiredMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">View</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.DivisaToggleActivaView.permission_required">
+<span class="sig-name descname"><span class="pre">permission_required</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'divisas.change_divisa'</span></em><a class="headerlink" href="#divisas.views.DivisaToggleActivaView.permission_required" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="divisas.views.DivisaToggleActivaView.post">
+<span class="sig-name descname"><span class="pre">post</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.views.DivisaToggleActivaView.post" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="divisas.views.DivisaUpdateView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">divisas.views.</span></span><span class="sig-name descname"><span class="pre">DivisaUpdateView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.views.DivisaUpdateView" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">LoginRequiredMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">PermissionRequiredMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">UpdateView</span></code></p>
+<p>Vista para editar una divisa existente.
+Requiere que el usuario esté autenticado y tenga el permiso “divisas.change_divisa”</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.DivisaUpdateView.form_class">
+<span class="sig-name descname"><span class="pre">form_class</span></span><a class="headerlink" href="#divisas.views.DivisaUpdateView.form_class" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="#divisas.forms.DivisaForm" title="divisas.forms.DivisaForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">DivisaForm</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.DivisaUpdateView.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#divisas.views.DivisaUpdateView.model" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="#divisas.models.Divisa" title="divisas.models.Divisa"><code class="xref py py-class docutils literal notranslate"><span class="pre">Divisa</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.DivisaUpdateView.permission_required">
+<span class="sig-name descname"><span class="pre">permission_required</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'divisas.change_divisa'</span></em><a class="headerlink" href="#divisas.views.DivisaUpdateView.permission_required" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.DivisaUpdateView.success_url">
+<span class="sig-name descname"><span class="pre">success_url</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'/divisas/'</span></em><a class="headerlink" href="#divisas.views.DivisaUpdateView.success_url" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.DivisaUpdateView.template_name">
+<span class="sig-name descname"><span class="pre">template_name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'divisas/form.html'</span></em><a class="headerlink" href="#divisas.views.DivisaUpdateView.template_name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioAllListView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">divisas.views.</span></span><span class="sig-name descname"><span class="pre">TasaCambioAllListView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.views.TasaCambioAllListView" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">LoginRequiredMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ListView</span></code></p>
+<p>Vista para ver todas las tasas de cambio de todas las divisas.</p>
+<p>Permite filtrar por divisa y rango de fechas.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioAllListView.context_object_name">
+<span class="sig-name descname"><span class="pre">context_object_name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tasas'</span></em><a class="headerlink" href="#divisas.views.TasaCambioAllListView.context_object_name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioAllListView.get_context_data">
+<span class="sig-name descname"><span class="pre">get_context_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.views.TasaCambioAllListView.get_context_data" title="Link to this definition">¶</a></dt>
+<dd><p>Get the context for this view.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioAllListView.get_queryset">
+<span class="sig-name descname"><span class="pre">get_queryset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#divisas.views.TasaCambioAllListView.get_queryset" title="Link to this definition">¶</a></dt>
+<dd><p>Filtra el queryset de tasas de cambio basado en los parámetros de la URL.</p>
+<p>Los filtros disponibles son:
+* <cite>divisa</cite>: ID o código de la divisa.
+* <cite>inicio</cite>: Fecha de inicio del rango (formato YYYY-MM-DD).
+* <cite>fin</cite>: Fecha de fin del rango (formato YYYY-MM-DD).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Devuelve<span class="colon">:</span></dt>
+<dd class="field-odd"><p>El queryset filtrado de tasas de cambio.</p>
+</dd>
+<dt class="field-even">Tipo del valor devuelto<span class="colon">:</span></dt>
+<dd class="field-even"><p>django.db.models.query.QuerySet</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioAllListView.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#divisas.views.TasaCambioAllListView.model" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="#divisas.models.TasaCambio" title="divisas.models.TasaCambio"><code class="xref py py-class docutils literal notranslate"><span class="pre">TasaCambio</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioAllListView.paginate_by">
+<span class="sig-name descname"><span class="pre">paginate_by</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">20</span></em><a class="headerlink" href="#divisas.views.TasaCambioAllListView.paginate_by" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioAllListView.template_name">
+<span class="sig-name descname"><span class="pre">template_name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'divisas/tasa_list_global.html'</span></em><a class="headerlink" href="#divisas.views.TasaCambioAllListView.template_name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioCreateView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">divisas.views.</span></span><span class="sig-name descname"><span class="pre">TasaCambioCreateView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.views.TasaCambioCreateView" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">LoginRequiredMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">PermissionRequiredMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">CreateView</span></code></p>
+<p>Crear tasa para UNA divisa.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioCreateView.form_class">
+<span class="sig-name descname"><span class="pre">form_class</span></span><a class="headerlink" href="#divisas.views.TasaCambioCreateView.form_class" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="#divisas.forms.TasaCambioForm" title="divisas.forms.TasaCambioForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">TasaCambioForm</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioCreateView.form_valid">
+<span class="sig-name descname"><span class="pre">form_valid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">form</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.views.TasaCambioCreateView.form_valid" title="Link to this definition">¶</a></dt>
+<dd><p>If the form is valid, save the associated model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioCreateView.get_context_data">
+<span class="sig-name descname"><span class="pre">get_context_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.views.TasaCambioCreateView.get_context_data" title="Link to this definition">¶</a></dt>
+<dd><p>Insert the form into the context dict.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioCreateView.get_initial">
+<span class="sig-name descname"><span class="pre">get_initial</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#divisas.views.TasaCambioCreateView.get_initial" title="Link to this definition">¶</a></dt>
+<dd><p>Return the initial data to use for forms on this view.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioCreateView.get_success_url">
+<span class="sig-name descname"><span class="pre">get_success_url</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#divisas.views.TasaCambioCreateView.get_success_url" title="Link to this definition">¶</a></dt>
+<dd><p>Return the URL to redirect to after processing a valid form.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioCreateView.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#divisas.views.TasaCambioCreateView.model" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="#divisas.models.TasaCambio" title="divisas.models.TasaCambio"><code class="xref py py-class docutils literal notranslate"><span class="pre">TasaCambio</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioCreateView.permission_required">
+<span class="sig-name descname"><span class="pre">permission_required</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'divisas.add_tasacambio'</span></em><a class="headerlink" href="#divisas.views.TasaCambioCreateView.permission_required" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioCreateView.template_name">
+<span class="sig-name descname"><span class="pre">template_name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'divisas/tasa_form.html'</span></em><a class="headerlink" href="#divisas.views.TasaCambioCreateView.template_name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioListView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">divisas.views.</span></span><span class="sig-name descname"><span class="pre">TasaCambioListView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.views.TasaCambioListView" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">LoginRequiredMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ListView</span></code></p>
+<p>Vista de lista para las tasas de cambio de una divisa específica.</p>
+<p>Requiere que el usuario esté autenticado y tenga el permiso <cite>divisas.view_tasacambio</cite>.
+Muestra una tabla con las tasas de cambio históricas de una divisa.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>divisa_id</strong> (<em>int</em>) – ID de la divisa. Se pasa a través de la URL.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioListView.context_object_name">
+<span class="sig-name descname"><span class="pre">context_object_name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tasas'</span></em><a class="headerlink" href="#divisas.views.TasaCambioListView.context_object_name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioListView.get_context_data">
+<span class="sig-name descname"><span class="pre">get_context_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.views.TasaCambioListView.get_context_data" title="Link to this definition">¶</a></dt>
+<dd><p>Agrega la divisa al contexto de la plantilla.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioListView.get_queryset">
+<span class="sig-name descname"><span class="pre">get_queryset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#divisas.views.TasaCambioListView.get_queryset" title="Link to this definition">¶</a></dt>
+<dd><p>Filtra el queryset para mostrar solo las tasas de la divisa especificada.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Devuelve<span class="colon">:</span></dt>
+<dd class="field-odd"><p>El queryset filtrado de tasas de cambio.</p>
+</dd>
+<dt class="field-even">Tipo del valor devuelto<span class="colon">:</span></dt>
+<dd class="field-even"><p>django.db.models.query.QuerySet</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioListView.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#divisas.views.TasaCambioListView.model" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="#divisas.models.TasaCambio" title="divisas.models.TasaCambio"><code class="xref py py-class docutils literal notranslate"><span class="pre">TasaCambio</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioListView.paginate_by">
+<span class="sig-name descname"><span class="pre">paginate_by</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">20</span></em><a class="headerlink" href="#divisas.views.TasaCambioListView.paginate_by" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.views.TasaCambioListView.template_name">
+<span class="sig-name descname"><span class="pre">template_name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'divisas/tasa_list.html'</span></em><a class="headerlink" href="#divisas.views.TasaCambioListView.template_name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class" id="module-divisas.forms">
+<dt class="sig sig-object py" id="divisas.forms.DivisaForm">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">divisas.forms.</span></span><span class="sig-name descname"><span class="pre">DivisaForm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_id='id_%s'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_class=&lt;class</span> <span class="pre">'django.forms.utils.ErrorList'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_suffix=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_permitted=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_required_attribute=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">renderer=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.forms.DivisaForm" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ModelForm</span></code></p>
+<p>Formulario para la creación y edición de divisas.</p>
+<p>Este formulario se basa en el modelo <a class="reference internal" href="#divisas.models.Divisa" title="divisas.models.Divisa"><code class="xref py py-class docutils literal notranslate"><span class="pre">Divisa</span></code></a>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="divisas.forms.DivisaForm.Meta">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Meta</span></span><a class="headerlink" href="#divisas.forms.DivisaForm.Meta" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.forms.DivisaForm.Meta.fields">
+<span class="sig-name descname"><span class="pre">fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['nombre',</span> <span class="pre">'code',</span> <span class="pre">'simbolo']</span></em><a class="headerlink" href="#divisas.forms.DivisaForm.Meta.fields" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.forms.DivisaForm.Meta.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#divisas.forms.DivisaForm.Meta.model" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="#divisas.models.Divisa" title="divisas.models.Divisa"><code class="xref py py-class docutils literal notranslate"><span class="pre">Divisa</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.forms.DivisaForm.base_fields">
+<span class="sig-name descname"><span class="pre">base_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'code':</span> <span class="pre">&lt;django.forms.fields.CharField</span> <span class="pre">object&gt;,</span> <span class="pre">'nombre':</span> <span class="pre">&lt;django.forms.fields.CharField</span> <span class="pre">object&gt;,</span> <span class="pre">'simbolo':</span> <span class="pre">&lt;django.forms.fields.CharField</span> <span class="pre">object&gt;}</span></em><a class="headerlink" href="#divisas.forms.DivisaForm.base_fields" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="divisas.forms.DivisaForm.clean_code">
+<span class="sig-name descname"><span class="pre">clean_code</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#divisas.forms.DivisaForm.clean_code" title="Link to this definition">¶</a></dt>
+<dd><p>Limpia y formatea el campo de código de la divisa.</p>
+<p>Convierte el código a mayúsculas y elimina los espacios en blanco.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Devuelve<span class="colon">:</span></dt>
+<dd class="field-odd"><p>El código de la divisa formateado.</p>
+</dd>
+<dt class="field-even">Tipo del valor devuelto<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.forms.DivisaForm.declared_fields">
+<span class="sig-name descname"><span class="pre">declared_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#divisas.forms.DivisaForm.declared_fields" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="divisas.forms.DivisaForm.media">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">media</span></span><a class="headerlink" href="#divisas.forms.DivisaForm.media" title="Link to this definition">¶</a></dt>
+<dd><p>Return all media required to render the widgets on this form.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="divisas.forms.TasaCambioForm">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">divisas.forms.</span></span><span class="sig-name descname"><span class="pre">TasaCambioForm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisas.forms.TasaCambioForm" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ModelForm</span></code></p>
+<p>Formulario para la creación y edición de tasas de cambio.</p>
+<p>Este formulario se basa en el modelo <a class="reference internal" href="#divisas.models.TasaCambio" title="divisas.models.TasaCambio"><code class="xref py py-class docutils literal notranslate"><span class="pre">TasaCambio</span></code></a> y
+personaliza el widget para el campo de fecha.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="divisas.forms.TasaCambioForm.Meta">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Meta</span></span><a class="headerlink" href="#divisas.forms.TasaCambioForm.Meta" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.forms.TasaCambioForm.Meta.fields">
+<span class="sig-name descname"><span class="pre">fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['fecha',</span> <span class="pre">'valor_compra',</span> <span class="pre">'valor_venta']</span></em><a class="headerlink" href="#divisas.forms.TasaCambioForm.Meta.fields" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.forms.TasaCambioForm.Meta.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#divisas.forms.TasaCambioForm.Meta.model" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="#divisas.models.TasaCambio" title="divisas.models.TasaCambio"><code class="xref py py-class docutils literal notranslate"><span class="pre">TasaCambio</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.forms.TasaCambioForm.Meta.widgets">
+<span class="sig-name descname"><span class="pre">widgets</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'fecha':</span> <span class="pre">&lt;django.forms.widgets.DateInput</span> <span class="pre">object&gt;}</span></em><a class="headerlink" href="#divisas.forms.TasaCambioForm.Meta.widgets" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.forms.TasaCambioForm.base_fields">
+<span class="sig-name descname"><span class="pre">base_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'fecha':</span> <span class="pre">&lt;django.forms.fields.DateField</span> <span class="pre">object&gt;,</span> <span class="pre">'valor_compra':</span> <span class="pre">&lt;django.forms.fields.DecimalField</span> <span class="pre">object&gt;,</span> <span class="pre">'valor_venta':</span> <span class="pre">&lt;django.forms.fields.DecimalField</span> <span class="pre">object&gt;}</span></em><a class="headerlink" href="#divisas.forms.TasaCambioForm.base_fields" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="divisas.forms.TasaCambioForm.declared_fields">
+<span class="sig-name descname"><span class="pre">declared_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#divisas.forms.TasaCambioForm.declared_fields" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="divisas.forms.TasaCambioForm.media">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">media</span></span><a class="headerlink" href="#divisas.forms.TasaCambioForm.media" title="Link to this definition">¶</a></dt>
+<dd><p>Return all media required to render the widgets on this form.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Global_Exchange</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Ir a" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navegación</h3>
+<p class="caption" role="heading"><span class="caption-text">Contenidos:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="clientes.html">Módulos de Clientes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vistas_cliente.html">Vistas de Clientes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="form_cliente.html">Formularios de Clientes</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Módulos de Divisas</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#divisas.models.Divisa"><code class="docutils literal notranslate"><span class="pre">Divisa</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#divisas.models.TasaCambio"><code class="docutils literal notranslate"><span class="pre">TasaCambio</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#divisas.views.DivisaCreateView"><code class="docutils literal notranslate"><span class="pre">DivisaCreateView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#divisas.views.DivisaListView"><code class="docutils literal notranslate"><span class="pre">DivisaListView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#divisas.views.DivisaToggleActivaView"><code class="docutils literal notranslate"><span class="pre">DivisaToggleActivaView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#divisas.views.DivisaUpdateView"><code class="docutils literal notranslate"><span class="pre">DivisaUpdateView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#divisas.views.TasaCambioAllListView"><code class="docutils literal notranslate"><span class="pre">TasaCambioAllListView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#divisas.views.TasaCambioCreateView"><code class="docutils literal notranslate"><span class="pre">TasaCambioCreateView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#divisas.views.TasaCambioListView"><code class="docutils literal notranslate"><span class="pre">TasaCambioListView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#divisas.forms.DivisaForm"><code class="docutils literal notranslate"><span class="pre">DivisaForm</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#divisas.forms.TasaCambioForm"><code class="docutils literal notranslate"><span class="pre">TasaCambioForm</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="form_cliente.html" title="capítulo anterior">Formularios de Clientes</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, Equipo_07.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/divisas.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
