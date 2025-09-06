@@ -1,41 +1,53 @@
 {% extends "base.html" %}
-
+{% load static %}
 {% block content %}
-<div class="container mt-4">
-    <div class="card">
-        <div class="card-body">
-            <h3 class="card-title">Rol: {{ group.name }}</h3>
-            <p class="text-muted">Gestión de usuarios del Rol.</p>
-
-            <form method="post">
-                {% csrf_token %}
-
-                <h5>Usuarios en este Rol</h5>
-                <ul id="selected-users-list" class="list-group mb-3">
-                    {% for user in current_users %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center" data-id="{{ user.id }}">
-                            {{ user.email }}
-                            <button type="button" class="btn btn-danger btn-sm remove-user">
-                                &times;
-                            </button>
-                            <input type="hidden" name="users" value="{{ user.id }}">
-                        </li>
-                    {% endfor %}
-                </ul>
-
-                <hr>
-
-                <h5>Añadir Usuarios</h5>
-                <div class="input-group mb-3">
-                    <input type="text" class="form-control" id="user-search" placeholder="Buscar usuario por correo...">
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg p-4">
+                <div class="card-header bg-primary text-white text-center rounded mb-4">
+                    <h2 class="card-title mb-0">
+                        <i class="fas fa-user-edit me-2"></i>Usuarios del Rol: {{ group.name }}
+                    </h2>
                 </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
 
-                <ul id="search-results" class="list-group mb-3" style="max-height: 250px; overflow-y: auto;">
-                    </ul>
+                        <h5 class="mb-3">Usuarios en este Rol</h5>
+                        <ul id="selected-users-list" class="list-group mb-3">
+                            {% for user in current_users %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center" data-id="{{ user.id }}">
+                                    {{ user.email }}
+                                    <button type="button" class="btn btn-danger btn-sm remove-user">
+                                        &times;
+                                    </button>
+                                    <input type="hidden" name="users" value="{{ user.id }}">
+                                </li>
+                            {% endfor %}
+                        </ul>
 
-                <button type="submit" class="btn btn-success">Guardar Cambios</button>
-                <a href="{% url 'group_list' %}" class="btn btn-secondary">Volver</a>
-            </form>
+                        <hr>
+
+                        <h5 class="mb-3">Añadir Usuarios</h5>
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" id="user-search" placeholder="Buscar usuario por correo...">
+                        </div>
+
+                        <ul id="search-results" class="list-group mb-3" style="max-height: 250px; overflow-y: auto;">
+                        </ul>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% url 'group_list' %}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-arrow-left me-2"></i>Volver
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>
