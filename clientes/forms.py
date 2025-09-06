@@ -1,5 +1,5 @@
 from django import forms
-from .models import Cliente, AsignacionCliente, Comision
+from .models import Cliente, AsignacionCliente, Descuento
 
 class ClienteForm(forms.ModelForm):
     """
@@ -55,12 +55,11 @@ class SeleccionClienteForm(forms.Form):
         )
         self.fields['cliente'].label_from_instance = lambda obj: obj.cliente.nombre_completo
 
-# Nuevo formulario para la gestión de comisiones
-class ComisionForm(forms.ModelForm):
+# Nuevo formulario para la gestión de descuentos
+class DescuentoForm(forms.ModelForm):
     class Meta:
-        model = Comision
-        fields = ['valor_compra', 'valor_venta']
+        model = Descuento
+        fields = ['porcentaje_descuento']
         widgets = {
-            'valor_compra': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-            'valor_venta': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'porcentaje_descuento': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }

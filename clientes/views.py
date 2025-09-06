@@ -10,8 +10,8 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib import messages
 
-from .models import Cliente, AsignacionCliente, Comision, Segmento, HistorialComision
-from .forms import ClienteForm, ComisionForm
+from .models import Cliente, AsignacionCliente, Descuento, Segmento, HistorialDescuentos
+from .forms import ClienteForm, DescuentoForm
 
 # Asociar clientes-usuarios
 
@@ -21,6 +21,17 @@ User = get_user_model()
 @login_required
 @user_passes_test(lambda u: u.is_staff)
 def asociar_clientes_usuarios_view(request):
+    """
+    Vista para asociar clientes a usuarios del sistema.
+
+    Solo accesible para usuarios de tipo staff. Permite a un usuario con los
+    permisos adecuados asignar clientes a otros usuarios.
+
+    :param request: Objeto de solicitud HTTP.
+    :type request: django.http.HttpRequest
+    :return: Redirección a la URL 'clientes:asociar_clientes_usuarios' o renderiza el formulario.
+    :rtype: django.http.HttpResponse
+    """
     if request.method == 'POST':
         usuario_id = request.POST.get('usuario')
         clientes_ids = request.POST.getlist('clientes')
@@ -53,6 +64,17 @@ def asociar_clientes_usuarios_view(request):
 @login_required
 @user_passes_test(lambda u: u.is_staff)
 def listar_asociaciones(request):
+    """
+    Vista para listar y eliminar asociaciones de clientes con usuarios.
+
+    Permite a los usuarios de tipo staff ver una lista de todas las
+    asignaciones existentes y eliminarlas si es necesario.
+
+    :param request: Objeto de solicitud HTTP.
+    :type request: django.http.HttpRequest
+    :return: Redirección a la URL 'clientes:listar_asociaciones' o renderiza la lista de asignaciones.
+    :rtype: django.http.HttpResponse
+    """
     if request.method == 'POST' and 'delete_id' in request.POST:
         try:
             asignacion_id = request.POST.get('delete_id')
@@ -65,11 +87,22 @@ def listar_asociaciones(request):
 
     asignaciones = AsignacionCliente.objects.all().order_by('usuario__email')
     context = {'asignaciones': asignaciones}
-    return render(request, 'asociar_a_usuario/lista_asociaciones.html', context)
+    return render(request, 'asociar_a_usuario/lista_descuentos.html', context)
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def crear_cliente_view(request):
+    """
+    Vista para crear un nuevo cliente.
+
+    Solo accesible para superusuarios. Maneja la lógica de validación
+    y guardado del formulario de creación de clientes.
+
+    :param request: Objeto de solicitud HTTP.
+    :type request: django.http.HttpRequest
+    :return: Redirección a la URL 'clientes:crear_cliente' o renderiza el formulario.
+    :rtype: django.http.HttpResponse
+    """
     if request.method == 'POST':
         form = ClienteForm(request.POST)
         if form.is_valid():
@@ -81,11 +114,22 @@ def crear_cliente_view(request):
 
     return render(request, 'crear_cliente.html', {'form': form})
 
-"""
+
 @login_required
 def lista_clientes(request):
+    """
+    Vista para listar los clientes asignados a un usuario.
+
+    Solo los usuarios autenticados pueden acceder a esta vista. Muestra los
+    clientes que han sido asignados al usuario actual.
+    
+    :param request: Objeto de solicitud HTTP.
+    :type request: django.http.HttpRequest
+    :return: Renderiza la lista de clientes del usuario.
+    :rtype: django.http.HttpResponse
+    """
     return render(request, 'clientes/lista_clientes.html')
-"""
+
 
 from .models import Segmento
 
@@ -122,68 +166,70 @@ class ClienteUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView)
     form_class = ClienteForm
     template_name = "clientes/form.html"
     success_url = reverse_lazy("clientes:lista_clientes")
-    permission_required = "clientes.change_cliente"# Nuevas vistas para la gestión de comisiones
+    permission_required = "clientes.change_cliente"
+
+
+# -------------------------------
+# NUEVAS VISTAS PARA DESCUENTOS
+# -------------------------------
+
 @method_decorator(login_required, name='dispatch')
-class ComisionListView(UserPassesTestMixin, ListView):
-    model = Comision
-    template_name = 'comisiones/lista_comisiones.html'
-    context_object_name = 'comisiones'
+class DescuentoListView(UserPassesTestMixin, ListView):
+    model = Descuento
+    template_name = 'descuentos/lista_descuentos.html'
+    context_object_name = 'descuentos'
 
     def test_func(self):
         return self.request.user.is_staff or self.request.user.is_superuser
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def get_queryset(self):
+        """
+        Asegura que cada segmento tenga un registro de Descuento.
+        """
         for segmento in Segmento.objects.all():
-            Comision.objects.get_or_create(
+            Descuento.objects.get_or_create(
                 segmento=segmento,
-                defaults={'valor_compra': 0.0, 'valor_venta': 0.0}
+                defaults={'porcentaje_descuento': 0.00, 'modificado_por': self.request.user}
             )
-        return context
+        return Descuento.objects.all()
+
 
 @method_decorator(login_required, name='dispatch')
-class ComisionUpdateView(UserPassesTestMixin, UpdateView):
-    model = Comision
-    form_class = ComisionForm
-    template_name = 'comisiones/editar_comision.html'
-    success_url = reverse_lazy('clientes:lista_comisiones')
+class DescuentoUpdateView(UserPassesTestMixin, UpdateView):
+    model = Descuento
+    form_class = DescuentoForm
+    template_name = 'descuentos/editar_descuento.html'
+    success_url = reverse_lazy('clientes:lista_descuentos')
 
     def test_func(self):
         return self.request.user.is_staff or self.request.user.is_superuser
 
     def form_valid(self, form):
-        # 1. Obtener los valores del objeto ANTES de guardar el formulario.
-        #    'self.object' es el objeto que se está editando, con los valores originales.
-            # 1. Obtener una copia de la instancia actual desde la BD para asegurar
-            #    que leemos los valores anteriores exactamente como están persistidos.
-            pk = self.get_object().pk
-            anterior = Comision.objects.get(pk=pk)
+        # Obtener valores anteriores
+        pk = self.get_object().pk
+        anterior = Descuento.objects.get(pk=pk)
 
-            # 2. Dejar que la vista haga el guardado normal (super().form_valid) y
-            #    así `self.object` quedará con los nuevos valores.
-            response = super().form_valid(form)
+        # Guardar normalmente
+        response = super().form_valid(form)
 
-            # 3. Crear el registro en el historial usando los valores leídos antes
-            #    y los valores actuales ya guardados en `self.object`.
-            HistorialComision.objects.create(
-                comision=self.object,
-                valor_compra_anterior=anterior.valor_compra,
-                valor_venta_anterior=anterior.valor_venta,
-                valor_compra_nuevo=self.object.valor_compra,
-                valor_venta_nuevo=self.object.valor_venta,
-                modificado_por=self.request.user
-            )
+        # Registrar en historial
+        HistorialDescuentos.objects.create(
+            descuento=self.object,
+            porcentaje_descuento_anterior=anterior.porcentaje_descuento,
+            porcentaje_descuento_nuevo=self.object.porcentaje_descuento,
+            modificado_por=self.request.user
+        )
 
-            messages.success(self.request, f"Comisión para {self.object.segmento.name} actualizada correctamente.")
+        messages.success(self.request, f"Descuento para {self.object.segmento.name} actualizado correctamente.")
 
-            return response
+        return response
 
 
 @method_decorator(login_required, name='dispatch')
-class HistorialComisionListView(UserPassesTestMixin, ListView):
-    model = HistorialComision
-    template_name = 'comisiones/historial_comisiones.html'
-    context_object_name = 'historial_comisiones'
-    
+class HistorialDescuentoListView(UserPassesTestMixin, ListView):
+    model = HistorialDescuentos
+    template_name = 'descuentos/historial_descuentos.html'
+    context_object_name = 'historial_descuentos'
+
     def test_func(self):
         return self.request.user.is_staff or self.request.user.is_superuser

@@ -30,51 +30,60 @@
         <p class="text-muted text-center">Accede al panel de administración desde las opciones de abajo.</p>
 
         <div class="row row-cols-2 row-cols-md-4 g-4 mt-4 justify-content-center">
+
           <!-- Opción: Ver Clientes -->
           <div class="col">
             <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
-              <div class="display-3 mb-3"><i class="fas fa-users"></i></div>              <h6 class="fw-bold">Ver Clientes</h6>
+              <div class="display-3 mb-3"><i class="fas fa-users"></i></div>
+              <h6 class="fw-bold">Ver Clientes</h6>
               <a href="{% url 'clientes:lista_clientes' %}" class="stretched-link"></a>
             </div>
           </div>
 
-                    <div class="col">
-            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
-              <div class="display-3 mb-3"><i class="fas fa-user-friends"></i></div>              <h6 class="fw-bold">Asignar Cliente a Usuario</h6>
-              <a href="{% url 'clientes:asociar_clientes_usuarios' %}" class="stretched-link"></a>
-            </div>
-          </div>
+          <!-- Opción: Asignar Cliente a Usuario -->
+          <div class="col">
+            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
+              <div class="display-3 mb-3"><i class="fas fa-user-friends"></i></div>
+              <h6 class="fw-bold">Asignar Cliente a Usuario</h6>
+              <a href="{% url 'clientes:asociar_clientes_usuarios' %}" class="stretched-link"></a>
+            </div>
+          </div>
 
-                    <div class="col">
-            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
-              <div class="display-3 mb-3"><i class="fas fa-user-plus"></i></div>              <h6 class="fw-bold">Nuevo Cliente</h6>
-              <a href="{% url 'clientes:crear_cliente' %}" class="stretched-link"></a>
-            </div>
-          </div>
+          <!-- Opción: Nuevo Cliente -->
+          <div class="col">
+            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
+              <div class="display-3 mb-3"><i class="fas fa-user-plus"></i></div>
+              <h6 class="fw-bold">Nuevo Cliente</h6>
+              <a href="{% url 'clientes:crear_cliente' %}" class="stretched-link"></a>
+            </div>
+          </div>
 
-                    <div class="col">
-            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
-              <div class="display-3 mb-3"><i class="fas fa-shield-alt"></i></div>
-              <h6 class="fw-bold">Roles</h6>
-              <a href="{% url 'group_list' %}" class="stretched-link"></a>
-            </div>
-          </div>
+          <!-- Opción: Roles -->
+          <div class="col">
+            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
+              <div class="display-3 mb-3"><i class="fas fa-shield-alt"></i></div>
+              <h6 class="fw-bold">Roles</h6>
+              <a href="{% url 'group_list' %}" class="stretched-link"></a>
+            </div>
+          </div>
 
-                    <div class="col">
-            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
-              <div class="display-3 mb-3"><i class="fas fa-key"></i></div>
-              <h6 class="fw-bold">Permisos</h6>
-              <a href="{% url 'permission_create' %}" class="stretched-link"></a>
-            </div>
-          </div>
+          <!-- Opción: Permisos -->
+          <div class="col">
+            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
+              <div class="display-3 mb-3"><i class="fas fa-key"></i></div>
+              <h6 class="fw-bold">Permisos</h6>
+              <a href="{% url 'permission_create' %}" class="stretched-link"></a>
+            </div>
+          </div>
 
-                    <div class="col">
-            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
-              <div class="display-3 mb-3"><i class="fas fa-percent"></i></div>
-              <h6 class="fw-bold">Comisiones</h6>
-              <a href="{% url 'clientes:lista_comisiones' %}" class="stretched-link"></a>
-            </div>
-          </div>
+          <!-- Opción: Descuentos -->
+          <div class="col">
+            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
+              <div class="display-3 mb-3"><i class="fas fa-percent"></i></div>
+              <h6 class="fw-bold">Descuentos</h6>
+              <a href="{% url 'clientes:lista_descuentos' %}" class="stretched-link"></a>
+            </div>
+          </div>
 
           <!-- Opción: Monedas -->
           <div class="col">
@@ -84,7 +93,9 @@
               <a href="{% url 'divisas:lista' %}" class="stretched-link"></a>
             </div>
           </div>
-        
+
+        </div> <!-- 🔥 aquí cerramos el row correctamente -->
+
       {% else %}
         <!-- Usuario autenticado pero sin grupo -->
         <p class="text-muted">
@@ -101,6 +112,4 @@
        {% include "partials/simulador_conversion.html" %}
     {% endif %}
   </div>
-
-
 {% endblock %}

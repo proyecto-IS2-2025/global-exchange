@@ -13,8 +13,9 @@
     </tr>
   </thead>
   <tbody>
-    {% for group in groups %}
+    {% for group in groups %} 
     <tr>
+      {% if group.name != 'admin' %}
       <td>{{ group.name }}</td>
       <td>
         {% for perm in group.permissions.all %}
@@ -24,10 +25,11 @@
         {% endfor %}
       </td>
       <td>
-        <!--<a href="{% url 'group_update' group.id %}" class="btn btn-sm btn-warning">Editar</a>-->
+         
         <a href="{% url 'group_detail_permissions' group.id %}" class="btn btn-sm btn-info">Editar Permisos</a>
         <a href="{% url 'group_detail_users' group.id %}" class="btn btn-sm btn-info">Editar Usuarios</a>
         <a href="{% url 'group_delete' group.id %}" class="btn btn-sm btn-danger">Eliminar</a>
+      {% endif %}
       </td>
     </tr>
     {% endfor %}

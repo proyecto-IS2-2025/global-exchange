@@ -2,7 +2,7 @@
 app_name = 'clientes'
 from django.urls import path
 from . import views
-from .views import ComisionListView, ComisionUpdateView, HistorialComisionListView
+from .views import DescuentoListView, DescuentoUpdateView, HistorialDescuentoListView
 from .views import ClienteListView, ClienteUpdateView
 
 """
@@ -21,11 +21,11 @@ urlpatterns = [
     path("lista_clientes/", ClienteListView.as_view(), name="lista_clientes"),
     path("<int:pk>/editar/", ClienteUpdateView.as_view(), name="editar"),
     
-    # URLs para la nueva gestión de comisiones
-    path('configuracion/comisiones/', ComisionListView.as_view(), name='lista_comisiones'),
-    path('configuracion/comisiones/<int:pk>/editar/', ComisionUpdateView.as_view(), name='editar_comision'),
-    # Nueva URL para el historial
-    path('configuracion/comisiones/historial/', HistorialComisionListView.as_view(), name='historial_comisiones'),
+    # URLs para la gestión de descuentos
+    path('configuracion/descuentos/', DescuentoListView.as_view(), name='lista_descuentos'),
+    path('configuracion/descuentos/<int:pk>/editar/', DescuentoUpdateView.as_view(), name='editar_descuento'),
+    path('configuracion/descuentos/historial/', HistorialDescuentoListView.as_view(), name='historial_descuentos'),
+
 ]
 
 """
