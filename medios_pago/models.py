@@ -8,8 +8,8 @@ class MedioDePago(models.Model):
     nombre = models.CharField('Nombre del medio', max_length=100, unique=True)
     comision_porcentaje = models.DecimalField(
         'Comisión (%)',
-        max_digits=5,
-        decimal_places=2,
+        max_digits=6,  # Aumentado para soportar hasta 100.000
+        decimal_places=3,  # 3 decimales para precisión
         default=0,
         help_text='Porcentaje de comisión del 0 al 100'
     )
@@ -39,17 +39,30 @@ class MedioDePago(models.Model):
     def __str__(self):
         estado = 'Activo' if self.is_active else 'Deshabilitado'
         return f'{self.nombre} - {estado}'
+        
+    def toggle_active(self):
+        """Cambiar estado activo/inactivo"""
+        if self.is_deleted:
+            raise ValidationError('No se puede cambiar el estado de un medio eliminado.')
+        self.is_active = not self.is_active
+        self.save(update_fields=['is_active'])
+        return self.is_active
 
     def soft_delete(self):
         """Eliminación suave del medio de pago"""
+        if self.is_deleted:
+            raise ValidationError('El medio ya está eliminado.')
         self.deleted_at = timezone.now()
         self.is_active = False
-        self.save()
+        self.save(update_fields=['deleted_at', 'is_active'])
 
     def restore(self):
         """Restaurar medio de pago eliminado"""
+        if not self.is_deleted:
+            raise ValidationError('No se puede restaurar un medio que no está eliminado.')
         self.deleted_at = None
-        self.save()
+        self.is_active = True
+        self.save(update_fields=['deleted_at', 'is_active'])
 
     @property
     def is_deleted(self):
