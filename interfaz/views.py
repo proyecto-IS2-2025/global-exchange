@@ -20,16 +20,6 @@ def inicio(request):
     # Subquery: última fila (por fecha) de TasaCambio para cada divisa
     latest = TasaCambio.objects.filter(divisa=OuterRef('pk')).order_by('-fecha')
 
-    """divisas = (
-        Divisa.objects
-        .filter(is_active=True)
-        .annotate(
-            ultima_fecha=Subquery(latest.values('fecha')[:1]),
-            ultima_compra=Subquery(latest.values('valor_compra')[:1]),
-            ultima_venta=Subquery(latest.values('valor_venta')[:1]),
-        )
-        .order_by('code')
-    )"""
     divisas = (
         Divisa.objects
         .filter(is_active=True)

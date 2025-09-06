@@ -42,20 +42,24 @@
             <table class="table table-striped table-hover">
                 <thead class="table-dark">
                     <tr>
-                        <th scope="col">Fecha</th>
+                        <th scope="col">Fecha y hora</th>
                         <th scope="col">Precio base</th>
+                        <th scope="col">Comisión compra</th>
+                        <th scope="col">Comisión venta</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% with d=divisa.decimales|default:2 %}
                     {% for t in tasas %}
                     <tr>
-                        <td>{{ t.fecha|date:"d/m/Y" }}</td>
+                        <td>{{ t.fecha|date:"d/m/Y H:i" }}</td>
                         <td>{{ t.precio_base|floatformat:d }}</td>
+                        <td>{{ t.comision_compra|floatformat:2 }}</td>
+                        <td>{{ t.comision_venta|floatformat:2 }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="2" class="text-center">No hay tasas registradas para este rango de fechas.</td>
+                        <td colspan="4" class="text-center">No hay tasas registradas para este rango de fechas.</td>
                     </tr>
                     {% endfor %}
                     {% endwith %}

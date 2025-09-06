@@ -2,5 +2,8 @@ from django.apps import AppConfig
 
 
 class DivisasConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'divisas'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "divisas"
+
+    def ready(self):
+        import divisas.signals

@@ -13,31 +13,38 @@ class DivisaForm(forms.ModelForm):
     def clean_code(self):
         return (self.cleaned_data.get('code') or '').upper().strip()
 
+# forms.py
 class TasaCambioForm(forms.ModelForm):
     class Meta:
         model = TasaCambio
-        fields = ['fecha', 'precio_base']
+        fields = ['precio_base', 'comision_compra', 'comision_venta']  # sin fecha
         widgets = {
-            'fecha': forms.DateInput(
-                format='%d/%m/%Y',
-                attrs={'type': 'text', 'placeholder': 'dd/mm/yyyy'}
-            ),
+            'precio_base': forms.NumberInput(attrs={'step': '0.00000001', 'min': '0'}),
+            'comision_compra': forms.NumberInput(attrs={'step': '0.00000001', 'min': '0'}),
+            'comision_venta': forms.NumberInput(attrs={'step': '0.00000001', 'min': '0'}),
         }
 
     def __init__(self, *args, **kwargs):
-        # recibimos la divisa desde la vista
         self.divisa = kwargs.pop('divisa', None)
         super().__init__(*args, **kwargs)
-        self.fields['fecha'].input_formats = ['%d/%m/%Y']
         if self.divisa:
-            self.instance.divisa = self.divisa  # para que Django sepa la relación
+            self.instance.divisa = self.divisa
 
-    def clean(self):
-        cleaned = super().clean()
-        fecha = cleaned.get('fecha')
-        if self.divisa and fecha:
-            existe = TasaCambio.objects.filter(divisa=self.divisa, fecha=fecha)\
-                                       .exclude(pk=self.instance.pk).exists()
-            if existe:
-                self.add_error('fecha', 'Ya existe una tasa para esta divisa en esa fecha.')
-        return cleaned
+    # Reglas: valores numéricos absolutos > 0
+    def clean_precio_base(self):
+        v = self.cleaned_data.get('precio_base')
+        if v is not None and v <= 0:
+            raise forms.ValidationError('El precio base debe ser mayor a 0.')
+        return v
+
+    def clean_comision_compra(self):
+        v = self.cleaned_data.get('comision_compra')
+        if v is not None and v <= 0:
+            raise forms.ValidationError('La comisión de compra debe ser mayor a 0.')
+        return v
+
+    def clean_comision_venta(self):
+        v = self.cleaned_data.get('comision_venta')
+        if v is not None and v <= 0:
+            raise forms.ValidationError('La comisión de venta debe ser mayor a 0.')
+        return v

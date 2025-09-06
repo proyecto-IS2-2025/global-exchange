@@ -28,5 +28,7 @@ parts/
 sdist/
 var/
 wheels/
+# Archivos de IDE
+.idea/
 
 #FIN DEL GITINORE

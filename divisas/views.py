@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
 from .models import Divisa, TasaCambio
 from .forms import DivisaForm, TasaCambioForm
-import datetime
+from django.urls import reverse_lazy, reverse
 from django.db.models import Max
 from django.db.models import OuterRef, Subquery
 
@@ -105,7 +105,7 @@ class TasaCambioListView(LoginRequiredMixin, ListView):
         :rtype: django.db.models.query.QuerySet
         """
         divisa_id = self.kwargs['divisa_id']
-        qs = TasaCambio.objects.filter(divisa_id=divisa_id).order_by('fecha')
+        qs = TasaCambio.objects.filter(divisa_id=divisa_id).order_by('-fecha')
 
         ini = self.request.GET.get('inicio')
         fin = self.request.GET.get('fin')
@@ -130,9 +130,17 @@ class TasaCambioCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateVi
     form_class = TasaCambioForm
     template_name = 'divisas/tasa_form.html'
 
+
     def get_initial(self):
         initial = super().get_initial()
-        initial['fecha'] = datetime.date.today()
+        divisa = get_object_or_404(Divisa, pk=self.kwargs['divisa_id'])
+        ultima = TasaCambio.objects.filter(divisa=divisa).order_by('-fecha').first()
+        if ultima:
+            initial.update({
+                'precio_base': ultima.precio_base,
+                'comision_compra': ultima.comision_compra,
+                'comision_venta': ultima.comision_venta,
+            })
         return initial
 
     def get_form_kwargs(self):
@@ -142,18 +150,14 @@ class TasaCambioCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateVi
 
     def form_valid(self, form):
         tasa = form.save(commit=False)
-        tasa.divisa = form.divisa  # viene desde get_form_kwargs
+        tasa.divisa = form.divisa
+        tasa.creado_por = self.request.user
         tasa.save()
-        return super().form_valid(form)
+        return redirect(self.get_success_url())
 
     def get_success_url(self):
-        return reverse_lazy('divisas:tasas', kwargs={'divisa_id': self.kwargs['divisa_id']})
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx['divisa'] = get_object_or_404(Divisa, pk=self.kwargs['divisa_id'])
-        return ctx
-
+        # redirige al listado de tasas de la misma divisa
+        return reverse('divisas:tasas', kwargs={'divisa_id': self.kwargs['divisa_id']})
 
 
 class TasaCambioAllListView(LoginRequiredMixin, ListView):
@@ -175,7 +179,7 @@ class TasaCambioAllListView(LoginRequiredMixin, ListView):
         * `divisa`: ID o código de la divisa.
         * `inicio`: Fecha de inicio del rango (formato YYYY-MM-DD).
         * `fin`: Fecha de fin del rango (formato YYYY-MM-DD).
-        
+
         :return: El queryset filtrado de tasas de cambio.
         :rtype: django.db.models.query.QuerySet
         """
@@ -208,6 +212,7 @@ class TasaCambioAllListView(LoginRequiredMixin, ListView):
 
 
 
+
 def visualizador_tasas(request):
     latest = TasaCambio.objects.filter(divisa=OuterRef('pk')).order_by('-fecha')
 
@@ -216,8 +221,8 @@ def visualizador_tasas(request):
         .filter(is_active=True)
         .annotate(
             ultima_fecha=Subquery(latest.values('fecha')[:1]),
-            ultima_compra=Subquery(latest.values('valor_compra')[:1]),
-            ultima_venta=Subquery(latest.values('valor_venta')[:1]),
+            ultima_compra=Subquery(latest.values('comision_compra')[:1]),
+            ultima_venta=Subquery(latest.values('comision_venta')[:1]),
         )
         .order_by('code')
     )
