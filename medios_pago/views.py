@@ -193,8 +193,7 @@ class MedioDePagoToggleActivoView(LoginRequiredMixin, PermissionRequiredMixin, V
     def post(self, request, pk):
         medio_de_pago = get_object_or_404(MedioDePago.active, pk=pk)
         estado_anterior = medio_de_pago.is_active
-        medio_de_pago.is_active = not medio_de_pago.is_active
-        medio_de_pago.save()
+        medio_de_pago.toggle_active()  # Usar el método del modelo
         
         estado = 'activado' if medio_de_pago.is_active else 'desactivado'
         messages.success(request, f'Medio de pago "{medio_de_pago.nombre}" {estado} exitosamente.')
