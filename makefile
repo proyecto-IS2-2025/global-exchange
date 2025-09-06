@@ -30,3 +30,8 @@ db-check:
 dbshell:
 	@echo "Abriendo shell de la base de datos..."
 	poetry run python manage.py dbshell
+
+tests:
+	@echo "Ejecutando tests..."
+	poetry run python manage.py test medios_pago.tests.MedioDePagoModelTest medios_pago.tests.CampoMedioDePagoModelTest medios_pago.tests.EdgeCasesTest -v 2
+	@echo "Tests completados."
