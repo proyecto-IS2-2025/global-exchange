@@ -205,22 +205,21 @@ class DescuentoUpdateView(UserPassesTestMixin, UpdateView):
         return self.request.user.is_staff or self.request.user.is_superuser
 
     def form_valid(self, form):
-        # Obtener valores anteriores
-        pk = self.get_object().pk
-        anterior = Descuento.objects.get(pk=pk)
+        anterior_descuento = self.get_object().porcentaje_descuento
+        #print("DEBUG >>> valor anterior:", anterior_descuento)
 
-        # Guardar normalmente
         response = super().form_valid(form)
 
-        # Registrar en historial
-        HistorialDescuentos.objects.create(
-            descuento=self.object,
-            porcentaje_descuento_anterior=anterior.porcentaje_descuento,
-            porcentaje_descuento_nuevo=self.object.porcentaje_descuento,
-            modificado_por=self.request.user
-        )
+        #print("DEBUG >>> valor nuevo:", self.object.porcentaje_descuento)
 
-        messages.success(self.request, f"Descuento para {self.object.segmento.name} actualizado correctamente.")
+        if anterior_descuento != self.object.porcentaje_descuento:
+            HistorialDescuentos.objects.create(
+                descuento=self.object,
+                porcentaje_descuento_anterior=anterior_descuento,
+                porcentaje_descuento_nuevo=self.object.porcentaje_descuento,
+                modificado_por=self.request.user
+            )
+            #print("DEBUG >>> historial creado")
 
         return response
 

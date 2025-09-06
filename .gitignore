@@ -1,4 +1,4 @@
-# Ignorar directorios y archivos de entorno virtual
+Ignorar directorios y archivos de entorno virtual,
 .venv/
 env/
 venv/
