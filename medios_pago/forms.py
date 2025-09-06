@@ -1,4 +1,4 @@
-# forms.py - Versión corregida para soft delete
+# forms.py - Versión mejorada para UX
 from django import forms
 from django.forms import inlineformset_factory
 from django.core.exceptions import ValidationError
@@ -111,15 +111,28 @@ class CampoMedioDePagoFormSet(forms.BaseInlineFormSet):
         return instances
 
 
-# Crear el formset usando la clase personalizada
-CampoMedioDePagoFormSet = inlineformset_factory(
-    MedioDePago,
-    CampoMedioDePago,
-    form=CampoMedioDePagoForm,
-    formset=CampoMedioDePagoFormSet,  # Usar nuestro formset personalizado
-    fields=('nombre_campo', 'tipo_dato', 'is_required'),
-    extra=0,
-    can_delete=True,
-    validate_max=True,
-    max_num=10,
-)
+# Función factory para crear formsets con configuración específica según el contexto
+def create_campo_formset(is_edit=False):
+    """
+    Factory para crear formsets con configuración específica:
+    - Creación: extra=1 (un campo por defecto)
+    - Edición: extra=0 (sin campos por defecto)
+    """
+    extra_forms = 0 if is_edit else 1
+    
+    return inlineformset_factory(
+        MedioDePago,
+        CampoMedioDePago,
+        form=CampoMedioDePagoForm,
+        formset=CampoMedioDePagoFormSet,
+        fields=('nombre_campo', 'tipo_dato', 'is_required'),
+        extra=extra_forms,  # Dinámico según el contexto
+        can_delete=True,
+        validate_max=True,
+        max_num=10,
+    )
+
+
+# Mantener compatibilidad con el código existente
+# (Usar solo para creación - será reemplazado por la factory)
+CampoMedioDePagoFormSet = create_campo_formset(is_edit=False)

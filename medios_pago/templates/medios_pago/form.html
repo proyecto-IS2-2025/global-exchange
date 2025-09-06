@@ -75,31 +75,8 @@
                 <h4 class="mb-0">Campos Específicos</h4>
                 <button type="button" id="add-campo" class="btn btn-outline-primary btn-sm">
                     <i class="fas fa-plus me-1"></i>
-                    {% if is_edit %}
-                        Agregar Nuevo Campo
-                    {% else %}
-                        Agregar Campo
-                    {% endif %}
+                    Agregar Campo
                 </button>
-            </div>
-
-            {% if is_edit %}
-                {% if can_edit_freely %}
-                    <div class="alert alert-success alert-sm mb-3">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Modo edición completa:</strong> Puedes agregar, modificar o eliminar campos libremente.
-                    </div>
-                {% else %}
-                    <div class="alert alert-warning alert-sm mb-3">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Edición restringida:</strong> Este medio de pago tiene transacciones asociadas. Solo puedes agregar nuevos campos.
-                    </div>
-                {% endif %}
-            {% endif %}
-
-            <div class="alert alert-info alert-sm mb-3">
-                <i class="fas fa-lightbulb me-2"></i>
-                <strong>Para eliminar campos:</strong> Marca el checkbox "Eliminar" y luego presiona "Guardar" para aplicar los cambios. Puedes desmarcar si cambias de opinión.
             </div>
 
             <div id="campos-formset-container">
@@ -114,10 +91,12 @@
                                     {% if form_campo.instance.pk %}
                                         <span class="badge bg-info">Campo existente</span>
                                     {% else %}
-                                        <span class="badge bg-success">Nuevo campo</span>
+                                        <span class="badge bg-success">
+                                            {% if is_edit %}Nuevo campo{% else %}Campo inicial{% endif %}
+                                        </span>
                                     {% endif %}
                                     
-                                    {% if form_campo.DELETE %}
+                                    {% if form_campo.DELETE and is_edit %}
                                         <div class="form-check m-0">
                                             {{ form_campo.DELETE }}
                                             <label class="form-check-label text-danger" for="{{ form_campo.DELETE.id_for_label }}">
@@ -198,6 +177,13 @@
                             </div>
                         </div>
                     </div>
+                {% empty %}
+                    {% if is_edit %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Este medio de pago no tiene campos específicos definidos. Puedes agregar algunos usando el botón "Agregar Campo".
+                        </div>
+                    {% endif %}
                 {% endfor %}
                 
                 <div id="empty-form-template" class="card mb-3 form-campo d-none">
@@ -207,7 +193,7 @@
                             <div class="d-flex align-items-center gap-2">
                                 <span class="badge bg-success">Nuevo campo</span>
                                 
-                                {% if campos_formset.empty_form.DELETE %}
+                                {% if campos_formset.empty_form.DELETE and is_edit %}
                                     <div class="form-check m-0">
                                         {{ campos_formset.empty_form.DELETE }}
                                         <label class="form-check-label text-danger" title="Marcar para eliminar al guardar">
@@ -251,7 +237,7 @@
 
             <div class="d-grid gap-2 mt-4">
                 <button type="submit" class="btn btn-success">
-                    <i class="fas fa-save me-2"></i>{{ action }}
+                    <i class="fas fa-save me-2"></i>Guardar
                 </button>
                 <a href="{% url 'medios_pago:lista' %}" class="btn btn-outline-secondary">
                     <i class="fas fa-times me-2"></i>Cancelar
@@ -286,6 +272,66 @@
             });
         }
 
+        // Función para mostrar mensajes contextuales
+        function showContextualMessage() {
+            const existingAlert = document.querySelector('.contextual-alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+
+            const camposCount = container.querySelectorAll('.form-campo:not(#empty-form-template):not(.marked-for-deletion)').length;
+            let messageHtml = '';
+
+            if (isEdit) {
+                if (canEditFreely) {
+                    messageHtml = `
+                        <div class="alert alert-success alert-sm mb-3 contextual-alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Modo edición completa:</strong> Puedes agregar, modificar o eliminar campos libremente.
+                        </div>
+                    `;
+                    
+                    if (camposCount > 0) {
+                        messageHtml += `
+                            <div class="alert alert-info alert-sm mb-3 contextual-alert">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                <strong>Para eliminar campos:</strong> Marca el checkbox "Eliminar" y luego presiona "Guardar" para aplicar los cambios.
+                            </div>
+                        `;
+                    }
+                } else {
+                    messageHtml = `
+                        <div class="alert alert-warning alert-sm mb-3 contextual-alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Edición restringida:</strong> Este medio de pago tiene transacciones asociadas. Solo puedes agregar nuevos campos.
+                        </div>
+                    `;
+                }
+            } else {
+                if (camposCount === 0) {
+                    messageHtml = `
+                        <div class="alert alert-info alert-sm mb-3 contextual-alert">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            <strong>Creando nuevo medio:</strong> Haz clic en "Agregar Campo" para definir los campos que necesita este medio de pago.
+                        </div>
+                    `;
+                } else {
+                    messageHtml = `
+                        <div class="alert alert-info alert-sm mb-3 contextual-alert">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            <strong>Creando nuevo medio:</strong> Ya tienes ${camposCount} campo${camposCount > 1 ? 's' : ''} definido${camposCount > 1 ? 's' : ''}. Puedes agregar más si los necesitas.
+                        </div>
+                    `;
+                }
+            }
+
+            // Buscar el contenedor de campos para insertar el mensaje antes
+            const camposContainer = document.getElementById('campos-formset-container');
+            if (camposContainer && messageHtml) {
+                camposContainer.insertAdjacentHTML('beforebegin', messageHtml);
+            }
+        }
+
         // Agregar nuevo campo
         if (addButton && emptyFormTemplate) {
             addButton.addEventListener('click', function() {
@@ -307,6 +353,7 @@
                 managementForm.value = totalForms + 1;
                 
                 updateFieldNumbers();
+                showContextualMessage();
             });
         }
 
@@ -319,7 +366,7 @@
                         // Marcar visualmente como "pendiente de eliminación"
                         formDiv.classList.add('marked-for-deletion');
                         formDiv.style.opacity = '0.6';
-                        formDiv.style.backgroundColor = '#fff3cd'; // Color amarillo suave
+                        formDiv.style.backgroundColor = '#fff3cd';
                         formDiv.style.border = '2px dashed #ffc107';
                         
                         // Agregar indicador visual
@@ -344,6 +391,7 @@
                         }
                     }
                     updateFieldNumbers();
+                    showContextualMessage();
                 }
             }
         });
@@ -359,8 +407,9 @@
             }
         });
 
-        // Inicializar numeración y estado visual de campos ya marcados
+        // Inicializar al cargar la página
         updateFieldNumbers();
+        showContextualMessage();
         
         // Revisar campos ya marcados para eliminación al cargar la página
         document.querySelectorAll('input[name*="DELETE"]:checked').forEach(function(checkbox) {

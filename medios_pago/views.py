@@ -1,4 +1,4 @@
-# views.py - Versión mejorada
+# views.py - Versión mejorada con UX optimizada
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, View
@@ -12,7 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 
 from .models import MedioDePago, CampoMedioDePago
-from .forms import MedioDePagoForm, CampoMedioDePagoFormSet
+from .forms import MedioDePagoForm, create_campo_formset
 
 
 class MedioDePagoListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
@@ -40,13 +40,16 @@ class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, Cr
         ctx['is_edit'] = False
         ctx['can_edit_freely'] = True  # En creación siempre se puede editar todo
         
+        # Usar factory para formset de creación (con extra=1)
+        CampoFormSet = create_campo_formset(is_edit=False)
+        
         if self.request.POST:
-            ctx['campos_formset'] = CampoMedioDePagoFormSet(
+            ctx['campos_formset'] = CampoFormSet(
                 self.request.POST,
                 instance=None
             )
         else:
-            ctx['campos_formset'] = CampoMedioDePagoFormSet(
+            ctx['campos_formset'] = CampoFormSet(
                 instance=None
             )
         return ctx
@@ -54,7 +57,10 @@ class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, Cr
     def post(self, request, *args, **kwargs):
         self.object = None
         form = self.get_form()
-        campos_formset = CampoMedioDePagoFormSet(
+        
+        # Usar factory para formset de creación
+        CampoFormSet = create_campo_formset(is_edit=False)
+        campos_formset = CampoFormSet(
             request.POST,
             instance=None
         )
@@ -98,10 +104,13 @@ class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateV
         ctx['is_edit'] = True
         ctx['can_edit_freely'] = self.object.can_be_edited_freely
         
+        # Usar factory para formset de edición (con extra=0)
+        CampoFormSet = create_campo_formset(is_edit=True)
+        
         if self.request.POST:
             # Incluir campos eliminados en el formset para mantener consistencia
             campos_queryset = self.object.campos.all()
-            ctx['campos_formset'] = CampoMedioDePagoFormSet(
+            ctx['campos_formset'] = CampoFormSet(
                 self.request.POST,
                 instance=self.object,
                 queryset=campos_queryset
@@ -109,7 +118,7 @@ class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateV
         else:
             # Solo mostrar campos activos en la vista
             campos_queryset = self.object.campos.filter(deleted_at__isnull=True)
-            ctx['campos_formset'] = CampoMedioDePagoFormSet(
+            ctx['campos_formset'] = CampoFormSet(
                 instance=self.object,
                 queryset=campos_queryset
             )
@@ -123,7 +132,9 @@ class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateV
         if request.headers.get('Content-Type') == 'application/json':
             return self.handle_ajax_field_delete(request)
         
-        campos_formset = CampoMedioDePagoFormSet(
+        # Usar factory para formset de edición
+        CampoFormSet = create_campo_formset(is_edit=True)
+        campos_formset = CampoFormSet(
             request.POST,
             instance=self.object,
             queryset=self.object.campos.all()
@@ -235,7 +246,7 @@ class CampoSoftDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
             
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
-# views.py - Agregar estas nuevas vistas
+
 
 class MedioDePagoDeletedListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     """Vista para mostrar medios de pago eliminados (papelera)"""
