@@ -7,22 +7,31 @@ from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
 from django.utils.decorators import method_decorator
-
-from .models import Cliente
-from .forms import ClienteForm
-
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib import messages
-from .models import AsignacionCliente
 
-#Asociar clientes-usuarios
+from .models import Cliente, AsignacionCliente, Descuento, Segmento, HistorialDescuentos
+from .forms import ClienteForm, DescuentoForm
+
+# Asociar clientes-usuarios
 
 User = get_user_model()
-
 
 # Vista para asociar usuarios y clientes
 @login_required
 @user_passes_test(lambda u: u.is_staff)
 def asociar_clientes_usuarios_view(request):
+    """
+    Vista para asociar clientes a usuarios del sistema.
+
+    Solo accesible para usuarios de tipo staff. Permite a un usuario con los
+    permisos adecuados asignar clientes a otros usuarios.
+
+    :param request: Objeto de solicitud HTTP.
+    :type request: django.http.HttpRequest
+    :return: Redirección a la URL 'clientes:asociar_clientes_usuarios' o renderiza el formulario.
+    :rtype: django.http.HttpResponse
+    """
     if request.method == 'POST':
         usuario_id = request.POST.get('usuario')
         clientes_ids = request.POST.getlist('clientes')
@@ -49,15 +58,23 @@ def asociar_clientes_usuarios_view(request):
         'usuarios': usuarios,
         'clientes': clientes,
     }
-    # 🔴 Antes: 'asociar_clientes_usuarios/admin_asociar.html'
-    # ✅ Ahora: usamos el template unificado
     return render(request, 'asociar_a_usuario/asociar_clientes_usuarios.html', context)
-
 
 # Vista para listar y eliminar asociaciones
 @login_required
 @user_passes_test(lambda u: u.is_staff)
 def listar_asociaciones(request):
+    """
+    Vista para listar y eliminar asociaciones de clientes con usuarios.
+
+    Permite a los usuarios de tipo staff ver una lista de todas las
+    asignaciones existentes y eliminarlas si es necesario.
+
+    :param request: Objeto de solicitud HTTP.
+    :type request: django.http.HttpRequest
+    :return: Redirección a la URL 'clientes:listar_asociaciones' o renderiza la lista de asignaciones.
+    :rtype: django.http.HttpResponse
+    """
     if request.method == 'POST' and 'delete_id' in request.POST:
         try:
             asignacion_id = request.POST.get('delete_id')
@@ -70,13 +87,22 @@ def listar_asociaciones(request):
 
     asignaciones = AsignacionCliente.objects.all().order_by('usuario__email')
     context = {'asignaciones': asignaciones}
-    return render(request, 'asociar_a_usuario/lista_asociaciones.html', context)
-    #return render(request, 'asociar_clientes_usuarios/test.html', context)
-
+    return render(request, 'asociar_a_usuario/lista_descuentos.html', context)
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def crear_cliente_view(request):
+    """
+    Vista para crear un nuevo cliente.
+
+    Solo accesible para superusuarios. Maneja la lógica de validación
+    y guardado del formulario de creación de clientes.
+
+    :param request: Objeto de solicitud HTTP.
+    :type request: django.http.HttpRequest
+    :return: Redirección a la URL 'clientes:crear_cliente' o renderiza el formulario.
+    :rtype: django.http.HttpResponse
+    """
     if request.method == 'POST':
         form = ClienteForm(request.POST)
         if form.is_valid():
@@ -88,11 +114,22 @@ def crear_cliente_view(request):
 
     return render(request, 'crear_cliente.html', {'form': form})
 
-"""
+
 @login_required
 def lista_clientes(request):
+    """
+    Vista para listar los clientes asignados a un usuario.
+
+    Solo los usuarios autenticados pueden acceder a esta vista. Muestra los
+    clientes que han sido asignados al usuario actual.
+    
+    :param request: Objeto de solicitud HTTP.
+    :type request: django.http.HttpRequest
+    :return: Renderiza la lista de clientes del usuario.
+    :rtype: django.http.HttpResponse
+    """
     return render(request, 'clientes/lista_clientes.html')
-"""
+
 
 from .models import Segmento
 
@@ -130,3 +167,69 @@ class ClienteUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView)
     template_name = "clientes/form.html"
     success_url = reverse_lazy("clientes:lista_clientes")
     permission_required = "clientes.change_cliente"
+
+
+# -------------------------------
+# NUEVAS VISTAS PARA DESCUENTOS
+# -------------------------------
+
+@method_decorator(login_required, name='dispatch')
+class DescuentoListView(UserPassesTestMixin, ListView):
+    model = Descuento
+    template_name = 'descuentos/lista_descuentos.html'
+    context_object_name = 'descuentos'
+
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.is_superuser
+
+    def get_queryset(self):
+        """
+        Asegura que cada segmento tenga un registro de Descuento.
+        """
+        for segmento in Segmento.objects.all():
+            Descuento.objects.get_or_create(
+                segmento=segmento,
+                defaults={'porcentaje_descuento': 0.00, 'modificado_por': self.request.user}
+            )
+        return Descuento.objects.all()
+
+
+@method_decorator(login_required, name='dispatch')
+class DescuentoUpdateView(UserPassesTestMixin, UpdateView):
+    model = Descuento
+    form_class = DescuentoForm
+    template_name = 'descuentos/editar_descuento.html'
+    success_url = reverse_lazy('clientes:lista_descuentos')
+
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.is_superuser
+
+    def form_valid(self, form):
+        # Obtener valores anteriores
+        pk = self.get_object().pk
+        anterior = Descuento.objects.get(pk=pk)
+
+        # Guardar normalmente
+        response = super().form_valid(form)
+
+        # Registrar en historial
+        HistorialDescuentos.objects.create(
+            descuento=self.object,
+            porcentaje_descuento_anterior=anterior.porcentaje_descuento,
+            porcentaje_descuento_nuevo=self.object.porcentaje_descuento,
+            modificado_por=self.request.user
+        )
+
+        messages.success(self.request, f"Descuento para {self.object.segmento.name} actualizado correctamente.")
+
+        return response
+
+
+@method_decorator(login_required, name='dispatch')
+class HistorialDescuentoListView(UserPassesTestMixin, ListView):
+    model = HistorialDescuentos
+    template_name = 'descuentos/historial_descuentos.html'
+    context_object_name = 'historial_descuentos'
+
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.is_superuser

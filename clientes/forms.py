@@ -1,11 +1,9 @@
-# clientes/forms.py
 from django import forms
-from .models import Cliente, AsignacionCliente
+from .models import Cliente, AsignacionCliente, Descuento
 
 class ClienteForm(forms.ModelForm):
     """
     Formulario para crear/editar clientes.
-    No incluye la asignación de usuario: eso se gestiona aparte.
     """
     class Meta:
         model = Cliente
@@ -39,7 +37,6 @@ class ClienteForm(forms.ModelForm):
             }),
         }
 
-
 class SeleccionClienteForm(forms.Form):
     """
     Formulario para que un usuario seleccione entre sus clientes asignados.
@@ -52,9 +49,17 @@ class SeleccionClienteForm(forms.Form):
 
     def __init__(self, user, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Solo mostrar los clientes asociados al usuario
         self.fields['cliente'].queryset = (
             AsignacionCliente.objects.filter(usuario=user)
                                      .select_related('cliente')
         )
         self.fields['cliente'].label_from_instance = lambda obj: obj.cliente.nombre_completo
+
+# Nuevo formulario para la gestión de descuentos
+class DescuentoForm(forms.ModelForm):
+    class Meta:
+        model = Descuento
+        fields = ['porcentaje_descuento']
+        widgets = {
+            'porcentaje_descuento': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        }
