@@ -25,8 +25,7 @@ def inicio(request):
         .filter(is_active=True)
         .annotate(
             ultima_fecha=Subquery(latest.values('fecha')[:1]),
-            ultima_compra=Subquery(latest.values('valor_compra')[:1]),
-            ultima_venta=Subquery(latest.values('valor_venta')[:1]),
+            ultimo_precio=Subquery(latest.values('precio_base')[:1]),
         )
         .order_by('code')
     )

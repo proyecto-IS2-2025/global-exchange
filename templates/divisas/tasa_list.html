@@ -2,74 +2,70 @@
 {% load static %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-8">
-            <div class="card shadow-lg p-4">
-                <div class="card-header bg-primary text-white text-center rounded mb-4">
-                    <h2 class="card-title mb-0">
-                        <i class="fas fa-chart-line me-2"></i>Tasas de {{ divisa.nombre }} ({{ divisa.code }})
-                    </h2>
-                </div>
-                <div class="card-body">
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-light">
-                            <h5 class="mb-0">Filtrar por fecha</h5>
-                        </div>
-                        <div class="card-body">
-                            <form method="get" class="row g-3 align-items-end">
-                                <div class="col-md-5">
-                                    <label for="id_inicio" class="form-label">Desde:</label>
-                                    <input type="date" class="form-control" id="id_inicio" name="inicio" value="{{ request.GET.inicio }}">
-                                </div>
-                                <div class="col-md-5">
-                                    <label for="id_fin" class="form-label">Hasta:</label>
-                                    <input type="date" class="form-control" id="id_fin" name="fin" value="{{ request.GET.fin }}">
-                                </div>
-                                <div class="col-md-2">
-                                    <button type="submit" class="btn btn-primary w-100">
-                                        <i class="fas fa-filter me-2"></i>Filtrar
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+    <div class="container mt-5">
+        <h2 class="mb-4">
+            <i class="fas fa-chart-line me-2"></i>Tasas de {{ divisa.nombre }} ({{ divisa.code }})
+        </h2>
 
-                    <div class="d-flex justify-content-between mb-3">
-                        <a href="{% url 'divisas:lista' %}" class="btn btn-secondary me-md-2">
-                            <i class="fas fa-arrow-left me-2"></i>Volver
-                        </a>
-                        <a href="{% url 'divisas:tasa_nueva' divisa.id %}" class="btn btn-primary">
-                            <i class="fas fa-plus-circle me-2"></i>Añadir Nueva Tasa
-                        </a>
-                    </div>
-                    
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th scope="col">Fecha</th>
-                                    <th scope="col">Valor Compra</th>
-                                    <th scope="col">Valor Venta</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for t in tasas %}
-                                <tr>
-                                    <td>{{ t.fecha|date:"d/m/Y" }}</td>
-                                    <td>{{ t.valor_compra }}</td>
-                                    <td>{{ t.valor_venta }}</td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="3" class="text-center">No hay tasas registradas para este rango de fechas.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Filtrar por fecha</h5>
             </div>
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-5">
+                        <label for="id_inicio" class="form-label">Desde:</label>
+                        <input type="date" class="form-control" id="id_inicio" name="inicio" value="{{ request.GET.inicio }}">
+                    </div>
+                    <div class="col-md-5">
+                        <label for="id_fin" class="form-label">Hasta:</label>
+                        <input type="date" class="form-control" id="id_fin" name="fin" value="{{ request.GET.fin }}">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter me-2"></i>Filtrar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="d-flex justify-content-between mb-3">
+            <a href="{% url 'divisas:lista' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Volver
+            </a>
+            <a href="{% url 'divisas:tasa_nueva' divisa.id %}" class="btn btn-success">
+                <i class="fas fa-plus-circle me-2"></i>Añadir Nueva Tasa
+            </a>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">Fecha y Hora</th>
+                        <th scope="col">Precio Base</th>
+                        <th scope="col">Comisión Compra</th>
+                        <th scope="col">Comisión Venta</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% with d=divisa.decimales|default:2 %}
+                    {% for t in tasas %}
+                    <tr>
+                        <td>{{ t.fecha|date:"d/m/Y H:i" }}</td>
+                        <td>{{ t.precio_base|floatformat:d }}</td>
+                        <td>{{ t.comision_compra|floatformat:d }}</td>
+                        <td>{{ t.comision_venta|floatformat:d }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center">No hay tasas registradas para este rango de fechas.</td>
+                    </tr>
+                    {% endfor %}
+                    {% endwith %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

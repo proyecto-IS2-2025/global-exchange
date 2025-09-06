@@ -15,34 +15,45 @@
                     <form method="post">
                         {% csrf_token %}
 
+                        <!-- Aviso de fecha automática -->
                         <div class="row mb-3">
                             <div class="col-md-12">
-                                <label for="{{ form.fecha.id_for_label }}" class="form-label">Fecha:</label>
-                                {{ form.fecha }}
-                                {% if form.fecha.errors %}
-                                    <div class="text-danger small mt-1">{{ form.fecha.errors }}</div>
-                                {% endif %}
-                                <div class="form-text text-muted">Formato: dd/mm/aaaa</div>
+                                <div class="alert alert-info">
+                                    La <strong>fecha y hora</strong> se registrarán automáticamente al guardar.
+                                </div>
                             </div>
                         </div>
 
+                        <!-- Precio base -->
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="{{ form.precio_base.id_for_label }}" class="form-label">Precio base:</label>
+                                {{ form.precio_base }}
+                                {% if form.precio_base.errors %}
+                                    <div class="text-danger small mt-1">{{ form.precio_base.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Comisiones -->
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label for="{{ form.valor_compra.id_for_label }}" class="form-label">Valor de Compra:</label>
-                                {{ form.valor_compra }}
-                                {% if form.valor_compra.errors %}
-                                    <div class="text-danger small mt-1">{{ form.valor_compra.errors }}</div>
+                                <label for="{{ form.comision_compra.id_for_label }}" class="form-label">Comisión Compra:</label>
+                                {{ form.comision_compra }}
+                                {% if form.comision_compra.errors %}
+                                    <div class="text-danger small mt-1">{{ form.comision_compra.errors }}</div>
                                 {% endif %}
                             </div>
                             <div class="col-md-6">
-                                <label for="{{ form.valor_venta.id_for_label }}" class="form-label">Valor de Venta:</label>
-                                {{ form.valor_venta }}
-                                {% if form.valor_venta.errors %}
-                                    <div class="text-danger small mt-1">{{ form.valor_venta.errors }}</div>
+                                <label for="{{ form.comision_venta.id_for_label }}" class="form-label">Comisión Venta:</label>
+                                {{ form.comision_venta }}
+                                {% if form.comision_venta.errors %}
+                                    <div class="text-danger small mt-1">{{ form.comision_venta.errors }}</div>
                                 {% endif %}
                             </div>
                         </div>
 
+                        <!-- Errores generales -->
                         {% if form.non_field_errors %}
                             <div class="alert alert-danger mt-3" role="alert">
                                 {% for error in form.non_field_errors %}
@@ -51,8 +62,9 @@
                             </div>
                         {% endif %}
 
+                        <!-- Botones -->
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                            <a href="{% url 'divisas:tasas' divisa.id %}" class="btn btn-secondary me-md-2">
+                            <a href="{% url 'divisas:tasas' view.kwargs.divisa_id %}" class="btn btn-secondary me-md-2">
                                 <i class="fas fa-arrow-left me-2"></i>Volver
                             </a>
                             <button type="submit" class="btn btn-primary">

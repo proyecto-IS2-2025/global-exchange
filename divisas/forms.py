@@ -3,48 +3,48 @@ from .models import Divisa, TasaCambio
 
 
 class DivisaForm(forms.ModelForm):
-    """
-    Formulario para la creación y edición de divisas.
-    
-    Este formulario se basa en el modelo :class:`~divisas.models.Divisa`.
-    """
     class Meta:
         model = Divisa
-        fields = ['nombre', 'code', 'simbolo']  # is_active NO se expone al crear
+        fields = ['nombre', 'code', 'simbolo', 'decimales']
+        widgets = {
+            'decimales': forms.NumberInput(attrs={'min': 0, 'max': 8}),
+        }
 
     def clean_code(self):
-        """
-        Limpia y formatea el campo de código de la divisa.
-
-        Convierte el código a mayúsculas y elimina los espacios en blanco.
-        
-        :return: El código de la divisa formateado.
-        :rtype: str
-        """
         return (self.cleaned_data.get('code') or '').upper().strip()
 
-
+# forms.py
 class TasaCambioForm(forms.ModelForm):
-    """
-    Formulario para la creación y edición de tasas de cambio.
-
-    Este formulario se basa en el modelo :class:`~divisas.models.TasaCambio` y
-    personaliza el widget para el campo de fecha.
-    """
     class Meta:
         model = TasaCambio
-        fields = ['fecha', 'valor_compra', 'valor_venta']
+        fields = ['precio_base', 'comision_compra', 'comision_venta']  # sin fecha
         widgets = {
-            'fecha': forms.DateInput(
-                format='%d/%m/%Y',
-                attrs={'type': 'text', 'placeholder': 'dd/mm/yyyy'}
-            ),
+            'precio_base': forms.NumberInput(attrs={'step': '0.00000001', 'min': '0'}),
+            'comision_compra': forms.NumberInput(attrs={'step': '0.00000001', 'min': '0'}),
+            'comision_venta': forms.NumberInput(attrs={'step': '0.00000001', 'min': '0'}),
         }
 
     def __init__(self, *args, **kwargs):
-        """
-        Inicializa el formulario y define los formatos de entrada para la fecha.
-        """
+        self.divisa = kwargs.pop('divisa', None)
         super().__init__(*args, **kwargs)
-        # Configurar formatos aceptados
-        self.fields['fecha'].input_formats = ['%d/%m/%Y']
+        if self.divisa:
+            self.instance.divisa = self.divisa
+
+    # Reglas: valores numéricos absolutos > 0
+    def clean_precio_base(self):
+        v = self.cleaned_data.get('precio_base')
+        if v is not None and v <= 0:
+            raise forms.ValidationError('El precio base debe ser mayor a 0.')
+        return v
+
+    def clean_comision_compra(self):
+        v = self.cleaned_data.get('comision_compra')
+        if v is not None and v <= 0:
+            raise forms.ValidationError('La comisión de compra debe ser mayor a 0.')
+        return v
+
+    def clean_comision_venta(self):
+        v = self.cleaned_data.get('comision_venta')
+        if v is not None and v <= 0:
+            raise forms.ValidationError('La comisión de venta debe ser mayor a 0.')
+        return v
