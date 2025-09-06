@@ -28,10 +28,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'users.apps.UsersConfig',
+    'django.contrib.humanize',
     'interfaz',
     'clientes',
     'roles',
     'divisas',
+    'medios_pago',
     'widget_tweaks'
 ]
 

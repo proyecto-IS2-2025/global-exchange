@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<h1 class="h3 mb-4 text-center">Medios de Cobro</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h5">Lista de Medios de Cobro</h2>
+    <div>
+        <a href="{% url 'medios_pago:papelera' %}" class="btn btn-outline-secondary me-2">
+            <i class="fas fa-trash me-2"></i>Papelera
+        </a>
+        <a href="{% url 'medios_pago:crear_admin' %}" class="btn btn-success">
+            <i class="fas fa-plus me-2"></i>Nuevo Medio
+        </a>
+    </div>
+</div>
+
+{% if medios_pago %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover shadow-sm rounded-4 overflow-hidden">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Comisión (%)</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Campos</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for medio in medios_pago %}
+                <tr>
+                    <td>{{ medio.nombre }}</td>
+                    <td>{{ medio.comision_porcentaje|default:"0"|intcomma }}%</td>
+                    <td>
+                        {% if medio.is_active %}
+                        <span class="badge bg-success">Activo</span>
+                        {% else %}
+                        <span class="badge bg-danger">Deshabilitado</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <small class="text-muted">{{ medio.total_campos_activos }} campo{{ medio.total_campos_activos|pluralize }}</small>
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <a href="{% url 'medios_pago:editar' medio.pk %}" class="btn btn-sm btn-primary" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="{% url 'medios_pago:toggle' medio.pk %}" method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" title="{% if medio.is_active %}Desactivar{% else %}Activar{% endif %}"
+                                    class="btn btn-sm {% if medio.is_active %}btn-warning{% else %}btn-success{% endif %}">
+                                    <i class="fas {% if medio.is_active %}fa-power-off{% else %}fa-check{% endif %}"></i>
+                                </button>
+                            </form>
+                            <button type="button" class="btn btn-sm btn-danger btn-delete" title="Eliminar"
+                                data-name="{{ medio.nombre|escapejs }}" data-url="{% url 'medios_pago:delete' medio.pk %}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="alert alert-info text-center mt-4">
+        No hay medios de cobro registrados.
+    </div>
+{% endif %}
+
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar el medio de pago <strong id="medio-name"></strong>?</p>
+                <p class="text-muted small">Esta acción se puede revertir desde el panel de administración.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="delete-form" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(nombreMedio, deleteUrl) {
+    document.getElementById('medio-name').textContent = nombreMedio;
+    document.getElementById('delete-form').action = deleteUrl;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+<script>
+// Delegated handler for delete buttons to avoid inline JS with template tags
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-delete');
+    if (!btn) return;
+    const name = btn.dataset.name || '';
+    const url = btn.dataset.url || '';
+    confirmDelete(name, url);
+});
+</script>
+{% endblock %}
