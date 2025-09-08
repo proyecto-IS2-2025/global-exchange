@@ -3,11 +3,16 @@ from django.views.generic import ListView, CreateView, UpdateView, View
 from django.urls import reverse_lazy
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
-from .models import Divisa, TasaCambio
+from .models import Divisa, TasaCambio, CotizacionSegmento
+from clientes.models import Cliente, AsignacionCliente, Descuento, Segmento
 from .forms import DivisaForm, TasaCambioForm
 from django.urls import reverse_lazy, reverse
 from django.db.models import Max
 from django.db.models import OuterRef, Subquery
+from django.contrib.auth.decorators import login_required
+#Visualización tasas inicio
+from divisas.services import ultimas_por_segmento
+from divisas.models import Divisa
 
 
 # ----------------------------
@@ -213,18 +218,82 @@ class TasaCambioAllListView(LoginRequiredMixin, ListView):
 
 
 
+
 def visualizador_tasas(request):
-    latest = TasaCambio.objects.filter(divisa=OuterRef('pk')).order_by('-fecha')
+    """
+    Muestra las tasas de cambio actuales filtradas por el cliente activo en la sesión.
+    Si no hay cliente activo, usa el segmento 'general'.
+    """
+    from clientes.models import Cliente, Segmento
+    from .services import ultimas_por_segmento
 
-    divisas = (
-        Divisa.objects
-        .filter(is_active=True)
-        .annotate(
-            ultima_fecha=Subquery(latest.values('fecha')[:1]),
-            ultima_compra=Subquery(latest.values('comision_compra')[:1]),
-            ultima_venta=Subquery(latest.values('comision_venta')[:1]),
-        )
-        .order_by('code')
-    )
+    segmento_activo = None
 
-    return render(request, 'visualizador.html', {'divisas': divisas})
+    # 1. Detectar cliente activo en la sesión
+    cliente_id = request.session.get("cliente_id")
+
+    if cliente_id:
+        try:
+            cliente = Cliente.objects.get(id=cliente_id, esta_activo=True)
+            segmento_activo = cliente.segmento
+        except Cliente.DoesNotExist:
+            pass
+
+    # 2. Si no hay cliente activo, usar segmento "general"
+    if not segmento_activo:
+        segmento_activo, _ = Segmento.objects.get_or_create(name="general")
+
+    # 3. Obtener divisas activas
+    divisas_activas = Divisa.objects.filter(is_active=True).order_by("code")
+    divisas_data = []
+
+    for divisa in divisas_activas:
+        # Obtener las últimas cotizaciones
+        ultimas_cotizaciones = ultimas_por_segmento(divisa)
+
+        # Filtrar SOLO el segmento activo
+        cotizaciones_segmento = [
+            cot for cot in ultimas_cotizaciones
+            if cot.segmento == segmento_activo
+        ]
+
+        divisas_data.append({
+            "divisa": divisa,
+            "cotizaciones": cotizaciones_segmento
+        })
+
+    return render(request, "visualizador.html", {
+        "divisas_data": divisas_data,
+        "segmento_activo": segmento_activo
+    })
+
+#Para administradores
+from django.contrib.auth.decorators import user_passes_test
+
+def is_admin_or_staff(user):
+    return user.is_authenticated and (user.is_staff or user.is_superuser)
+
+@user_passes_test(is_admin_or_staff)
+def visualizador_tasas_admin(request):
+    """
+    Vista administrativa que muestra todas las cotizaciones de todos los segmentos.
+    Solo accesible para staff y superusuarios.
+    """
+    from .services import ultimas_por_segmento
+    
+    divisas_activas = Divisa.objects.filter(is_active=True).order_by('code')
+    divisas_data = []
+    
+    for divisa in divisas_activas:
+        # Obtener las últimas cotizaciones para esta divisa (todos los segmentos)
+        ultimas_cotizaciones = ultimas_por_segmento(divisa)
+        
+        divisas_data.append({
+            'divisa': divisa,
+            'cotizaciones': list(ultimas_cotizaciones)
+        })
+    
+    return render(request, 'visualizador_admin.html', {
+        'divisas_data': divisas_data,
+        'is_admin_view': True
+    })

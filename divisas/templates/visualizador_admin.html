@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container py-5">
+  <div class="d-flex justify-content-between align-items-center mb-5">
+    <h2 class="mb-0 text-uppercase fw-bold text-dark">
+      <i class="bi bi-currency-exchange me-3 text-primary"></i>
+      Tasas de Cambio <span class="text-muted fw-normal">| Vista Administrativa</span>
+    </h2>
+    <a href="#" class="btn btn-primary btn-sm d-none d-md-block">
+      <i class="bi bi-plus-circle me-2"></i>Nueva Cotización
+    </a>
+  </div>
+
+  {% if debug_info %}
+    <div class="card shadow-sm mb-4 border-start border-4 border-info">
+      <div class="card-body">
+        <h6 class="card-title fw-bold text-info"><i class="bi bi-info-circle me-2"></i>Información del Sistema</h6>
+        <div class="d-flex flex-wrap gap-4 mt-3">
+          <div class="me-4">
+            <small class="text-muted">Divisas activas:</small>
+            <p class="h5 fw-bold text-dark mt-1">{{ debug_info.divisas_count|default:"N/A" }}</p>
+          </div>
+          <div class="me-4">
+            <small class="text-muted">Total cotizaciones:</small>
+            <p class="h5 fw-bold text-dark mt-1">{{ debug_info.cotizaciones_count|default:"N/A" }}</p>
+          </div>
+          <div>
+            <small class="text-muted">Total divisas procesadas:</small>
+            <p class="h5 fw-bold text-dark mt-1">{{ divisas_data|length }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="card shadow-sm rounded-3 overflow-hidden">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="bg-light text-center text-uppercase">
+            <tr class="fw-bold text-muted small">
+              <th>Divisa</th>
+              <th>Código</th>
+              <th>Segmento</th>
+              <th class="text-success">Compra</th>
+              <th class="text-primary">Venta</th>
+              <th class="text-warning">Descuento (%)</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for data in divisas_data %}
+              {% if data.cotizaciones %}
+                {% for cotizacion in data.cotizaciones %}
+                  <tr class="text-center">
+                    {% if forloop.first %}
+                      <td class="fw-bold align-middle bg-light" rowspan="{{ data.cotizaciones|length }}">
+                        {{ data.divisa.nombre }}
+                      </td>
+                      <td class="align-middle bg-light" rowspan="{{ data.cotizaciones|length }}">
+                        <span class="badge bg-dark">{{ data.divisa.code }}</span>
+                      </td>
+                    {% endif %}
+                    <td><span class="badge bg-info text-dark">{{ cotizacion.segmento.name }}</span></td>
+                    <td class="text-success fw-bold">{{ cotizacion.valor_compra_unit|floatformat:cotizacion.divisa.decimales }}</td>
+                    <td class="text-primary fw-bold">{{ cotizacion.valor_venta_unit|floatformat:cotizacion.divisa.decimales }}</td>
+                    <td class="text-warning fw-bold">{{ cotizacion.porcentaje_descuento|floatformat:2 }}%</td>
+                    <td class="text-muted small">{{ cotizacion.fecha|date:"d/m/Y H:i" }}</td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                <tr class="text-center text-muted">
+                  <td class="fw-bold">{{ data.divisa.nombre }}</td>
+                  <td><span class="badge bg-secondary">{{ data.divisa.code }}</span></td>
+                  <td colspan="5">Sin cotizaciones registradas</td>
+                </tr>
+              {% endif %}
+            {% empty %}
+              <tr>
+                <td colspan="7" class="text-center text-muted py-4">
+                  <i class="bi bi-exclamation-triangle me-2"></i>
+                  No hay divisas activas para mostrar.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card bg-light mt-5 shadow-sm border-start border-4 border-warning">
+    <div class="card-body d-flex align-items-center">
+      <i class="bi bi-shield-exclamation me-3 fs-4 text-warning"></i>
+      <div>
+        <h6 class="fw-bold mb-1 text-warning">Aviso Importante</h6>
+        <p class="mb-0 text-muted small">
+          <strong>Vista Administrativa:</strong> Esta vista muestra todas las cotizaciones de todos los segmentos. 
+          Los usuarios regulares solo verán las cotizaciones de sus segmentos asignados.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+

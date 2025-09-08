@@ -87,7 +87,7 @@ def listar_asociaciones(request):
 
     asignaciones = AsignacionCliente.objects.all().order_by('usuario__email')
     context = {'asignaciones': asignaciones}
-    return render(request, 'asociar_a_usuario/lista_descuentos.html', context)
+    return render(request, 'asociar_a_usuario/lista_asociaciones.html', context)
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
@@ -232,3 +232,27 @@ class HistorialDescuentoListView(UserPassesTestMixin, ListView):
 
     def test_func(self):
         return self.request.user.is_staff or self.request.user.is_superuser
+    
+#Seleccionar Cliente
+def seleccionar_cliente_view(request):
+    """
+    Permite al usuario seleccionar cuál de sus clientes usar como activo.
+    """
+    if not request.user.is_authenticated:
+        return redirect("login")
+
+    asignaciones = AsignacionCliente.objects.filter(usuario=request.user).select_related("cliente__segmento")
+    clientes_asignados = [a.cliente for a in asignaciones]
+
+    cliente_activo_id = request.session.get("cliente_id")
+
+    if request.method == "POST":
+        cliente_id = request.POST.get("cliente_id")
+        cliente = get_object_or_404(Cliente, id=cliente_id, asignacioncliente__usuario=request.user)
+        request.session["cliente_id"] = cliente.id
+        return redirect("inicio")
+
+    return render(request, "seleccionar_cliente.html", {
+        "clientes_asignados": clientes_asignados,
+        "cliente_activo_id": cliente_activo_id,
+    })

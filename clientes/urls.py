@@ -25,7 +25,8 @@ urlpatterns = [
     path('configuracion/descuentos/', DescuentoListView.as_view(), name='lista_descuentos'),
     path('configuracion/descuentos/<int:pk>/editar/', DescuentoUpdateView.as_view(), name='editar_descuento'),
     path('configuracion/descuentos/historial/', HistorialDescuentoListView.as_view(), name='historial_descuentos'),
-
+    #Seleccionar cliente
+    path("seleccionar/", views.seleccionar_cliente_view, name="seleccionar_cliente"),    
 ]
 
 """

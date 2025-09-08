@@ -60,6 +60,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'roles.context_processors.grupo_usuario',
+                'roles.context_processors.grupos_context',
             ],
         },
     },
