@@ -1,0 +1,36 @@
+<tbody>
+  {% for data in divisas_data %}
+    {% if data.cotizaciones %}
+      {% for cotizacion in data.cotizaciones %}
+        <tr class="text-center">
+          {% if forloop.first %}
+            <td class="fw-bold align-middle" rowspan="{{ data.cotizaciones|length }}">
+              {{ data.divisa.nombre }}
+            </td>
+            <td class="align-middle" rowspan="{{ data.cotizaciones|length }}">
+              <span class="badge bg-secondary">{{ data.divisa.code }}</span>
+            </td>
+          {% endif %}
+          <td><span class="badge bg-info text-dark">{{ cotizacion.segmento.name }}</span></td>
+          <td class="text-success fw-semibold">{{ cotizacion.valor_compra_unit|floatformat:cotizacion.divisa.decimales }}</td>
+          <td class="text-primary fw-semibold">{{ cotizacion.valor_venta_unit|floatformat:cotizacion.divisa.decimales }}</td>
+          <td class="text-warning fw-semibold">{{ cotizacion.porcentaje_descuento|floatformat:2 }}%</td>
+          <td class="text-muted small">{{ cotizacion.fecha|date:"d/m/Y H:i" }}</td>
+        </tr>
+      {% endfor %}
+    {% else %}
+      <tr class="text-center">
+        <td class="fw-bold">{{ data.divisa.nombre }}</td>
+        <td><span class="badge bg-secondary">{{ data.divisa.code }}</span></td>
+        <td colspan="5" class="text-muted">Sin cotizaciones para este segmento</td>
+      </tr>
+    {% endif %}
+  {% empty %}
+    <tr>
+      <td colspan="7" class="text-center text-muted py-3">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        No hay divisas activas o no tienes clientes asignados para mostrar.
+      </td>
+    </tr>
+  {% endfor %}
+</tbody>

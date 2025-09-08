@@ -22,4 +22,6 @@ urlpatterns = [
 
     #Visualizador tasas
     path("tasas/actuales", views.visualizador_tasas, name="visualizador_tasas"),
+    # Visualizador tasas - Administradores (todos los segmentos)
+    path("tasas/admin/", views.visualizador_tasas_admin, name="visualizador_tasas_admin")
 ]
