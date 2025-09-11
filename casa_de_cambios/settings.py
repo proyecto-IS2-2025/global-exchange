@@ -34,7 +34,8 @@ INSTALLED_APPS = [
     'roles',
     'divisas',
     'medios_pago',
-    'widget_tweaks'
+    'widget_tweaks',
+    'simulador',
 ]
 
 MIDDLEWARE = [
@@ -62,6 +63,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'roles.context_processors.grupo_usuario',
                 'roles.context_processors.grupos_context',
+                'simulador.context_processors.simulador_context',
             ],
         },
     },
@@ -81,6 +83,9 @@ DATABASES = {
         'PASSWORD': os.environ.get('DB_PASSWORD', 'django123'),
         'HOST': os.environ.get('DB_HOST', 'localhost'),  # ¡CORREGIDO!
         'PORT': int(os.environ.get('DB_PORT', '5432')),
+        'TEST': {
+            'NAME': 'test_global_exchange',  # Nombre específico para la BD de prueba
+        },
     }
 }
 
