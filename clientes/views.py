@@ -234,13 +234,8 @@ class HistorialDescuentoListView(UserPassesTestMixin, ListView):
         return self.request.user.is_staff or self.request.user.is_superuser
     
 #Seleccionar Cliente
+@login_required
 def seleccionar_cliente_view(request):
-    """
-    Permite al usuario seleccionar cuál de sus clientes usar como activo.
-    """
-    if not request.user.is_authenticated:
-        return redirect("login")
-
     asignaciones = AsignacionCliente.objects.filter(usuario=request.user).select_related("cliente__segmento")
     clientes_asignados = [a.cliente for a in asignaciones]
 
@@ -250,9 +245,17 @@ def seleccionar_cliente_view(request):
         cliente_id = request.POST.get("cliente_id")
         cliente = get_object_or_404(Cliente, id=cliente_id, asignacioncliente__usuario=request.user)
         request.session["cliente_id"] = cliente.id
+
+        # Guardar como último cliente usado
+        request.user.ultimo_cliente_id = cliente.id
+        request.user.save(update_fields=["ultimo_cliente_id"])
+
         return redirect("inicio")
 
     return render(request, "seleccionar_cliente.html", {
         "clientes_asignados": clientes_asignados,
         "cliente_activo_id": cliente_activo_id,
     })
+
+
+
