@@ -32,7 +32,7 @@
   {% elif grupo_usuario == "cliente" %}
     <li><hr class="dropdown-divider"></li>
     <li>
-      <a class="dropdown-item fw-bold text-secondary" href="#">
+      <a class="dropdown-item fw-bold text-secondary" href="{% url 'users:perfil_usuario' %}">
         Mi perfil
       </a>
     </li>
@@ -45,7 +45,24 @@
       <a class="dropdown-item fw-bold text-secondary" href="{% url 'clientes:seleccionar_cliente' %}">
         Seleccionar Cliente
       </a>
-    </li>    
+    </li>  
+  {% else %}
+    <li><hr class="dropdown-divider"></li>
+    <li>
+      <a class="dropdown-item fw-bold text-secondary" href="{% url 'users:perfil_usuario' %}">
+        Mi perfil
+      </a>
+    </li>
+    <li>
+      <a class="dropdown-item fw-bold text-secondary" href="{% url 'divisas:visualizador_tasas' %}">
+        Visualizar tasas
+      </a>
+    </li>
+    <li>
+      <a class="dropdown-item fw-bold text-secondary" href="{% url 'clientes:seleccionar_cliente' %}">
+        Seleccionar Cliente
+      </a>
+    </li>   
   {% endif %}
 {% endif %}
 </ul>

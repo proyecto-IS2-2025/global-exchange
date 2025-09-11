@@ -1,3 +1,4 @@
+
 .opcion_admin {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
@@ -20,4 +21,48 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+
+.fade-in {
+  animation: fadeIn 0.6s ease-in forwards;
+  opacity: 0;
+}
+
+.slide-up {
+  animation: slideUp 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+.slide-up-delay {
+  animation: slideUp 0.8s ease-out forwards;
+  opacity: 0;
+}
+
+.pulse {
+  animation: pulse 1.5s infinite;
+}
+
+.bounce-in {
+  animation: bounceIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes bounceIn {
+  0% { transform: scale(0.9); opacity: 0; }
+  60% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); }
 }
