@@ -52,6 +52,14 @@ class CotizacionSegmento(models.Model):
 
     objects = CotizacionSegmentoQuerySet.as_manager()
 
+    @property
+    def comision_compra_ajustada(self):
+        return self._ajustar_comision(self.comision_compra, self.porcentaje_descuento)
+    
+    @property
+    def comision_venta_ajustada(self):
+        return self._ajustar_comision(self.comision_venta, self.porcentaje_descuento)
+
     class Meta:
         verbose_name = 'Cotización por segmento'
         verbose_name_plural = 'Cotizaciones por segmento'
@@ -138,6 +146,7 @@ class TasaCambio(models.Model):
     comision_venta = models.DecimalField('Comisión venta', max_digits=20, decimal_places=8, default=0)
 
     creado = models.DateTimeField(auto_now_add=True)
+    
 
     class Meta:
         verbose_name = 'Tasa de Cambio'
