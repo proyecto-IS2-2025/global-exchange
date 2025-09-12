@@ -51,15 +51,15 @@ def calcular_simulacion_api(request):
                 print(f"Usuario {request.user} no tiene asignación de cliente")
                 pass
         
-        # Si no hay segmento de usuario, usamos el "Minorista" por defecto
+        # Si no hay segmento de usuario, usamos el "general" por defecto
         if not segmento_obj:
             try:
-                segmento_obj = Segmento.objects.get(name='Minorista')
+                segmento_obj = Segmento.objects.get(name='general')
                 print(f"Usando segmento por defecto: {segmento_obj.name}")
             except ObjectDoesNotExist:
                 return JsonResponse({
                     'success': False,
-                    'error': 'Segmento "Minorista" no encontrado. Favor, crear el segmento.'
+                    'error': 'Segmento "general" no encontrado. Favor, crear el segmento.'
                 }, status=500)
 
         # 2. Obtener la divisa
