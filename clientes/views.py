@@ -234,19 +234,27 @@ class HistorialDescuentoListView(UserPassesTestMixin, ListView):
         return self.request.user.is_staff or self.request.user.is_superuser
     
 #Seleccionar Cliente
+# En seleccionar_cliente_view
+import logging
+logger = logging.getLogger(__name__)
+
 @login_required
 def seleccionar_cliente_view(request):
     asignaciones = AsignacionCliente.objects.filter(usuario=request.user).select_related("cliente__segmento")
     clientes_asignados = [a.cliente for a in asignaciones]
 
     cliente_activo_id = request.session.get("cliente_id")
+    logger.debug(f"cliente_activo_id en sesión: {cliente_activo_id}")
 
     if request.method == "POST":
         cliente_id = request.POST.get("cliente_id")
         cliente = get_object_or_404(Cliente, id=cliente_id, asignacioncliente__usuario=request.user)
         request.session["cliente_id"] = cliente.id
 
-        # Guardar como último cliente usado
+        # Log para verificar que se guarda correctamente
+        logger.debug(f"Nuevo cliente_id guardado en sesión: {cliente.id}")
+    
+        request.session.modified = True
         request.user.ultimo_cliente_id = cliente.id
         request.user.save(update_fields=["ultimo_cliente_id"])
 
@@ -256,6 +264,9 @@ def seleccionar_cliente_view(request):
         "clientes_asignados": clientes_asignados,
         "cliente_activo_id": cliente_activo_id,
     })
+
+
+
 
 
 

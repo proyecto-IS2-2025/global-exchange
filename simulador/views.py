@@ -10,6 +10,7 @@ from clientes.models import AsignacionCliente, Segmento
 from django.db.models import ObjectDoesNotExist
 from .context_processors import simulador_context as get_simulador_context
 from django.core.serializers.json import DjangoJSONEncoder
+from clientes.models import Cliente, Segmento, AsignacionCliente
 
 def simulador_view(request):
     """
@@ -38,23 +39,22 @@ def calcular_simulacion_api(request):
                 'error': 'No se permiten operaciones con Guaraní (PYG) en el simulador.'
             }, status=400)
         
-        # 1. Obtener el segmento del usuario
+        # 1. Obtener el segmento del usuario desde la sesión
         segmento_obj = None
-        if request.user.is_authenticated:
+        cliente_id = request.session.get("cliente_id")
+
+        if cliente_id:
             try:
-                asignacion = AsignacionCliente.objects.select_related(
-                    'cliente__segmento').filter(usuario=request.user).first()
-                if asignacion and asignacion.cliente and asignacion.cliente.segmento:
-                    segmento_obj = asignacion.cliente.segmento
-                    print(f"Usuario {request.user} tiene segmento: {segmento_obj.name}")
-            except AsignacionCliente.DoesNotExist:
-                print(f"Usuario {request.user} no tiene asignación de cliente")
+                cliente = Cliente.objects.get(id=cliente_id, esta_activo=True)
+                segmento_obj = cliente.segmento
+                print(f"Cliente activo tiene segmento: {segmento_obj.name}")
+            except Cliente.DoesNotExist:
                 pass
-        
-        # Si no hay segmento de usuario, usamos el "general" por defecto
+
+        # 2. Si no hay cliente activo, usar segmento "general"
         if not segmento_obj:
             try:
-                segmento_obj = Segmento.objects.get(name='general')
+                segmento_obj, _ = Segmento.objects.get_or_create(name='general')
                 print(f"Usando segmento por defecto: {segmento_obj.name}")
             except ObjectDoesNotExist:
                 return JsonResponse({
@@ -62,7 +62,7 @@ def calcular_simulacion_api(request):
                     'error': 'Segmento "general" no encontrado. Favor, crear el segmento.'
                 }, status=500)
 
-        # 2. Obtener la divisa
+        # 3. Obtener la divisa
         try:
             divisa_obj = Divisa.objects.get(code=moneda_code, is_active=True)
             print(f"Divisa encontrada: {divisa_obj.code} - {divisa_obj.nombre}")
@@ -72,7 +72,7 @@ def calcular_simulacion_api(request):
                 'error': f'Divisa {moneda_code} no encontrada o no activa.'
             }, status=404)
 
-        # 3. Obtener la cotización más reciente para la divisa y el segmento
+        # 4. Obtener la cotización más reciente para la divisa y el segmento
         cotizacion = CotizacionSegmento.objects.ultima_para(
             divisa=divisa_obj,
             segmento=segmento_obj
