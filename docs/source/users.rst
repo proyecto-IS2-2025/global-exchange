@@ -15,8 +15,4 @@ Gestión de Usuarios
    :members:
    :undoc-members:
    :show-inheritance:
-
-.. automodule:: users.tests_crud_cliente
-   :members:
-   :undoc-members:
-   :show-inheritance:   
+   
