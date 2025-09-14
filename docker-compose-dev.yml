@@ -1,0 +1,16 @@
+services:
+  casa-cambios-db:
+    image: postgres:17
+    restart: always
+    ports:
+      - "5433:5432"  # Puerto 5433 externo para evitar conflictos
+    shm_size: 128mb
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: global_exchange
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
