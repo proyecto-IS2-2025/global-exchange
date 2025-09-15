@@ -1,0 +1,9 @@
+[
+  {
+    "model": "clientes.segmento",
+    "pk": 5,
+    "fields": {
+      "name": "Premium"
+    }
+  }
+]
