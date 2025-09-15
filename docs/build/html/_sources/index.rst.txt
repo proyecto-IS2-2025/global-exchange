@@ -22,3 +22,4 @@ Esta documentación incluye información detallada sobre los módulos, modelos y
    roles
    medios_pago
    users 
+   simulador
