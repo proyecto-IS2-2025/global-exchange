@@ -54,3 +54,12 @@ test-simulador:
 	@echo "Probando simulador de pagos..."
 	poetry run python manage.py test simulador
 	@echo "Pruebas de simulador completadas."
+
+cargar-datos:
+	@echo "Cargando datos iniciales..."
+	python manage.py loaddata roles_data.json
+	python manage.py loaddata users_data.json
+	python manage.py loaddata clientes_data.json
+	python manage.py loaddata divisas_initial_data.json
+	python manage.py loaddata medios_pago_initial_data.json
+	@echo "Datos iniciales cargados."
