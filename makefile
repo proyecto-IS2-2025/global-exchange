@@ -30,3 +30,7 @@ db-check:
 dbshell:
 	@echo "Abriendo shell de la base de datos..."
 	poetry run python manage.py dbshell
+
+shell:
+	@echo "Abriendo shell de Django..."
+	poetry run python manage.py shell
