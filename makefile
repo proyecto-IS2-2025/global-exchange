@@ -1,6 +1,6 @@
 runserver:
 	@echo "Iniciando el servidor de desarrollo Django..."
-	poetry run python manage.py runserver
+	python manage.py runserver
 
 migrations:
 	@echo "Aplicando migraciones a la base de datos..."
@@ -42,17 +42,17 @@ docs:
 
 test-medios-pago:
 	@echo "Probando migraciones..."
-	poetry run python manage.py test medios_pago.tests.MedioDePagoModelTest medios_pago.tests.CampoMedioDePagoModelTest medios_pago.tests.EdgeCasesTest -v 2
+	python manage.py test medios_pago.tests.MedioDePagoModelTest medios_pago.tests.CampoMedioDePagoModelTest medios_pago.tests.EdgeCasesTest -v 2
 	@echo "Pruebas de migraciones completadas."
 
 test-divisas:
 	@echo "Probando migraciones..."
-	poetry run python manage.py test divisas
+	python manage.py test divisas
 	@echo "Pruebas de migraciones completadas."
 
 test-simulador:
 	@echo "Probando simulador de pagos..."
-	poetry run python manage.py test simulador
+	python manage.py test simulador
 	@echo "Pruebas de simulador completadas."
 
 cargar-datos:
