@@ -22,7 +22,7 @@ class DivisasModelsTest(TestCase):
         print("Ejecutando: test_divisa_save_normaliza_code_y_simbolo")
         d = Divisa.objects.create(code=" usd ", nombre="Dólar", simbolo=" $ ")
         print(f"Guardado: code={d.code}, simbolo={d.simbolo}, decimales={d.decimales}")
-        self.assertEqual(d.code, "USD ", "❌ El código no se normalizó correctamente")
+        self.assertEqual(d.code, "USD", "❌ El código no se normalizó correctamente")
         self.assertEqual(d.simbolo, "$", "❌ El símbolo no se normalizó correctamente")
 
     def test_divisa_str(self):

@@ -39,3 +39,18 @@ docs:
 	@echo "Generando documentación con Sphinx..."
 	poetry run sphinx-build -b html docs/source docs/build
 	@echo "Documentación generada en docs/build"
+
+test-medios-pago:
+	@echo "Probando migraciones..."
+	poetry run python manage.py test medios_pago.tests.MedioDePagoModelTest medios_pago.tests.CampoMedioDePagoModelTest medios_pago.tests.EdgeCasesTest -v 2
+	@echo "Pruebas de migraciones completadas."
+
+test-divisas:
+	@echo "Probando migraciones..."
+	poetry run python manage.py test divisas
+	@echo "Pruebas de migraciones completadas."
+
+test-simulador:
+	@echo "Probando simulador de pagos..."
+	poetry run python manage.py test simulador
+	@echo "Pruebas de simulador completadas."
