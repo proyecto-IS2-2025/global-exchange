@@ -9,6 +9,7 @@ from django.contrib.auth.decorators import login_required, permission_required, 
 from django.utils.decorators import method_decorator
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib import messages
+from django.contrib.auth.models import Group
 
 from .models import Cliente, AsignacionCliente, Descuento, Segmento, HistorialDescuentos
 from .forms import ClienteForm, DescuentoForm
@@ -36,6 +37,11 @@ def asociar_clientes_usuarios_view(request):
         usuario_id = request.POST.get('usuario')
         clientes_ids = request.POST.getlist('clientes')
         
+         # Obtener el usuario y los grupos
+        usuario = get_object_or_404(User, id=usuario_id)
+        registered_group, created_reg = Group.objects.get_or_create(name='usuario_registrado')
+        associated_group, created_assoc = Group.objects.get_or_create(name='usuario_asociado')
+        
         for cliente_id in clientes_ids:
             try:
                 usuario = User.objects.get(id=usuario_id)
@@ -49,6 +55,12 @@ def asociar_clientes_usuarios_view(request):
             except (User.DoesNotExist, Cliente.DoesNotExist):
                 messages.error(request, 'Error: No se pudo encontrar el usuario o cliente.')
                 return redirect('clientes:asociar_clientes_usuarios')
+            
+        # Lógica para cambiar el grupo del usuario
+        # Si tiene asignaciones, se convierte en 'usuario_asociado'
+        if AsignacionCliente.objects.filter(usuario=usuario).exists():
+            usuario.groups.add(associated_group)
+            usuario.groups.remove(registered_group)
 
         return redirect('clientes:asociar_clientes_usuarios')
 
@@ -79,8 +91,24 @@ def listar_asociaciones(request):
         try:
             asignacion_id = request.POST.get('delete_id')
             asignacion = get_object_or_404(AsignacionCliente, id=asignacion_id)
+            
+            # Guarda el usuario antes de eliminar la asignación
+            usuario = asignacion.usuario
+            
+            # Elimina la asignación
             asignacion.delete()
             messages.success(request, 'Asociación eliminada correctamente.')
+
+            # Verifica si al usuario le quedan clientes asignados
+            if not AsignacionCliente.objects.filter(usuario=usuario).exists():
+                # Si no tiene más asignaciones, cambia su grupo
+                registered_group, created_reg = Group.objects.get_or_create(name='usuario_registrado')
+                associated_group, created_assoc = Group.objects.get_or_create(name='usuario_asociado')
+                
+                usuario.groups.remove(associated_group)
+                usuario.groups.add(registered_group)
+                messages.info(request, f'El usuario {usuario.email} ya no tiene clientes asignados. Su rol se ha cambiado a "usuario_registrado".')
+
         except Exception as e:
             messages.error(request, f'Error al eliminar la asociación: {e}')
         return redirect('clientes:listar_asociaciones')
