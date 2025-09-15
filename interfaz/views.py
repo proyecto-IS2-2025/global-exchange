@@ -15,11 +15,10 @@ from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 
-
 User = get_user_model()
 
 def inicio(request):
-    # Roles (ya tenías esto)
+    # Roles
     grupo_cliente = request.user.groups.filter(name="cliente").exists() if request.user.is_authenticated else False
     grupo_operador = request.user.groups.filter(name="operador").exists() if request.user.is_authenticated else False
     grupo_admin = request.user.groups.filter(name="admin").exists() if request.user.is_authenticated else False
@@ -53,7 +52,6 @@ def inicio(request):
     divisas_data = []
     for divisa in divisas_activas:
         ultimas = ultimas_por_segmento(divisa)   # retorna queryset de CotizacionSegmento (últimas por segmento)
-        # filtrar por el segmento del cliente (si tuviera)
         cotizaciones = [c for c in ultimas if c.segmento_id == getattr(segmento_obj, 'id', None)]
         divisas_data.append({
             'divisa': divisa,
@@ -65,6 +63,11 @@ def inicio(request):
     if request.user.is_authenticated:
         clientes_asignados = [asig.cliente for asig in AsignacionCliente.objects.filter(usuario=request.user).select_related('cliente')]
 
+    # ----------- CAMBIO: flag para alerta -----------
+    mostrar_alerta_sin_clientes = (
+        request.user.is_authenticated and len(clientes_asignados) == 0
+    )
+
     context = {
         "grupo_cliente": grupo_cliente,
         "grupo_operador": grupo_operador,
@@ -73,6 +76,7 @@ def inicio(request):
         "segmento_activo": segmento_obj,
         "cliente_activo": cliente_activo,
         "clientes_asignados": clientes_asignados,
+        "mostrar_alerta_sin_clientes": mostrar_alerta_sin_clientes,  # <--- CAMBIO
     }
     return render(request, "inicio.html", context)
 
@@ -89,7 +93,7 @@ def cliente_dashboard(request):
 @login_required
 def redireccion_por_grupo(request):
     grupos = list(request.user.groups.values_list('name', flat=True))
-    print("Grupos del usuario:", grupos)  # Esto se verá en la consola del servidor
+    print("Grupos del usuario:", grupos)
 
     if 'admin' in grupos:
         return redirect('admin_dashboard')
@@ -105,42 +109,3 @@ def redireccion_por_grupo(request):
 @login_required
 def asociar_clientes_usuarios(request):
     return render(request, "admin/asociar_clientes_usuarios.html")
-
-
-"""
-@require_POST
-def seleccionar_cliente(request):
-    cliente_id = request.POST.get('cliente_id')
-    if cliente_id:
-        request.session['cliente_id'] = int(cliente_id)
-    return redirect('inicio')
-"""
-
-#Seleccionar cliente tabla tasas
-"""
-@require_POST
-def seleccionar_cliente(request):
-    cliente_id = request.POST.get("cliente_id")
-    if cliente_id:
-        request.session["cliente_id"] = int(cliente_id)
-
-    # Si la request es AJAX, devolvemos solo el HTML de la tabla
-    if request.headers.get("x-requested-with") == "XMLHttpRequest":
-        from divisas.models import Divisa
-        from divisas.services import ultimas_por_segmento
-        from clientes.models import Cliente, Segmento, AsignacionCliente
-
-        cliente_activo = Cliente.objects.filter(id=cliente_id).first()
-        segmento_obj = cliente_activo.segmento if cliente_activo and cliente_activo.segmento else Segmento.objects.get_or_create(name="general")[0]
-
-        divisas_data = []
-        for divisa in Divisa.objects.filter(is_active=True).order_by("code"):
-            ultimas = ultimas_por_segmento(divisa)
-            cotizaciones = [c for c in ultimas if c.segmento_id == segmento_obj.id]
-            divisas_data.append({"divisa": divisa, "cotizaciones": cotizaciones})
-
-        html_tabla = render_to_string("partials/visualizador_table.html", {"divisas_data": divisas_data}, request=request)
-        return JsonResponse({"tabla": html_tabla})
-
-    return redirect("inicio")
-"""

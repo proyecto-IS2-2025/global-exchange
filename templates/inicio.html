@@ -14,7 +14,7 @@
       {% endif %}
     {% endif %}
 
-    {% if user.is_authenticated %} 
+    {% if user.is_authenticated %}
       {% if grupo_cliente %}
         <p class="text-muted">
           Bienvenido, <strong>{{ user.get_full_name|default:user.username }}</strong>
@@ -101,7 +101,7 @@
               <h6 class="fw-bold">Visualizador Tasas</h6>
               <a href="{% url 'divisas:visualizador_tasas_admin' %}" class="stretched-link"></a>
             </div>
-          </div>          
+          </div>
         </div>
 
       {% else %}
