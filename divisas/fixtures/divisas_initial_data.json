@@ -1,0 +1,201 @@
+[
+  {
+    "model": "divisas.divisa",
+    "pk": 1,
+    "fields": {
+      "code": "USD",
+      "nombre": "Dólar Estadounidense",
+      "simbolo": "$",
+      "is_active": true,
+      "decimales": 2,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.divisa",
+    "pk": 2,
+    "fields": {
+      "code": "EUR",
+      "nombre": "Euro",
+      "simbolo": "€",
+      "is_active": true,
+      "decimales": 2,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.divisa",
+    "pk": 3,
+    "fields": {
+      "code": "GBP",
+      "nombre": "Libra Esterlina",
+      "simbolo": "£",
+      "is_active": true,
+      "decimales": 2,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.divisa",
+    "pk": 4,
+    "fields": {
+      "code": "JPY",
+      "nombre": "Yen Japonés",
+      "simbolo": "¥",
+      "is_active": false,
+      "decimales": 0,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.divisa",
+    "pk": 5,
+    "fields": {
+      "code": "CAD",
+      "nombre": "Dólar Canadiense",
+      "simbolo": "C$",
+      "is_active": true,
+      "decimales": 2,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.divisa",
+    "pk": 6,
+    "fields": {
+      "code": "AUD",
+      "nombre": "Dólar Australiano",
+      "simbolo": "A$",
+      "is_active": true,
+      "decimales": 2,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.divisa",
+    "pk": 7,
+    "fields": {
+      "code": "CHF",
+      "nombre": "Franco Suizo",
+      "simbolo": "Fr",
+      "is_active": true,
+      "decimales": 2,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.divisa",
+    "pk": 8,
+    "fields": {
+      "code": "CNY",
+      "nombre": "Yuan Chino",
+      "simbolo": "¥",
+      "is_active": true,
+      "decimales": 2,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.divisa",
+    "pk": 9,
+    "fields": {
+      "code": "MXN",
+      "nombre": "Peso Mexicano",
+      "simbolo": "Mex$",
+      "is_active": true,
+      "decimales": 2,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.divisa",
+    "pk": 10,
+    "fields": {
+      "code": "PYG",
+      "nombre": "Guaraní Paraguayo",
+      "simbolo": "₲",
+      "is_active": true,
+      "decimales": 0,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.tasacambio",
+    "pk": 1,
+    "fields": {
+      "divisa": 1,
+      "fecha": "2025-09-15T12:00:00Z",
+      "precio_base": "7000.00000000",
+      "comision_compra": "300.00000000",
+      "comision_venta": "100.00000000",
+      "creado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.tasacambio",
+    "pk": 2,
+    "fields": {
+      "divisa": 2,
+      "fecha": "2025-09-15T12:00:00Z",
+      "precio_base": "7500.00000000",
+      "comision_compra": "250.00000000",
+      "comision_venta": "150.00000000",
+      "creado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.cotizacionsegmento",
+    "pk": 1,
+    "fields": {
+      "divisa": 1,
+      "segmento": 1,
+      "fecha": "2025-09-15T12:00:00Z",
+      "precio_base": "7000.00000000",
+      "comision_compra": "300.00000000",
+      "comision_venta": "100.00000000",
+      "porcentaje_descuento": "0.00",
+      "valor_compra_unit": "6700.00000000",
+      "valor_venta_unit": "7100.00000000"
+    }
+  },
+  {
+    "model": "divisas.cotizacionsegmento",
+    "pk": 2,
+    "fields": {
+      "divisa": 1,
+      "segmento": 2,
+      "fecha": "2025-09-15T12:00:00Z",
+      "precio_base": "7000.00000000",
+      "comision_compra": "300.00000000",
+      "comision_venta": "100.00000000",
+      "porcentaje_descuento": "10.00",
+      "valor_compra_unit": "6730.00000000",
+      "valor_venta_unit": "7090.00000000"
+    }
+  },
+  {
+    "model": "divisas.cotizacionsegmento",
+    "pk": 3,
+    "fields": {
+      "divisa": 2,
+      "segmento": 1,
+      "fecha": "2025-09-15T12:00:00Z",
+      "precio_base": "7500.00000000",
+      "comision_compra": "250.00000000",
+      "comision_venta": "150.00000000",
+      "porcentaje_descuento": "0.00",
+      "valor_compra_unit": "7250.00000000",
+      "valor_venta_unit": "7650.00000000"
+    }
+  }
+]
