@@ -16,6 +16,16 @@ CustomUser = get_user_model()
 @method_decorator(login_required, name='dispatch')
 @method_decorator(permission_required('users.view_customuser', raise_exception=True), name='dispatch')
 class CustomUserListView(ListView):
+    """
+    Vista que muestra una lista de todos los usuarios del sistema.
+
+    Requiere que el usuario esté autenticado y tenga el permiso
+    'users.view_customuser'.
+
+    - **Modelo:** `CustomUser`
+    - **Plantilla:** `users/user_list.html`
+    - **Contexto:** `users`
+    """
     model = CustomUser
     template_name = 'users/user_list.html'
     context_object_name = 'users'
@@ -23,6 +33,17 @@ class CustomUserListView(ListView):
 @method_decorator(login_required, name='dispatch')
 @method_decorator(permission_required('users.add_customuser', raise_exception=True), name='dispatch')
 class CustomUserCreateView(CreateView):
+    """
+    Vista para la creación de un nuevo usuario.
+
+    Utiliza `CustomUserCreationForm` para manejar la validación
+    y el guardado de datos. Requiere permisos de creación.
+
+    - **Modelo:** `CustomUser`
+    - **Formulario:** `CustomUserCreationForm`
+    - **Plantilla:** `users/user_form.html`
+    - **Redirección:** `user_list`
+    """
     model = CustomUser
     form_class = CustomUserCreationForm
     template_name = 'users/user_form.html'
@@ -31,6 +52,16 @@ class CustomUserCreateView(CreateView):
 @method_decorator(login_required, name='dispatch')
 @method_decorator(permission_required('users.change_customuser', raise_exception=True), name='dispatch')
 class CustomUserUpdateView(UpdateView):
+    """
+    Vista para la actualización de un usuario existente.
+
+    Utiliza `CustomUserChangeForm` y requiere permisos de modificación.
+
+    - **Modelo:** `CustomUser`
+    - **Formulario:** `CustomUserChangeForm`
+    - **Plantilla:** `users/user_form.html`
+    - **Redirección:** `user_list`
+    """
     model = CustomUser
     form_class = CustomUserChangeForm
     template_name = 'users/user_form.html'
@@ -39,6 +70,16 @@ class CustomUserUpdateView(UpdateView):
 @method_decorator(login_required, name='dispatch')
 @method_decorator(permission_required('users.delete_customuser', raise_exception=True), name='dispatch')
 class CustomUserDeleteView(DeleteView):
+    """
+    Vista para la eliminación de un usuario.
+
+    Maneja la eliminación de un objeto `CustomUser` y requiere permisos
+    de borrado.
+
+    - **Modelo:** `CustomUser`
+    - **Plantilla:** `users/user_confirm_delete.html`
+    - **Redirección:** `user_list`
+    """
     model = CustomUser
     template_name = 'users/user_confirm_delete.html'
     success_url = reverse_lazy('user_list')

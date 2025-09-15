@@ -14,10 +14,14 @@ from django.contrib.auth.decorators import login_required
 from divisas.services import ultimas_por_segmento
 from divisas.models import Divisa
 
+"""
+Vistas para la gestión de divisas y tasas de cambio.
 
-# ----------------------------
-# DIVISAS
-# ----------------------------
+Este módulo define vistas basadas en clases (CBV) y funciones
+que permiten listar, crear, actualizar y visualizar divisas
+y sus tasas de cambio, incluyendo un visualizador para clientes
+y otro para administradores.
+"""
 class DivisaListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     """
     Vista de lista para mostrar todas las divisas.
@@ -75,6 +79,11 @@ class DivisaUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
 
 
 class DivisaToggleActivaView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """
+    Alterna el estado de activación de una divisa.
+
+    Requiere autenticación y el permiso `divisas.change_divisa`.
+    """
     permission_required = 'divisas.change_divisa'
 
     def post(self, request, pk):
@@ -130,6 +139,12 @@ class TasaCambioListView(LoginRequiredMixin, ListView):
 
 
 class TasaCambioCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    """
+    Permite registrar una nueva tasa de cambio para una divisa.
+
+    Requiere autenticación y el permiso `divisas.add_tasacambio`.
+    Prellena valores con la última tasa registrada.
+    """
     permission_required = 'divisas.add_tasacambio'
     model = TasaCambio
     form_class = TasaCambioForm

@@ -15,6 +15,7 @@
     <script src="_static/translations.js?v=f85f4cfb"></script>
     <link rel="index" title="Índice" href="genindex.html" />
     <link rel="search" title="Búsqueda" href="search.html" />
+    <link rel="next" title="Modulo de Medios de Pago" href="medios_pago.html" />
     <link rel="prev" title="Módulos de Divisas" href="divisas.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -250,27 +251,7 @@ asociados a un tipo de contenido (modelo) específico.</p>
 
 </dd></dl>
 
-<dl class="py function" id="module-roles.context_processors">
-<dt class="sig sig-object py" id="roles.context_processors.grupo_usuario">
-<span class="sig-prename descclassname"><span class="pre">roles.context_processors.</span></span><span class="sig-name descname"><span class="pre">grupo_usuario</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.context_processors.grupo_usuario" title="Link to this definition">¶</a></dt>
-<dd><p>Procesador de contexto que expone el nombre del primer grupo del usuario autenticado
-en el contexto de la plantilla.</p>
-<p>Esto permite acceder al nombre del grupo directamente en las plantillas HTML
-como <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">grupo_usuario</span> <span class="pre">}}</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>request</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">HttpRequest</span></code>) – Objeto de solicitud HTTP.</p>
-</dd>
-<dt class="field-even">Devuelve<span class="colon">:</span></dt>
-<dd class="field-even"><p>Un diccionario de contexto que contiene el nombre del grupo del usuario.</p>
-</dd>
-<dt class="field-odd">Tipo del valor devuelto<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
+<span class="target" id="module-roles.context_processors"></span></section>
 
 
           </div>
@@ -300,6 +281,7 @@ como <code class="docutils literal notranslate"><span class="pre">{{</span> <spa
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navegación</h3>
 <p class="caption" role="heading"><span class="caption-text">Contenidos:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="autenticacion.html">Modulo de Autenticacion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="clientes.html">Módulos de Clientes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vistas_cliente.html">Vistas de Clientes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="form_cliente.html">Formularios de Clientes</a></li>
@@ -316,9 +298,10 @@ como <code class="docutils literal notranslate"><span class="pre">{{</span> <spa
 <li class="toctree-l2"><a class="reference internal" href="#roles.views.search_users"><code class="docutils literal notranslate"><span class="pre">search_users()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#roles.forms.GroupForm"><code class="docutils literal notranslate"><span class="pre">GroupForm</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#roles.forms.PermissionForm"><code class="docutils literal notranslate"><span class="pre">PermissionForm</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#roles.context_processors.grupo_usuario"><code class="docutils literal notranslate"><span class="pre">grupo_usuario()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="medios_pago.html">Modulo de Medios de Pago</a></li>
+<li class="toctree-l1"><a class="reference internal" href="users.html">Gestión de Usuarios</a></li>
 </ul>
 
 <div class="relations">
@@ -326,6 +309,7 @@ como <code class="docutils literal notranslate"><span class="pre">{{</span> <spa
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="divisas.html" title="capítulo anterior">Módulos de Divisas</a></li>
+      <li>Next: <a href="medios_pago.html" title="próximo capítulo">Modulo de Medios de Pago</a></li>
   </ul></li>
 </ul>
 </div>

@@ -7,7 +7,14 @@ from django.contrib.auth import get_user_model
 CustomUser = get_user_model()
 
 class CustomUserCreationForm(UserCreationForm):
-    class Meta:
+    """
+    Formulario personalizado para la creación de un nuevo usuario.
+
+    Hereda de `UserCreationForm` para manejar la creación de un
+    usuario con el modelo `CustomUser`. Los campos incluidos son
+    `username` y `email`.
+    """
+    class Meta(UserCreationForm.Meta):
         model = CustomUser
         fields = ('username', 'email')
         labels = {
@@ -31,6 +38,12 @@ class CustomUserCreationForm(UserCreationForm):
 
 
 class CustomUserChangeForm(UserChangeForm):
+    """
+    Formulario personalizado para la modificación de un usuario existente.
+
+    Hereda de `UserChangeForm` y se conecta al modelo `CustomUser`.
+    Los campos incluidos para la edición son `is_cambista`, `is_active` y `email`.
+    """
     class Meta:
         model = CustomUser
         fields = ('email', 'is_active', 'is_cambista')

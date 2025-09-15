@@ -16,6 +16,11 @@ from .forms import MedioDePagoForm, create_campo_formset
 
 
 class MedioDePagoListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    """
+    Vista de listado para los Medios de Pago activos.
+    
+    Requiere el permiso 'medios_pago.view_mediodepago'.
+    """
     permission_required = 'medios_pago.view_mediodepago'
     model = MedioDePago
     template_name = 'medios_pago/lista.html'
@@ -23,11 +28,20 @@ class MedioDePagoListView(LoginRequiredMixin, PermissionRequiredMixin, ListView)
     paginate_by = 20
 
     def get_queryset(self):
+        """
+        Devuelve el queryset de medios de pago activos.
+        """ 
         # Mostrar solo medios activos (no eliminados)
         return MedioDePago.active.all()
 
 
 class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    """
+    Vista para la creación de un nuevo Medio de Pago.
+    
+    Requiere el permiso 'medios_pago.add_mediodepago'.
+    Permite la creación de campos dinámicos a través de un formset.
+    """
     permission_required = 'medios_pago.add_mediodepago'
     model = MedioDePago
     form_class = MedioDePagoForm
@@ -35,6 +49,9 @@ class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, Cr
     success_url = reverse_lazy('medios_pago:lista')
 
     def get_context_data(self, **kwargs):
+        """
+        Añade el formset de campos al contexto.
+        """
         ctx = super().get_context_data(**kwargs)
         ctx['action'] = 'Crear'
         ctx['is_edit'] = False
@@ -71,6 +88,14 @@ class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, Cr
             return self.form_invalid(form, campos_formset)
 
     def form_valid(self, form, campos_formset):
+        """
+        Guarda el medio de pago y sus campos asociados.
+
+        :param form: El formulario de MedioDePago.
+        :type form: MedioDePagoForm
+        :returns: Una redirección a la lista si es exitoso.
+        :rtype: HttpResponseRedirect
+        """
         try:
             with transaction.atomic():
                 self.object = form.save()
@@ -92,6 +117,12 @@ class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, Cr
 
 
 class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    """
+    Vista para la edición de un Medio de Pago existente.
+    
+    Requiere el permiso 'medios_pago.change_mediodepago'.
+    Permite la edición de campos dinámicos y la eliminación suave.
+    """
     permission_required = 'medios_pago.change_mediodepago'
     model = MedioDePago
     form_class = MedioDePagoForm
@@ -99,6 +130,9 @@ class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateV
     success_url = reverse_lazy('medios_pago:lista')
 
     def get_context_data(self, **kwargs):
+        """
+        Añade el formset de campos al contexto en modo edición.
+        """
         ctx = super().get_context_data(**kwargs)
         ctx['action'] = 'Editar'
         ctx['is_edit'] = True
@@ -168,6 +202,14 @@ class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateV
             return JsonResponse({'success': False, 'error': str(e)})
 
     def form_valid(self, form, campos_formset):
+        """
+        Guarda los cambios en el medio de pago y sus campos asociados.
+
+        :param form: El formulario de MedioDePago.
+        :type form: MedioDePagoForm
+        :returns: Una redirección a la lista si es exitoso.
+        :rtype: HttpResponseRedirect
+        """
         try:
             with transaction.atomic():
                 self.object = form.save()
@@ -188,6 +230,13 @@ class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateV
 
 
 class MedioDePagoToggleActivoView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """
+    Vista para activar o desactivar un medio de pago.
+
+    Esta vista cambia el estado `is_active` de un `MedioDePago` existente.
+    Requiere que el usuario esté autenticado (`LoginRequiredMixin`) y tenga
+    el permiso `medios_pago.change_mediodepago`.
+    """
     permission_required = 'medios_pago.change_mediodepago'
 
     def post(self, request, pk):
@@ -202,10 +251,23 @@ class MedioDePagoToggleActivoView(LoginRequiredMixin, PermissionRequiredMixin, V
 
 
 class MedioDePagoSoftDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
-    """Vista para eliminación suave de medios de pago"""
+    """
+    Vista API para la eliminación suave (soft delete) de un medio de pago.
+    
+    Requiere el permiso 'medios_pago.delete_mediodepago'.
+    """
     permission_required = 'medios_pago.delete_mediodepago'
 
     def post(self, request, pk):
+        """
+        Maneja la solicitud POST para realizar la eliminación suave.
+        
+        :param request: Objeto de la solicitud HTTP.
+        :param pk: Clave primaria del medio de pago a eliminar.
+        :type pk: int
+        :returns: Una respuesta JSON con el resultado de la operación.
+        :rtype: JsonResponse
+        """
         medio_de_pago = get_object_or_404(MedioDePago.active, pk=pk)
         
         # Verificar si se puede eliminar (lógica de negocio)

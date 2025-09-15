@@ -10,6 +10,13 @@ class Role(models.Model):
         return self.name
 
 class CustomUser(AbstractUser):
+    """
+    Modelo de usuario personalizado que extiende `AbstractUser`.
+
+    Utiliza el `email` como campo de inicio de sesión único y
+    añade un campo `is_cambista` para identificar a los usuarios
+    con rol de cambista.
+    """
     email = models.EmailField(unique=True)
     is_cambista = models.BooleanField(default=False)
     ultimo_cliente_id = models.PositiveIntegerField(null=True, blank=True) 

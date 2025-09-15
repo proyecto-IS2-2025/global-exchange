@@ -42,6 +42,7 @@
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
@@ -59,8 +60,22 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="divisas.html#divisas.models.Divisa.actualizado">actualizado (atributo de divisas.models.Divisa)</a>
+      <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.active">active (atributo de medios_pago.models.CampoMedioDePago)</a>
+
+      <ul>
+        <li><a href="medios_pago.html#medios_pago.models.MedioDePago.active">(atributo de medios_pago.models.MedioDePago)</a>
 </li>
+      </ul></li>
+      <li><a href="medios_pago.html#medios_pago.models.ActiveManager">ActiveManager (clase en medios_pago.models)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.Divisa.actualizado">actualizado (atributo de divisas.models.Divisa)</a>
+
+      <ul>
+        <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.actualizado">(atributo de medios_pago.models.CampoMedioDePago)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.models.MedioDePago.actualizado">(atributo de medios_pago.models.MedioDePago)</a>
+</li>
+      </ul></li>
       <li><a href="clientes.html#clientes.models.AsignacionCliente">AsignacionCliente (clase en clientes.models)</a>
 </li>
       <li><a href="clientes.html#clientes.models.AsignacionCliente.DoesNotExist">AsignacionCliente.DoesNotExist</a>
@@ -70,9 +85,27 @@
       <li><a href="clientes.html#clientes.models.AsignacionCliente.MultipleObjectsReturned">AsignacionCliente.MultipleObjectsReturned</a>
 </li>
       <li><a href="clientes.html#clientes.models.Cliente.asignacioncliente_set">asignacioncliente_set (atributo de clientes.models.Cliente)</a>
+
+      <ul>
+        <li><a href="users.html#users.models.CustomUser.asignacioncliente_set">(atributo de users.models.CustomUser)</a>
 </li>
+      </ul></li>
       <li><a href="vistas_cliente.html#clientes.views.asociar_clientes_usuarios_view">asociar_clientes_usuarios_view() (en el módulo clientes.views)</a>
 </li>
+      <li>
+    autenticacion.utils
+
+      <ul>
+        <li><a href="autenticacion.html#module-autenticacion.utils">module</a>
+</li>
+      </ul></li>
+      <li>
+    autenticacion.views
+
+      <ul>
+        <li><a href="autenticacion.html#module-autenticacion.views">module</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -84,6 +117,14 @@
       <ul>
         <li><a href="divisas.html#divisas.forms.TasaCambioForm.base_fields">(atributo de divisas.forms.TasaCambioForm)</a>
 </li>
+        <li><a href="medios_pago.html#medios_pago.forms.CampoMedioDePagoForm.base_fields">(atributo de medios_pago.forms.CampoMedioDePagoForm)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.forms.MedioDePagoForm.base_fields">(atributo de medios_pago.forms.MedioDePagoForm)</a>
+</li>
+        <li><a href="users.html#users.forms.CustomUserChangeForm.base_fields">(atributo de users.forms.CustomUserChangeForm)</a>
+</li>
+        <li><a href="users.html#users.forms.CustomUserCreationForm.base_fields">(atributo de users.forms.CustomUserCreationForm)</a>
+</li>
       </ul></li>
   </ul></td>
 </tr></table>
@@ -91,9 +132,49 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmento.calcular_valores">calcular_valores() (método de divisas.models.CotizacionSegmento)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago">CampoMedioDePago (clase en medios_pago.models)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.DoesNotExist">CampoMedioDePago.DoesNotExist</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.MultipleObjectsReturned">CampoMedioDePago.MultipleObjectsReturned</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.forms.CampoMedioDePagoForm">CampoMedioDePagoForm (clase en medios_pago.forms)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.forms.CampoMedioDePagoForm.Meta">CampoMedioDePagoForm.Meta (clase en medios_pago.forms)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.CampoMedioDePagoModelTest">CampoMedioDePagoModelTest (clase en medios_pago.tests)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.models.MedioDePago.campos">campos (atributo de medios_pago.models.MedioDePago)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.views.CampoSoftDeleteView">CampoSoftDeleteView (clase en medios_pago.views)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.models.MedioDePago.can_be_edited_freely">can_be_edited_freely (medios_pago.models.MedioDePago propiedad)</a>
+</li>
       <li><a href="clientes.html#clientes.models.Cliente.cedula">cedula (atributo de clientes.models.Cliente)</a>
 </li>
+      <li><a href="medios_pago.html#medios_pago.forms.CampoMedioDePagoForm.clean">clean() (método de medios_pago.forms.CampoMedioDePagoForm)</a>
+
+      <ul>
+        <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.clean">(método de medios_pago.models.CampoMedioDePago)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.models.MedioDePago.clean">(método de medios_pago.models.MedioDePago)</a>
+</li>
+      </ul></li>
       <li><a href="divisas.html#divisas.forms.DivisaForm.clean_code">clean_code() (método de divisas.forms.DivisaForm)</a>
+</li>
+      <li><a href="divisas.html#divisas.forms.TasaCambioForm.clean_comision_compra">clean_comision_compra() (método de divisas.forms.TasaCambioForm)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.forms.MedioDePagoForm.clean_comision_porcentaje">clean_comision_porcentaje() (método de medios_pago.forms.MedioDePagoForm)</a>
+</li>
+      <li><a href="divisas.html#divisas.forms.TasaCambioForm.clean_comision_venta">clean_comision_venta() (método de divisas.forms.TasaCambioForm)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.forms.MedioDePagoForm.clean_nombre">clean_nombre() (método de medios_pago.forms.MedioDePagoForm)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.forms.CampoMedioDePagoForm.clean_nombre_campo">clean_nombre_campo() (método de medios_pago.forms.CampoMedioDePagoForm)</a>
+</li>
+      <li><a href="divisas.html#divisas.forms.TasaCambioForm.clean_precio_base">clean_precio_base() (método de divisas.forms.TasaCambioForm)</a>
 </li>
       <li><a href="clientes.html#clientes.models.AsignacionCliente.cliente">cliente (atributo de clientes.models.AsignacionCliente)</a>
 </li>
@@ -106,8 +187,14 @@
       <li><a href="clientes.html#clientes.models.AsignacionCliente.cliente_id">cliente_id (atributo de clientes.models.AsignacionCliente)</a>
 </li>
       <li><a href="clientes.html#clientes.models.Segmento.cliente_set">cliente_set (atributo de clientes.models.Segmento)</a>
+
+      <ul>
+        <li><a href="users.html#users.models.CustomUser.cliente_set">(atributo de users.models.CustomUser)</a>
 </li>
+      </ul></li>
       <li><a href="form_cliente.html#clientes.forms.ClienteForm">ClienteForm (clase en clientes.forms)</a>
+</li>
+      <li><a href="vistas_cliente.html#clientes.views.ClienteListView">ClienteListView (clase en clientes.views)</a>
 </li>
       <li>
     clientes.forms
@@ -116,13 +203,18 @@
         <li><a href="form_cliente.html#module-clientes.forms">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     clientes.models
 
       <ul>
         <li><a href="clientes.html#module-clientes.models">module</a>
+</li>
+      </ul></li>
+      <li>
+    clientes.tests
+
+      <ul>
+        <li><a href="tests_cliente.html#module-clientes.tests">module</a>
 </li>
       </ul></li>
       <li>
@@ -132,7 +224,29 @@
         <li><a href="vistas_cliente.html#module-clientes.views">module</a>
 </li>
       </ul></li>
+      <li><a href="vistas_cliente.html#clientes.views.ClienteUpdateView">ClienteUpdateView (clase en clientes.views)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="divisas.html#divisas.models.Divisa.code">code (atributo de divisas.models.Divisa)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmento.comision_compra">comision_compra (atributo de divisas.models.CotizacionSegmento)</a>
+
+      <ul>
+        <li><a href="divisas.html#divisas.models.TasaCambio.comision_compra">(atributo de divisas.models.TasaCambio)</a>
+</li>
+      </ul></li>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmento.comision_compra_ajustada">comision_compra_ajustada (divisas.models.CotizacionSegmento propiedad)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.models.MedioDePago.comision_porcentaje">comision_porcentaje (atributo de medios_pago.models.MedioDePago)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmento.comision_venta">comision_venta (atributo de divisas.models.CotizacionSegmento)</a>
+
+      <ul>
+        <li><a href="divisas.html#divisas.models.TasaCambio.comision_venta">(atributo de divisas.models.TasaCambio)</a>
+</li>
+      </ul></li>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmento.comision_venta_ajustada">comision_venta_ajustada (divisas.models.CotizacionSegmento propiedad)</a>
 </li>
       <li><a href="divisas.html#divisas.views.DivisaListView.context_object_name">context_object_name (atributo de divisas.views.DivisaListView)</a>
 
@@ -141,14 +255,68 @@
 </li>
         <li><a href="divisas.html#divisas.views.TasaCambioListView.context_object_name">(atributo de divisas.views.TasaCambioListView)</a>
 </li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoDeletedListView.context_object_name">(atributo de medios_pago.views.MedioDePagoDeletedListView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoListView.context_object_name">(atributo de medios_pago.views.MedioDePagoListView)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserListView.context_object_name">(atributo de users.views.CustomUserListView)</a>
+</li>
       </ul></li>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmento">CotizacionSegmento (clase en divisas.models)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmento.DoesNotExist">CotizacionSegmento.DoesNotExist</a>
+</li>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmento.MultipleObjectsReturned">CotizacionSegmento.MultipleObjectsReturned</a>
+</li>
+      <li><a href="clientes.html#clientes.models.Segmento.cotizacionsegmento_set">cotizacionsegmento_set (atributo de clientes.models.Segmento)</a>
+
+      <ul>
+        <li><a href="divisas.html#divisas.models.Divisa.cotizacionsegmento_set">(atributo de divisas.models.Divisa)</a>
+</li>
+        <li><a href="users.html#users.models.CustomUser.cotizacionsegmento_set">(atributo de users.models.CustomUser)</a>
+</li>
+      </ul></li>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmentoQuerySet">CotizacionSegmentoQuerySet (clase en divisas.models)</a>
+</li>
       <li><a href="divisas.html#divisas.models.Divisa.creado">creado (atributo de divisas.models.Divisa)</a>
 
       <ul>
         <li><a href="divisas.html#divisas.models.TasaCambio.creado">(atributo de divisas.models.TasaCambio)</a>
 </li>
+        <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.creado">(atributo de medios_pago.models.CampoMedioDePago)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.models.MedioDePago.creado">(atributo de medios_pago.models.MedioDePago)</a>
+</li>
       </ul></li>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmento.creado_por">creado_por (atributo de divisas.models.CotizacionSegmento)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmento.creado_por_id">creado_por_id (atributo de divisas.models.CotizacionSegmento)</a>
+</li>
       <li><a href="vistas_cliente.html#clientes.views.crear_cliente_view">crear_cliente_view() (en el módulo clientes.views)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.forms.create_campo_formset">create_campo_formset() (en el módulo medios_pago.forms)</a>
+</li>
+      <li><a href="users.html#users.models.CustomUser">CustomUser (clase en users.models)</a>
+</li>
+      <li><a href="users.html#users.models.CustomUser.DoesNotExist">CustomUser.DoesNotExist</a>
+</li>
+      <li><a href="users.html#users.models.CustomUser.MultipleObjectsReturned">CustomUser.MultipleObjectsReturned</a>
+</li>
+      <li><a href="users.html#users.forms.CustomUserChangeForm">CustomUserChangeForm (clase en users.forms)</a>
+</li>
+      <li><a href="users.html#users.forms.CustomUserChangeForm.Meta">CustomUserChangeForm.Meta (clase en users.forms)</a>
+</li>
+      <li><a href="users.html#users.views.CustomUserCreateView">CustomUserCreateView (clase en users.views)</a>
+</li>
+      <li><a href="users.html#users.forms.CustomUserCreationForm">CustomUserCreationForm (clase en users.forms)</a>
+</li>
+      <li><a href="users.html#users.forms.CustomUserCreationForm.Meta">CustomUserCreationForm.Meta (clase en users.forms)</a>
+</li>
+      <li><a href="users.html#users.views.CustomUserDeleteView">CustomUserDeleteView (clase en users.views)</a>
+</li>
+      <li><a href="users.html#users.views.CustomUserListView">CustomUserListView (clase en users.views)</a>
+</li>
+      <li><a href="users.html#users.views.CustomUserUpdateView">CustomUserUpdateView (clase en users.views)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -156,30 +324,92 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="users.html#users.models.CustomUser.date_joined">date_joined (atributo de users.models.CustomUser)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.Divisa.decimales">decimales (atributo de divisas.models.Divisa)</a>
+</li>
       <li><a href="divisas.html#divisas.forms.DivisaForm.declared_fields">declared_fields (atributo de divisas.forms.DivisaForm)</a>
 
       <ul>
         <li><a href="divisas.html#divisas.forms.TasaCambioForm.declared_fields">(atributo de divisas.forms.TasaCambioForm)</a>
 </li>
+        <li><a href="medios_pago.html#medios_pago.forms.CampoMedioDePagoForm.declared_fields">(atributo de medios_pago.forms.CampoMedioDePagoForm)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.forms.MedioDePagoForm.declared_fields">(atributo de medios_pago.forms.MedioDePagoForm)</a>
+</li>
+        <li><a href="users.html#users.forms.CustomUserChangeForm.declared_fields">(atributo de users.forms.CustomUserChangeForm)</a>
+</li>
+        <li><a href="users.html#users.forms.CustomUserCreationForm.declared_fields">(atributo de users.forms.CustomUserCreationForm)</a>
+</li>
       </ul></li>
+      <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.deleted_at">deleted_at (atributo de medios_pago.models.CampoMedioDePago)</a>
+
+      <ul>
+        <li><a href="medios_pago.html#medios_pago.models.MedioDePago.deleted_at">(atributo de medios_pago.models.MedioDePago)</a>
+</li>
+      </ul></li>
+      <li><a href="users.html#users.models.Role.description">description (atributo de users.models.Role)</a>
+</li>
+      <li><a href="clientes.html#clientes.models.HistorialDescuentos.descuento">descuento (atributo de clientes.models.HistorialDescuentos)</a>
+
+      <ul>
+        <li><a href="clientes.html#clientes.models.Segmento.descuento">(atributo de clientes.models.Segmento)</a>
+</li>
+      </ul></li>
+      <li><a href="clientes.html#clientes.models.Descuento">Descuento (clase en clientes.models)</a>
+</li>
+      <li><a href="clientes.html#clientes.models.Descuento.DoesNotExist">Descuento.DoesNotExist</a>
+</li>
+      <li><a href="clientes.html#clientes.models.Descuento.MultipleObjectsReturned">Descuento.MultipleObjectsReturned</a>
+</li>
+      <li><a href="clientes.html#clientes.models.HistorialDescuentos.descuento_id">descuento_id (atributo de clientes.models.HistorialDescuentos)</a>
+</li>
+      <li><a href="users.html#users.models.CustomUser.descuento_set">descuento_set (atributo de users.models.CustomUser)</a>
+</li>
+      <li><a href="form_cliente.html#clientes.forms.DescuentoForm">DescuentoForm (clase en clientes.forms)</a>
+</li>
+      <li><a href="vistas_cliente.html#clientes.views.DescuentoListView">DescuentoListView (clase en clientes.views)</a>
+</li>
+      <li><a href="vistas_cliente.html#clientes.views.DescuentoUpdateView">DescuentoUpdateView (clase en clientes.views)</a>
+</li>
       <li><a href="clientes.html#clientes.models.Cliente.direccion">direccion (atributo de clientes.models.Cliente)</a>
 </li>
-      <li><a href="divisas.html#divisas.models.TasaCambio.divisa">divisa (atributo de divisas.models.TasaCambio)</a>
+      <li><a href="medios_pago.html#medios_pago.views.CampoSoftDeleteView.dispatch">dispatch() (método de medios_pago.views.CampoSoftDeleteView)</a>
+
+      <ul>
+        <li><a href="users.html#users.views.CustomUserCreateView.dispatch">(método de users.views.CustomUserCreateView)</a>
 </li>
+        <li><a href="users.html#users.views.CustomUserDeleteView.dispatch">(método de users.views.CustomUserDeleteView)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserListView.dispatch">(método de users.views.CustomUserListView)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserUpdateView.dispatch">(método de users.views.CustomUserUpdateView)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmento.divisa">divisa (atributo de divisas.models.CotizacionSegmento)</a>
+
+      <ul>
+        <li><a href="divisas.html#divisas.models.TasaCambio.divisa">(atributo de divisas.models.TasaCambio)</a>
+</li>
+      </ul></li>
       <li><a href="divisas.html#divisas.models.Divisa">Divisa (clase en divisas.models)</a>
 </li>
       <li><a href="divisas.html#divisas.models.Divisa.DoesNotExist">Divisa.DoesNotExist</a>
 </li>
       <li><a href="divisas.html#divisas.models.Divisa.MultipleObjectsReturned">Divisa.MultipleObjectsReturned</a>
 </li>
-      <li><a href="divisas.html#divisas.models.TasaCambio.divisa_id">divisa_id (atributo de divisas.models.TasaCambio)</a>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmento.divisa_id">divisa_id (atributo de divisas.models.CotizacionSegmento)</a>
+
+      <ul>
+        <li><a href="divisas.html#divisas.models.TasaCambio.divisa_id">(atributo de divisas.models.TasaCambio)</a>
 </li>
+      </ul></li>
       <li><a href="divisas.html#divisas.views.DivisaCreateView">DivisaCreateView (clase en divisas.views)</a>
 </li>
       <li><a href="divisas.html#divisas.forms.DivisaForm">DivisaForm (clase en divisas.forms)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="divisas.html#divisas.forms.DivisaForm.Meta">DivisaForm.Meta (clase en divisas.forms)</a>
 </li>
       <li><a href="divisas.html#divisas.views.DivisaListView">DivisaListView (clase en divisas.views)</a>
@@ -215,7 +445,19 @@
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="medios_pago.html#medios_pago.tests.EdgeCasesTest">EdgeCasesTest (clase en medios_pago.tests)</a>
+</li>
       <li><a href="clientes.html#clientes.models.Cliente.email">email (atributo de clientes.models.Cliente)</a>
+
+      <ul>
+        <li><a href="users.html#users.models.CustomUser.email">(atributo de users.models.CustomUser)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="autenticacion.html#autenticacion.utils.enviar_verificacion">enviar_verificacion() (en el módulo autenticacion.utils)</a>
+</li>
+      <li><a href="clientes.html#clientes.models.Cliente.esta_activo">esta_activo (atributo de clientes.models.Cliente)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -223,30 +465,72 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="divisas.html#divisas.models.TasaCambio.fecha">fecha (atributo de divisas.models.TasaCambio)</a>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmento.fecha">fecha (atributo de divisas.models.CotizacionSegmento)</a>
+
+      <ul>
+        <li><a href="divisas.html#divisas.models.TasaCambio.fecha">(atributo de divisas.models.TasaCambio)</a>
 </li>
+      </ul></li>
       <li><a href="clientes.html#clientes.models.AsignacionCliente.fecha_asignacion">fecha_asignacion (atributo de clientes.models.AsignacionCliente)</a>
+</li>
+      <li><a href="clientes.html#clientes.models.HistorialDescuentos.fecha_cambio">fecha_cambio (atributo de clientes.models.HistorialDescuentos)</a>
+</li>
+      <li><a href="clientes.html#clientes.models.Descuento.fecha_modificacion">fecha_modificacion (atributo de clientes.models.Descuento)</a>
 </li>
       <li><a href="divisas.html#divisas.forms.DivisaForm.Meta.fields">fields (atributo de divisas.forms.DivisaForm.Meta)</a>
 
       <ul>
         <li><a href="divisas.html#divisas.forms.TasaCambioForm.Meta.fields">(atributo de divisas.forms.TasaCambioForm.Meta)</a>
 </li>
+        <li><a href="medios_pago.html#medios_pago.forms.CampoMedioDePagoForm.Meta.fields">(atributo de medios_pago.forms.CampoMedioDePagoForm.Meta)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.forms.MedioDePagoForm.Meta.fields">(atributo de medios_pago.forms.MedioDePagoForm.Meta)</a>
+</li>
+        <li><a href="users.html#users.forms.CustomUserChangeForm.Meta.fields">(atributo de users.forms.CustomUserChangeForm.Meta)</a>
+</li>
+        <li><a href="users.html#users.forms.CustomUserCreationForm.Meta.fields">(atributo de users.forms.CustomUserCreationForm.Meta)</a>
+</li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="divisas.html#divisas.views.DivisaCreateView.form_class">form_class (atributo de divisas.views.DivisaCreateView)</a>
+      <li><a href="users.html#users.models.CustomUser.first_name">first_name (atributo de users.models.CustomUser)</a>
+</li>
+      <li><a href="vistas_cliente.html#clientes.views.ClienteUpdateView.form_class">form_class (atributo de clientes.views.ClienteUpdateView)</a>
 
       <ul>
+        <li><a href="vistas_cliente.html#clientes.views.DescuentoUpdateView.form_class">(atributo de clientes.views.DescuentoUpdateView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DivisaCreateView.form_class">(atributo de divisas.views.DivisaCreateView)</a>
+</li>
         <li><a href="divisas.html#divisas.views.DivisaUpdateView.form_class">(atributo de divisas.views.DivisaUpdateView)</a>
 </li>
         <li><a href="divisas.html#divisas.views.TasaCambioCreateView.form_class">(atributo de divisas.views.TasaCambioCreateView)</a>
 </li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoCreateAdminView.form_class">(atributo de medios_pago.views.MedioDePagoCreateAdminView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoUpdateView.form_class">(atributo de medios_pago.views.MedioDePagoUpdateView)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserCreateView.form_class">(atributo de users.views.CustomUserCreateView)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserUpdateView.form_class">(atributo de users.views.CustomUserUpdateView)</a>
+</li>
       </ul></li>
-      <li><a href="divisas.html#divisas.views.DivisaCreateView.form_valid">form_valid() (método de divisas.views.DivisaCreateView)</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="medios_pago.html#medios_pago.views.MedioDePagoCreateAdminView.form_invalid">form_invalid() (método de medios_pago.views.MedioDePagoCreateAdminView)</a>
 
       <ul>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoUpdateView.form_invalid">(método de medios_pago.views.MedioDePagoUpdateView)</a>
+</li>
+      </ul></li>
+      <li><a href="vistas_cliente.html#clientes.views.DescuentoUpdateView.form_valid">form_valid() (método de clientes.views.DescuentoUpdateView)</a>
+
+      <ul>
+        <li><a href="divisas.html#divisas.views.DivisaCreateView.form_valid">(método de divisas.views.DivisaCreateView)</a>
+</li>
         <li><a href="divisas.html#divisas.views.TasaCambioCreateView.form_valid">(método de divisas.views.TasaCambioCreateView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoCreateAdminView.form_valid">(método de medios_pago.views.MedioDePagoCreateAdminView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoUpdateView.form_valid">(método de medios_pago.views.MedioDePagoUpdateView)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -255,49 +539,111 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="divisas.html#divisas.views.TasaCambioAllListView.get_context_data">get_context_data() (método de divisas.views.TasaCambioAllListView)</a>
+      <li><a href="autenticacion.html#autenticacion.utils.generar_token">generar_token() (en el módulo autenticacion.utils)</a>
+</li>
+      <li><a href="vistas_cliente.html#clientes.views.ClienteListView.get_context_data">get_context_data() (método de clientes.views.ClienteListView)</a>
 
       <ul>
-        <li><a href="divisas.html#divisas.views.TasaCambioCreateView.get_context_data">(método de divisas.views.TasaCambioCreateView)</a>
+        <li><a href="divisas.html#divisas.views.TasaCambioAllListView.get_context_data">(método de divisas.views.TasaCambioAllListView)</a>
 </li>
         <li><a href="divisas.html#divisas.views.TasaCambioListView.get_context_data">(método de divisas.views.TasaCambioListView)</a>
 </li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoCreateAdminView.get_context_data">(método de medios_pago.views.MedioDePagoCreateAdminView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoDeletedListView.get_context_data">(método de medios_pago.views.MedioDePagoDeletedListView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoUpdateView.get_context_data">(método de medios_pago.views.MedioDePagoUpdateView)</a>
+</li>
       </ul></li>
+      <li><a href="divisas.html#divisas.views.TasaCambioCreateView.get_form_kwargs">get_form_kwargs() (método de divisas.views.TasaCambioCreateView)</a>
+</li>
       <li><a href="divisas.html#divisas.views.TasaCambioCreateView.get_initial">get_initial() (método de divisas.views.TasaCambioCreateView)</a>
 </li>
       <li><a href="divisas.html#divisas.models.Divisa.get_next_by_actualizado">get_next_by_actualizado() (método de divisas.models.Divisa)</a>
+
+      <ul>
+        <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.get_next_by_actualizado">(método de medios_pago.models.CampoMedioDePago)</a>
 </li>
+        <li><a href="medios_pago.html#medios_pago.models.MedioDePago.get_next_by_actualizado">(método de medios_pago.models.MedioDePago)</a>
+</li>
+      </ul></li>
       <li><a href="divisas.html#divisas.models.Divisa.get_next_by_creado">get_next_by_creado() (método de divisas.models.Divisa)</a>
 
       <ul>
         <li><a href="divisas.html#divisas.models.TasaCambio.get_next_by_creado">(método de divisas.models.TasaCambio)</a>
 </li>
-      </ul></li>
-      <li><a href="divisas.html#divisas.models.TasaCambio.get_next_by_fecha">get_next_by_fecha() (método de divisas.models.TasaCambio)</a>
+        <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.get_next_by_creado">(método de medios_pago.models.CampoMedioDePago)</a>
 </li>
+        <li><a href="medios_pago.html#medios_pago.models.MedioDePago.get_next_by_creado">(método de medios_pago.models.MedioDePago)</a>
+</li>
+      </ul></li>
+      <li><a href="users.html#users.models.CustomUser.get_next_by_date_joined">get_next_by_date_joined() (método de users.models.CustomUser)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmento.get_next_by_fecha">get_next_by_fecha() (método de divisas.models.CotizacionSegmento)</a>
+
+      <ul>
+        <li><a href="divisas.html#divisas.models.TasaCambio.get_next_by_fecha">(método de divisas.models.TasaCambio)</a>
+</li>
+      </ul></li>
       <li><a href="clientes.html#clientes.models.AsignacionCliente.get_next_by_fecha_asignacion">get_next_by_fecha_asignacion() (método de clientes.models.AsignacionCliente)</a>
 </li>
-      <li><a href="divisas.html#divisas.models.Divisa.get_previous_by_actualizado">get_previous_by_actualizado() (método de divisas.models.Divisa)</a>
+      <li><a href="clientes.html#clientes.models.HistorialDescuentos.get_next_by_fecha_cambio">get_next_by_fecha_cambio() (método de clientes.models.HistorialDescuentos)</a>
 </li>
+      <li><a href="clientes.html#clientes.models.Descuento.get_next_by_fecha_modificacion">get_next_by_fecha_modificacion() (método de clientes.models.Descuento)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.Divisa.get_previous_by_actualizado">get_previous_by_actualizado() (método de divisas.models.Divisa)</a>
+
+      <ul>
+        <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.get_previous_by_actualizado">(método de medios_pago.models.CampoMedioDePago)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.models.MedioDePago.get_previous_by_actualizado">(método de medios_pago.models.MedioDePago)</a>
+</li>
+      </ul></li>
       <li><a href="divisas.html#divisas.models.Divisa.get_previous_by_creado">get_previous_by_creado() (método de divisas.models.Divisa)</a>
 
       <ul>
         <li><a href="divisas.html#divisas.models.TasaCambio.get_previous_by_creado">(método de divisas.models.TasaCambio)</a>
 </li>
+        <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.get_previous_by_creado">(método de medios_pago.models.CampoMedioDePago)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.models.MedioDePago.get_previous_by_creado">(método de medios_pago.models.MedioDePago)</a>
+</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="divisas.html#divisas.models.TasaCambio.get_previous_by_fecha">get_previous_by_fecha() (método de divisas.models.TasaCambio)</a>
+      <li><a href="users.html#users.models.CustomUser.get_previous_by_date_joined">get_previous_by_date_joined() (método de users.models.CustomUser)</a>
 </li>
-      <li><a href="clientes.html#clientes.models.AsignacionCliente.get_previous_by_fecha_asignacion">get_previous_by_fecha_asignacion() (método de clientes.models.AsignacionCliente)</a>
-</li>
-      <li><a href="divisas.html#divisas.views.TasaCambioAllListView.get_queryset">get_queryset() (método de divisas.views.TasaCambioAllListView)</a>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmento.get_previous_by_fecha">get_previous_by_fecha() (método de divisas.models.CotizacionSegmento)</a>
 
       <ul>
+        <li><a href="divisas.html#divisas.models.TasaCambio.get_previous_by_fecha">(método de divisas.models.TasaCambio)</a>
+</li>
+      </ul></li>
+      <li><a href="clientes.html#clientes.models.AsignacionCliente.get_previous_by_fecha_asignacion">get_previous_by_fecha_asignacion() (método de clientes.models.AsignacionCliente)</a>
+</li>
+      <li><a href="clientes.html#clientes.models.HistorialDescuentos.get_previous_by_fecha_cambio">get_previous_by_fecha_cambio() (método de clientes.models.HistorialDescuentos)</a>
+</li>
+      <li><a href="clientes.html#clientes.models.Descuento.get_previous_by_fecha_modificacion">get_previous_by_fecha_modificacion() (método de clientes.models.Descuento)</a>
+</li>
+      <li><a href="vistas_cliente.html#clientes.views.ClienteListView.get_queryset">get_queryset() (método de clientes.views.ClienteListView)</a>
+
+      <ul>
+        <li><a href="vistas_cliente.html#clientes.views.DescuentoListView.get_queryset">(método de clientes.views.DescuentoListView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.TasaCambioAllListView.get_queryset">(método de divisas.views.TasaCambioAllListView)</a>
+</li>
         <li><a href="divisas.html#divisas.views.TasaCambioListView.get_queryset">(método de divisas.views.TasaCambioListView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.models.ActiveManager.get_queryset">(método de medios_pago.models.ActiveManager)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoDeletedListView.get_queryset">(método de medios_pago.views.MedioDePagoDeletedListView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoListView.get_queryset">(método de medios_pago.views.MedioDePagoListView)</a>
 </li>
       </ul></li>
       <li><a href="divisas.html#divisas.views.TasaCambioCreateView.get_success_url">get_success_url() (método de divisas.views.TasaCambioCreateView)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.get_tipo_dato_display">get_tipo_dato_display() (método de medios_pago.models.CampoMedioDePago)</a>
 </li>
       <li><a href="roles.html#roles.views.group_create">group_create() (en el módulo roles.views)</a>
 </li>
@@ -313,8 +659,38 @@
 </li>
       <li><a href="roles.html#roles.forms.GroupForm.Meta">GroupForm.Meta (clase en roles.forms)</a>
 </li>
-      <li><a href="roles.html#roles.context_processors.grupo_usuario">grupo_usuario() (en el módulo roles.context_processors)</a>
+      <li><a href="users.html#users.models.CustomUser.groups">groups (atributo de users.models.CustomUser)</a>
 </li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="medios_pago.html#medios_pago.views.MedioDePagoUpdateView.handle_ajax_field_delete">handle_ajax_field_delete() (método de medios_pago.views.MedioDePagoUpdateView)</a>
+</li>
+      <li><a href="users.html#users.forms.CustomUserChangeForm.Meta.help_texts">help_texts (atributo de users.forms.CustomUserChangeForm.Meta)</a>
+
+      <ul>
+        <li><a href="users.html#users.forms.CustomUserCreationForm.Meta.help_texts">(atributo de users.forms.CustomUserCreationForm.Meta)</a>
+</li>
+      </ul></li>
+      <li><a href="vistas_cliente.html#clientes.views.HistorialDescuentoListView">HistorialDescuentoListView (clase en clientes.views)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="clientes.html#clientes.models.HistorialDescuentos">HistorialDescuentos (clase en clientes.models)</a>
+</li>
+      <li><a href="clientes.html#clientes.models.HistorialDescuentos.DoesNotExist">HistorialDescuentos.DoesNotExist</a>
+</li>
+      <li><a href="clientes.html#clientes.models.HistorialDescuentos.MultipleObjectsReturned">HistorialDescuentos.MultipleObjectsReturned</a>
+</li>
+      <li><a href="clientes.html#clientes.models.Descuento.historialdescuentos_set">historialdescuentos_set (atributo de clientes.models.Descuento)</a>
+
+      <ul>
+        <li><a href="users.html#users.models.CustomUser.historialdescuentos_set">(atributo de users.models.CustomUser)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -326,18 +702,54 @@
       <ul>
         <li><a href="clientes.html#clientes.models.Cliente.id">(atributo de clientes.models.Cliente)</a>
 </li>
+        <li><a href="clientes.html#clientes.models.HistorialDescuentos.id">(atributo de clientes.models.HistorialDescuentos)</a>
+</li>
         <li><a href="clientes.html#clientes.models.Segmento.id">(atributo de clientes.models.Segmento)</a>
+</li>
+        <li><a href="divisas.html#divisas.models.CotizacionSegmento.id">(atributo de divisas.models.CotizacionSegmento)</a>
 </li>
         <li><a href="divisas.html#divisas.models.Divisa.id">(atributo de divisas.models.Divisa)</a>
 </li>
         <li><a href="divisas.html#divisas.models.TasaCambio.id">(atributo de divisas.models.TasaCambio)</a>
 </li>
+        <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.id">(atributo de medios_pago.models.CampoMedioDePago)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.models.MedioDePago.id">(atributo de medios_pago.models.MedioDePago)</a>
+</li>
+        <li><a href="users.html#users.models.CustomUser.id">(atributo de users.models.CustomUser)</a>
+</li>
+        <li><a href="users.html#users.models.Role.id">(atributo de users.models.Role)</a>
+</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="divisas.html#divisas.models.Divisa.is_active">is_active (atributo de divisas.models.Divisa)</a>
+      <li><a href="medios_pago.html#medios_pago.tests.IntegrationTest">IntegrationTest (clase en medios_pago.tests)</a>
 </li>
+      <li><a href="divisas.html#divisas.models.Divisa.is_active">is_active (atributo de divisas.models.Divisa)</a>
+
+      <ul>
+        <li><a href="medios_pago.html#medios_pago.models.MedioDePago.is_active">(atributo de medios_pago.models.MedioDePago)</a>
+</li>
+        <li><a href="users.html#users.models.CustomUser.is_active">(atributo de users.models.CustomUser)</a>
+</li>
+      </ul></li>
       <li><a href="roles.html#roles.views.is_admin">is_admin() (en el módulo roles.views)</a>
+</li>
+      <li><a href="divisas.html#divisas.views.is_admin_or_staff">is_admin_or_staff() (en el módulo divisas.views)</a>
+</li>
+      <li><a href="users.html#users.models.CustomUser.is_cambista">is_cambista (atributo de users.models.CustomUser)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.is_deleted">is_deleted (medios_pago.models.CampoMedioDePago propiedad)</a>
+
+      <ul>
+        <li><a href="medios_pago.html#medios_pago.models.MedioDePago.is_deleted">(medios_pago.models.MedioDePago propiedad)</a>
+</li>
+      </ul></li>
+      <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.is_required">is_required (atributo de medios_pago.models.CampoMedioDePago)</a>
+</li>
+      <li><a href="users.html#users.models.CustomUser.is_staff">is_staff (atributo de users.models.CustomUser)</a>
+</li>
+      <li><a href="users.html#users.models.CustomUser.is_superuser">is_superuser (atributo de users.models.CustomUser)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -345,11 +757,25 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="vistas_cliente.html#clientes.views.lista_clientes">lista_clientes() (en el módulo clientes.views)</a>
+      <li><a href="users.html#users.forms.CustomUserChangeForm.Meta.labels">labels (atributo de users.forms.CustomUserChangeForm.Meta)</a>
+
+      <ul>
+        <li><a href="users.html#users.forms.CustomUserCreationForm.Meta.labels">(atributo de users.forms.CustomUserCreationForm.Meta)</a>
+</li>
+      </ul></li>
+      <li><a href="users.html#users.models.CustomUser.last_login">last_login (atributo de users.models.CustomUser)</a>
+</li>
+      <li><a href="users.html#users.models.CustomUser.last_name">last_name (atributo de users.models.CustomUser)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="vistas_cliente.html#clientes.views.lista_clientes">lista_clientes() (en el módulo clientes.views)</a>
+</li>
       <li><a href="vistas_cliente.html#clientes.views.listar_asociaciones">listar_asociaciones() (en el módulo clientes.views)</a>
+</li>
+      <li><a href="users.html#users.models.CustomUser.logentry_set">logentry_set (atributo de users.models.CustomUser)</a>
+</li>
+      <li><a href="autenticacion.html#autenticacion.views.login_view">login_view() (en el módulo autenticacion.views)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -360,20 +786,104 @@
       <li><a href="form_cliente.html#clientes.forms.ClienteForm.media">media (clientes.forms.ClienteForm propiedad)</a>
 
       <ul>
+        <li><a href="form_cliente.html#clientes.forms.DescuentoForm.media">(clientes.forms.DescuentoForm propiedad)</a>
+</li>
         <li><a href="form_cliente.html#clientes.forms.SeleccionClienteForm.media">(clientes.forms.SeleccionClienteForm propiedad)</a>
 </li>
         <li><a href="divisas.html#divisas.forms.DivisaForm.media">(divisas.forms.DivisaForm propiedad)</a>
 </li>
         <li><a href="divisas.html#divisas.forms.TasaCambioForm.media">(divisas.forms.TasaCambioForm propiedad)</a>
 </li>
+        <li><a href="medios_pago.html#medios_pago.forms.CampoMedioDePagoForm.media">(medios_pago.forms.CampoMedioDePagoForm propiedad)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.forms.MedioDePagoForm.media">(medios_pago.forms.MedioDePagoForm propiedad)</a>
+</li>
         <li><a href="roles.html#roles.forms.GroupForm.media">(roles.forms.GroupForm propiedad)</a>
 </li>
         <li><a href="roles.html#roles.forms.PermissionForm.media">(roles.forms.PermissionForm propiedad)</a>
 </li>
+        <li><a href="users.html#users.forms.CustomUserChangeForm.media">(users.forms.CustomUserChangeForm propiedad)</a>
+</li>
+        <li><a href="users.html#users.forms.CustomUserCreationForm.media">(users.forms.CustomUserCreationForm propiedad)</a>
+</li>
       </ul></li>
-      <li><a href="divisas.html#divisas.forms.DivisaForm.Meta.model">model (atributo de divisas.forms.DivisaForm.Meta)</a>
+      <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.medio_de_pago">medio_de_pago (atributo de medios_pago.models.CampoMedioDePago)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.medio_de_pago_id">medio_de_pago_id (atributo de medios_pago.models.CampoMedioDePago)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.models.MedioDePago">MedioDePago (clase en medios_pago.models)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.models.MedioDePago.DoesNotExist">MedioDePago.DoesNotExist</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.models.MedioDePago.MultipleObjectsReturned">MedioDePago.MultipleObjectsReturned</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.views.MedioDePagoCreateAdminView">MedioDePagoCreateAdminView (clase en medios_pago.views)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.views.MedioDePagoDeletedListView">MedioDePagoDeletedListView (clase en medios_pago.views)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.forms.MedioDePagoForm">MedioDePagoForm (clase en medios_pago.forms)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.forms.MedioDePagoForm.Meta">MedioDePagoForm.Meta (clase en medios_pago.forms)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoFormsTest">MedioDePagoFormsTest (clase en medios_pago.tests)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.views.MedioDePagoHardDeleteView">MedioDePagoHardDeleteView (clase en medios_pago.views)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.views.MedioDePagoListView">MedioDePagoListView (clase en medios_pago.views)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoModelTest">MedioDePagoModelTest (clase en medios_pago.tests)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.views.MedioDePagoRestoreView">MedioDePagoRestoreView (clase en medios_pago.views)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.views.MedioDePagoSoftDeleteView">MedioDePagoSoftDeleteView (clase en medios_pago.views)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.views.MedioDePagoToggleActivoView">MedioDePagoToggleActivoView (clase en medios_pago.views)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.views.MedioDePagoUpdateView">MedioDePagoUpdateView (clase en medios_pago.views)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoViewsTest">MedioDePagoViewsTest (clase en medios_pago.tests)</a>
+</li>
+      <li>
+    medios_pago.forms
 
       <ul>
+        <li><a href="medios_pago.html#module-medios_pago.forms">module</a>
+</li>
+      </ul></li>
+      <li>
+    medios_pago.models
+
+      <ul>
+        <li><a href="medios_pago.html#module-medios_pago.models">module</a>
+</li>
+      </ul></li>
+      <li>
+    medios_pago.tests
+
+      <ul>
+        <li><a href="medios_pago.html#module-medios_pago.tests">module</a>
+</li>
+      </ul></li>
+      <li>
+    medios_pago.views
+
+      <ul>
+        <li><a href="medios_pago.html#module-medios_pago.views">module</a>
+</li>
+      </ul></li>
+      <li><a href="vistas_cliente.html#clientes.views.ClienteListView.model">model (atributo de clientes.views.ClienteListView)</a>
+
+      <ul>
+        <li><a href="vistas_cliente.html#clientes.views.ClienteUpdateView.model">(atributo de clientes.views.ClienteUpdateView)</a>
+</li>
+        <li><a href="vistas_cliente.html#clientes.views.DescuentoListView.model">(atributo de clientes.views.DescuentoListView)</a>
+</li>
+        <li><a href="vistas_cliente.html#clientes.views.DescuentoUpdateView.model">(atributo de clientes.views.DescuentoUpdateView)</a>
+</li>
+        <li><a href="vistas_cliente.html#clientes.views.HistorialDescuentoListView.model">(atributo de clientes.views.HistorialDescuentoListView)</a>
+</li>
+        <li><a href="divisas.html#divisas.forms.DivisaForm.Meta.model">(atributo de divisas.forms.DivisaForm.Meta)</a>
+</li>
         <li><a href="divisas.html#divisas.forms.TasaCambioForm.Meta.model">(atributo de divisas.forms.TasaCambioForm.Meta)</a>
 </li>
         <li><a href="divisas.html#divisas.views.DivisaCreateView.model">(atributo de divisas.views.DivisaCreateView)</a>
@@ -388,18 +898,60 @@
 </li>
         <li><a href="divisas.html#divisas.views.TasaCambioListView.model">(atributo de divisas.views.TasaCambioListView)</a>
 </li>
+        <li><a href="medios_pago.html#medios_pago.forms.CampoMedioDePagoForm.Meta.model">(atributo de medios_pago.forms.CampoMedioDePagoForm.Meta)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.forms.MedioDePagoForm.Meta.model">(atributo de medios_pago.forms.MedioDePagoForm.Meta)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoCreateAdminView.model">(atributo de medios_pago.views.MedioDePagoCreateAdminView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoDeletedListView.model">(atributo de medios_pago.views.MedioDePagoDeletedListView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoListView.model">(atributo de medios_pago.views.MedioDePagoListView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoUpdateView.model">(atributo de medios_pago.views.MedioDePagoUpdateView)</a>
+</li>
         <li><a href="roles.html#roles.forms.GroupForm.Meta.model">(atributo de roles.forms.GroupForm.Meta)</a>
+</li>
+        <li><a href="users.html#users.forms.CustomUserChangeForm.Meta.model">(atributo de users.forms.CustomUserChangeForm.Meta)</a>
+</li>
+        <li><a href="users.html#users.forms.CustomUserCreationForm.Meta.model">(atributo de users.forms.CustomUserCreationForm.Meta)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserCreateView.model">(atributo de users.views.CustomUserCreateView)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserDeleteView.model">(atributo de users.views.CustomUserDeleteView)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserListView.model">(atributo de users.views.CustomUserListView)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserUpdateView.model">(atributo de users.views.CustomUserUpdateView)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="clientes.html#clientes.models.Descuento.modificado_por">modificado_por (atributo de clientes.models.Descuento)</a>
+
+      <ul>
+        <li><a href="clientes.html#clientes.models.HistorialDescuentos.modificado_por">(atributo de clientes.models.HistorialDescuentos)</a>
+</li>
+      </ul></li>
+      <li><a href="clientes.html#clientes.models.Descuento.modificado_por_id">modificado_por_id (atributo de clientes.models.Descuento)</a>
+
+      <ul>
+        <li><a href="clientes.html#clientes.models.HistorialDescuentos.modificado_por_id">(atributo de clientes.models.HistorialDescuentos)</a>
+</li>
+      </ul></li>
       <li>
     module
 
       <ul>
+        <li><a href="autenticacion.html#module-autenticacion.utils">autenticacion.utils</a>
+</li>
+        <li><a href="autenticacion.html#module-autenticacion.views">autenticacion.views</a>
+</li>
         <li><a href="form_cliente.html#module-clientes.forms">clientes.forms</a>
 </li>
         <li><a href="clientes.html#module-clientes.models">clientes.models</a>
+</li>
+        <li><a href="tests_cliente.html#module-clientes.tests">clientes.tests</a>
 </li>
         <li><a href="vistas_cliente.html#module-clientes.views">clientes.views</a>
 </li>
@@ -409,11 +961,25 @@
 </li>
         <li><a href="divisas.html#module-divisas.views">divisas.views</a>
 </li>
+        <li><a href="medios_pago.html#module-medios_pago.forms">medios_pago.forms</a>
+</li>
+        <li><a href="medios_pago.html#module-medios_pago.models">medios_pago.models</a>
+</li>
+        <li><a href="medios_pago.html#module-medios_pago.tests">medios_pago.tests</a>
+</li>
+        <li><a href="medios_pago.html#module-medios_pago.views">medios_pago.views</a>
+</li>
         <li><a href="roles.html#module-roles.context_processors">roles.context_processors</a>
 </li>
         <li><a href="roles.html#module-roles.forms">roles.forms</a>
 </li>
         <li><a href="roles.html#module-roles.views">roles.views</a>
+</li>
+        <li><a href="users.html#module-users.forms">users.forms</a>
+</li>
+        <li><a href="users.html#module-users.models">users.models</a>
+</li>
+        <li><a href="users.html#module-users.views">users.views</a>
 </li>
       </ul></li>
   </ul></td>
@@ -423,10 +989,20 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="clientes.html#clientes.models.Segmento.name">name (atributo de clientes.models.Segmento)</a>
+
+      <ul>
+        <li><a href="users.html#users.models.Role.name">(atributo de users.models.Role)</a>
 </li>
+      </ul></li>
+      <li><a href="divisas.html#divisas.models.Divisa.nombre">nombre (atributo de divisas.models.Divisa)</a>
+
+      <ul>
+        <li><a href="medios_pago.html#medios_pago.models.MedioDePago.nombre">(atributo de medios_pago.models.MedioDePago)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="divisas.html#divisas.models.Divisa.nombre">nombre (atributo de divisas.models.Divisa)</a>
+      <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.nombre_campo">nombre_campo (atributo de medios_pago.models.CampoMedioDePago)</a>
 </li>
       <li><a href="clientes.html#clientes.models.Cliente.nombre_completo">nombre_completo (atributo de clientes.models.Cliente)</a>
 </li>
@@ -441,13 +1017,29 @@
       <ul>
         <li><a href="clientes.html#clientes.models.Cliente.objects">(atributo de clientes.models.Cliente)</a>
 </li>
+        <li><a href="clientes.html#clientes.models.Descuento.objects">(atributo de clientes.models.Descuento)</a>
+</li>
+        <li><a href="clientes.html#clientes.models.HistorialDescuentos.objects">(atributo de clientes.models.HistorialDescuentos)</a>
+</li>
         <li><a href="clientes.html#clientes.models.Segmento.objects">(atributo de clientes.models.Segmento)</a>
+</li>
+        <li><a href="divisas.html#divisas.models.CotizacionSegmento.objects">(atributo de divisas.models.CotizacionSegmento)</a>
 </li>
         <li><a href="divisas.html#divisas.models.Divisa.objects">(atributo de divisas.models.Divisa)</a>
 </li>
         <li><a href="divisas.html#divisas.models.TasaCambio.objects">(atributo de divisas.models.TasaCambio)</a>
 </li>
+        <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.objects">(atributo de medios_pago.models.CampoMedioDePago)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.models.MedioDePago.objects">(atributo de medios_pago.models.MedioDePago)</a>
+</li>
+        <li><a href="users.html#users.models.Role.objects">(atributo de users.models.Role)</a>
+</li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.orden">orden (atributo de medios_pago.models.CampoMedioDePago)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -461,7 +1053,19 @@
 </li>
         <li><a href="divisas.html#divisas.views.TasaCambioListView.paginate_by">(atributo de divisas.views.TasaCambioListView)</a>
 </li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoDeletedListView.paginate_by">(atributo de medios_pago.views.MedioDePagoDeletedListView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoListView.paginate_by">(atributo de medios_pago.views.MedioDePagoListView)</a>
+</li>
       </ul></li>
+      <li><a href="users.html#users.models.CustomUser.password">password (atributo de users.models.CustomUser)</a>
+</li>
+      <li><a href="users.html#users.views.perfil_usuario">perfil_usuario() (en el módulo users.views)</a>
+</li>
+      <li><a href="users.html#users.models.CustomUser.perfilusuario">perfilusuario (atributo de users.models.CustomUser)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.PerformanceTest">PerformanceTest (clase en medios_pago.tests)</a>
+</li>
       <li><a href="roles.html#roles.views.permission_create">permission_create() (en el módulo roles.views)</a>
 </li>
       <li><a href="divisas.html#divisas.views.DivisaCreateView.permission_required">permission_required (atributo de divisas.views.DivisaCreateView)</a>
@@ -475,19 +1079,89 @@
 </li>
         <li><a href="divisas.html#divisas.views.TasaCambioCreateView.permission_required">(atributo de divisas.views.TasaCambioCreateView)</a>
 </li>
+        <li><a href="medios_pago.html#medios_pago.views.CampoSoftDeleteView.permission_required">(atributo de medios_pago.views.CampoSoftDeleteView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoCreateAdminView.permission_required">(atributo de medios_pago.views.MedioDePagoCreateAdminView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoDeletedListView.permission_required">(atributo de medios_pago.views.MedioDePagoDeletedListView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoHardDeleteView.permission_required">(atributo de medios_pago.views.MedioDePagoHardDeleteView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoListView.permission_required">(atributo de medios_pago.views.MedioDePagoListView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoRestoreView.permission_required">(atributo de medios_pago.views.MedioDePagoRestoreView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoSoftDeleteView.permission_required">(atributo de medios_pago.views.MedioDePagoSoftDeleteView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoToggleActivoView.permission_required">(atributo de medios_pago.views.MedioDePagoToggleActivoView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoUpdateView.permission_required">(atributo de medios_pago.views.MedioDePagoUpdateView)</a>
+</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="roles.html#roles.forms.PermissionForm">PermissionForm (clase en roles.forms)</a>
 </li>
-      <li><a href="divisas.html#divisas.views.DivisaToggleActivaView.post">post() (método de divisas.views.DivisaToggleActivaView)</a>
+      <li><a href="clientes.html#clientes.models.Descuento.porcentaje_descuento">porcentaje_descuento (atributo de clientes.models.Descuento)</a>
+
+      <ul>
+        <li><a href="divisas.html#divisas.models.CotizacionSegmento.porcentaje_descuento">(atributo de divisas.models.CotizacionSegmento)</a>
 </li>
+      </ul></li>
+      <li><a href="clientes.html#clientes.models.HistorialDescuentos.porcentaje_descuento_anterior">porcentaje_descuento_anterior (atributo de clientes.models.HistorialDescuentos)</a>
+</li>
+      <li><a href="clientes.html#clientes.models.HistorialDescuentos.porcentaje_descuento_nuevo">porcentaje_descuento_nuevo (atributo de clientes.models.HistorialDescuentos)</a>
+</li>
+      <li><a href="divisas.html#divisas.views.DivisaToggleActivaView.post">post() (método de divisas.views.DivisaToggleActivaView)</a>
+
+      <ul>
+        <li><a href="medios_pago.html#medios_pago.views.CampoSoftDeleteView.post">(método de medios_pago.views.CampoSoftDeleteView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoCreateAdminView.post">(método de medios_pago.views.MedioDePagoCreateAdminView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoHardDeleteView.post">(método de medios_pago.views.MedioDePagoHardDeleteView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoRestoreView.post">(método de medios_pago.views.MedioDePagoRestoreView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoSoftDeleteView.post">(método de medios_pago.views.MedioDePagoSoftDeleteView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoToggleActivoView.post">(método de medios_pago.views.MedioDePagoToggleActivoView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoUpdateView.post">(método de medios_pago.views.MedioDePagoUpdateView)</a>
+</li>
+      </ul></li>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmento.precio_base">precio_base (atributo de divisas.models.CotizacionSegmento)</a>
+
+      <ul>
+        <li><a href="divisas.html#divisas.models.TasaCambio.precio_base">(atributo de divisas.models.TasaCambio)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmentoQuerySet.recientes">recientes() (método de divisas.models.CotizacionSegmentoQuerySet)</a>
+</li>
+      <li><a href="autenticacion.html#autenticacion.views.registro_usuario">registro_usuario() (en el módulo autenticacion.views)</a>
+</li>
+      <li><a href="users.html#users.models.CustomUser.REQUIRED_FIELDS">REQUIRED_FIELDS (atributo de users.models.CustomUser)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.restore">restore() (método de medios_pago.models.CampoMedioDePago)</a>
+
+      <ul>
+        <li><a href="medios_pago.html#medios_pago.models.MedioDePago.restore">(método de medios_pago.models.MedioDePago)</a>
+</li>
+      </ul></li>
+      <li><a href="users.html#users.models.Role">Role (clase en users.models)</a>
+</li>
+      <li><a href="users.html#users.models.Role.DoesNotExist">Role.DoesNotExist</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="users.html#users.models.Role.MultipleObjectsReturned">Role.MultipleObjectsReturned</a>
+</li>
       <li>
     roles.context_processors
 
@@ -502,8 +1176,6 @@
         <li><a href="roles.html#module-roles.forms">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     roles.views
 
@@ -511,38 +1183,92 @@
         <li><a href="roles.html#module-roles.views">module</a>
 </li>
       </ul></li>
+      <li><a href="medios_pago.html#medios_pago.tests.run_all_tests">run_all_tests() (en el módulo medios_pago.tests)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="divisas.html#divisas.models.Divisa.save">save() (método de divisas.models.Divisa)</a>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmento.save">save() (método de divisas.models.CotizacionSegmento)</a>
+
+      <ul>
+        <li><a href="divisas.html#divisas.models.Divisa.save">(método de divisas.models.Divisa)</a>
 </li>
+        <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.save">(método de medios_pago.models.CampoMedioDePago)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.models.MedioDePago.save">(método de medios_pago.models.MedioDePago)</a>
+</li>
+      </ul></li>
       <li><a href="roles.html#roles.views.search_permissions">search_permissions() (en el módulo roles.views)</a>
 </li>
       <li><a href="roles.html#roles.views.search_users">search_users() (en el módulo roles.views)</a>
 </li>
       <li><a href="clientes.html#clientes.models.Cliente.segmento">segmento (atributo de clientes.models.Cliente)</a>
+
+      <ul>
+        <li><a href="clientes.html#clientes.models.Descuento.segmento">(atributo de clientes.models.Descuento)</a>
 </li>
+        <li><a href="divisas.html#divisas.models.CotizacionSegmento.segmento">(atributo de divisas.models.CotizacionSegmento)</a>
+</li>
+      </ul></li>
       <li><a href="clientes.html#clientes.models.Segmento">Segmento (clase en clientes.models)</a>
 </li>
       <li><a href="clientes.html#clientes.models.Segmento.DoesNotExist">Segmento.DoesNotExist</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="clientes.html#clientes.models.Segmento.MultipleObjectsReturned">Segmento.MultipleObjectsReturned</a>
 </li>
       <li><a href="clientes.html#clientes.models.Cliente.segmento_id">segmento_id (atributo de clientes.models.Cliente)</a>
+
+      <ul>
+        <li><a href="clientes.html#clientes.models.Descuento.segmento_id">(atributo de clientes.models.Descuento)</a>
 </li>
+        <li><a href="divisas.html#divisas.models.CotizacionSegmento.segmento_id">(atributo de divisas.models.CotizacionSegmento)</a>
+</li>
+      </ul></li>
       <li><a href="form_cliente.html#clientes.forms.SeleccionClienteForm">SeleccionClienteForm (clase en clientes.forms)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="medios_pago.html#medios_pago.tests.CampoMedioDePagoModelTest.setUp">setUp() (método de medios_pago.tests.CampoMedioDePagoModelTest)</a>
+
+      <ul>
+        <li><a href="medios_pago.html#medios_pago.tests.EdgeCasesTest.setUp">(método de medios_pago.tests.EdgeCasesTest)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.tests.IntegrationTest.setUp">(método de medios_pago.tests.IntegrationTest)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoFormsTest.setUp">(método de medios_pago.tests.MedioDePagoFormsTest)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoModelTest.setUp">(método de medios_pago.tests.MedioDePagoModelTest)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoViewsTest.setUp">(método de medios_pago.tests.MedioDePagoViewsTest)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.tests.PerformanceTest.setUp">(método de medios_pago.tests.PerformanceTest)</a>
+</li>
+      </ul></li>
       <li><a href="divisas.html#divisas.models.Divisa.simbolo">simbolo (atributo de divisas.models.Divisa)</a>
 </li>
+      <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.soft_delete">soft_delete() (método de medios_pago.models.CampoMedioDePago)</a>
+
+      <ul>
+        <li><a href="medios_pago.html#medios_pago.models.MedioDePago.soft_delete">(método de medios_pago.models.MedioDePago)</a>
+</li>
+      </ul></li>
       <li><a href="divisas.html#divisas.views.DivisaCreateView.success_url">success_url (atributo de divisas.views.DivisaCreateView)</a>
 
       <ul>
         <li><a href="divisas.html#divisas.views.DivisaUpdateView.success_url">(atributo de divisas.views.DivisaUpdateView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoCreateAdminView.success_url">(atributo de medios_pago.views.MedioDePagoCreateAdminView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoUpdateView.success_url">(atributo de medios_pago.views.MedioDePagoUpdateView)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserCreateView.success_url">(atributo de users.views.CustomUserCreateView)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserDeleteView.success_url">(atributo de users.views.CustomUserDeleteView)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserUpdateView.success_url">(atributo de users.views.CustomUserUpdateView)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -567,8 +1293,6 @@
 </li>
       <li><a href="divisas.html#divisas.views.TasaCambioListView">TasaCambioListView (clase en divisas.views)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="divisas.html#divisas.models.Divisa.tasas">tasas (atributo de divisas.models.Divisa)</a>
 </li>
       <li><a href="clientes.html#clientes.models.Cliente.telefono">telefono (atributo de clientes.models.Cliente)</a>
@@ -586,8 +1310,94 @@
 </li>
         <li><a href="divisas.html#divisas.views.TasaCambioListView.template_name">(atributo de divisas.views.TasaCambioListView)</a>
 </li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoCreateAdminView.template_name">(atributo de medios_pago.views.MedioDePagoCreateAdminView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoDeletedListView.template_name">(atributo de medios_pago.views.MedioDePagoDeletedListView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoListView.template_name">(atributo de medios_pago.views.MedioDePagoListView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoUpdateView.template_name">(atributo de medios_pago.views.MedioDePagoUpdateView)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserCreateView.template_name">(atributo de users.views.CustomUserCreateView)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserDeleteView.template_name">(atributo de users.views.CustomUserDeleteView)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserListView.template_name">(atributo de users.views.CustomUserListView)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserUpdateView.template_name">(atributo de users.views.CustomUserUpdateView)</a>
+</li>
       </ul></li>
+      <li><a href="medios_pago.html#medios_pago.tests.CampoMedioDePagoModelTest.test_campo_duplicado_despues_soft_delete">test_campo_duplicado_despues_soft_delete() (método de medios_pago.tests.CampoMedioDePagoModelTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoFormsTest.test_campo_form_valido">test_campo_form_valido() (método de medios_pago.tests.MedioDePagoFormsTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.EdgeCasesTest.test_campo_orden_automatico">test_campo_orden_automatico() (método de medios_pago.tests.EdgeCasesTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.EdgeCasesTest.test_cascada_eliminacion">test_cascada_eliminacion() (método de medios_pago.tests.EdgeCasesTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.EdgeCasesTest.test_comision_decimal_precision">test_comision_decimal_precision() (método de medios_pago.tests.EdgeCasesTest)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="medios_pago.html#medios_pago.tests.CampoMedioDePagoModelTest.test_crear_campo_basico">test_crear_campo_basico() (método de medios_pago.tests.CampoMedioDePagoModelTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoModelTest.test_crear_medio_pago_basico">test_crear_medio_pago_basico() (método de medios_pago.tests.MedioDePagoModelTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoViewsTest.test_crear_medio_pago_completo">test_crear_medio_pago_completo() (método de medios_pago.tests.MedioDePagoViewsTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoViewsTest.test_editar_medio_agregar_campo">test_editar_medio_agregar_campo() (método de medios_pago.tests.MedioDePagoViewsTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.IntegrationTest.test_flujo_completo_crear_editar_eliminar">test_flujo_completo_crear_editar_eliminar() (método de medios_pago.tests.IntegrationTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoFormsTest.test_formset_creacion_vs_edicion">test_formset_creacion_vs_edicion() (método de medios_pago.tests.MedioDePagoFormsTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoViewsTest.test_lista_medios_pago">test_lista_medios_pago() (método de medios_pago.tests.MedioDePagoViewsTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.IntegrationTest.test_manejo_espacios_en_nombres">test_manejo_espacios_en_nombres() (método de medios_pago.tests.IntegrationTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.PerformanceTest.test_manejo_multiples_medios_pago">test_manejo_multiples_medios_pago() (método de medios_pago.tests.PerformanceTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoFormsTest.test_medio_pago_form_comision_invalida">test_medio_pago_form_comision_invalida() (método de medios_pago.tests.MedioDePagoFormsTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoFormsTest.test_medio_pago_form_valido">test_medio_pago_form_valido() (método de medios_pago.tests.MedioDePagoFormsTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.EdgeCasesTest.test_nombre_medio_unicode">test_nombre_medio_unicode() (método de medios_pago.tests.EdgeCasesTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoModelTest.test_nombre_vacio_no_permitido">test_nombre_vacio_no_permitido() (método de medios_pago.tests.MedioDePagoModelTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoViewsTest.test_papelera_medios_eliminados">test_papelera_medios_eliminados() (método de medios_pago.tests.MedioDePagoViewsTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoViewsTest.test_restaurar_medio_eliminado">test_restaurar_medio_eliminado() (método de medios_pago.tests.MedioDePagoViewsTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoModelTest.test_restore_medio_eliminado">test_restore_medio_eliminado() (método de medios_pago.tests.MedioDePagoModelTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.IntegrationTest.test_restriccion_edicion_campos_existentes">test_restriccion_edicion_campos_existentes() (método de medios_pago.tests.IntegrationTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.CampoMedioDePagoModelTest.test_soft_delete_campo">test_soft_delete_campo() (método de medios_pago.tests.CampoMedioDePagoModelTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoModelTest.test_soft_delete_funcionalidad">test_soft_delete_funcionalidad() (método de medios_pago.tests.MedioDePagoModelTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.EdgeCasesTest.test_tipos_dato_validacion">test_tipos_dato_validacion() (método de medios_pago.tests.EdgeCasesTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoViewsTest.test_toggle_activo_medio">test_toggle_activo_medio() (método de medios_pago.tests.MedioDePagoViewsTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.IntegrationTest.test_validacion_campos_duplicados_en_formset">test_validacion_campos_duplicados_en_formset() (método de medios_pago.tests.IntegrationTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoModelTest.test_validacion_comision_mayor_100">test_validacion_comision_mayor_100() (método de medios_pago.tests.MedioDePagoModelTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoModelTest.test_validacion_comision_negativa">test_validacion_comision_negativa() (método de medios_pago.tests.MedioDePagoModelTest)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.tests.CampoMedioDePagoModelTest.test_validacion_nombre_campo_duplicado">test_validacion_nombre_campo_duplicado() (método de medios_pago.tests.CampoMedioDePagoModelTest)</a>
+</li>
       <li><a href="clientes.html#clientes.models.Cliente.tipo_cliente">tipo_cliente (atributo de clientes.models.Cliente)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.tipo_dato">tipo_dato (atributo de medios_pago.models.CampoMedioDePago)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.TIPO_DATO_CHOICES">TIPO_DATO_CHOICES (atributo de medios_pago.models.CampoMedioDePago)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.models.MedioDePago.toggle_active">toggle_active() (método de medios_pago.models.MedioDePago)</a>
+</li>
+      <li><a href="medios_pago.html#medios_pago.models.MedioDePago.total_campos_activos">total_campos_activos (medios_pago.models.MedioDePago propiedad)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -595,10 +1405,41 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="clientes.html#clientes.models.AsignacionCliente.usuario">usuario (atributo de clientes.models.AsignacionCliente)</a>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmentoQuerySet.ultima_para">ultima_para() (método de divisas.models.CotizacionSegmentoQuerySet)</a>
 </li>
+      <li><a href="users.html#users.models.CustomUser.ultimo_cliente_id">ultimo_cliente_id (atributo de users.models.CustomUser)</a>
+</li>
+      <li><a href="users.html#users.models.CustomUser.user_permissions">user_permissions (atributo de users.models.CustomUser)</a>
+</li>
+      <li><a href="users.html#users.models.CustomUser.username">username (atributo de users.models.CustomUser)</a>
+</li>
+      <li><a href="users.html#users.models.CustomUser.USERNAME_FIELD">USERNAME_FIELD (atributo de users.models.CustomUser)</a>
+</li>
+      <li>
+    users.forms
+
+      <ul>
+        <li><a href="users.html#module-users.forms">module</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    users.models
+
+      <ul>
+        <li><a href="users.html#module-users.models">module</a>
+</li>
+      </ul></li>
+      <li>
+    users.views
+
+      <ul>
+        <li><a href="users.html#module-users.views">module</a>
+</li>
+      </ul></li>
+      <li><a href="clientes.html#clientes.models.AsignacionCliente.usuario">usuario (atributo de clientes.models.AsignacionCliente)</a>
+</li>
       <li><a href="clientes.html#clientes.models.AsignacionCliente.usuario_id">usuario_id (atributo de clientes.models.AsignacionCliente)</a>
 </li>
       <li><a href="clientes.html#clientes.models.Cliente.usuarios">usuarios (atributo de clientes.models.Cliente)</a>
@@ -609,11 +1450,17 @@
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="divisas.html#divisas.models.TasaCambio.valor_compra">valor_compra (atributo de divisas.models.TasaCambio)</a>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmento.valor_compra_unit">valor_compra_unit (atributo de divisas.models.CotizacionSegmento)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmento.valor_venta_unit">valor_venta_unit (atributo de divisas.models.CotizacionSegmento)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="divisas.html#divisas.models.TasaCambio.valor_venta">valor_venta (atributo de divisas.models.TasaCambio)</a>
+      <li><a href="autenticacion.html#autenticacion.views.verificar_correo">verificar_correo() (en el módulo autenticacion.views)</a>
+</li>
+      <li><a href="divisas.html#divisas.views.visualizador_tasas">visualizador_tasas() (en el módulo divisas.views)</a>
+</li>
+      <li><a href="divisas.html#divisas.views.visualizador_tasas_admin">visualizador_tasas_admin() (en el módulo divisas.views)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -621,8 +1468,20 @@
 <h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="divisas.html#divisas.forms.TasaCambioForm.Meta.widgets">widgets (atributo de divisas.forms.TasaCambioForm.Meta)</a>
+      <li><a href="divisas.html#divisas.forms.DivisaForm.Meta.widgets">widgets (atributo de divisas.forms.DivisaForm.Meta)</a>
+
+      <ul>
+        <li><a href="divisas.html#divisas.forms.TasaCambioForm.Meta.widgets">(atributo de divisas.forms.TasaCambioForm.Meta)</a>
 </li>
+        <li><a href="medios_pago.html#medios_pago.forms.CampoMedioDePagoForm.Meta.widgets">(atributo de medios_pago.forms.CampoMedioDePagoForm.Meta)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.forms.MedioDePagoForm.Meta.widgets">(atributo de medios_pago.forms.MedioDePagoForm.Meta)</a>
+</li>
+        <li><a href="users.html#users.forms.CustomUserChangeForm.Meta.widgets">(atributo de users.forms.CustomUserChangeForm.Meta)</a>
+</li>
+        <li><a href="users.html#users.forms.CustomUserCreationForm.Meta.widgets">(atributo de users.forms.CustomUserCreationForm.Meta)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -655,11 +1514,14 @@
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navegación</h3>
 <p class="caption" role="heading"><span class="caption-text">Contenidos:</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="autenticacion.html">Modulo de Autenticacion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="clientes.html">Módulos de Clientes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vistas_cliente.html">Vistas de Clientes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="form_cliente.html">Formularios de Clientes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="divisas.html">Módulos de Divisas</a></li>
 <li class="toctree-l1"><a class="reference internal" href="roles.html">Módulo de Roles y Permisos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="medios_pago.html">Modulo de Medios de Pago</a></li>
+<li class="toctree-l1"><a class="reference internal" href="users.html">Gestión de Usuarios</a></li>
 </ul>
 
 <div class="relations">
