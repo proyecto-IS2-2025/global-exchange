@@ -1,0 +1,136 @@
+[
+  {
+    "model": "medios_pago.mediodepago",
+    "pk": 1,
+    "fields": {
+      "nombre": "Transferencia bancaria",
+      "comision_porcentaje": "0.500",
+      "is_active": true,
+      "deleted_at": null,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "medios_pago.mediodepago",
+    "pk": 2,
+    "fields": {
+      "nombre": "Billetera digital",
+      "comision_porcentaje": "1.000",
+      "is_active": true,
+      "deleted_at": null,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "medios_pago.mediodepago",
+    "pk": 3,
+    "fields": {
+      "nombre": "Tarjeta de crédito",
+      "comision_porcentaje": "3.500",
+      "is_active": true,
+      "deleted_at": null,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 1,
+    "fields": {
+      "medio_de_pago": 1,
+      "nombre_campo": "Número de Cuenta",
+      "tipo_dato": "NUMERO",
+      "is_required": true,
+      "orden": 1,
+      "deleted_at": null,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 2,
+    "fields": {
+      "medio_de_pago": 1,
+      "nombre_campo": "Entidad Bancaria",
+      "tipo_dato": "TEXTO",
+      "is_required": true,
+      "orden": 2,
+      "deleted_at": null,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 3,
+    "fields": {
+      "medio_de_pago": 2,
+      "nombre_campo": "Número de Teléfono",
+      "tipo_dato": "TELEFONO",
+      "is_required": true,
+      "orden": 1,
+      "deleted_at": null,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 4,
+    "fields": {
+      "medio_de_pago": 2,
+      "nombre_campo": "Email",
+      "tipo_dato": "EMAIL",
+      "is_required": false,
+      "orden": 2,
+      "deleted_at": null,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 5,
+    "fields": {
+      "medio_de_pago": 3,
+      "nombre_campo": "Número de Tarjeta",
+      "tipo_dato": "NUMERO",
+      "is_required": true,
+      "orden": 1,
+      "deleted_at": null,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 6,
+    "fields": {
+      "medio_de_pago": 3,
+      "nombre_campo": "Fecha de Vencimiento",
+      "tipo_dato": "FECHA",
+      "is_required": true,
+      "orden": 2,
+      "deleted_at": null,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 7,
+    "fields": {
+      "medio_de_pago": 3,
+      "nombre_campo": "Código de Seguridad",
+      "tipo_dato": "NUMERO",
+      "is_required": true,
+      "orden": 3,
+      "deleted_at": null,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  }
+]
