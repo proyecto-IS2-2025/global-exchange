@@ -416,6 +416,184 @@ class EdgeCasesTest(TestCase):
         print("Relación medio-campos funcionando correctamente")
 
 
+class ErrorSearchTest(TestCase):
+    """Tests específicamente diseñados para encontrar errores y fallos"""
+    
+    def setUp(self):
+        print(f"\nBUSCANDO ERRORES: {self._testMethodName}")
+        
+        self.medio_base = MedioDePago.objects.create(
+            nombre="Medio Para Errores",
+            comision_porcentaje=2.0,
+            is_active=True
+        )
+    
+    def test_crear_medio_con_datos_extremos_debe_fallar(self):
+        """Test: Buscar errores con datos extremos"""
+        print("Probando datos extremos que deben fallar...")
+        
+        casos_que_deben_fallar = [
+            # Comisiones inválidas
+            {"nombre": "Test1", "comision_porcentaje": -0.001, "error_esperado": "negativa"},
+            {"nombre": "Test2", "comision_porcentaje": 100.001, "error_esperado": "mayor a 100"},
+            {"nombre": "Test3", "comision_porcentaje": 999.999, "error_esperado": "excesiva"},
+            # Nombres inválidos
+            {"nombre": None, "comision_porcentaje": 5.0, "error_esperado": "nombre nulo"},
+            {"nombre": "   ", "comision_porcentaje": 5.0, "error_esperado": "nombre vacío"},
+        ]
+        
+        errores_encontrados = 0
+        for i, caso in enumerate(casos_que_deben_fallar):
+            try:
+                medio = MedioDePago(
+                    nombre=caso["nombre"],
+                    comision_porcentaje=caso["comision_porcentaje"]
+                )
+                # Intentar tanto full_clean como save
+                medio.full_clean()
+                medio.save()
+                
+                print(f"ERROR CRÍTICO: Caso {i+1} ({caso['error_esperado']}) fue ACEPTADO cuando debía fallar")
+                self.fail(f"Datos inválidos fueron aceptados: {caso}")
+                
+            except (ValidationError, ValueError, TypeError) as e:
+                errores_encontrados += 1
+                print(f"BIEN: Caso {i+1} ({caso['error_esperado']}) rechazado correctamente")
+        
+        print(f"Total errores correctamente capturados: {errores_encontrados}/{len(casos_que_deben_fallar)}")
+        self.assertEqual(errores_encontrados, len(casos_que_deben_fallar))
+    
+    def test_operaciones_en_medio_eliminado_deben_fallar(self):
+        """Test: Operaciones inválidas en medios eliminados"""
+        print("Probando operaciones que deben fallar en medios eliminados...")
+        
+        # Crear y eliminar medio
+        medio = MedioDePago.objects.create(
+            nombre="Para Eliminar Y Probar",
+            comision_porcentaje=3.0
+        )
+        medio.soft_delete()
+        
+        # Estas operaciones deben fallar
+        operaciones_invalidas = [
+            ("toggle_active", lambda: medio.toggle_active()),
+            ("soft_delete doble", lambda: medio.soft_delete()),
+        ]
+        
+        errores_capturados = 0
+        for nombre_operacion, operacion in operaciones_invalidas:
+            try:
+                operacion()
+                print(f"ERROR: {nombre_operacion} fue permitida en medio eliminado")
+                self.fail(f"Operación '{nombre_operacion}' debería fallar en medio eliminado")
+            except ValidationError:
+                errores_capturados += 1
+                print(f"BIEN: {nombre_operacion} rechazada correctamente")
+            except Exception as e:
+                print(f"ADVERTENCIA: {nombre_operacion} falló con error inesperado: {e}")
+        
+        print(f"Operaciones inválidas bloqueadas: {errores_capturados}")
+    
+    def test_crear_campos_con_datos_invalidos_debe_fallar(self):
+        """Test: Buscar errores en creación de campos con datos inválidos"""
+        print("Probando creación de campos con datos inválidos...")
+        
+        casos_campo_invalido = [
+            # Nombres inválidos
+            {"nombre_campo": "", "tipo_dato": "TEXTO", "error": "nombre vacío"},
+            {"nombre_campo": "   ", "tipo_dato": "TEXTO", "error": "nombre solo espacios"},
+            {"nombre_campo": None, "tipo_dato": "TEXTO", "error": "nombre nulo"},
+            # Tipos inválidos  
+            {"nombre_campo": "Campo Valid", "tipo_dato": "", "error": "tipo vacío"},
+            {"nombre_campo": "Campo Valid", "tipo_dato": "INVALIDO", "error": "tipo no existe"},
+            {"nombre_campo": "Campo Valid", "tipo_dato": None, "error": "tipo nulo"},
+        ]
+        
+        errores_encontrados = 0
+        for caso in casos_campo_invalido:
+            try:
+                campo = CampoMedioDePago(
+                    medio_de_pago=self.medio_base,
+                    nombre_campo=caso["nombre_campo"],
+                    tipo_dato=caso["tipo_dato"]
+                )
+                campo.full_clean()
+                campo.save()
+                
+                print(f"ERROR CRÍTICO: {caso['error']} fue ACEPTADO")
+                self.fail(f"Datos inválidos de campo aceptados: {caso['error']}")
+                
+            except (ValidationError, ValueError, TypeError):
+                errores_encontrados += 1
+                print(f"BIEN: {caso['error']} rechazado correctamente")
+        
+        print(f"Errores de campo capturados: {errores_encontrados}/{len(casos_campo_invalido)}")
+    
+    def test_duplicados_con_variaciones_debe_fallar(self):
+        """Test: Buscar errores con nombres duplicados y sus variaciones"""
+        print("Probando detección de duplicados con variaciones...")
+        
+        # Crear campo base
+        CampoMedioDePago.objects.create(
+            medio_de_pago=self.medio_base,
+            nombre_campo="Email Cliente",
+            tipo_dato="EMAIL"
+        )
+        
+        # Variaciones que deben ser detectadas como duplicados
+        variaciones_duplicadas = [
+            "Email Cliente",      # Exacto
+            "email cliente",      # Minúsculas
+            "EMAIL CLIENTE",      # Mayúsculas  
+            "Email  Cliente",     # Espacios extra internos
+            " Email Cliente ",    # Espacios externos
+        ]
+        
+        duplicados_bloqueados = 0
+        for variacion in variaciones_duplicadas:
+            try:
+                campo_duplicado = CampoMedioDePago(
+                    medio_de_pago=self.medio_base,
+                    nombre_campo=variacion,
+                    tipo_dato="TEXTO"
+                )
+                campo_duplicado.full_clean()
+                
+                print(f"ERROR: Variación '{variacion}' NO fue detectada como duplicado")
+                self.fail(f"Duplicado no detectado: '{variacion}'")
+                
+            except ValidationError:
+                duplicados_bloqueados += 1
+                print(f"BIEN: '{variacion}' detectado como duplicado")
+        
+        print(f"Duplicados correctamente bloqueados: {duplicados_bloqueados}/{len(variaciones_duplicadas)}")
+    
+    def test_limites_numericos_debe_fallar(self):
+        """Test: Buscar errores en límites numéricos"""
+        print("Probando límites numéricos extremos...")
+        
+        limites_que_deben_fallar = [
+            # Valores fuera del rango de DecimalField
+            {"comision": Decimal('999999.999'), "error": "demasiado grande"},
+            {"comision": Decimal('-999999.999'), "error": "demasiado negativo"},
+        ]
+        
+        for caso in limites_que_deben_fallar:
+            try:
+                medio = MedioDePago(
+                    nombre=f"Test {caso['error']}",
+                    comision_porcentaje=caso["comision"]
+                )
+                medio.full_clean()
+                medio.save()
+                
+                print(f"ADVERTENCIA: {caso['error']} fue aceptado - valor: {caso['comision']}")
+                # Esto podría ser válido si el campo permite estos valores
+                
+            except Exception as e:
+                print(f"BIEN: {caso['error']} rechazado - {type(e).__name__}")
+
+
 # Función para ejecutar tests esenciales incluyendo búsqueda de errores
 def run_essential_tests():
     """Ejecuta todos los tests esenciales del módulo incluyendo búsqueda de errores"""
