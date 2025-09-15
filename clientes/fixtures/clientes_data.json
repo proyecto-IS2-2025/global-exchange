@@ -1,9 +1,165 @@
 [
   {
     "model": "clientes.segmento",
+    "pk": 1,
+    "fields": {
+      "name": "general"
+    }
+  },
+  {
+    "model": "clientes.segmento",
+    "pk": 2,
+    "fields": {
+      "name": "VIP"
+    }
+  },
+  {
+    "model": "clientes.segmento",
+    "pk": 3,
+    "fields": {
+      "name": "Empresarial"
+    }
+  },
+  
+
+
+
+
+
+  {
+    "model": "clientes.descuento",
+    "pk": 1,
+    "fields": {
+      "porcentaje_descuento": "0",
+      "fecha_modificacion": "2025-09-15T10:00:00Z",
+      "modificado_por": null
+    }
+  },
+  {
+    "model": "clientes.descuento",
+    "pk": 2,
+    "fields": {
+      "porcentaje_descuento": "12.50",
+      "fecha_modificacion": "2025-09-15T10:05:00Z",
+      "modificado_por": null
+    }
+  },
+  {
+    "model": "clientes.descuento",
+    "pk": 3,
+    "fields": {
+      "porcentaje_descuento": "20.00",
+      "fecha_modificacion": "2025-09-15T10:10:00Z",
+      "modificado_por": null
+    }
+  },
+
+
+
+
+
+
+  {
+    "model": "clientes.asignacioncliente",
+    "pk": 1,
+    "fields": {
+      "usuario": 2,
+      "cliente": 1,
+      "fecha_asignacion": "2025-09-15T09:00:00Z"
+    }
+  },
+  {
+    "model": "clientes.asignacioncliente",
+    "pk": 2,
+    "fields": {
+      "usuario": 3,
+      "cliente": 1,
+      "fecha_asignacion": "2025-09-15T09:05:00Z"
+    }
+  },
+  {
+    "model": "clientes.asignacioncliente",
+    "pk": 3,
+    "fields": {
+      "usuario": 3,
+      "cliente": 2,
+      "fecha_asignacion": "2025-09-15T09:10:00Z"
+    }
+  },
+  {
+    "model": "clientes.asignacioncliente",
+    "pk": 4,
+    "fields": {
+      "usuario": 4,
+      "cliente": 1,
+      "fecha_asignacion": "2025-09-15T09:10:00Z"
+    }
+  },
+  {
+    "model": "clientes.asignacioncliente",
     "pk": 5,
     "fields": {
-      "name": "Premium"
+      "usuario": 4,
+      "cliente": 2,
+      "fecha_asignacion": "2025-09-15T09:10:00Z"
     }
-  }
+  },
+  {
+    "model": "clientes.asignacioncliente",
+    "pk": 6,
+    "fields": {
+      "usuario": 4,
+      "cliente": 3,
+      "fecha_asignacion": "2025-09-15T09:10:00Z"
+    }
+  },
+
+
+
+
+
+  
+  {
+    "model": "clientes.cliente",
+    "pk": 1,
+    "fields": {
+      "cedula": "12345678",
+      "nombre_completo": "Cliente General",
+      "email": "ClienteGeneral@gmail.com",
+      "direccion": "Calle cliente general",
+      "telefono": "099123456",
+      "segmento": 1,
+      "tipo_cliente": "minorista",
+      "esta_activo": true
+    }
+  },
+  {
+    "model": "clientes.cliente",
+    "pk": 2,
+    "fields": {
+      "cedula": "87654321",
+      "nombre_completo": "Cliente VIP",
+      "email": "ClienteVIP@gmail.com",
+      "direccion": "Calle cliente VIP",
+      "telefono": "098765432",
+      "segmento": 2,
+      "tipo_cliente": "mayorista",
+      "esta_activo": true
+    }
+  },
+  {
+    "model": "clientes.cliente",
+    "pk": 3,
+    "fields": {
+      "cedula": "11223344",
+      "nombre_completo": "Cliente Empresarial",
+      "email": "ClienteEmpresarial@gmail.com",
+      "direccion": "Calle Cliente Empresarial",
+      "telefono": "0983112233",
+      "segmento": 3,
+      "tipo_cliente": "corporativo",
+      "esta_activo": true
+    }
+  }  
+
 ]
