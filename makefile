@@ -30,3 +30,12 @@ db-check:
 dbshell:
 	@echo "Abriendo shell de la base de datos..."
 	poetry run python manage.py dbshell
+
+shell:
+	@echo "Abriendo shell de Django..."
+	poetry run python manage.py shell
+
+docs:
+	@echo "Generando documentación con Sphinx..."
+	poetry run sphinx-build -b html docs/source docs/build
+	@echo "Documentación generada en docs/build"

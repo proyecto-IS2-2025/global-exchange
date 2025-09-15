@@ -274,10 +274,8 @@
 
         // Función para mostrar mensajes contextuales
         function showContextualMessage() {
-            const existingAlert = document.querySelector('.contextual-alert');
-            if (existingAlert) {
-                existingAlert.remove();
-            }
+            const existingAlerts = document.querySelectorAll('.contextual-alert');
+            existingAlerts.forEach(alert => alert.remove());
 
             const camposCount = container.querySelectorAll('.form-campo:not(#empty-form-template):not(.marked-for-deletion)').length;
             let messageHtml = '';

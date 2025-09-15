@@ -14,7 +14,7 @@
         <a href="{% url 'medios_pago:lista' %}" class="btn btn-outline-primary me-2">
             <i class="fas fa-arrow-left me-2"></i>Volver a Lista
         </a>
-        {% if total_eliminados > 0 %}
+        {% if is_edit %}
             <button type="button" class="btn btn-outline-danger" onclick="confirmEmptyTrash()">
                 <i class="fas fa-trash-alt me-2"></i>Vaciar Papelera
             </button>
@@ -75,10 +75,12 @@
                                 data-name="{{ medio.nombre|escapejs }}" data-url="{% url 'medios_pago:restore' medio.pk %}">
                                 <i class="fas fa-undo"></i>
                             </button>
+                            {% if is_edit %}
                             <button type="button" class="btn btn-sm btn-outline-danger btn-hard-delete" title="Eliminar Permanentemente"
                                 data-name="{{ medio.nombre|escapejs }}" data-url="{% url 'medios_pago:hard_delete' medio.pk %}">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
+                            {% endif %}
                         </div>
                     </td>
                 </tr>

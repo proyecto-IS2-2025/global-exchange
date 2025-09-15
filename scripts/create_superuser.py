@@ -5,9 +5,9 @@ User = get_user_model()
 
 try:
     # ⚙️ Datos del superusuario
-    username = 'superadmin'
-    email = 'superadmin@tudominio.com'
-    password = 'password_seguro'
+    username = input("Ingrese el nombre de usuario para el superusuario: ") or 'superadmin'
+    email = input("Ingrese el correo electrónico para el superusuario: ") or 'superadmin@tudominio.com'
+    password = input("Ingrese la contraseña para el superusuario: ") or 'password_seguro'
 
     # Crea el superusuario
     if not User.objects.filter(username=username).exists():
