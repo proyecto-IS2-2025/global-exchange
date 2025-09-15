@@ -40,7 +40,7 @@ def asociar_clientes_usuarios_view(request):
          # Obtener el usuario y los grupos
         usuario = get_object_or_404(User, id=usuario_id)
         registered_group, created_reg = Group.objects.get_or_create(name='usuario_registrado')
-        associated_group, created_assoc = Group.objects.get_or_create(name='usuario_asociado')
+        associated_group, created_assoc = Group.objects.get_or_create(name='cliente')
         
         for cliente_id in clientes_ids:
             try:
@@ -57,7 +57,7 @@ def asociar_clientes_usuarios_view(request):
                 return redirect('clientes:asociar_clientes_usuarios')
             
         # Lógica para cambiar el grupo del usuario
-        # Si tiene asignaciones, se convierte en 'usuario_asociado'
+        # Si tiene asignaciones, se convierte en 'cliente'
         if AsignacionCliente.objects.filter(usuario=usuario).exists():
             usuario.groups.add(associated_group)
             usuario.groups.remove(registered_group)
@@ -103,7 +103,7 @@ def listar_asociaciones(request):
             if not AsignacionCliente.objects.filter(usuario=usuario).exists():
                 # Si no tiene más asignaciones, cambia su grupo
                 registered_group, created_reg = Group.objects.get_or_create(name='usuario_registrado')
-                associated_group, created_assoc = Group.objects.get_or_create(name='usuario_asociado')
+                associated_group, created_assoc = Group.objects.get_or_create(name='cliente')
                 
                 usuario.groups.remove(associated_group)
                 usuario.groups.add(registered_group)
