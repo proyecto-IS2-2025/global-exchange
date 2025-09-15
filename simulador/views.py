@@ -13,7 +13,15 @@ from django.core.serializers.json import DjangoJSONEncoder
 
 def simulador_view(request):
     """
-    Renderiza la plantilla del simulador y pasa el contexto necesario.
+    Renderiza la plantilla principal del simulador de divisas.
+
+    Esta vista prepara el contexto necesario para la plantilla,
+    incluyendo una lista de divisas disponibles para la simulación.
+
+    :param request: El objeto HttpRequest.
+    :type request: django.http.HttpRequest
+    :return: Un objeto HttpResponse que renderiza la plantilla del simulador.
+    :rtype: django.http.HttpResponse
     """
     context = get_simulador_context(request)
     return render(request, 'simulador/simulador.html', context)
@@ -23,8 +31,28 @@ def simulador_view(request):
 @require_POST
 def calcular_simulacion_api(request):
     """
-    Vista que recibe los datos y realiza el cálculo de la simulación.
-    Devuelve un objeto JSON con el resultado.
+    API endpoint para calcular una simulación de cambio de divisas.
+
+    Procesa una solicitud POST con los detalles de una operación de cambio
+    (tipo, monto y moneda) y devuelve un resultado calculado en formato JSON.
+
+    Flujo de cálculo:
+    1. Deserializa los datos JSON de la solicitud.
+    2. Valida la operación, prohibiendo el uso del Guaraní (PYG).
+    3. Determina el segmento del cliente basado en la sesión, la asignación de usuario
+       o, por defecto, el segmento 'general'.
+    4. Obtiene la cotización de la divisa más reciente para el segmento del cliente.
+    5. Realiza el cálculo de la conversión y la comisión ajustada según el tipo de operación.
+    6. Formatea el resultado en un diccionario JSON y lo devuelve como respuesta.
+
+    :param request: El objeto HttpRequest con datos JSON en el cuerpo.
+    :type request: django.http.HttpRequest
+    :return: Un objeto JsonResponse con el resultado de la simulación o un error.
+    :rtype: django.http.JsonResponse
+    :raises json.JSONDecodeError: Si el cuerpo de la solicitud no es un JSON válido.
+    :raises Divisa.DoesNotExist: Si la divisa especificada no se encuentra o está inactiva.
+    :raises ObjectDoesNotExist: Si el segmento 'general' no existe en la base de datos.
+    :raises Exception: Para manejar cualquier otro error inesperado.
     """
     try:
         data = json.loads(request.body)
