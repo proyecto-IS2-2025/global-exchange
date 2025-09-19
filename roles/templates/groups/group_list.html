@@ -2,12 +2,20 @@
 {% load static %}
 {% block content %}
 <div class="container mt-5">
-    <div class="text-end mb-3">
-        <a href="{% url 'group_create' %}" class="btn btn-primary">
-            <i class="fas fa-plus-circle me-2"></i>Crear Rol
-        </a>
-    </div>
-    
+        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <a href="{% url 'inicio' %}" class="btn btn-primary">
+            <i class="fas fa-arrow-left me-1"></i> Volver
+            </a>
+        </div>
+        <div class="text-end mb-3">
+            <a href="{% url 'group_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-2"></i>Crear Rol
+            </a>
+        </div>
+        </div>
+        
+        
     <div class="card shadow-sm">
         <div class="card-body">
           <div class="card-header bg-primary text-white text-center rounded mb-4">
@@ -27,20 +35,25 @@
                     <tbody>
                         {% for group in groups %}
                         <tr>
-                            {% if group.name != 'admin' %}
                             <th scope="row">{{ group.name }}</th>
                             <td>
-                                {% for perm in group.permissions.all %}
-                                <span class="badge bg-secondary">{{ perm.name }}</span>
-                                {% empty %}
-                                <span class="text-muted">Sin permisos</span>
-                                {% endfor %}
+                                {% if group.name != 'admin' %}
+                                    {% for perm in group.permissions.all %}
+                                    <span class="badge bg-secondary">{{ perm.name }}</span>
+                                    {% empty %}
+                                    <span class="text-muted">Sin permisos</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="text-muted">Todos los permisos</span>
+                                {% endif %}
                             </td>
                             <td>
                                 <div class="btn-group" role="group" aria-label="Acciones de grupo">
-                                     <a href="{% url 'group_detail_permissions' group.id %}" class="btn btn-sm btn-warning text-white">
-                                        <i class="fas fa-shield-alt"></i> Permisos
-                                    </a>
+                                     {% if group.name != 'admin' %}
+                                        <a href="{% url 'group_detail_permissions' group.id %}" class="btn btn-sm btn-warning text-white">
+                                            <i class="fas fa-shield-alt"></i> Permisos
+                                        </a>
+                                    {% endif %}
                                     <a href="{% url 'group_detail_users' group.id %}" class="btn btn-sm btn-primary text-white">
                                         <i class="fas fa-user-edit"></i> Usuarios
                                     </a>
@@ -48,7 +61,6 @@
                                         <i class="fas fa-trash-alt"></i> Eliminar
                                     </a>
                                 </div>
-                            {% endif %}
                             </td>
                         </tr>
                         {% empty %}

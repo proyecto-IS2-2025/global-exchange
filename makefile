@@ -14,7 +14,7 @@ db-clean:
 #-------------- Comandos DJANGO ----------------#
 runserver:
 	@echo "Iniciando el servidor de desarrollo Django..."
-	poetry run python manage.py runserver
+	python manage.py runserver
 
 migrations:
 	@echo "Aplicando migraciones a la base de datos..."
@@ -45,31 +45,40 @@ dbshell:
 	@echo "Abriendo shell de la base de datos..."
 	poetry run python manage.py dbshell
 
-#-------------- Configuración del proyecto ----------------#
-app-setup:
-	@echo "Configurando el proyecto Django..."
-	make db-clean
-	make db-up
-	sleep 5
-	make migrate
-	@echo "Proyecto configurado correctamente"
+shell:
+	@echo "Abriendo shell de Django..."
+	poetry run python manage.py shell
 
-help:
-	@echo "Comandos disponibles:"
-	@echo "  db-up        - Levanta PostgreSQL en Docker"
-	@echo "  db-clean     - Limpia base de datos y volúmenes"
-	@echo "  runserver    - Inicia Django localmente"
-	@echo "  migrations   - Crea migraciones"
-	@echo "  migrate      - Aplica migraciones"
-	@echo "  db-check     - Verifica conexión a la base de datos"
-	@echo "  dbshell      - Abre shell de PostgreSQL"
-	@echo "  app-setup    - Configuración inicial completa"
+docs:
+	@echo "Generando documentación con Sphinx..."
+	poetry run sphinx-build -b html docs/source docs/build
+	@echo "Documentación generada en docs/build"
 
-fresh-setup:
-	@echo "Configurando el proyecto Django desde cero..."
-	make db-clean
-	make db-up
-	sleep 5
-	poetry run python reset_migrations.py
-	make migrate
-	@echo "Proyecto configurado correctamente"
+test-medios-pago:
+	@echo "Probando migraciones..."
+	python manage.py test medios_pago.tests.MedioDePagoModelTest medios_pago.tests.CampoMedioDePagoModelTest medios_pago.tests.EdgeCasesTest -v 2
+	@echo "Pruebas de migraciones completadas."
+
+test-divisas:
+	@echo "Probando migraciones..."
+	python manage.py test divisas
+	@echo "Pruebas de migraciones completadas."
+
+test-simulador:
+	@echo "Probando simulador de pagos..."
+	python manage.py test simulador
+	@echo "Pruebas de simulador completadas."
+
+cargar-datos:
+	@echo "Cargando datos iniciales..."
+	python manage.py loaddata roles_data.json
+	python manage.py loaddata users_data.json
+	python manage.py loaddata clientes_data.json
+	python manage.py loaddata divisas_initial_data.json
+	python manage.py loaddata medios_pago_initial_data.json
+	@echo "Datos iniciales cargados."
+
+run:
+	@echo "Ejecutando el servidor de desarrollo con recarga automática..."
+	poetry run python manage.py runserver 
+	@echo "Servidor detenido."

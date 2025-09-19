@@ -14,7 +14,7 @@
       {% endif %}
     {% endif %}
 
-    {% if user.is_authenticated %} 
+    {% if user.is_authenticated %}
       {% if grupo_cliente %}
         <p class="text-muted">
           Bienvenido, <strong>{{ user.get_full_name|default:user.username }}</strong>
@@ -85,11 +85,11 @@
             </div>
           </div>
 
-          <!-- Opción: Monedas -->
+          <!-- Opción: Divisas -->
           <div class="col">
             <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
               <div class="display-3 mb-3"><i class="fas fa-coins"></i></div>
-              <h6 class="fw-bold">Monedas</h6>
+              <h6 class="fw-bold">Divisas</h6>
               <a href="{% url 'divisas:lista' %}" class="stretched-link"></a>
             </div>
           </div>
@@ -101,7 +101,7 @@
               <h6 class="fw-bold">Visualizador Tasas</h6>
               <a href="{% url 'divisas:visualizador_tasas_admin' %}" class="stretched-link"></a>
             </div>
-          </div>          
+          </div>
         </div>
 
       {% else %}

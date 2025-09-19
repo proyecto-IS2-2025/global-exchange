@@ -2,119 +2,176 @@
 {% load static %}
 
 {% block content %}
-<div class="container mt-4 fade-in">
-  <h2 class="mb-4 text-primary fw-bold">
-    <i class="fa-solid fa-id-card me-2"></i> Perfil de Usuario
-  </h2>
+<style>
+/* Estado inicial invisible */
+.fade-in, 
+.slide-in-up {
+    opacity: 0;
+}
 
-  <!-- Información del usuario -->
-  <div class="card shadow-sm rounded-4 mb-4 border-start border-4 border-primary slide-up">
-    <div class="card-header bg-primary text-white fw-semibold">
-      <i class="fa-solid fa-user me-2"></i> Información del Usuario
-    </div>
-    <div class="card-body">
-      <div class="row g-4">
-        <div class="col-md-6">
-          <div class="mb-1 text-muted small fw-semibold">
-            <i class="fa-solid fa-user-tag me-1"></i> Nombre de usuario
-          </div>
-          <div class="fs-5">{{ user.username }}</div>
-        </div>
-        <div class="col-md-6">
-          <div class="mb-1 text-muted small fw-semibold">
-            <i class="fa-solid fa-envelope me-1"></i> Correo electrónico
-          </div>
-          <div class="fs-5">{{ user.email }}</div>
-        </div>
-        <div class="col-md-6">
-          <div class="mb-1 text-muted small fw-semibold">
-            <i class="fa-solid fa-circle-check me-1"></i> Estado
-          </div>
-          {% if user.is_active %}
-            <span class="badge bg-success px-3 py-2 fs-6 bounce-in">Activo</span>
-          {% else %}
-            <span class="badge bg-danger px-3 py-2 fs-6 bounce-in">Inactivo</span>
-          {% endif %}
-        </div>
-        <div class="col-md-6">
-          <div class="mb-1 text-muted small fw-semibold">
-            <i class="fa-solid fa-users me-1"></i> Grupo
-          </div>
-          <span class="badge bg-secondary px-3 py-2 fs-6">{{ grupo }}</span>
-        </div>
-      </div>
-    </div>
-  </div>
+/* Animaciones */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
 
-  <!-- Información del cliente activo -->
-  <div class="card shadow-sm rounded-4 mb-4 border-start border-4 border-success slide-up-delay">
-    <div class="card-header bg-success text-white fw-semibold">
-      <i class="fa-solid fa-address-card me-2"></i> Cliente Activo
-    </div>
-    <div class="card-body">
-      {% if cliente_activo %}
-        <div class="row g-4">
-          <div class="col-md-6">
-            <div class="mb-1 text-muted small fw-semibold">
-              <i class="fa-solid fa-user me-1"></i> Nombre completo
-            </div>
-            <div class="fs-5">{{ cliente_activo.nombre_completo }}</div>
-          </div>
-          <div class="col-md-6">
-            <div class="mb-1 text-muted small fw-semibold">
-              <i class="fa-solid fa-id-card me-1"></i> Cédula
-            </div>
-            <div class="fs-5">{{ cliente_activo.cedula }}</div>
-          </div>
-          <div class="col-md-6">
-            <div class="mb-1 text-muted small fw-semibold">
-              <i class="fa-solid fa-envelope me-1"></i> Email
-            </div>
-            <div class="fs-5">{{ cliente_activo.email|default:"-" }}</div>
-          </div>
-          <div class="col-md-6">
-            <div class="mb-1 text-muted small fw-semibold">
-              <i class="fa-solid fa-phone me-1"></i> Teléfono
-            </div>
-            <div class="fs-5">{{ cliente_activo.telefono|default:"-" }}</div>
-          </div>
-          <div class="col-md-12">
-            <div class="mb-1 text-muted small fw-semibold">
-              <i class="fa-solid fa-location-dot me-1"></i> Dirección
-            </div>
-            <div class="fs-5">{{ cliente_activo.direccion|default:"-" }}</div>
-          </div>
-          <div class="col-md-6">
-            <div class="mb-1 text-muted small fw-semibold">
-              <i class="fa-solid fa-layer-group me-1"></i> Segmento
-            </div>
-            <span class="badge bg-light text-dark px-3 py-2 fs-6">{{ cliente_activo.segmento.name }}</span>
-          </div>
-          <div class="col-md-6">
-            <div class="mb-1 text-muted small fw-semibold">
-              <i class="fa-solid fa-user-gear me-1"></i> Tipo de cliente
-            </div>
-            <span class="badge bg-dark text-white px-3 py-2 fs-6">{{ cliente_activo.tipo_cliente }}</span>
-          </div>
-        </div>
-      {% else %}
-        <p class="text-warning fs-6 fade-in">
-          <i class="fa-solid fa-triangle-exclamation me-1"></i> No hay un cliente activo seleccionado.
-        </p>
-        <a href="{% url 'clientes:seleccionar_cliente' %}" class="btn btn-outline-primary">
-          <i class="fa-solid fa-user-plus me-1"></i> Seleccionar Cliente
-        </a>
-      {% endif %}
-    </div>
-  </div>
+@keyframes slideInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
-  <!-- Botón para editar perfil -->
-  {% if puede_editar %}
-    <div class="text-end">
-      <a href="{% url 'users:customuser_update' user.id %}" class="btn btn-primary btn-lg pulse">
-        <i class="fa-solid fa-pen-to-square me-1"></i> Editar Perfil
-      </a>
+.fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+}
+
+.slide-in-up {
+    animation: slideInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* Escalonar animación */
+.slide-in-up.card-1 { animation-delay: 0.2s; }
+.slide-in-up.card-2 { animation-delay: 0.4s; }
+
+/* Pulso para botones */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+.pulse-btn { 
+    animation: pulse 2s infinite; 
+}
+</style>
+
+<div class="container py-5">
+    <h1 class="mb-5 text-center text-primary fw-bold display-7 fade-in">
+        <i class="fa-solid fa-id-card-clip me-2"></i> Dashboard de Usuario
+    </h1>
+
+    <div class="row justify-content-center g-4">
+        <div class="col-md-6">
+            <div class="card shadow-lg rounded-4 border-0 slide-in-up card-1">
+                <div class="card-header bg-primary text-white text-center rounded-top-4 py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fa-solid fa-user me-2"></i> Información de la Cuenta</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="d-flex align-items-center">
+                                <i class="fa-solid fa-user-tag text-primary me-3 fs-5"></i>
+                                <div>
+                                    <small class="text-muted d-block">Nombre de usuario</small>
+                                    <span class="fw-bold fs-5">{{ user.username }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex align-items-center">
+                                <i class="fa-solid fa-envelope text-primary me-3 fs-5"></i>
+                                <div>
+                                    <small class="text-muted d-block">Correo electrónico</small>
+                                    <span class="fw-bold fs-5">{{ user.email }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex align-items-center">
+                                <i class="fa-solid fa-circle-check text-primary me-3 fs-5"></i>
+                                <div>
+                                    <small class="text-muted d-block">Estado de la cuenta</small>
+                                    {% if user.is_active %}
+                                        <span class="badge bg-success py-2 px-3 fs-6">Activo</span>
+                                    {% else %}
+                                        <span class="badge bg-danger py-2 px-3 fs-6">Inactivo</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex align-items-center">
+                                <i class="fa-solid fa-users text-primary me-3 fs-5"></i>
+                                <div>
+                                    <small class="text-muted d-block">Grupo</small>
+                                    <span class="badge bg-secondary py-2 px-3 fs-6">{{ grupo }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-lg rounded-4 border-0 slide-in-up card-2">
+                <div class="card-header bg-success text-white text-center rounded-top-4 py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fa-solid fa-address-card me-2"></i> Cliente Activo</h5>
+                </div>
+                <div class="card-body p-4">
+                    {% if cliente_activo %}
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="d-flex align-items-center">
+                                    <i class="fa-solid fa-user-tie text-success me-3 fs-5"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Nombre completo</small>
+                                        <span class="fw-bold fs-5">{{ cliente_activo.nombre_completo }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex align-items-center">
+                                    <i class="fa-solid fa-id-card me-3 text-success fs-5"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Cédula</small>
+                                        <span class="fw-bold fs-5">{{ cliente_activo.cedula }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex align-items-center">
+                                    <i class="fa-solid fa-layer-group text-success me-3 fs-5"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Segmento</small>
+                                        <span class="badge bg-info text-dark py-2 px-3 fs-6">{{ cliente_activo.segmento.name }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex align-items-center">
+                                    <i class="fa-solid fa-user-gear text-success me-3 fs-5"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Tipo de cliente</small>
+                                        <span class="badge bg-dark text-white py-2 px-3 fs-6">{{ cliente_activo.tipo_cliente }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 text-center mt-4">
+                                <a href="{% url 'clientes:seleccionar_cliente' %}" class="btn btn-outline-success w-75 fw-semibold transition-all">
+                                    <i class="fa-solid fa-arrows-rotate me-2"></i> Cambiar Cliente
+                                </a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center p-4">
+                            <i class="fa-solid fa-user-xmark fs-1 text-danger mb-3"></i>
+                            <p class="text-muted fs-6 mb-4">No hay un cliente activo seleccionado.</p>
+                            <a href="{% url 'clientes:seleccionar_cliente' %}" class="btn btn-success fw-semibold pulse-btn">
+                                <i class="fa-solid fa-user-plus me-1"></i> Seleccionar Cliente
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
-  {% endif %}
+    
+    {% if puede_editar %}
+        <div class="text-center mt-5">
+            <a href="{% url 'users:customuser_update' user.id %}" class="btn btn-primary btn-lg fw-bold px-5 pulse-btn">
+                <i class="fa-solid fa-pen-to-square me-2"></i> Editar Perfil
+            </a>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}

@@ -1,7 +1,6 @@
-# models.py - Versión corregida para soft delete
+# models.py - Versión simplificada sin soft delete
 from django.db import models
 from django.core.exceptions import ValidationError
-from django.utils import timezone
 
 
 class MedioDePago(models.Model):
@@ -9,26 +8,23 @@ class MedioDePago(models.Model):
     Representa un medio de pago, como tarjeta de crédito, transferencia, etc.
 
     Los medios de pago pueden tener una comisión asociada y pueden ser
-    desactivados. Utiliza un sistema de "soft delete" para
-    mantener un registro histórico.
+    activados/desactivados mediante el campo is_active.
 
     :ivar nombre: Nombre único del medio de pago.
     :ivar comision_porcentaje: Porcentaje de comisión a aplicar.
     :ivar is_active: Booleano que indica si el medio de pago está activo.
-    :ivar deleted_at: Fecha y hora en que el medio de pago fue "eliminado" (soft delete).
     :ivar creado: Fecha de creación del registro.
     :ivar actualizado: Fecha de la última actualización del registro.
     """
     nombre = models.CharField('Nombre del medio', max_length=100, unique=True)
     comision_porcentaje = models.DecimalField(
         'Comisión (%)',
-        max_digits=6,  # Aumentado para soportar hasta 100.000
-        decimal_places=3,  # 3 decimales para precisión
+        max_digits=6,
+        decimal_places=3,
         default=0,
         help_text='Porcentaje de comisión del 0 al 100'
     )
-    is_active = models.BooleanField('Activo', default=False)
-    deleted_at = models.DateTimeField('Eliminado en', null=True, blank=True)
+    is_active = models.BooleanField('Activo', default=True)
     creado = models.DateTimeField(auto_now_add=True)
     actualizado = models.DateTimeField(auto_now=True)
 
@@ -57,39 +53,14 @@ class MedioDePago(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        estado = 'Activo' if self.is_active else 'Deshabilitado'
+        estado = 'Activo' if self.is_active else 'Inactivo'
         return f'{self.nombre} - {estado}'
         
     def toggle_active(self):
         """Cambiar estado activo/inactivo"""
-        if self.is_deleted:
-            raise ValidationError('No se puede cambiar el estado de un medio eliminado.')
         self.is_active = not self.is_active
         self.save(update_fields=['is_active'])
         return self.is_active
-
-    def soft_delete(self):
-        """Eliminación suave del medio de pago"""
-        if self.is_deleted:
-            raise ValidationError('El medio ya está eliminado.')
-        self.deleted_at = timezone.now()
-        self.is_active = False
-        self.save(update_fields=['deleted_at', 'is_active'])
-
-    def restore(self):
-        """Restaurar medio de pago eliminado"""
-        if not self.is_deleted:
-            raise ValidationError('No se puede restaurar un medio que no está eliminado.')
-        self.deleted_at = None
-        self.is_active = True
-        self.save(update_fields=['deleted_at', 'is_active'])
-
-    @property
-    def is_deleted(self):
-        """
-        Indica si el medio de pago está eliminado.
-        """
-        return self.deleted_at is not None
 
     @property
     def can_be_edited_freely(self):
@@ -98,7 +69,8 @@ class MedioDePago(models.Model):
 
     @property
     def total_campos_activos(self):
-        return self.campos.filter(deleted_at__isnull=True).count()
+        """Cuenta los campos asociados al medio de pago"""
+        return self.campos.count()
 
 
 class CampoMedioDePago(models.Model):
@@ -112,7 +84,6 @@ class CampoMedioDePago(models.Model):
     :ivar nombre_campo: Nombre del campo.
     :ivar tipo_dato: Tipo de dato del campo (ej. texto, número, fecha).
     :ivar is_required: Booleano que indica si el campo es obligatorio.
-    :ivar deleted_at: Fecha de eliminación suave.
     :ivar creado: Fecha de creación del registro.
     :ivar actualizado: Fecha de la última actualización del registro.
     """
@@ -139,15 +110,13 @@ class CampoMedioDePago(models.Model):
     )
     is_required = models.BooleanField('Requerido', default=True)
     orden = models.PositiveIntegerField('Orden', default=0)
-    deleted_at = models.DateTimeField('Eliminado en', null=True, blank=True)
     creado = models.DateTimeField(auto_now_add=True)
     actualizado = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = 'Campo de Medio de Pago'
         verbose_name_plural = 'Campos de Medios de Pago'
-        # QUITAR unique_together para evitar conflictos con soft delete
-        # unique_together = ('medio_de_pago', 'nombre_campo')  # ← Comentar esta línea
+        unique_together = ('medio_de_pago', 'nombre_campo')  # Restaurar unique_together
         ordering = ['orden', 'id']
 
     def clean(self):
@@ -164,24 +133,6 @@ class CampoMedioDePago(models.Model):
                 'tipo_dato': 'Debe seleccionar un tipo de dato.'
             })
 
-        # Validación personalizada de unicidad que excluye eliminados
-        # Solo validar si el medio_de_pago ya está guardado (tiene pk)
-        if self.nombre_campo and self.medio_de_pago and self.medio_de_pago.pk:
-            existing = CampoMedioDePago.objects.filter(
-                medio_de_pago=self.medio_de_pago,
-                nombre_campo__iexact=self.nombre_campo.strip(),
-                deleted_at__isnull=True  # Solo considerar campos NO eliminados
-            )
-            
-            # Excluir el objeto actual si está siendo editado
-            if self.pk:
-                existing = existing.exclude(pk=self.pk)
-            
-            if existing.exists():
-                raise ValidationError({
-                    'nombre_campo': f'Ya existe un campo con el nombre "{self.nombre_campo}" en este medio de pago.'
-                })
-
     def save(self, *args, **kwargs):
         """
         Override del método save para limpiar el nombre del campo y ejecutar la validación.
@@ -192,38 +143,19 @@ class CampoMedioDePago(models.Model):
         self.full_clean()
         super().save(*args, **kwargs)
 
-    def soft_delete(self):
-        """Eliminación suave del campo"""
-        self.deleted_at = timezone.now()
-        self.save()
-
-    def restore(self):
-        """Restaurar campo eliminado"""
-        self.deleted_at = None
-        self.save()
-
-    @property
-    def is_deleted(self):
-        return self.deleted_at is not None
-
     def __str__(self):
         requerido = ' (Requerido)' if self.is_required else ''
-        deleted = ' [ELIMINADO]' if self.is_deleted else ''
-        return f'{self.nombre_campo} ({self.get_tipo_dato_display()}){requerido} - {self.medio_de_pago.nombre}{deleted}'
+        return f'{self.nombre_campo} ({self.get_tipo_dato_display()}){requerido} - {self.medio_de_pago.nombre}'
 
 
-# Managers personalizados
+# Manager personalizado para filtrar por activos
 class ActiveManager(models.Manager):
     """
-    Manager personalizado para filtrar objetos que no han sido eliminados.
+    Manager personalizado para filtrar objetos activos.
     """
     def get_queryset(self):
-        return super().get_queryset().filter(deleted_at__isnull=True)
+        return super().get_queryset().filter(is_active=True)
 
 
-# Agregar managers a los modelos
-MedioDePago.add_to_class('objects', models.Manager())
-MedioDePago.add_to_class('active', ActiveManager())
-
-CampoMedioDePago.add_to_class('objects', models.Manager())
-CampoMedioDePago.add_to_class('active', ActiveManager())
+# Agregar manager de activos solo a MedioDePago
+MedioDePago.add_to_class('active_objects', ActiveManager())

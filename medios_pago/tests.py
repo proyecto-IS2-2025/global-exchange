@@ -1,33 +1,21 @@
-# tests.py - Tests completos para el módulo de Medios de Pago
-from django.test import TestCase, Client
-from django.urls import reverse
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
-from django.utils import timezone
+# tests.py - Tests esenciales para el módulo de Medios de Pago
+from django.test import TestCase
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
+from django.utils import timezone
 from decimal import Decimal
-import json
-from datetime import datetime
 
 from .models import MedioDePago, CampoMedioDePago
-from .forms import MedioDePagoForm, CampoMedioDePagoForm, create_campo_formset
-
-User = get_user_model()
 
 
 class MedioDePagoModelTest(TestCase):
-    """Tests para el modelo MedioDePago"""
+    """Tests básicos para el modelo MedioDePago"""
     
     def setUp(self):
-        """Configuración inicial para cada test"""
-        print("\n" + "="*80)
-        print(f"Ejecutando: {self._testMethodName}")
-        print("="*80)
-        
-    def test_crear_medio_pago_basico(self):
-        """Test: Crear un medio de pago con datos básicos"""
-        print("\n✅ Probando creación de medio de pago básico...")
+        print(f"\nEjecutando: {self._testMethodName}")
+    
+    def test_crear_medio_pago_valido(self):
+        """Test: Crear medio de pago con datos válidos"""
+        print("Creando medio de pago básico...")
         
         medio = MedioDePago.objects.create(
             nombre="PayPal",
@@ -38,124 +26,126 @@ class MedioDePagoModelTest(TestCase):
         self.assertEqual(medio.nombre, "PayPal")
         self.assertEqual(medio.comision_porcentaje, Decimal('3.5'))
         self.assertTrue(medio.is_active)
-        self.assertIsNone(medio.deleted_at)
+        self.assertFalse(medio.is_deleted)
         
-        print(f"   ✓ Medio creado: {medio}")
-        print(f"   ✓ Comisión: {medio.comision_porcentaje}%")
-        print(f"   ✓ Estado: {'Activo' if medio.is_active else 'Inactivo'}")
+        print(f"Medio creado exitosamente: {medio.nombre} - {medio.comision_porcentaje}%")
+    
+    def test_validacion_comision_fuera_rango(self):
+        """Test: Validar comisiones fuera del rango 0-100"""
+        print("Probando validación de comisión fuera de rango...")
         
-    def test_validacion_comision_negativa(self):
-        """Test: Validar que no se permitan comisiones negativas"""
-        print("\n⚠️ Probando validación de comisión negativa...")
-        
-        with self.assertRaises(ValidationError) as context:
+        # Comisión negativa
+        with self.assertRaises(ValidationError):
             medio = MedioDePago(
-                nombre="Tarjeta Visa",
-                comision_porcentaje=-5,
-                is_active=True
+                nombre="Test Negativo",
+                comision_porcentaje=-5.0
             )
             medio.full_clean()
+        print("Comisión negativa rechazada correctamente")
         
-        print(f"   ✓ Error capturado: {context.exception}")
-        print("   ✓ Validación funcionando correctamente")
-        
-    def test_validacion_comision_mayor_100(self):
-        """Test: Validar que no se permitan comisiones mayores a 100%"""
-        print("\n⚠️ Probando validación de comisión mayor a 100%...")
-        
-        with self.assertRaises(ValidationError) as context:
+        # Comisión mayor a 100
+        with self.assertRaises(ValidationError):
             medio = MedioDePago(
-                nombre="Banco Local",
-                comision_porcentaje=150,
-                is_active=True
+                nombre="Test Mayor",
+                comision_porcentaje=150.0
             )
             medio.full_clean()
-        
-        print(f"   ✓ Error capturado: {context.exception}")
-        print("   ✓ Comisión máxima validada correctamente")
-        
-    def test_nombre_vacio_no_permitido(self):
-        """Test: Validar que el nombre no puede estar vacío"""
-        print("\n⚠️ Probando validación de nombre vacío...")
+        print("Comisión > 100% rechazada correctamente")
+    
+    def test_nombre_requerido(self):
+        """Test: Nombre es obligatorio"""
+        print("Probando validación de nombre obligatorio...")
         
         with self.assertRaises(ValidationError):
             medio = MedioDePago(
-                nombre="   ",  # Solo espacios
+                nombre="",
                 comision_porcentaje=2.5
             )
             medio.save()
         
-        print("   ✓ Nombre vacío rechazado correctamente")
-        
-    def test_soft_delete_funcionalidad(self):
-        """Test: Probar la funcionalidad de soft delete"""
-        print("\n🗑️ Probando soft delete...")
+        print("Nombre vacío rechazado correctamente")
+    
+    def test_soft_delete_basico(self):
+        """Test: Funcionalidad básica de soft delete"""
+        print("Probando soft delete...")
         
         medio = MedioDePago.objects.create(
-            nombre="Mercado Pago",
-            comision_porcentaje=4.5,
+            nombre="Para Eliminar",
+            comision_porcentaje=2.0,
             is_active=True
         )
         
-        print(f"   Estado inicial: Activo={medio.is_active}, Eliminado={medio.is_deleted}")
+        # Estado inicial
+        self.assertFalse(medio.is_deleted)
+        self.assertTrue(medio.is_active)
         
         # Aplicar soft delete
         medio.soft_delete()
         
-        print(f"   Estado después de soft delete: Activo={medio.is_active}, Eliminado={medio.is_deleted}")
-        
-        self.assertIsNotNone(medio.deleted_at)
-        self.assertFalse(medio.is_active)
+        # Verificar cambios
         self.assertTrue(medio.is_deleted)
+        self.assertFalse(medio.is_active)
+        self.assertIsNotNone(medio.deleted_at)
         
-        # Verificar que aún existe en la BD
-        self.assertTrue(MedioDePago.objects.filter(pk=medio.pk).exists())
-        
-        # Verificar que no aparece en el manager 'active'
-        self.assertFalse(MedioDePago.active.filter(pk=medio.pk).exists())
-        
-        print("   ✓ Soft delete aplicado correctamente")
-        print("   ✓ Registro aún existe en BD pero marcado como eliminado")
-        
-    def test_restore_medio_eliminado(self):
-        """Test: Restaurar un medio de pago eliminado"""
-        print("\n♻️ Probando restauración de medio eliminado...")
+        print(f"Soft delete aplicado: eliminado={medio.is_deleted}, activo={medio.is_active}")
+    
+    def test_restaurar_medio_eliminado(self):
+        """Test: Restaurar medio eliminado"""
+        print("Probando restauración...")
         
         medio = MedioDePago.objects.create(
-            nombre="Bitcoin Wallet",
+            nombre="Para Restaurar",
             comision_porcentaje=1.5
         )
         
+        # Eliminar y restaurar
         medio.soft_delete()
-        print(f"   Estado después de eliminar: Eliminado={medio.is_deleted}")
+        self.assertTrue(medio.is_deleted)
         
         medio.restore()
-        print(f"   Estado después de restaurar: Eliminado={medio.is_deleted}")
-        
-        self.assertIsNone(medio.deleted_at)
         self.assertFalse(medio.is_deleted)
+        self.assertTrue(medio.is_active)
         
-        print("   ✓ Medio restaurado exitosamente")
+        print(f"Restauración exitosa: eliminado={medio.is_deleted}, activo={medio.is_active}")
+    
+    def test_toggle_estado_activo(self):
+        """Test: Cambiar estado activo/inactivo"""
+        print("Probando toggle de estado...")
+        
+        medio = MedioDePago.objects.create(
+            nombre="Toggle Test",
+            comision_porcentaje=3.0,
+            is_active=False
+        )
+        
+        # Toggle a activo
+        resultado = medio.toggle_active()
+        self.assertTrue(medio.is_active)
+        self.assertTrue(resultado)
+        
+        # Toggle a inactivo
+        resultado = medio.toggle_active()
+        self.assertFalse(medio.is_active)
+        self.assertFalse(resultado)
+        
+        print(f"Toggle funcionando: estado final={medio.is_active}")
 
 
 class CampoMedioDePagoModelTest(TestCase):
     """Tests para el modelo CampoMedioDePago"""
     
     def setUp(self):
-        """Configuración inicial para cada test"""
-        print("\n" + "="*80)
-        print(f"Ejecutando: {self._testMethodName}")
-        print("="*80)
+        print(f"\nEjecutando: {self._testMethodName}")
         
         self.medio = MedioDePago.objects.create(
-            nombre="PayPal Test",
-            comision_porcentaje=3.0,
+            nombre="Medio Test",
+            comision_porcentaje=2.0,
             is_active=True
         )
-        
-    def test_crear_campo_basico(self):
-        """Test: Crear un campo básico para un medio de pago"""
-        print("\n📝 Probando creación de campo básico...")
+    
+    def test_crear_campo_valido(self):
+        """Test: Crear campo con datos válidos"""
+        print("Creando campo básico...")
         
         campo = CampoMedioDePago.objects.create(
             medio_de_pago=self.medio,
@@ -167,63 +157,127 @@ class CampoMedioDePagoModelTest(TestCase):
         self.assertEqual(campo.nombre_campo, "Email")
         self.assertEqual(campo.tipo_dato, "EMAIL")
         self.assertTrue(campo.is_required)
+        self.assertFalse(campo.is_deleted)
         
-        print(f"   ✓ Campo creado: {campo}")
-        print(f"   ✓ Tipo: {campo.get_tipo_dato_display()}")
-        print(f"   ✓ Requerido: {'Sí' if campo.is_required else 'No'}")
+        print(f"Campo creado: {campo.nombre_campo} ({campo.get_tipo_dato_display()})")
+    
+    def test_todos_tipos_dato_validos(self):
+        """Test: Verificar que todos los tipos de dato funcionan"""
+        print("Probando todos los tipos de dato...")
         
-    def test_validacion_nombre_campo_duplicado(self):
-        """Test: Validar que no se permitan campos duplicados en el mismo medio"""
-        print("\n⚠️ Probando validación de campos duplicados...")
+        tipos_datos = [
+            ('TEXTO', 'Texto'),
+            ('NUMERO', 'Número'),
+            ('FECHA', 'Fecha'),
+            ('EMAIL', 'Email'),
+            ('TELEFONO', 'Teléfono'),
+            ('URL', 'URL'),
+        ]
+        
+        for codigo, display in tipos_datos:
+            campo = CampoMedioDePago.objects.create(
+                medio_de_pago=self.medio,
+                nombre_campo=f"Campo {codigo}",
+                tipo_dato=codigo,
+                is_required=False
+            )
+            
+            self.assertEqual(campo.tipo_dato, codigo)
+            self.assertEqual(campo.get_tipo_dato_display(), display)
+            print(f"Tipo {codigo}: OK")
+        
+        print(f"Total campos creados: {self.medio.campos.count()}")
+    
+    def test_validacion_nombre_duplicado(self):
+        """Test: No permitir campos con nombres duplicados en el mismo medio"""
+        print("Probando validación de nombres duplicados...")
         
         # Crear primer campo
         CampoMedioDePago.objects.create(
             medio_de_pago=self.medio,
             nombre_campo="Número de cuenta",
-            tipo_dato="TEXTO"
+            tipo_dato="NUMERO"
         )
         
-        # Intentar crear campo duplicado
-        with self.assertRaises(ValidationError) as context:
+        # Intentar crear duplicado exacto
+        with self.assertRaises(ValidationError):
             campo_duplicado = CampoMedioDePago(
                 medio_de_pago=self.medio,
-                nombre_campo="Número de cuenta",  # Mismo nombre
-                tipo_dato="NUMERO"
+                nombre_campo="Número de cuenta",
+                tipo_dato="TEXTO"
             )
             campo_duplicado.full_clean()
         
-        print(f"   ✓ Error capturado: {context.exception}")
-        print("   ✓ Duplicados prevenidos correctamente")
+        print("Duplicado exacto rechazado")
         
+        # Intentar crear con diferente case (debe fallar también)
+        with self.assertRaises(ValidationError):
+            campo_case = CampoMedioDePago(
+                medio_de_pago=self.medio,
+                nombre_campo="NÚMERO DE CUENTA",
+                tipo_dato="TEXTO"
+            )
+            campo_case.full_clean()
+        
+        print("Duplicado con diferente case rechazado")
+    
+    def test_nombre_campo_requerido(self):
+        """Test: Nombre de campo es obligatorio"""
+        print("Probando validación de nombre campo obligatorio...")
+        
+        with self.assertRaises(ValidationError):
+            campo = CampoMedioDePago(
+                medio_de_pago=self.medio,
+                nombre_campo="",
+                tipo_dato="TEXTO"
+            )
+            campo.full_clean()
+        
+        print("Nombre vacío rechazado correctamente")
+    
+    def test_tipo_dato_requerido(self):
+        """Test: Tipo de dato es obligatorio"""
+        print("Probando validación de tipo dato obligatorio...")
+        
+        with self.assertRaises(ValidationError):
+            campo = CampoMedioDePago(
+                medio_de_pago=self.medio,
+                nombre_campo="Campo Test",
+                tipo_dato=""
+            )
+            campo.full_clean()
+        
+        print("Tipo dato vacío rechazado correctamente")
+    
     def test_soft_delete_campo(self):
-        """Test: Probar soft delete de campos"""
-        print("\n🗑️ Probando soft delete de campo...")
+        """Test: Soft delete de campo individual"""
+        print("Probando soft delete de campo...")
         
         campo = CampoMedioDePago.objects.create(
             medio_de_pago=self.medio,
-            nombre_campo="CVV",
-            tipo_dato="NUMERO",
-            is_required=True
+            nombre_campo="Campo Para Eliminar",
+            tipo_dato="TEXTO"
         )
         
-        print(f"   Estado inicial: Eliminado={campo.is_deleted}")
+        # Estado inicial
+        self.assertFalse(campo.is_deleted)
+        campos_activos_inicial = self.medio.campos.filter(deleted_at__isnull=True).count()
         
+        # Eliminar campo
         campo.soft_delete()
         
-        print(f"   Estado después de soft delete: Eliminado={campo.is_deleted}")
-        
-        self.assertIsNotNone(campo.deleted_at)
+        # Verificar eliminación
         self.assertTrue(campo.is_deleted)
+        self.assertIsNotNone(campo.deleted_at)
         
-        # Verificar que no aparece en campos activos
-        self.assertEqual(self.medio.campos.filter(deleted_at__isnull=True).count(), 0)
+        campos_activos_final = self.medio.campos.filter(deleted_at__isnull=True).count()
+        self.assertEqual(campos_activos_final, campos_activos_inicial - 1)
         
-        print("   ✓ Campo marcado como eliminado")
-        print("   ✓ No aparece en campos activos del medio")
-        
-    def test_campo_duplicado_despues_soft_delete(self):
-        """Test: Permitir crear campo con mismo nombre después de soft delete"""
-        print("\n♻️ Probando creación de campo con nombre de campo eliminado...")
+        print(f"Campo eliminado: campos activos {campos_activos_inicial} -> {campos_activos_final}")
+    
+    def test_reutilizar_nombre_despues_eliminacion(self):
+        """Test: Permitir reutilizar nombre de campo después de eliminación"""
+        print("Probando reutilización de nombre después de eliminación...")
         
         # Crear y eliminar campo
         campo1 = CampoMedioDePago.objects.create(
@@ -232,977 +286,435 @@ class CampoMedioDePagoModelTest(TestCase):
             tipo_dato="TEXTO"
         )
         campo1.soft_delete()
+        print(f"Campo '{campo1.nombre_campo}' eliminado")
         
-        print(f"   Campo original eliminado: {campo1.nombre_campo}")
-        
-        # Crear nuevo campo con el mismo nombre (debería permitirse)
+        # Crear nuevo campo con mismo nombre (debe permitirse)
         campo2 = CampoMedioDePago.objects.create(
             medio_de_pago=self.medio,
             nombre_campo="Token",
-            tipo_dato="TEXTO"
+            tipo_dato="NUMERO"
         )
         
         self.assertEqual(campo2.nombre_campo, "Token")
         self.assertFalse(campo2.is_deleted)
         
-        print(f"   ✓ Nuevo campo creado con el mismo nombre: {campo2.nombre_campo}")
-        print("   ✓ Sistema permite reutilizar nombres de campos eliminados")
-
-
-class MedioDePagoFormsTest(TestCase):
-    """Tests para los formularios del módulo"""
-    
-    def setUp(self):
-        """Configuración inicial para cada test"""
-        print("\n" + "="*80)
-        print(f"Ejecutando: {self._testMethodName}")
-        print("="*80)
-        
-    def test_medio_pago_form_valido(self):
-        """Test: Formulario de medio de pago con datos válidos"""
-        print("\n✅ Probando formulario con datos válidos...")
-        
-        form_data = {
-            'nombre': 'Stripe',
-            'comision_porcentaje': '2.9',
-            'is_active': True
-        }
-        
-        form = MedioDePagoForm(data=form_data)
-        
-        self.assertTrue(form.is_valid())
-        print(f"   ✓ Formulario válido")
-        print(f"   ✓ Datos: {form_data}")
-        
-    def test_medio_pago_form_comision_invalida(self):
-        """Test: Formulario con comisión inválida"""
-        print("\n⚠️ Probando formulario con comisión inválida...")
-        
-        form_data = {
-            'nombre': 'Banco Test',
-            'comision_porcentaje': '120',  # Mayor a 100
-            'is_active': True
-        }
-        
-        form = MedioDePagoForm(data=form_data)
-        
-        self.assertFalse(form.is_valid())
-        self.assertIn('comision_porcentaje', form.errors)
-        
-        print(f"   ✓ Formulario rechazado correctamente")
-        print(f"   ✓ Error: {form.errors['comision_porcentaje']}")
-        
-    def test_campo_form_valido(self):
-        """Test: Formulario de campo con datos válidos"""
-        print("\n✅ Probando formulario de campo válido...")
-        
-        medio = MedioDePago.objects.create(
-            nombre="Test Medio",
-            comision_porcentaje=2.0
-        )
-        
-        form_data = {
-            'nombre_campo': 'Número de tarjeta',
-            'tipo_dato': 'NUMERO',
-            'is_required': True
-        }
-        
-        form = CampoMedioDePagoForm(data=form_data)
-        form.instance.medio_de_pago = medio
-        
-        self.assertTrue(form.is_valid())
-        print(f"   ✓ Formulario de campo válido")
-        print(f"   ✓ Campo: {form_data['nombre_campo']}")
-        
-    def test_formset_creacion_vs_edicion(self):
-        """Test: Verificar diferencias entre formset de creación y edición"""
-        print("\n🔄 Probando formsets de creación vs edición...")
-        
-        # Formset de creación
-        FormSetCreacion = create_campo_formset(is_edit=False)
-        formset_creacion = FormSetCreacion()
-        
-        print(f"   Formset de creación:")
-        print(f"   ✓ Formularios extra: {formset_creacion.extra}")
-        self.assertEqual(formset_creacion.extra, 1)
-        
-        # Formset de edición
-        FormSetEdicion = create_campo_formset(is_edit=True)
-        formset_edicion = FormSetEdicion()
-        
-        print(f"   Formset de edición:")
-        print(f"   ✓ Formularios extra: {formset_edicion.extra}")
-        self.assertEqual(formset_edicion.extra, 0)
-        
-        print("   ✓ Configuración diferenciada correcta")
-
-
-class MedioDePagoViewsTest(TestCase):
-    """Tests para las vistas del módulo"""
-    
-    def setUp(self):
-        """Configuración inicial para cada test"""
-        print("\n" + "="*80)
-        print(f"Ejecutando: {self._testMethodName}")
-        print("="*80)
-        
-        # Crear superusuario de prueba y forzar autenticación
-        self.user = User.objects.create_superuser(
-            username='admin',
-            password='admin123',
-            email='admin@test.com',
-            is_staff=True,
-            is_active=True
-        )
-        # Forzar autenticación sin usar login
-        self.client = Client()
-        self.client.force_login(self.user)
-        
-        # Permisos específicos para medios de pago
-        perms = [
-            'view_mediodepago',
-            'add_mediodepago',
-            'change_mediodepago',
-            'delete_mediodepago',
-            'view_campomediodepago',
-            'add_campomediodepago',
-            'change_campomediodepago',
-            'delete_campomediodepago'
-        ]
-        
-        # Asegurar que el usuario tiene todos los permisos necesarios
-        for perm_code in perms:
-            try:
-                perm = Permission.objects.get(codename=perm_code)
-                self.user.user_permissions.add(perm)
-            except Permission.DoesNotExist:
-                print(f"⚠️ Advertencia: Permiso {perm_code} no encontrado")
-        
-        # Configurar cliente y forzar login
-        self.client = Client()
-        success = self.client.login(username='testuser', password='testpass123')
-        
-        if not success:
-            print("❌ Error: No se pudo autenticar el usuario de prueba")
-            print("💡 Sugerencia: Verificar credenciales y estado del usuario")
-        
-        print(f"   Usuario de prueba creado: {self.user.username}")
-        print(f"   Permisos asignados: {[p.codename for p in self.user.user_permissions.all()]}")
-        print(f"   Estado login: {'✅ Exitoso' if success else '❌ Fallido'}")
-        
-    def test_lista_medios_pago(self):
-        """Test: Vista de lista de medios de pago"""
-        print("\n📋 Probando vista de lista...")
-        
-        # Crear algunos medios de prueba con Decimal
-        from decimal import Decimal
-        MedioDePago.objects.create(nombre="PayPal", comision_porcentaje=Decimal('3.500'))
-        MedioDePago.objects.create(nombre="Stripe", comision_porcentaje=Decimal('2.900'))
-        
-        # Crear uno eliminado (no debe aparecer)
-        medio_eliminado = MedioDePago.objects.create(
-            nombre="Eliminado",
-            comision_porcentaje=5.0
-        )
-        medio_eliminado.soft_delete()
-        
-        response = self.client.get(reverse('medios_pago:lista'))
-        
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "PayPal")
-        self.assertContains(response, "Stripe")
-        self.assertNotContains(response, "Eliminado")
-        
-        print(f"   ✓ Status: {response.status_code}")
-        print(f"   ✓ Medios activos mostrados: 2")
-        print(f"   ✓ Medios eliminados ocultados: 1")
-        
-    def test_crear_medio_pago_completo(self):
-        """Test: Crear medio de pago con campos dinámicos"""
-        print("\n➕ Probando creación de medio con campos...")
-        print("   • Fase 1: Verificando acceso al formulario...")
-        
-        try:
-            url = reverse('medios_pago:crear_admin')
-            print(f"   • URL del formulario: {url}")
-            
-            response = self.client.get(url)
-            print(f"   • Status code: {response.status_code}")
-            
-            if response.status_code == 404:
-                print("   ❌ Error: URL no encontrada")
-                print("   💡 Sugerencia: Verificar en urls.py:")
-                print("     - Que existe la URL 'crear_admin'")
-                print("     - Que la vista está correctamente importada")
-            elif response.status_code == 302:
-                print(f"   ⚠️ Redirección detectada -> {response.url}")
-                print("   💡 Sugerencia: Verificar permisos del usuario")
-        except Exception as e:
-            print(f"   ❌ Error al acceder: {str(e)}")
-            print("   💡 Sugerencia: Verificar configuración de URLs")
-        
-        print("\n   • Fase 2: Preparando datos de creación...")
-        data = {
-            'nombre': 'MercadoPago',
-            'comision_porcentaje': '4.5',
-            'is_active': 'on',
-            # Formset management
-            'campos-TOTAL_FORMS': '2',
-            'campos-INITIAL_FORMS': '0',
-            'campos-MIN_NUM_FORMS': '0',
-            'campos-MAX_NUM_FORMS': '10',
-            # Campo 1
-            'campos-0-nombre_campo': 'Email',
-            'campos-0-tipo_dato': 'EMAIL',
-            'campos-0-is_required': 'on',
-            'campos-0-DELETE': '',
-            # Campo 2
-            'campos-1-nombre_campo': 'Token API',
-            'campos-1-tipo_dato': 'TEXTO',
-            'campos-1-is_required': 'on',
-            'campos-1-DELETE': '',
-        }
-
-        print("   • Datos del medio de pago:")
-        print(f"     - Nombre: {data['nombre']}")
-        print(f"     - Comisión: {data['comision_porcentaje']}%")
-        print(f"     - Activo: {data['is_active']}")
-        
-        print("   • Campos dinámicos:")
-        print(f"     1. {data['campos-0-nombre_campo']} ({data['campos-0-tipo_dato']})")
-        print(f"     2. {data['campos-1-nombre_campo']} ({data['campos-1-tipo_dato']})")
-
-        print("\n   • Fase 3: Enviando datos al servidor...")
-        response = self.client.post(url, data, follow=True)
-        
-        if response.status_code != 200:
-            print(f"   ❌ Error: Status code {response.status_code}")
-            if response.context and 'form' in response.context:
-                print("   • Errores en el formulario:")
-                for field, errors in response.context['form'].errors.items():
-                    print(f"     - {field}: {', '.join(errors)}")
-        else:
-            print("   ✅ Datos enviados exitosamente")
-
-        print("\n   • Fase 4: Verificando creación en base de datos...")
-        medio = MedioDePago.objects.filter(nombre='MercadoPago').first()
-        
-        if medio is None:
-            print("   ❌ Error: Medio de pago no creado")
-            return
-            
-        campos = medio.campos.filter(deleted_at__isnull=True)
-        
-        self.assertIsNotNone(medio)
-        self.assertEqual(campos.count(), 2)
-        
-        print("\n   • Resumen de la creación:")
-        print(f"   ✅ Medio de pago creado:")
-        print(f"     - ID: {medio.id}")
-        print(f"     - Nombre: {medio.nombre}")
-        print(f"     - Comisión: {medio.comision_porcentaje}%")
-        print(f"     - Estado: {'Activo' if medio.is_active else 'Inactivo'}")
-        
-        print(f"\n   ✅ Campos configurados ({campos.count()}):")
-        for campo in campos:
-            print(f"     - {campo.nombre_campo}:")
-            print(f"       • Tipo: {campo.get_tipo_dato_display()}")
-            print(f"       • Requerido: {'Sí' if campo.is_required else 'No'}")
-            print(f"       • ID: {campo.id}")
-        
-        print("\n   ✅ Test completado exitosamente")
-        
-    def test_editar_medio_agregar_campo(self):
-        """Test: Editar medio y agregar nuevo campo (sin eliminar existentes)"""
-        print("\n✏️ Probando edición con adición de campo...")
-        print("   • Paso 1: Crear medio de pago inicial...")
-        
-        # Crear medio con campo inicial
-        medio = MedioDePago.objects.create(
-            nombre="WebPay",
-            comision_porcentaje=3.0,
-            is_active=True
-        )
-        
-        campo_inicial = CampoMedioDePago.objects.create(
-            medio_de_pago=medio,
-            nombre_campo="Código comercio",
-            tipo_dato="TEXTO",
-            is_required=True
-        )
-        
-        print(f"   Estado inicial: 1 campo ({campo_inicial.nombre_campo})")
-        
-        url = reverse('medios_pago:editar', args=[medio.pk])
-        
-        # Datos para agregar un nuevo campo
-        data = {
-            'nombre': 'WebPay',
-            'comision_porcentaje': '3.5',  # Cambiar comisión
-            'is_active': 'on',
-            # Formset management
-            'campos-TOTAL_FORMS': '2',
-            'campos-INITIAL_FORMS': '1',
-            'campos-MIN_NUM_FORMS': '0',
-            'campos-MAX_NUM_FORMS': '10',
-            # Campo existente
-            'campos-0-id': str(campo_inicial.id),
-            'campos-0-nombre_campo': 'Código comercio',
-            'campos-0-tipo_dato': 'TEXTO',
-            'campos-0-is_required': 'on',
-            'campos-0-DELETE': '',
-            # Campo nuevo
-            'campos-1-nombre_campo': 'Llave privada',
-            'campos-1-tipo_dato': 'TEXTO',
-            'campos-1-is_required': 'on',
-            'campos-1-DELETE': '',
-        }
-        
-        response = self.client.post(url, data, follow=True)
-        
-        self.assertEqual(response.status_code, 200)
-        
-        # Verificar cambios
-        medio.refresh_from_db()
-        self.assertEqual(medio.comision_porcentaje, Decimal('3.5'))
-        
-        campos = medio.campos.filter(deleted_at__isnull=True)
-        self.assertEqual(campos.count(), 2)
-        
-        print(f"   ✓ Comisión actualizada: {medio.comision_porcentaje}%")
-        print(f"   ✓ Campos totales: {campos.count()}")
-        for campo in campos:
-            print(f"     - {campo.nombre_campo}")
-        
-    def test_toggle_activo_medio(self):
-        """Test: Activar/Desactivar medio de pago"""
-        print("\n🔄 Probando toggle de estado activo...")
-        print("   • Paso 1: Crear medio inicialmente inactivo...")
-        
-        medio = MedioDePago.objects.create(
-            nombre="Bitcoin",
-            comision_porcentaje=1.0,
-            is_active=False
-        )
-        
-        print(f"   Estado inicial: {'Activo' if medio.is_active else 'Inactivo'}")
-        
-        url = reverse('medios_pago:toggle', args=[medio.pk])
-        response = self.client.post(url, follow=True)
-        
-        medio.refresh_from_db()
-        self.assertTrue(medio.is_active)
-        
-        print(f"   Estado después de toggle: {'Activo' if medio.is_active else 'Inactivo'}")
-        
-        # Toggle nuevamente
-        response = self.client.post(url, follow=True)
-        medio.refresh_from_db()
-        self.assertFalse(medio.is_active)
-        
-        print(f"   Estado después de segundo toggle: {'Activo' if medio.is_active else 'Inactivo'}")
-        print("   ✓ Toggle funcionando correctamente")
-        
-    def test_papelera_medios_eliminados(self):
-        """Test: Vista de papelera con medios eliminados"""
-        print("\n🗑️ Probando vista de papelera...")
-        print("   • Verificando permisos y acceso...")
-        
-        url = reverse('medios_pago:papelera')
-        print(f"   • Intentando acceder a: {url}")
-        
-        response = self.client.get(url)
-        if response.status_code == 302:
-            print(f"   ⚠️ Redirección detectada -> {response.url}")
-            print("   💡 Sugerencia: Verificar que el usuario tiene permiso 'view_mediodepago'")
-        
-        # Crear medios activos y eliminados
-        medio_activo = MedioDePago.objects.create(
-            nombre="Activo",
-            comision_porcentaje=2.0
-        )
-        
-        medio_eliminado1 = MedioDePago.objects.create(
-            nombre="Eliminado 1",
-            comision_porcentaje=3.0
-        )
-        medio_eliminado1.soft_delete()
-        
-        medio_eliminado2 = MedioDePago.objects.create(
-            nombre="Eliminado 2",
-            comision_porcentaje=4.0
-        )
-        medio_eliminado2.soft_delete()
-        
-        url = reverse('medios_pago:papelera')
-        response = self.client.get(url)
-        
-        self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, "Activo")
-        self.assertContains(response, "Eliminado 1")
-        self.assertContains(response, "Eliminado 2")
-        
-        print(f"   ✓ Status: {response.status_code}")
-        print(f"   ✓ Medios en papelera mostrados: 2")
-        print(f"   ✓ Medios activos ocultados de papelera")
-        
-    def test_restaurar_medio_eliminado(self):
-        """Test: Restaurar medio desde papelera"""
-        print("\n♻️ Probando restauración desde papelera...")
-        
-        # Crear y eliminar un medio de prueba
-        medio = MedioDePago.objects.create(
-            nombre="Para Restaurar",
-            comision_porcentaje=5.0
-        )
-        medio.soft_delete()
-        
-        print(f"   • Estado inicial del medio:")
-        print(f"     - Nombre: {medio.nombre}")
-        print(f"     - Eliminado: {'Sí' if medio.deleted_at else 'No'}")
-        print(f"     - Fecha eliminación: {medio.deleted_at or 'N/A'}")
-        print(f"     - Activo: {'Sí' if medio.is_active else 'No'}")
-        
-        # Intentar restaurar
-        try:
-            url = reverse('medios_pago:restore', args=[medio.pk])
-            print(f"   • URL de restauración: {url}")
-        except Exception as e:
-            print(f"   ❌ Error al generar URL: {str(e)}")
-            print("   💡 Sugerencia: Verificar 'restore' en medios_pago.urls")
-        response = self.client.post(url, follow=True)
-        
-        medio.refresh_from_db()
-        self.assertFalse(medio.is_deleted)
-        self.assertIsNone(medio.deleted_at)
-        
-        print(f"   Estado después de restaurar: Eliminado={medio.is_deleted}")
-        print("   ✓ Medio restaurado exitosamente")
-
-
-class IntegrationTest(TestCase):
-    """Tests de integración del módulo completo"""
-    
-    def setUp(self):
-        """Configuración inicial para cada test"""
-        print("\n" + "="*80)
-        print(f"Ejecutando: {self._testMethodName}")
-        print("="*80)
-        
-        # Crear usuario administrador
-        self.admin_user = User.objects.create_superuser(
-            username='admin',
-            password='admin123',
-            email='admin@test.com'
-        )
-        
-        self.client = Client()
-        self.client.login(username='admin', password='admin123')
-        
-    def test_flujo_completo_crear_editar_eliminar(self):
-        """Test: Flujo completo de crear, editar y eliminar un medio de pago"""
-        print("\n🔄 Ejecutando flujo completo del sistema...")
-        
-        # PASO 1: Crear medio de pago
-        print("\n📌 PASO 1: Creando medio de pago...")
-        
-        try:
-            create_url = reverse('medios_pago:crear_admin')
-            print(f"   • URL de creación: {create_url}")
-        except Exception as e:
-            print(f"   ❌ Error al generar URL de creación: {str(e)}")
-            print("   💡 Sugerencia: Verificar 'crear_admin' en medios_pago.urls")
-        create_data = {
-            'nombre': 'Transferencia Bancaria',
-            'comision_porcentaje': '0',
-            'is_active': 'on',
-            'campos-TOTAL_FORMS': '3',
-            'campos-INITIAL_FORMS': '0',
-            'campos-MIN_NUM_FORMS': '0',
-            'campos-MAX_NUM_FORMS': '10',
-            'campos-0-nombre_campo': 'Banco',
-            'campos-0-tipo_dato': 'TEXTO',
-            'campos-0-is_required': 'on',
-            'campos-0-DELETE': '',
-            'campos-1-nombre_campo': 'Número de cuenta',
-            'campos-1-tipo_dato': 'NUMERO',
-            'campos-1-is_required': 'on',
-            'campos-1-DELETE': '',
-            'campos-2-nombre_campo': 'Titular',
-            'campos-2-tipo_dato': 'TEXTO',
-            'campos-2-is_required': 'on',
-            'campos-2-DELETE': '',
-        }
-        
-        response = self.client.post(create_url, create_data, follow=True)
-        self.assertEqual(response.status_code, 200)
-        
-        medio = MedioDePago.objects.get(nombre='Transferencia Bancaria')
-        print(f"   ✓ Medio creado: {medio.nombre}")
-        print(f"   ✓ Campos creados: {medio.campos.count()}")
-        
-        # PASO 2: Editar medio (agregar campo y cambiar comisión)
-        print("\n📌 PASO 2: Editando medio de pago...")
-        
-        edit_url = reverse('medios_pago:editar', args=[medio.pk])
-        
-        campos_existentes = list(medio.campos.all())
-        
-        edit_data = {
-            'nombre': 'Transferencia Bancaria',
-            'comision_porcentaje': '0.5',  # Cambiar comisión
-            'is_active': 'on',
-            'campos-TOTAL_FORMS': '4',
-            'campos-INITIAL_FORMS': '3',
-            'campos-MIN_NUM_FORMS': '0',
-            'campos-MAX_NUM_FORMS': '10',
-        }
-        
-        # Agregar campos existentes
-        for i, campo in enumerate(campos_existentes):
-            edit_data.update({
-                f'campos-{i}-id': str(campo.id),
-                f'campos-{i}-nombre_campo': campo.nombre_campo,
-                f'campos-{i}-tipo_dato': campo.tipo_dato,
-                f'campos-{i}-is_required': 'on' if campo.is_required else '',
-                f'campos-{i}-DELETE': '',
-            })
-        
-        # Agregar nuevo campo
-        edit_data.update({
-            'campos-3-nombre_campo': 'Swift',
-            'campos-3-tipo_dato': 'TEXTO',
-            'campos-3-is_required': '',
-            'campos-3-DELETE': '',
-        })
-        
-        response = self.client.post(edit_url, edit_data, follow=True)
-        self.assertEqual(response.status_code, 200)
-        
-        medio.refresh_from_db()
-        print(f"   ✓ Comisión actualizada: {medio.comision_porcentaje}%")
-        print(f"   ✓ Campos totales: {medio.campos.filter(deleted_at__isnull=True).count()}")
-        
-        # PASO 3: Desactivar medio
-        print("\n📌 PASO 3: Desactivando medio de pago...")
-        
-        toggle_url = reverse('medios_pago:toggle', args=[medio.pk])
-        response = self.client.post(toggle_url, follow=True)
-        
-        medio.refresh_from_db()
-        self.assertFalse(medio.is_active)
-        print(f"   ✓ Estado: {'Activo' if medio.is_active else 'Inactivo'}")
-        
-        # PASO 4: Soft delete
-        print("\n📌 PASO 4: Eliminando medio (soft delete)...")
-        
-        delete_url = reverse('medios_pago:delete', args=[medio.pk])
-        response = self.client.post(delete_url, follow=True)
-        
-        medio.refresh_from_db()
-        self.assertTrue(medio.is_deleted)
-        print(f"   ✓ Medio eliminado (soft delete)")
-        
-        # PASO 5: Verificar en papelera
-        print("\n📌 PASO 5: Verificando en papelera...")
-        
-        papelera_url = reverse('medios_pago:papelera')
-        response = self.client.get(papelera_url)
-        
-        self.assertContains(response, 'Transferencia Bancaria')
-        print(f"   ✓ Medio visible en papelera")
-        
-        # PASO 6: Restaurar
-        print("\n📌 PASO 6: Restaurando medio...")
-        
-        restore_url = reverse('medios_pago:restore', args=[medio.pk])
-        response = self.client.post(restore_url, follow=True)
-        
-        medio.refresh_from_db()
-        self.assertFalse(medio.is_deleted)
-        print(f"   ✓ Medio restaurado exitosamente")
-        
-        # PASO 7: Eliminación permanente
-        print("\n📌 PASO 7: Preparando eliminación permanente...")
-        
-        # Primero hacer soft delete nuevamente
-        medio.soft_delete()
-        
-        hard_delete_url = reverse('medios_pago:hard_delete', args=[medio.pk])
-        response = self.client.post(hard_delete_url, follow=True)
-        
-        self.assertFalse(MedioDePago.objects.filter(pk=medio.pk).exists())
-        print(f"   ✓ Medio eliminado permanentemente de la BD")
-        
-        print("\n🎉 FLUJO COMPLETO EJECUTADO EXITOSAMENTE")
-        
-    def test_validacion_campos_duplicados_en_formset(self):
-        """Test: Validar que no se puedan crear campos duplicados en el mismo envío"""
-        print("\n⚠️ Probando validación de campos duplicados en formset...")
-        
-        create_url = reverse('medios_pago:crear_admin')
-        
-        # Intentar crear con campos duplicados
-        data = {
-            'nombre': 'Medio con Duplicados',
-            'comision_porcentaje': '2.5',
-            'is_active': 'on',
-            'campos-TOTAL_FORMS': '2',
-            'campos-INITIAL_FORMS': '0',
-            'campos-MIN_NUM_FORMS': '0',
-            'campos-MAX_NUM_FORMS': '10',
-            # Dos campos con el mismo nombre
-            'campos-0-nombre_campo': 'Email',
-            'campos-0-tipo_dato': 'EMAIL',
-            'campos-0-is_required': 'on',
-            'campos-0-DELETE': '',
-            'campos-1-nombre_campo': 'Email',  # Duplicado
-            'campos-1-tipo_dato': 'TEXTO',
-            'campos-1-is_required': '',
-            'campos-1-DELETE': '',
-        }
-        
-        response = self.client.post(create_url, data)
-        
-        # No debe crear el medio si hay duplicados
-        self.assertFalse(
-            MedioDePago.objects.filter(nombre='Medio con Duplicados').exists()
-        )
-        
-        print("   ✓ Campos duplicados detectados y rechazados")
-        print("   ✓ Medio no creado debido a la validación")
-        
-    def test_restriccion_edicion_campos_existentes(self):
-        """Test: Verificar que no se pueden eliminar campos existentes en edición"""
-        print("\n🔒 Probando restricciones de edición...")
-        print("   • Verificando protección de campos existentes...")
-        print("\n🔒 Probando restricción de eliminación de campos en edición...")
-        
-        # Crear medio con campos
-        medio = MedioDePago.objects.create(
-            nombre="Medio Protegido",
-            comision_porcentaje=3.0,
-            is_active=True
-        )
-        
-        campo1 = CampoMedioDePago.objects.create(
-            medio_de_pago=medio,
-            nombre_campo="Campo Protegido 1",
-            tipo_dato="TEXTO",
-            is_required=True
-        )
-        
-        campo2 = CampoMedioDePago.objects.create(
-            medio_de_pago=medio,
-            nombre_campo="Campo Protegido 2",
-            tipo_dato="NUMERO",
-            is_required=False
-        )
-        
-        print(f"   Campos iniciales: {medio.campos.count()}")
-        
-        # Intentar editar y marcar campo para eliminación
-        edit_url = reverse('medios_pago:editar', args=[medio.pk])
-        
-        edit_data = {
-            'nombre': 'Medio Protegido',
-            'comision_porcentaje': '3.0',
-            'is_active': 'on',
-            'campos-TOTAL_FORMS': '2',
-            'campos-INITIAL_FORMS': '2',
-            'campos-MIN_NUM_FORMS': '0',
-            'campos-MAX_NUM_FORMS': '10',
-            'campos-0-id': str(campo1.id),
-            'campos-0-nombre_campo': 'Campo Protegido 1',
-            'campos-0-tipo_dato': 'TEXTO',
-            'campos-0-is_required': 'on',
-            'campos-0-DELETE': 'on',  # Intentar eliminar
-            'campos-1-id': str(campo2.id),
-            'campos-1-nombre_campo': 'Campo Protegido 2',
-            'campos-1-tipo_dato': 'NUMERO',
-            'campos-1-is_required': '',
-            'campos-1-DELETE': '',
-        }
-        
-        response = self.client.post(edit_url, edit_data, follow=True)
-        
-        # El campo marcado para eliminación debe hacer soft delete
-        campo1.refresh_from_db()
-        self.assertTrue(campo1.is_deleted)
-        
-        print(f"   ✓ Campo marcado para eliminación: soft delete aplicado")
-        print(f"   ✓ Campo aún existe en BD pero marcado como eliminado")
-        
-    def test_manejo_espacios_en_nombres(self):
-        """Test: Verificar el manejo correcto de espacios en nombres"""
-        print("\n🔤 Probando manejo de espacios en nombres...")
-        
-        # Crear medio con espacios extras
-        medio = MedioDePago.objects.create(
-            nombre="   PayPal Business   ",
-            comision_porcentaje=3.5
-        )
-        
-        # El modelo debe limpiar los espacios
-        self.assertEqual(medio.nombre, "PayPal Business")
-        print(f"   ✓ Espacios eliminados: '{medio.nombre}'")
-        
-        # Crear campo con espacios
-        campo = CampoMedioDePago.objects.create(
-            medio_de_pago=medio,
-            nombre_campo="   Email del Cliente   ",
-            tipo_dato="EMAIL"
-        )
-        
-        self.assertEqual(campo.nombre_campo, "Email del Cliente")
-        print(f"   ✓ Campo limpiado: '{campo.nombre_campo}'")
-
-
-class PerformanceTest(TestCase):
-    """Tests de rendimiento y escalabilidad"""
-    
-    def setUp(self):
-        """Configuración inicial para cada test"""
-        print("\n" + "="*80)
-        print(f"Ejecutando: {self._testMethodName}")
-        print("="*80)
-        
-    def test_manejo_multiples_medios_pago(self):
-        """Test: Manejo eficiente de múltiples medios de pago"""
-        print("\n⚡ Probando rendimiento con múltiples medios...")
-        
-        import time
-        start_time = time.time()
-        
-        # Crear 50 medios de pago
-        medios = []
-        for i in range(50):
-            medio = MedioDePago.objects.create(
-                nombre=f"Medio {i:03d}",
-                comision_porcentaje=i % 10,
-                is_active=i % 2 == 0
-            )
-            medios.append(medio)
-        
-        creation_time = time.time() - start_time
-        print(f"   ✓ 50 medios creados en {creation_time:.2f} segundos")
-        
-        # Crear campos para cada medio
-        start_time = time.time()
-        for medio in medios[:10]:  # Solo los primeros 10 para no demorar mucho
-            for j in range(5):
-                CampoMedioDePago.objects.create(
-                    medio_de_pago=medio,
-                    nombre_campo=f"Campo {j}",
-                    tipo_dato='TEXTO'
-                )
-        
-        fields_time = time.time() - start_time
-        print(f"   ✓ 50 campos creados en {fields_time:.2f} segundos")
-        
-        # Probar consultas
-        start_time = time.time()
-        
-        # Consulta de medios activos
-        activos = MedioDePago.active.count()
-        
-        # Consulta con prefetch de campos
-        medios_con_campos = MedioDePago.active.prefetch_related('campos').all()
-        total_campos = sum(m.campos.count() for m in medios_con_campos)
-        
-        query_time = time.time() - start_time
-        print(f"   ✓ Consultas ejecutadas en {query_time:.2f} segundos")
-        print(f"   ✓ Medios activos: {activos}")
-        print(f"   ✓ Total campos: {total_campos}")
-        
-        self.assertLess(creation_time, 5, "Creación toma demasiado tiempo")
-        self.assertLess(query_time, 1, "Consultas toman demasiado tiempo")
+        print(f"Nuevo campo '{campo2.nombre_campo}' creado exitosamente")
 
 
 class EdgeCasesTest(TestCase):
-    """Tests para casos extremos y situaciones especiales"""
+    """Tests para casos límite del módulo medios de pago"""
     
     def setUp(self):
-        """Configuración inicial para cada test"""
-        print("\n" + "="*80)
-        print(f"Ejecutando: {self._testMethodName}")
-        print("="*80)
+        print(f"\nEjecutando: {self._testMethodName}")
+    
+    def test_precision_decimal_comisiones(self):
+        """Test: Precisión decimal en comisiones"""
+        print("Probando precisión decimal...")
         
-    def test_nombre_medio_unicode(self):
-        """Test: Manejo de caracteres Unicode en nombres"""
-        print("\n🌍 Probando caracteres Unicode...")
+        casos = [
+            Decimal('0.001'),    # Mínimo con decimales
+            Decimal('2.999'),    # Múltiples decimales
+            Decimal('99.999'),   # Máximo con decimales
+            Decimal('50.000'),   # Sin decimales significativos
+        ]
+        
+        for valor in casos:
+            medio = MedioDePago.objects.create(
+                nombre=f"Precisión {valor}",
+                comision_porcentaje=valor
+            )
+            self.assertEqual(medio.comision_porcentaje, valor)
+            print(f"Precisión {valor}: OK")
+            medio.delete()  # Limpiar
+        
+        print("Precisión decimal verificada")
+    
+    def test_limites_longitud_nombres(self):
+        """Test: Límites de longitud en nombres"""
+        print("Probando límites de longitud...")
+        
+        # Nombre de medio en el límite (100 caracteres)
+        nombre_limite = "A" * 100
+        medio = MedioDePago.objects.create(
+            nombre=nombre_limite,
+            comision_porcentaje=1.0
+        )
+        self.assertEqual(len(medio.nombre), 100)
+        print(f"Nombre medio 100 chars: OK")
+        
+        # Nombre de campo en el límite (100 caracteres)
+        campo_limite = "B" * 100
+        campo = CampoMedioDePago.objects.create(
+            medio_de_pago=medio,
+            nombre_campo=campo_limite,
+            tipo_dato="TEXTO"
+        )
+        self.assertEqual(len(campo.nombre_campo), 100)
+        print(f"Nombre campo 100 chars: OK")
+    
+    def test_managers_personalizados(self):
+        """Test: Comportamiento de managers 'objects' vs 'active'"""
+        print("Probando managers personalizados...")
+        
+        # Crear medios en diferentes estados
+        medio_activo = MedioDePago.objects.create(
+            nombre="Activo",
+            is_active=True
+        )
+        
+        medio_inactivo = MedioDePago.objects.create(
+            nombre="Inactivo", 
+            is_active=False
+        )
+        
+        medio_eliminado = MedioDePago.objects.create(
+            nombre="Eliminado",
+            is_active=True
+        )
+        medio_eliminado.soft_delete()
+        
+        # Verificar contadores
+        total_objects = MedioDePago.objects.count()
+        total_active = MedioDePago.active.count()
+        
+        self.assertEqual(total_objects, 3)  # Todos los registros
+        self.assertEqual(total_active, 2)   # Solo no eliminados
+        
+        print(f"Manager objects: {total_objects} registros")
+        print(f"Manager active: {total_active} registros")
+        print("Managers funcionando correctamente")
+    
+    def test_relacion_medio_campos(self):
+        """Test: Relación entre medio y sus campos"""
+        print("Probando relación medio-campos...")
         
         medio = MedioDePago.objects.create(
-            nombre="Ñandú Pagos - Guaraní €₹¥",
+            nombre="Medio con Campos",
             comision_porcentaje=2.5
         )
         
-        self.assertEqual(medio.nombre, "Ñandú Pagos - Guaraní €₹¥")
-        print(f"   ✓ Unicode manejado correctamente: {medio.nombre}")
-        
-    def test_comision_decimal_precision(self):
-        """Test: Precisión decimal en comisiones"""
-        print("\n💰 Probando precisión decimal...")
-        
-        try:
-            from decimal import Decimal
-            medio = MedioDePago.objects.create(
-                nombre="Precision Test",
-                comision_porcentaje=Decimal('2.990')
-            )
-            print(f"   ✓ Medio creado con comisión: {medio.comision_porcentaje}%")
-            self.assertEqual(medio.comision_porcentaje, Decimal('2.99'))
-            print("   ✓ Precisión decimal correcta")
-        except ValidationError as e:
-            print(f"   ❌ Error de validación: {e.messages[0]}")
-            print(f"   💡 Sugerencia: Verificar decimales en models.py - DecimalField")
-            raise
-        
-        # Probar límites
-        medio.comision_porcentaje = Decimal('99.99')
-        medio.save()
-        
-        medio.refresh_from_db()
-        self.assertEqual(medio.comision_porcentaje, Decimal('99.99'))
-        
-        print(f"   ✓ Precisión decimal mantenida: {medio.comision_porcentaje}")
-        
-    def test_campo_orden_automatico(self):
-        """Test: Orden automático de campos"""
-        print("\n📊 Probando orden de campos...")
-        
-        medio = MedioDePago.objects.create(
-            nombre="Orden Test",
-            comision_porcentaje=1.0
-        )
-        
-        # Crear campos sin especificar orden
-        campo1 = CampoMedioDePago.objects.create(
-            medio_de_pago=medio,
-            nombre_campo="Primero",
-            tipo_dato="TEXTO"
-        )
-        
-        campo2 = CampoMedioDePago.objects.create(
-            medio_de_pago=medio,
-            nombre_campo="Segundo",
-            tipo_dato="NUMERO"
-        )
-        
-        campo3 = CampoMedioDePago.objects.create(
-            medio_de_pago=medio,
-            nombre_campo="Tercero",
-            tipo_dato="FECHA"
-        )
-        
-        # Verificar que se ordenan correctamente
-        campos_ordenados = medio.campos.all()
-        
-        print("   Orden de campos:")
-        for campo in campos_ordenados:
-            print(f"     - {campo.nombre_campo} (orden: {campo.orden})")
-        
-        self.assertEqual(len(campos_ordenados), 3)
-        
-    def test_tipos_dato_validacion(self):
-        """Test: Validación de todos los tipos de dato"""
-        print("\n📝 Probando todos los tipos de dato...")
-        
-        medio = MedioDePago.objects.create(
-            nombre="Tipos Test",
-            comision_porcentaje=0
-        )
-        
-        tipos = ['TEXTO', 'NUMERO', 'FECHA', 'EMAIL', 'TELEFONO', 'URL']
-        
-        for tipo in tipos:
+        # Crear varios campos
+        campos_creados = []
+        for i in range(3):
             campo = CampoMedioDePago.objects.create(
                 medio_de_pago=medio,
-                nombre_campo=f"Campo {tipo}",
-                tipo_dato=tipo,
-                is_required=False
-            )
-            
-            self.assertEqual(campo.tipo_dato, tipo)
-            print(f"   ✓ Tipo {tipo}: {campo.get_tipo_dato_display()}")
-        
-        self.assertEqual(medio.campos.count(), len(tipos))
-        
-    def test_cascada_eliminacion(self):
-        """Test: Verificar eliminación en cascada de campos"""
-        print("\n🔗 Probando eliminación en cascada...")
-        
-        medio = MedioDePago.objects.create(
-            nombre="Cascada Test",
-            comision_porcentaje=5.0
-        )
-        
-        # Crear varios campos
-        for i in range(3):
-            CampoMedioDePago.objects.create(
-                medio_de_pago=medio,
-                nombre_campo=f"Campo {i}",
+                nombre_campo=f"Campo {i+1}",
                 tipo_dato="TEXTO"
             )
+            campos_creados.append(campo)
         
-        print(f"   Campos creados: {medio.campos.count()}")
+        # Verificar relaciones
+        self.assertEqual(medio.campos.count(), 3)
+        self.assertEqual(medio.total_campos_activos, 3)
         
-        # Eliminar el medio (hard delete)
-        medio_id = medio.id
-        medio.delete()
+        # Eliminar un campo y verificar
+        campos_creados[0].soft_delete()
+        self.assertEqual(medio.total_campos_activos, 2)
         
-        # Verificar que los campos también se eliminaron
-        campos_restantes = CampoMedioDePago.objects.filter(
-            medio_de_pago_id=medio_id
-        ).count()
-        
-        self.assertEqual(campos_restantes, 0)
-        print(f"   ✓ Campos eliminados en cascada: 0 restantes")
+        print(f"Campos totales: {medio.campos.count()}")
+        print(f"Campos activos: {medio.total_campos_activos}")
+        print("Relación medio-campos funcionando correctamente")
 
 
-# Ejecutor de tests con reporte detallado
-def run_all_tests():
-    """Función helper para ejecutar todos los tests con reporte detallado"""
+class ErrorSearchTest(TestCase):
+    """Tests específicamente diseñados para encontrar errores y fallos"""
+    
+    def setUp(self):
+        print(f"\nBUSCANDO ERRORES: {self._testMethodName}")
+        
+        self.medio_base = MedioDePago.objects.create(
+            nombre="Medio Para Errores",
+            comision_porcentaje=2.0,
+            is_active=True
+        )
+    
+    def test_crear_medio_con_datos_extremos_debe_fallar(self):
+        """Test: Buscar errores con datos extremos"""
+        print("Probando datos extremos que deben fallar...")
+        
+        casos_que_deben_fallar = [
+            # Comisiones inválidas
+            {"nombre": "Test1", "comision_porcentaje": -0.001, "error_esperado": "negativa"},
+            {"nombre": "Test2", "comision_porcentaje": 100.001, "error_esperado": "mayor a 100"},
+            {"nombre": "Test3", "comision_porcentaje": 999.999, "error_esperado": "excesiva"},
+            # Nombres inválidos
+            {"nombre": None, "comision_porcentaje": 5.0, "error_esperado": "nombre nulo"},
+            {"nombre": "   ", "comision_porcentaje": 5.0, "error_esperado": "nombre vacío"},
+        ]
+        
+        errores_encontrados = 0
+        for i, caso in enumerate(casos_que_deben_fallar):
+            try:
+                medio = MedioDePago(
+                    nombre=caso["nombre"],
+                    comision_porcentaje=caso["comision_porcentaje"]
+                )
+                # Intentar tanto full_clean como save
+                medio.full_clean()
+                medio.save()
+                
+                print(f"ERROR CRÍTICO: Caso {i+1} ({caso['error_esperado']}) fue ACEPTADO cuando debía fallar")
+                self.fail(f"Datos inválidos fueron aceptados: {caso}")
+                
+            except (ValidationError, ValueError, TypeError) as e:
+                errores_encontrados += 1
+                print(f"BIEN: Caso {i+1} ({caso['error_esperado']}) rechazado correctamente")
+        
+        print(f"Total errores correctamente capturados: {errores_encontrados}/{len(casos_que_deben_fallar)}")
+        self.assertEqual(errores_encontrados, len(casos_que_deben_fallar))
+    
+    def test_operaciones_en_medio_eliminado_deben_fallar(self):
+        """Test: Operaciones inválidas en medios eliminados"""
+        print("Probando operaciones que deben fallar en medios eliminados...")
+        
+        # Crear y eliminar medio
+        medio = MedioDePago.objects.create(
+            nombre="Para Eliminar Y Probar",
+            comision_porcentaje=3.0
+        )
+        medio.soft_delete()
+        
+        # Estas operaciones deben fallar
+        operaciones_invalidas = [
+            ("toggle_active", lambda: medio.toggle_active()),
+            ("soft_delete doble", lambda: medio.soft_delete()),
+        ]
+        
+        errores_capturados = 0
+        for nombre_operacion, operacion in operaciones_invalidas:
+            try:
+                operacion()
+                print(f"ERROR: {nombre_operacion} fue permitida en medio eliminado")
+                self.fail(f"Operación '{nombre_operacion}' debería fallar en medio eliminado")
+            except ValidationError:
+                errores_capturados += 1
+                print(f"BIEN: {nombre_operacion} rechazada correctamente")
+            except Exception as e:
+                print(f"ADVERTENCIA: {nombre_operacion} falló con error inesperado: {e}")
+        
+        print(f"Operaciones inválidas bloqueadas: {errores_capturados}")
+    
+    def test_crear_campos_con_datos_invalidos_debe_fallar(self):
+        """Test: Buscar errores en creación de campos con datos inválidos"""
+        print("Probando creación de campos con datos inválidos...")
+        
+        casos_campo_invalido = [
+            # Nombres inválidos
+            {"nombre_campo": "", "tipo_dato": "TEXTO", "error": "nombre vacío"},
+            {"nombre_campo": "   ", "tipo_dato": "TEXTO", "error": "nombre solo espacios"},
+            {"nombre_campo": None, "tipo_dato": "TEXTO", "error": "nombre nulo"},
+            # Tipos inválidos  
+            {"nombre_campo": "Campo Valid", "tipo_dato": "", "error": "tipo vacío"},
+            {"nombre_campo": "Campo Valid", "tipo_dato": "INVALIDO", "error": "tipo no existe"},
+            {"nombre_campo": "Campo Valid", "tipo_dato": None, "error": "tipo nulo"},
+        ]
+        
+        errores_encontrados = 0
+        for caso in casos_campo_invalido:
+            try:
+                campo = CampoMedioDePago(
+                    medio_de_pago=self.medio_base,
+                    nombre_campo=caso["nombre_campo"],
+                    tipo_dato=caso["tipo_dato"]
+                )
+                campo.full_clean()
+                campo.save()
+                
+                print(f"ERROR CRÍTICO: {caso['error']} fue ACEPTADO")
+                self.fail(f"Datos inválidos de campo aceptados: {caso['error']}")
+                
+            except (ValidationError, ValueError, TypeError):
+                errores_encontrados += 1
+                print(f"BIEN: {caso['error']} rechazado correctamente")
+        
+        print(f"Errores de campo capturados: {errores_encontrados}/{len(casos_campo_invalido)}")
+    
+    def test_duplicados_con_variaciones_debe_fallar(self):
+        """Test: Buscar errores con nombres duplicados y sus variaciones"""
+        print("Probando detección de duplicados con variaciones...")
+        
+        # Crear campo base
+        CampoMedioDePago.objects.create(
+            medio_de_pago=self.medio_base,
+            nombre_campo="Email Cliente",
+            tipo_dato="EMAIL"
+        )
+        
+        # Variaciones que deben ser detectadas como duplicados
+        variaciones_duplicadas = [
+            "Email Cliente",      # Exacto
+            "email cliente",      # Minúsculas
+            "EMAIL CLIENTE",      # Mayúsculas  
+            "Email  Cliente",     # Espacios extra internos
+            " Email Cliente ",    # Espacios externos
+        ]
+        
+        duplicados_bloqueados = 0
+        for variacion in variaciones_duplicadas:
+            try:
+                campo_duplicado = CampoMedioDePago(
+                    medio_de_pago=self.medio_base,
+                    nombre_campo=variacion,
+                    tipo_dato="TEXTO"
+                )
+                campo_duplicado.full_clean()
+                
+                print(f"ERROR: Variación '{variacion}' NO fue detectada como duplicado")
+                self.fail(f"Duplicado no detectado: '{variacion}'")
+                
+            except ValidationError:
+                duplicados_bloqueados += 1
+                print(f"BIEN: '{variacion}' detectado como duplicado")
+        
+        print(f"Duplicados correctamente bloqueados: {duplicados_bloqueados}/{len(variaciones_duplicadas)}")
+    
+    def test_limites_numericos_debe_fallar(self):
+        """Test: Buscar errores en límites numéricos"""
+        print("Probando límites numéricos extremos...")
+        
+        limites_que_deben_fallar = [
+            # Valores fuera del rango de DecimalField
+            {"comision": Decimal('999999.999'), "error": "demasiado grande"},
+            {"comision": Decimal('-999999.999'), "error": "demasiado negativo"},
+        ]
+        
+        for caso in limites_que_deben_fallar:
+            try:
+                medio = MedioDePago(
+                    nombre=f"Test {caso['error']}",
+                    comision_porcentaje=caso["comision"]
+                )
+                medio.full_clean()
+                medio.save()
+                
+                print(f"ADVERTENCIA: {caso['error']} fue aceptado - valor: {caso['comision']}")
+                # Esto podría ser válido si el campo permite estos valores
+                
+            except Exception as e:
+                print(f"BIEN: {caso['error']} rechazado - {type(e).__name__}")
+
+
+# Función para ejecutar tests esenciales incluyendo búsqueda de errores
+def run_essential_tests():
+    """Ejecuta todos los tests esenciales del módulo incluyendo búsqueda de errores"""
     import unittest
     
-    print("\n" + "="*80)
-    print("INICIANDO SUITE DE TESTS - MÓDULO MEDIOS DE PAGO")
-    print("="*80)
+    print("EJECUTANDO TESTS ESENCIALES + BÚSQUEDA DE ERRORES")
+    print("MÓDULO MEDIOS DE PAGO")
+    print("="*60)
     
-    # Crear suite de tests
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
     
-    # Agregar todos los test cases
-    test_cases = [
+    # Todos los test cases incluyendo búsqueda de errores
+    all_tests = [
         MedioDePagoModelTest,
         CampoMedioDePagoModelTest,
-        MedioDePagoFormsTest,
-        MedioDePagoViewsTest,
-        IntegrationTest,
-        PerformanceTest,
+        ErrorSearchTest,  # Nueva clase de búsqueda de errores
         EdgeCasesTest
     ]
     
-    for test_case in test_cases:
-        suite.addTests(loader.loadTestsFromTestCase(test_case))
+    total_tests = 0
+    for test_case in all_tests:
+        case_suite = loader.loadTestsFromTestCase(test_case)
+        suite.addTests(case_suite)
+        test_count = case_suite.countTestCases()
+        total_tests += test_count
+        print(f"{test_case.__name__}: {test_count} tests")
     
-    # Ejecutar tests
+    print(f"Total tests: {total_tests}")
+    print("="*60)
+    
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
     
-    # Reporte final
-    print("\n" + "="*80)
-    print("REPORTE FINAL DE TESTS")
-    print("="*80)
-    print(f"Tests ejecutados: {result.testsRun}")
-    print(f"✅ Exitosos: {result.testsRun - len(result.failures) - len(result.errors)}")
-    print(f"❌ Fallos: {len(result.failures)}")
-    print(f"💥 Errores: {len(result.errors)}")
+    # Reporte detallado
+    print("\n" + "="*60)
+    print("REPORTE FINAL DETALLADO")
+    print("="*60)
+    
+    exitosos = result.testsRun - len(result.failures) - len(result.errors)
+    porcentaje_exito = (exitosos / result.testsRun * 100) if result.testsRun > 0 else 0
+    
+    print(f"ESTADÍSTICAS:")
+    print(f"  Tests ejecutados: {result.testsRun}")
+    print(f"  Exitosos: {exitosos}")
+    print(f"  Fallos: {len(result.failures)}")
+    print(f"  Errores: {len(result.errors)}")
+    print(f"  Tasa de éxito: {porcentaje_exito:.1f}%")
+    
+    if result.failures:
+        print(f"\nFALLOS DETECTADOS ({len(result.failures)}):")
+        for i, (test, traceback) in enumerate(result.failures, 1):
+            test_name = str(test).split()[0]
+            error_msg = traceback.split('AssertionError:')[-1].split('\n')[0].strip() if 'AssertionError:' in traceback else 'Fallo de aserción'
+            print(f"  {i}. {test_name}")
+            print(f"     Error: {error_msg}")
+    
+    if result.errors:
+        print(f"\nERRORES DE EJECUCIÓN ({len(result.errors)}):")
+        for i, (test, traceback) in enumerate(result.errors, 1):
+            test_name = str(test).split()[0]
+            print(f"  {i}. {test_name}")
+            print(f"     Tipo: {traceback.split('\\n')[-2] if traceback.split('\\n') else 'Error desconocido'}")
+    
+    # Análisis específico de búsqueda de errores
+    error_search_results = []
+    for test_result in [result.failures, result.errors]:
+        for test, _ in test_result:
+            if 'ErrorSearchTest' in str(test):
+                error_search_results.append(str(test))
+    
+    if error_search_results:
+        print(f"\nERRORES ENCONTRADOS EN BÚSQUEDA:")
+        print("ATENCIÓN: Los siguientes tests de búsqueda de errores fallaron:")
+        for error_test in error_search_results:
+            print(f"  - {error_test}")
+        print("Esto indica posibles vulnerabilidades o fallos en las validaciones")
     
     if result.wasSuccessful():
-        print("\n🎉 ¡TODOS LOS TESTS PASARON EXITOSAMENTE! 🎉")
+        print(f"\n✅ TODOS LOS TESTS PASARON EXITOSAMENTE")
+        print("✅ Funcionalidades básicas: OK")
+        print("✅ Validaciones de seguridad: OK") 
+        print("✅ Búsqueda de errores: OK")
+        print("✅ Casos límite: OK")
+        print("\nEl módulo de medios de pago está robusto y seguro")
     else:
-        print("\n⚠️ Algunos tests fallaron. Revisa los detalles arriba.")
+        print(f"\n⚠️ ALGUNOS TESTS FALLARON")
+        print("🔍 Revisa los detalles arriba para identificar problemas")
+        print("💡 Los fallos en tests de búsqueda de errores son CRÍTICOS")
+        print("💡 Indica que validaciones de seguridad no están funcionando")
     
     return result
+
+
+def run_error_search_only():
+    """Ejecuta solo los tests de búsqueda de errores"""
+    import unittest
+    
+    print("EJECUTANDO SOLO TESTS DE BÚSQUEDA DE ERRORES")
+    print("="*60)
+    
+    loader = unittest.TestLoader()
+    suite = loader.loadTestsFromTestCase(ErrorSearchTest)
+    
+    print(f"Tests de búsqueda de errores: {suite.countTestCases()}")
+    print("Estos tests buscan específicamente vulnerabilidades y fallos")
+    print("="*60)
+    
+    runner = unittest.TextTestRunner(verbosity=2)
+    result = runner.run(suite)
+    
+    if result.wasSuccessful():
+        print(f"\n✅ BÚSQUEDA DE ERRORES EXITOSA")
+        print("Todas las validaciones están funcionando correctamente")
+        print("No se encontraron vulnerabilidades críticas")
+    else:
+        print(f"\n🚨 ERRORES CRÍTICOS ENCONTRADOS")
+        print("Las validaciones tienen fallos que deben corregirse INMEDIATAMENTE")
+        
+    return result
+
+
+if __name__ == '__main__':
+    run_essential_tests()

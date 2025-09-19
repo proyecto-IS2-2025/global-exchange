@@ -1,4 +1,4 @@
-# views.py - Versión mejorada con UX optimizada
+# views.py - Versión con filtros por estado en lugar de soft delete
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, View
@@ -17,9 +17,10 @@ from .forms import MedioDePagoForm, create_campo_formset
 
 class MedioDePagoListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     """
-    Vista de listado para los Medios de Pago activos.
+    Vista de listado para los Medios de Pago con filtros por estado.
     
     Requiere el permiso 'medios_pago.view_mediodepago'.
+    Permite filtrar por: todos, activos, inactivos.
     """
     permission_required = 'medios_pago.view_mediodepago'
     model = MedioDePago
@@ -29,10 +30,51 @@ class MedioDePagoListView(LoginRequiredMixin, PermissionRequiredMixin, ListView)
 
     def get_queryset(self):
         """
-        Devuelve el queryset de medios de pago activos.
-        """ 
-        # Mostrar solo medios activos (no eliminados)
-        return MedioDePago.active.all()
+        Devuelve el queryset filtrado según el parámetro 'estado'.
+        """
+        # Obtener todos los medios (sin soft delete)
+        queryset = MedioDePago.objects.all()
+        
+        # Aplicar filtro según el parámetro GET
+        estado_filtro = self.request.GET.get('estado', 'todos')
+        
+        if estado_filtro == 'activos':
+            queryset = queryset.filter(is_active=True)
+        elif estado_filtro == 'inactivos':
+            queryset = queryset.filter(is_active=False)
+        # 'todos' no aplica filtro adicional
+        
+        return queryset.order_by('nombre')
+
+    def get_context_data(self, **kwargs):
+        """
+        Añade información del filtro actual al contexto.
+        """
+        context = super().get_context_data(**kwargs)
+        
+        # Estado del filtro actual
+        estado_actual = self.request.GET.get('estado', 'todos')
+        context['estado_filtro'] = estado_actual
+        
+        # Estadísticas para mostrar en la interfaz
+        total_medios = MedioDePago.objects.count()
+        medios_activos = MedioDePago.objects.filter(is_active=True).count()
+        medios_inactivos = MedioDePago.objects.filter(is_active=False).count()
+        
+        context['stats'] = {
+            'total': total_medios,
+            'activos': medios_activos,
+            'inactivos': medios_inactivos
+        }
+        
+        # Opciones del filtro
+        context['filtros_disponibles'] = [
+            {'value': 'todos', 'label': f'Todos ({total_medios})', 'active': estado_actual == 'todos'},
+            {'value': 'activos', 'label': f'Activos ({medios_activos})', 'active': estado_actual == 'activos'},
+            {'value': 'inactivos', 'label': f'Inactivos ({medios_inactivos})', 'active': estado_actual == 'inactivos'},
+        ]
+        
+        return context
 
 
 class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
@@ -90,11 +132,6 @@ class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, Cr
     def form_valid(self, form, campos_formset):
         """
         Guarda el medio de pago y sus campos asociados.
-
-        :param form: El formulario de MedioDePago.
-        :type form: MedioDePagoForm
-        :returns: Una redirección a la lista si es exitoso.
-        :rtype: HttpResponseRedirect
         """
         try:
             with transaction.atomic():
@@ -121,7 +158,7 @@ class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateV
     Vista para la edición de un Medio de Pago existente.
     
     Requiere el permiso 'medios_pago.change_mediodepago'.
-    Permite la edición de campos dinámicos y la eliminación suave.
+    Permite la edición de campos dinámicos.
     """
     permission_required = 'medios_pago.change_mediodepago'
     model = MedioDePago
@@ -142,7 +179,7 @@ class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateV
         CampoFormSet = create_campo_formset(is_edit=True)
         
         if self.request.POST:
-            # Incluir campos eliminados en el formset para mantener consistencia
+            # Incluir todos los campos en el formset
             campos_queryset = self.object.campos.all()
             ctx['campos_formset'] = CampoFormSet(
                 self.request.POST,
@@ -150,8 +187,8 @@ class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateV
                 queryset=campos_queryset
             )
         else:
-            # Solo mostrar campos activos en la vista
-            campos_queryset = self.object.campos.filter(deleted_at__isnull=True)
+            # Mostrar todos los campos activos
+            campos_queryset = self.object.campos.all()
             ctx['campos_formset'] = CampoFormSet(
                 instance=self.object,
                 queryset=campos_queryset
@@ -161,10 +198,6 @@ class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateV
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         form = self.get_form()
-        
-        # Manejar eliminación de campos via AJAX
-        if request.headers.get('Content-Type') == 'application/json':
-            return self.handle_ajax_field_delete(request)
         
         # Usar factory para formset de edición
         CampoFormSet = create_campo_formset(is_edit=True)
@@ -179,36 +212,9 @@ class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateV
         else:
             return self.form_invalid(form, campos_formset)
 
-    def handle_ajax_field_delete(self, request):
-        """Manejar eliminación de campos via AJAX"""
-        try:
-            data = json.loads(request.body)
-            field_id = data.get('field_id')
-            
-            if not field_id:
-                return JsonResponse({'success': False, 'error': 'ID de campo requerido'})
-            
-            campo = get_object_or_404(CampoMedioDePago, id=field_id, medio_de_pago=self.object)
-            
-            if self.object.can_be_edited_freely:
-                campo.soft_delete()
-                return JsonResponse({'success': True, 'message': 'Campo eliminado exitosamente'})
-            else:
-                return JsonResponse({'success': False, 'error': 'No se puede eliminar este campo'})
-                
-        except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'error': 'Datos JSON inválidos'})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
-
     def form_valid(self, form, campos_formset):
         """
         Guarda los cambios en el medio de pago y sus campos asociados.
-
-        :param form: El formulario de MedioDePago.
-        :type form: MedioDePagoForm
-        :returns: Una redirección a la lista si es exitoso.
-        :rtype: HttpResponseRedirect
         """
         try:
             with transaction.atomic():
@@ -232,129 +238,43 @@ class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateV
 class MedioDePagoToggleActivoView(LoginRequiredMixin, PermissionRequiredMixin, View):
     """
     Vista para activar o desactivar un medio de pago.
-
-    Esta vista cambia el estado `is_active` de un `MedioDePago` existente.
-    Requiere que el usuario esté autenticado (`LoginRequiredMixin`) y tenga
-    el permiso `medios_pago.change_mediodepago`.
     """
     permission_required = 'medios_pago.change_mediodepago'
 
     def post(self, request, pk):
-        medio_de_pago = get_object_or_404(MedioDePago.active, pk=pk)
+        medio_de_pago = get_object_or_404(MedioDePago, pk=pk)
         estado_anterior = medio_de_pago.is_active
-        medio_de_pago.toggle_active()  # Usar el método del modelo
+        medio_de_pago.toggle_active()
         
         estado = 'activado' if medio_de_pago.is_active else 'desactivado'
         messages.success(request, f'Medio de pago "{medio_de_pago.nombre}" {estado} exitosamente.')
         
-        return redirect('medios_pago:lista')
+        # Mantener el filtro actual al redirigir
+        estado_filtro = request.GET.get('estado', 'todos')
+        return redirect(f"{reverse_lazy('medios_pago:lista')}?estado={estado_filtro}")
 
 
-class MedioDePagoSoftDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
+class MedioDePagoDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
     """
-    Vista API para la eliminación suave (soft delete) de un medio de pago.
-    
-    Requiere el permiso 'medios_pago.delete_mediodepago'.
+    Vista para eliminación real (no soft delete) de un medio de pago.
+    Solo disponible si no tiene dependencias.
     """
     permission_required = 'medios_pago.delete_mediodepago'
 
     def post(self, request, pk):
-        """
-        Maneja la solicitud POST para realizar la eliminación suave.
-        
-        :param request: Objeto de la solicitud HTTP.
-        :param pk: Clave primaria del medio de pago a eliminar.
-        :type pk: int
-        :returns: Una respuesta JSON con el resultado de la operación.
-        :rtype: JsonResponse
-        """
-        medio_de_pago = get_object_or_404(MedioDePago.active, pk=pk)
-        
-        # Verificar si se puede eliminar (lógica de negocio)
-        # Por ejemplo, verificar si no tiene transacciones asociadas
+        medio_de_pago = get_object_or_404(MedioDePago, pk=pk)
         
         try:
-            medio_de_pago.soft_delete()
-            messages.success(request, f'Medio de pago "{medio_de_pago.nombre}" eliminado exitosamente.')
+            # Verificar si se puede eliminar (lógica de negocio)
+            if hasattr(medio_de_pago, 'transacciones') and medio_de_pago.transacciones.exists():
+                messages.error(request, f'No se puede eliminar "{medio_de_pago.nombre}" porque tiene transacciones asociadas.')
+                return redirect('medios_pago:lista')
+            
+            nombre = medio_de_pago.nombre
+            medio_de_pago.delete()
+            messages.success(request, f'Medio de pago "{nombre}" eliminado exitosamente.')
+            
         except Exception as e:
             messages.error(request, f'Error al eliminar el medio de pago: {str(e)}')
         
         return redirect('medios_pago:lista')
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class CampoSoftDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
-    """Vista para eliminación suave de campos via AJAX"""
-    permission_required = 'medios_pago.change_mediodepago'
-
-    def post(self, request, medio_pk, campo_pk):
-        try:
-            medio = get_object_or_404(MedioDePago, pk=medio_pk)
-            campo = get_object_or_404(CampoMedioDePago, pk=campo_pk, medio_de_pago=medio)
-            
-            if not medio.can_be_edited_freely:
-                return JsonResponse({
-                    'success': False, 
-                    'error': 'No se pueden eliminar campos de este medio de pago'
-                })
-            
-            campo.soft_delete()
-            
-            return JsonResponse({
-                'success': True, 
-                'message': f'Campo "{campo.nombre_campo}" eliminado exitosamente'
-            })
-            
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
-
-
-class MedioDePagoDeletedListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
-    """Vista para mostrar medios de pago eliminados (papelera)"""
-    permission_required = 'medios_pago.view_mediodepago'
-    model = MedioDePago
-    template_name = 'medios_pago/papelera.html'
-    context_object_name = 'medios_eliminados'
-    paginate_by = 20
-
-    def get_queryset(self):
-        # Mostrar solo medios eliminados (soft delete)
-        return MedioDePago.objects.filter(deleted_at__isnull=False)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['total_eliminados'] = self.get_queryset().count()
-        return context
-
-
-class MedioDePagoRestoreView(LoginRequiredMixin, PermissionRequiredMixin, View):
-    """Vista para restaurar un medio de pago eliminado"""
-    permission_required = 'medios_pago.change_mediodepago'
-
-    def post(self, request, pk):
-        medio_de_pago = get_object_or_404(MedioDePago.objects.filter(deleted_at__isnull=False), pk=pk)
-        
-        try:
-            medio_de_pago.restore()
-            messages.success(request, f'Medio de pago "{medio_de_pago.nombre}" restaurado exitosamente.')
-        except Exception as e:
-            messages.error(request, f'Error al restaurar el medio de pago: {str(e)}')
-        
-        return redirect('medios_pago:papelera')
-
-
-class MedioDePagoHardDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
-    """Vista para eliminación permanente (solo para casos extremos)"""
-    permission_required = 'medios_pago.delete_mediodepago'
-
-    def post(self, request, pk):
-        medio_de_pago = get_object_or_404(MedioDePago.objects.filter(deleted_at__isnull=False), pk=pk)
-        
-        try:
-            nombre = medio_de_pago.nombre
-            medio_de_pago.delete()  # Eliminación real de la BD
-            messages.warning(request, f'Medio de pago "{nombre}" eliminado permanentemente.')
-        except Exception as e:
-            messages.error(request, f'Error al eliminar permanentemente: {str(e)}')
-        
-        return redirect('medios_pago:papelera')

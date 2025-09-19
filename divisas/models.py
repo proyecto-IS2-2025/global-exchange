@@ -4,7 +4,13 @@ from django.db.models.functions import Upper
 from decimal import Decimal, ROUND_HALF_UP
 from django.db import models
 from django.contrib.auth import get_user_model
+"""
+Modelos de divisas y cotizaciones.
 
+Este módulo define las entidades principales para manejar divisas, tasas de cambio
+y cotizaciones por segmento. Los modelos permiten almacenar información sobre las
+monedas disponibles, su historial de tasas y los valores ajustados por segmento.
+"""
 User = get_user_model()
 creado_por = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
 
@@ -14,6 +20,12 @@ C100 = Decimal('100')
 
 
 class CotizacionSegmentoQuerySet(models.QuerySet):
+    """
+    Conjunto de consultas personalizado para CotizacionSegmento.
+
+    Proporciona métodos auxiliares para obtener registros recientes
+    y la última cotización para un segmento específico.
+    """
     def recientes(self):
         return self.order_by('-fecha')
 
@@ -25,8 +37,24 @@ class CotizacionSegmentoQuerySet(models.QuerySet):
 
 class CotizacionSegmento(models.Model):
     """
-    Una cotización 'unitaria' por segmento (Gs x 1 USD) en una fecha.
-    Congela: precio_base y comisiones de la tasa, y el % de descuento del segmento.
+    Representa una cotización unitaria de una divisa para un segmento.
+
+    :param divisa: Divisa relacionada con la cotización.
+    :type divisa: Divisa
+    :param segmento: Segmento de cliente asociado.
+    :type segmento: clientes.Segmento
+    :param precio_base: Precio base congelado de la tasa.
+    :type precio_base: Decimal
+    :param comision_compra: Comisión de compra congelada.
+    :type comision_compra: Decimal
+    :param comision_venta: Comisión de venta congelada.
+    :type comision_venta: Decimal
+    :param porcentaje_descuento: Descuento aplicado al segmento.
+    :type porcentaje_descuento: Decimal
+    :param valor_compra_unit: Valor de compra final (con descuento).
+    :type valor_compra_unit: Decimal
+    :param valor_venta_unit: Valor de venta final (con descuento).
+    :type valor_venta_unit: Decimal
     """
     fecha = models.DateTimeField(auto_now_add=True)
 
@@ -93,6 +121,23 @@ class CotizacionSegmento(models.Model):
         return f"{self.divisa.code} / {self.segmento.name} @ {self.fecha:%Y-%m-%d %H:%M}"
 
 class Divisa(models.Model):
+    """
+    Representa una divisa o moneda.
+
+    Incluye código ISO, nombre, símbolo, estado (activa/deshabilitada) y
+    cantidad de decimales admitidos para cotización.
+
+    :param code: Código de la divisa (ISO u otro identificador).
+    :type code: str
+    :param nombre: Nombre descriptivo de la divisa.
+    :type nombre: str
+    :param simbolo: Símbolo de la divisa.
+    :type simbolo: str
+    :param is_active: Indica si la divisa está habilitada para operar.
+    :type is_active: bool
+    :param decimales: Precisión decimal permitida (0–8).
+    :type decimales: int
+    """
     code = models.CharField('Código', max_length=10, unique=True)
     nombre = models.CharField('Nombre', max_length=100)
     simbolo = models.CharField('Símbolo', max_length=5, default='', blank=True)
@@ -137,6 +182,22 @@ class Divisa(models.Model):
 
 
 class TasaCambio(models.Model):
+    """
+    Representa una tasa de cambio histórica de una divisa.
+
+    Incluye precio base, comisiones de compra y venta, y fecha de creación.
+
+    :param divisa: Divisa asociada a la tasa.
+    :type divisa: Divisa
+    :param fecha: Fecha y hora de registro.
+    :type fecha: datetime
+    :param precio_base: Precio base de la divisa.
+    :type precio_base: Decimal
+    :param comision_compra: Comisión aplicada en la compra.
+    :type comision_compra: Decimal
+    :param comision_venta: Comisión aplicada en la venta.
+    :type comision_venta: Decimal
+    """
     divisa = models.ForeignKey(Divisa, on_delete=models.CASCADE, related_name='tasas')
 
     fecha = models.DateTimeField('Fecha y hora', auto_now_add=True)

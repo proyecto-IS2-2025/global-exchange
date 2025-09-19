@@ -10,16 +10,16 @@ def simulador_context(request):
     Context processor que provee tasas, lista de divisas y descuentos por segmento.
     Excluye la divisa Guaraní (PYG) del listado.
     """
-    segmento_usuario = 'Minorista'
+    segmento_usuario = ''  # Asignación por defecto
     if request.user.is_authenticated:
         try:
+            # Usar AsignacionCliente directamente como en la vista
             asignacion = AsignacionCliente.objects.select_related('cliente__segmento').filter(usuario=request.user).first()
-            
             if asignacion and asignacion.cliente and asignacion.cliente.segmento:
                 segmento_usuario = asignacion.cliente.segmento.name
         except AsignacionCliente.DoesNotExist:
             pass
-    
+
     # Obtener la lista de divisas activas para el frontend, excluyendo el Guaraní (código 116)
     divisas_activas = Divisa.objects.filter(is_active=True).exclude(code='116')
     divisas_list = [
