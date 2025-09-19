@@ -29,6 +29,7 @@
                         <tr>
                             <th scope="col">Nombre</th>
                             <th scope="col">Permisos</th>
+                            <th scope="col">Estado</th>
                             <th scope="col">Acciones</th>
                         </tr>
                     </thead>
@@ -48,6 +49,13 @@
                                 {% endif %}
                             </td>
                             <td>
+                                {% if group.status.is_active %}
+                                    <span class="badge bg-success">Activo</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td>
                                 <div class="btn-group" role="group" aria-label="Acciones de grupo">
                                      {% if group.name != 'admin' %}
                                         <a href="{% url 'group_detail_permissions' group.id %}" class="btn btn-sm btn-warning text-white">
@@ -57,15 +65,17 @@
                                     <a href="{% url 'group_detail_users' group.id %}" class="btn btn-sm btn-primary text-white">
                                         <i class="fas fa-user-edit"></i> Usuarios
                                     </a>
-                                    <a href="{% url 'group_delete' group.id %}" class="btn btn-sm btn-danger">
-                                        <i class="fas fa-trash-alt"></i> Eliminar
+                                     <a href="{% url 'group_toggle_status' group.id %}" 
+                                        class="btn btn-sm {% if group.status.is_active %}btn-danger{% else %}btn-success{% endif %}">
+                                        <i class="fas {% if group.status.is_active %}fa-ban{% else %}fa-check-circle{% endif %}"></i> 
+                                        {% if group.status.is_active %}Desactivar{% else %}Activar{% endif %}
                                     </a>
                                 </div>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="3" class="text-center">No hay roles registrados.</td>
+                            <td colspan="4" class="text-center">No hay roles registrados.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
