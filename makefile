@@ -63,3 +63,8 @@ cargar-datos:
 	python manage.py loaddata divisas_initial_data.json
 	python manage.py loaddata medios_pago_initial_data.json
 	@echo "Datos iniciales cargados."
+
+run:
+	@echo "Ejecutando el servidor de desarrollo con recarga automática..."
+	poetry run python manage.py runserver 
+	@echo "Servidor detenido."

@@ -1,4 +1,4 @@
-# forms.py - Versión mejorada para UX
+# forms.py - Versión simplificada sin soft delete
 from django import forms
 from django.forms import inlineformset_factory
 from django.core.exceptions import ValidationError
@@ -74,11 +74,10 @@ class CampoMedioDePagoForm(forms.ModelForm):
         
         # Solo validar si tenemos un nombre de campo y una instancia padre
         if nombre_campo and hasattr(self, 'instance') and hasattr(self.instance, 'medio_de_pago') and self.instance.medio_de_pago:
-            # Buscar campos existentes con el mismo nombre (excluyendo eliminados)
+            # Buscar campos existentes con el mismo nombre
             existing = CampoMedioDePago.objects.filter(
                 medio_de_pago=self.instance.medio_de_pago,
-                nombre_campo__iexact=nombre_campo,
-                deleted_at__isnull=True  # Solo considerar campos NO eliminados
+                nombre_campo__iexact=nombre_campo
             )
             
             # Excluir el objeto actual si está siendo editado
@@ -87,13 +86,13 @@ class CampoMedioDePagoForm(forms.ModelForm):
             
             if existing.exists():
                 raise forms.ValidationError({
-                    'nombre_campo': f'Ya existe un campo activo con el nombre "{nombre_campo}" en este medio de pago.'
+                    'nombre_campo': f'Ya existe un campo con el nombre "{nombre_campo}" en este medio de pago.'
                 })
         
         return cleaned_data
 
 
-# Formset personalizado que maneja soft delete correctamente
+# Formset personalizado simplificado
 class CampoMedioDePagoFormSet(forms.BaseInlineFormSet):
     """
     Formset base para manejar la validación de los campos de Medio de Pago.
@@ -120,22 +119,6 @@ class CampoMedioDePagoFormSet(forms.BaseInlineFormSet):
                 if nombre_lower in nombres_campos:
                     raise forms.ValidationError(f'No puede haber campos duplicados con el nombre "{nombre}".')
                 nombres_campos.append(nombre_lower)
-
-    def save(self, commit=True):
-        """Override save para manejar soft delete correctamente"""
-        instances = super().save(commit=False)
-        
-        # Para formularios marcados como DELETE en edición, hacer soft delete
-        for form in self.deleted_forms:
-            if form.instance.pk:
-                # En lugar de eliminar, hacer soft delete
-                form.instance.soft_delete()
-        
-        if commit:
-            for instance in instances:
-                instance.save()
-        
-        return instances
 
 
 # Función factory para crear formsets con configuración específica según el contexto
@@ -166,5 +149,4 @@ def create_campo_formset(is_edit=False):
 
 
 # Mantener compatibilidad con el código existente
-# (Usar solo para creación - será reemplazado por la factory)
 CampoMedioDePagoFormSet = create_campo_formset(is_edit=False)
