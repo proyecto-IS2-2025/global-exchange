@@ -1,10 +1,15 @@
+# users/views.py
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import user_passes_test
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import Group
 from django.http import JsonResponse
 from .forms import GroupForm, PermissionForm
 from django.contrib import messages
+from .models import RoleStatus # Importa el nuevo modelo
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
 
 # Get the custom user model
 CustomUser = get_user_model()
@@ -20,6 +25,11 @@ def is_admin(user):
     :rtype: bool
     """
     return user.is_staff or user.is_superuser
+
+@receiver(post_save, sender=Group)
+def create_role_status(sender, instance, created, **kwargs):
+    if created:
+        RoleStatus.objects.create(group=instance)
 
 @user_passes_test(is_admin)
 def group_list(request):
@@ -81,6 +91,21 @@ def group_update(request, pk):
         form = GroupForm(instance=group)
     return render(request, 'groups/group_form.html', {'form': form})
 
+@user_passes_test(is_admin)
+def group_toggle_status(request, pk):
+    """
+    Vista para activar o desactivar un rol.
+    """
+    group = get_object_or_404(Group, pk=pk)
+    # Crea el RoleStatus si no existe (por si se agregaron grupos antes de este cambio)
+    status, created = RoleStatus.objects.get_or_create(group=group)
+    status.is_active = not status.is_active
+    status.save()
+
+    messages.success(request, f"El rol '{group.name}' ha sido {'activado' if status.is_active else 'desactivado'}.")
+    return redirect('group_list')
+
+#Eliminar ya no utilizamos, solo usamos desactivate
 @user_passes_test(is_admin)
 def group_delete(request, pk):
     """

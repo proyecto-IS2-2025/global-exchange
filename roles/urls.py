@@ -11,4 +11,5 @@ urlpatterns = [
     path('api/search_permissions/', views.search_permissions, name='search_permissions'),
     path('api/search_users/', views.search_users, name='search_users'), # Nueva URL
     path('permissions/create/', views.permission_create, name='permission_create'),
+    path('roles/<int:pk>/toggle_status/', views.group_toggle_status, name='group_toggle_status'),
 ]
