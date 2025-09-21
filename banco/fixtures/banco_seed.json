@@ -1,0 +1,53 @@
+[
+  {
+    "model": "banco.bancouser",
+    "pk": 1,
+    "fields": {
+      "email": "alice@example.com",
+      "password": "alice123"
+    }
+  },
+  {
+    "model": "banco.bancouser",
+    "pk": 2,
+    "fields": {
+      "email": "bob@example.com",
+      "password": "bob123"
+    }
+  },
+  {
+    "model": "banco.bancouser",
+    "pk": 3,
+    "fields": {
+      "email": "carol@example.com",
+      "password": "carol123"
+    }
+  },
+  {
+    "model": "banco.cuenta",
+    "pk": 1,
+    "fields": {
+      "usuario": 1,
+      "numero_cuenta": "CUENTA001",
+      "saldo": "15000.00"
+    }
+  },
+  {
+    "model": "banco.cuenta",
+    "pk": 2,
+    "fields": {
+      "usuario": 2,
+      "numero_cuenta": "CUENTA002",
+      "saldo": "8000.50"
+    }
+  },
+  {
+    "model": "banco.cuenta",
+    "pk": 3,
+    "fields": {
+      "usuario": 3,
+      "numero_cuenta": "CUENTA003",
+      "saldo": "12000.75"
+    }
+  }
+]

@@ -1,0 +1,151 @@
+{% extends "banco/base.html" %}
+
+{% block title %}Historial de Transferencias{% endblock %}
+
+{% block extra_head %}
+<style>
+  body {
+    background-color: #f8f9fa;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+  }
+
+  h2 {
+    font-weight: 600;
+    color: #212529;
+  }
+
+  .card-custom {
+    border: 1px solid #e9ecef;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .card-header {
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  .card-header i {
+    margin-right: 0.4rem;
+  }
+
+  .table {
+    margin-bottom: 0;
+  }
+
+  .table th {
+    background-color: #f1f3f5;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+  }
+
+  .table td {
+    font-size: 0.9rem;
+    vertical-align: middle;
+  }
+
+  .text-muted {
+    font-size: 0.9rem;
+    padding: 1rem;
+  }
+
+  .btn-outline-secondary {
+    border-radius: 0.5rem;
+    font-weight: 500;
+    padding: 0.6rem 1.2rem;
+  }
+
+  code {
+    background-color: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.85rem;
+    color: #495057;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4 text-center">
+    <i class="bi bi-clock-history"></i> Historial de Transferencias
+  </h2>
+
+  <!-- Enviadas -->
+  <div class="card card-custom mb-4 shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <i class="bi bi-arrow-up-circle-fill"></i> Transferencias Enviadas
+    </div>
+    <div class="card-body p-0">
+      {% if enviadas %}
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Destino</th>
+              <th>Monto</th>
+              <th>Comprobante</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for tx in enviadas %}
+              <tr>
+                <td>{{ tx.fecha|date:"d/m/Y H:i" }}</td>
+                <td>{{ tx.cuenta_destino.usuario.email }}</td>
+                <td class="text-danger fw-semibold">₲ {{ tx.monto }}</td>
+                <td><code>{{ tx.comprobante }}</code></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="text-muted">No has enviado transferencias.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recibidas -->
+  <div class="card card-custom shadow-sm">
+    <div class="card-header bg-success text-white">
+      <i class="bi bi-arrow-down-circle-fill"></i> Transferencias Recibidas
+    </div>
+    <div class="card-body p-0">
+      {% if recibidas %}
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Origen</th>
+              <th>Monto</th>
+              <th>Comprobante</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for tx in recibidas %}
+              <tr>
+                <td>{{ tx.fecha|date:"d/m/Y H:i" }}</td>
+                <td>{{ tx.cuenta_origen.usuario.email }}</td>
+                <td class="text-success fw-semibold">₲ {{ tx.monto }}</td>
+                <td><code>{{ tx.comprobante }}</code></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="text-muted">No has recibido transferencias.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="text-center mt-4">
+    <a href="{% url 'banco:dashboard' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left-circle"></i> Volver al dashboard
+    </a>
+  </div>
+</div>
+{% endblock %}

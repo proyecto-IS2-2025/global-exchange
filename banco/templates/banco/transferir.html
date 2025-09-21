@@ -1,0 +1,140 @@
+{% extends "banco/base.html" %}
+
+{% block title %}Transferencia{% endblock %}
+
+{% block extra_head %}
+<style>
+    body {
+        background-color: #f5f7fa;
+        font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #212529;
+    }
+
+    .card-custom {
+        border-radius: 1rem;
+        border: none;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+        background: #ffffff;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card-custom:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-header-custom {
+        background: linear-gradient(135deg, #1d3557, #457b9d);
+        color: #fff;
+        padding: 1.5rem;
+        font-size: 1.3rem;
+        font-weight: 600;
+        text-align: center;
+        border-bottom: none;
+    }
+
+    .card-header-custom i {
+        margin-right: 0.5rem;
+    }
+
+    .card-body {
+        padding: 2rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.4rem;
+        font-size: 0.95rem;
+    }
+
+    .form-control {
+        border-radius: 0.6rem;
+        border: 1px solid #d0d7de;
+        padding: 0.75rem 1rem;
+        transition: all 0.2s ease;
+        font-size: 0.95rem;
+        background-color: #fcfcfc;
+    }
+
+    .form-control:focus {
+        border-color: #0d6efd;
+        background-color: #fff;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+        outline: none;
+    }
+
+    .btn-send {
+        background: linear-gradient(135deg, #1d3557, #457b9d);
+        border: none;
+        border-radius: 0.6rem;
+        padding: 0.8rem 1.25rem;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #fff;
+        transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .btn-send:hover {
+        background: linear-gradient(135deg, #1d3557, #457b9d);
+        transform: translateY(-2px);
+    }
+
+    .btn-outline-secondary {
+        border-radius: 0.6rem;
+        font-weight: 500;
+        padding: 0.65rem 1.2rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-outline-secondary:hover {
+        background-color: #f1f3f5;
+        color: #212529;
+    }
+
+    .alert {
+        font-size: 0.9rem;
+        border-radius: 0.6rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="card mx-auto" style="max-width: 480px;">
+        <div class="card-header card-header-custom">
+            <i class="bi bi-arrow-right-circle"></i> Nueva Transferencia
+        </div>
+        <div class="card-body">
+            {% if error %}
+                <div class="alert alert-danger text-center" role="alert">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="text-danger small mt-1">{{ field.errors }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
+                <button type="submit" class="btn btn-send w-100 mt-3">
+                    <i class="bi bi-send-check"></i> Enviar transferencia
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="{% url 'banco:dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left-circle"></i> Volver al dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
