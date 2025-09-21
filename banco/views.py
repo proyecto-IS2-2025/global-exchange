@@ -52,26 +52,35 @@ def transferir(request):
     error = None
 
     if request.method == "POST":
-        form = TransferenciaForm(request.POST, cuenta_emisor=cuenta_emisor)
+        form = TransferenciaForm(request.POST)
         if form.is_valid():
-            transferencia = form.save(commit=False)
-            transferencia.cuenta_origen = cuenta_emisor
+            numero = form.cleaned_data["numero_cuenta_destino"]
+            monto = form.cleaned_data["monto"]
 
-            if cuenta_emisor.saldo >= transferencia.monto:
-                cuenta_emisor.saldo -= transferencia.monto
-                transferencia.cuenta_destino.saldo += transferencia.monto
-
-                cuenta_emisor.save()
-                transferencia.cuenta_destino.save()
-                transferencia.save()
-
-                return redirect("banco:dashboard")
-            else:
-                error = "Saldo insuficiente"
+            try:
+                cuenta_destino = Cuenta.objects.get(numero_cuenta=numero)
+                if cuenta_destino == cuenta_emisor:
+                    error = "No puedes transferirte a tu propia cuenta."
+                elif cuenta_emisor.saldo >= monto:
+                    transferencia = Transferencia.objects.create(
+                        cuenta_origen=cuenta_emisor,
+                        cuenta_destino=cuenta_destino,
+                        monto=monto
+                    )
+                    cuenta_emisor.saldo -= monto
+                    cuenta_destino.saldo += monto
+                    cuenta_emisor.save()
+                    cuenta_destino.save()
+                    return redirect("banco:dashboard")
+                else:
+                    error = "Saldo insuficiente"
+            except Cuenta.DoesNotExist:
+                error = "La cuenta destino no existe."
     else:
-        form = TransferenciaForm(cuenta_emisor=cuenta_emisor)
+        form = TransferenciaForm()
 
     return render(request, "banco/transferir.html", {"form": form, "error": error})
+
 
 
 # --------- HISTORIAL ---------
