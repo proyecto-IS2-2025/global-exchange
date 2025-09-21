@@ -6,7 +6,6 @@
       "nombre": "Transferencia bancaria",
       "comision_porcentaje": "0.500",
       "is_active": true,
-      "deleted_at": null,
       "creado": "2025-09-15T12:00:00Z",
       "actualizado": "2025-09-15T12:00:00Z"
     }
@@ -18,7 +17,6 @@
       "nombre": "Billetera digital",
       "comision_porcentaje": "1.000",
       "is_active": true,
-      "deleted_at": null,
       "creado": "2025-09-15T12:00:00Z",
       "actualizado": "2025-09-15T12:00:00Z"
     }
@@ -30,7 +28,6 @@
       "nombre": "Tarjeta de crédito",
       "comision_porcentaje": "3.500",
       "is_active": true,
-      "deleted_at": null,
       "creado": "2025-09-15T12:00:00Z",
       "actualizado": "2025-09-15T12:00:00Z"
     }
@@ -44,7 +41,6 @@
       "tipo_dato": "NUMERO",
       "is_required": true,
       "orden": 1,
-      "deleted_at": null,
       "creado": "2025-09-15T12:00:00Z",
       "actualizado": "2025-09-15T12:00:00Z"
     }
@@ -58,7 +54,6 @@
       "tipo_dato": "TEXTO",
       "is_required": true,
       "orden": 2,
-      "deleted_at": null,
       "creado": "2025-09-15T12:00:00Z",
       "actualizado": "2025-09-15T12:00:00Z"
     }
@@ -72,7 +67,6 @@
       "tipo_dato": "TELEFONO",
       "is_required": true,
       "orden": 1,
-      "deleted_at": null,
       "creado": "2025-09-15T12:00:00Z",
       "actualizado": "2025-09-15T12:00:00Z"
     }
@@ -86,7 +80,6 @@
       "tipo_dato": "EMAIL",
       "is_required": false,
       "orden": 2,
-      "deleted_at": null,
       "creado": "2025-09-15T12:00:00Z",
       "actualizado": "2025-09-15T12:00:00Z"
     }
@@ -100,7 +93,6 @@
       "tipo_dato": "NUMERO",
       "is_required": true,
       "orden": 1,
-      "deleted_at": null,
       "creado": "2025-09-15T12:00:00Z",
       "actualizado": "2025-09-15T12:00:00Z"
     }
@@ -114,7 +106,6 @@
       "tipo_dato": "FECHA",
       "is_required": true,
       "orden": 2,
-      "deleted_at": null,
       "creado": "2025-09-15T12:00:00Z",
       "actualizado": "2025-09-15T12:00:00Z"
     }
@@ -128,7 +119,6 @@
       "tipo_dato": "NUMERO",
       "is_required": true,
       "orden": 3,
-      "deleted_at": null,
       "creado": "2025-09-15T12:00:00Z",
       "actualizado": "2025-09-15T12:00:00Z"
     }
