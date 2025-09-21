@@ -3,7 +3,8 @@ from django.urls import path
 from . import views
 from .views import (
     DivisaListView, DivisaCreateView, DivisaUpdateView, DivisaToggleActivaView,
-    TasaCambioListView, TasaCambioCreateView, TasaCambioAllListView
+    TasaCambioListView, TasaCambioCreateView, TasaCambioAllListView,
+    VentaDivisaView, VentaConfirmacionView, VentaMediosView
 )
 
 app_name = 'divisas'
@@ -23,5 +24,10 @@ urlpatterns = [
     #Visualizador tasas
     path("tasas/actuales", views.visualizador_tasas, name="visualizador_tasas"),
     # Visualizador tasas - Administradores (todos los segmentos)
-    path("tasas/admin/", views.visualizador_tasas_admin, name="visualizador_tasas_admin")
+    path("tasas/admin/", views.visualizador_tasas_admin, name="visualizador_tasas_admin"),
+
+    #Compra de divisas
+    path("venta/", VentaDivisaView.as_view(), name="venta"),
+    path("venta/confirmacion/", VentaConfirmacionView.as_view(), name="venta_confirmacion"),
+    path("venta/medios/", VentaMediosView.as_view(), name="venta_medios"),
 ]

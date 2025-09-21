@@ -1,18 +1,22 @@
+#divisas
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.views.generic import ListView, CreateView, UpdateView, View
-from django.urls import reverse_lazy
+from django.views.generic import ListView, CreateView, UpdateView, View, FormView, TemplateView
+from django.urls import reverse_lazy, reverse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
 from .models import Divisa, TasaCambio, CotizacionSegmento
 from clientes.models import Cliente, AsignacionCliente, Descuento, Segmento
-from .forms import DivisaForm, TasaCambioForm
-from django.urls import reverse_lazy, reverse
+from .forms import DivisaForm, TasaCambioForm, VentaDivisaForm
 from django.db.models import Max
 from django.db.models import OuterRef, Subquery
 from django.contrib.auth.decorators import login_required
 #Visualización tasas inicio
 from divisas.services import ultimas_por_segmento
 from divisas.models import Divisa
+from simulador.views import calcular_simulacion_api
+from django.http import JsonResponse
+import json
+from django.test import RequestFactory
 
 """
 Vistas para la gestión de divisas y tasas de cambio.
@@ -312,3 +316,55 @@ def visualizador_tasas_admin(request):
         'divisas_data': divisas_data,
         'is_admin_view': True
     })
+
+
+# --- VISTAS PARA VENTA USANDO LOGICA DEL SIMULADOR ---
+class VentaDivisaView(LoginRequiredMixin, FormView):
+    template_name = "operaciones/venta.html"
+    form_class = VentaDivisaForm
+
+    def form_valid(self, form):
+        divisa = form.cleaned_data['divisa']
+        monto = form.cleaned_data['monto']
+
+        payload = {
+            "tipo_operacion": "venta",   # FORZAMOS venta
+            "monto": str(monto),
+            "moneda": divisa.code
+        }
+
+        # Construir una petición POST "limpia" e inyectar session/user
+        rf = RequestFactory()
+        post_req = rf.post('/simulador/calcular/', data=json.dumps(payload), content_type='application/json')
+        # adjuntamos session y usuario para que el simulador pueda usarlos
+        post_req.session = self.request.session
+        post_req.user = self.request.user
+
+        # Llamamos la vista del simulador que ya hace todo el cálculo
+        resp = calcular_simulacion_api(post_req)
+        try:
+            data = json.loads(resp.content)
+        except Exception:
+            form.add_error(None, "Error interno al comunicarse con el simulador.")
+            return self.form_invalid(form)
+
+        if not data.get("success"):
+            form.add_error(None, data.get("error", "Error en la simulación"))
+            return self.form_invalid(form)
+
+        # Guardamos el resultado en sesión para mostrar en confirmación
+        self.request.session['venta_resultado'] = data
+        return redirect('divisas:venta_confirmacion')
+
+
+class VentaConfirmacionView(LoginRequiredMixin, TemplateView):
+    template_name = "operaciones/venta_confirmacion.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['resultado'] = self.request.session.get('venta_resultado')
+        return ctx
+
+
+class VentaMediosView(LoginRequiredMixin, TemplateView):
+    template_name = "operaciones/venta_medios.html"
