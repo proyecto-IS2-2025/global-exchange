@@ -193,6 +193,18 @@ files = [
 django = ">=4.2"
 
 [[package]]
+name = "django-postgres-extensions"
+version = "0.9.3"
+description = "Extra features for django.contrib.postgres"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "django_postgres_extensions-0.9.3-py2.py3-none-any.whl", hash = "sha256:0dc14112dfc898eeeda5c72bd3013ec34a6fe8769965b56a962fa2cc862983d3"},
+    {file = "django_postgres_extensions-0.9.3.tar.gz", hash = "sha256:902d333a012a15aa01798f0f670c68ee730f0ee73b507801301dda98032dc2e5"},
+]
+
+[[package]]
 name = "django-widget-tweaks"
 version = "1.5.0"
 description = "Tweak the form field rendering in templates, not in python-level form definitions."
@@ -717,4 +729,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13"
-content-hash = "3d7888926eb047f8f2a4ed89a1a0234e4682ff17ce54229ad60ea97dcbee48b1"
+content-hash = "87dd5ad81176727e732ed0801d03080ff4c8d273dc74eef06dab1f5735b9ff3d"

@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import django_postgres_extensions
 
 # Ya tenés BASE_DIR definido más abajo; si lo preferís aquí, usa:
 # BASE_DIR = Path(__file__).resolve().parent.parent
@@ -78,14 +79,11 @@ WSGI_APPLICATION = 'casa_de_cambios.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'global_exchange'),
-        'USER': os.environ.get('DB_USER', 'django_user'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'django123'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),  # ¡CORREGIDO!
-        'PORT': int(os.environ.get('DB_PORT', '5432')),
-        'TEST': {
-            'NAME': 'test_global_exchange',  # Nombre específico para la BD de prueba
-        },
+        'NAME': 'casa_de_cambios', # <- This must match the docker-compose.yml
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'localhost',
+        'PORT': 5433,
     }
 }
 
