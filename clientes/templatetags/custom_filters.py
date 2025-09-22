@@ -1,5 +1,4 @@
 # clientes/templatetags/custom_filters.py
-
 from django import template
 
 register = template.Library()
@@ -30,3 +29,14 @@ def add_class(field, css_class):
         if css_class not in existing_classes:
             field.field.widget.attrs['class'] = f"{existing_classes} {css_class}".strip()
     return field
+
+@register.filter
+def stringformat(value, arg):
+    """
+    Aplica formato de string de Python
+    Uso: {{ campo.id|stringformat:"s" }}
+    """
+    try:
+        return (f"%{arg}") % value
+    except:
+        return value

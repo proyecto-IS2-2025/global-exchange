@@ -1,194 +1,650 @@
-<!-- clientes/templates/clientes/medios_pago/form_medio_pago.html -->
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <!-- Header -->
-            <div class="card bg-primary text-white mb-4">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h4 class="mb-0">{{ action }} Medio de Pago</h4>
-                        <small>{{ medio_de_pago.nombre }} - {{ cliente.nombre_completo }}</small>
-                    </div>
-                    <div>
-                        <span class="badge bg-warning text-dark">{{ medio_de_pago.comision_porcentaje }}%</span>
-                    </div>
-                </div>
-            </div>
+{% extends 'base.html' %}
+{% load static %}
 
-            <!-- DEBUG: Información del formulario -->
-            <div class="alert alert-info">
-                <strong>DEBUG:</strong> 
-                Medio de Pago ID: {{ form.medio_de_pago.value|default:"No definido" }}<br>
-                Initial: {{ form.medio_de_pago.field.initial|default:"No definido" }}<br>
-                Object: {{ medio_de_pago.id }}<br>
-                Form fields: {{ form.fields.keys }}<br>
-                Campos esperados: {% for campo in campos %}campo_{{ campo.id }}{% if not forloop.last %}, {% endif %}{% endfor %}
-            </div>
-
-            <!-- Mostrar todos los errores del formulario -->
-            {% if form.errors %}
-                <div class="alert alert-danger">
-                    <h5>Errores en el formulario:</h5>
-                    {{ form.errors }}
-                    {% for field_name, field_errors in form.errors.items %}
-                        <strong>{{ field_name }}:</strong> 
-                        {% for error in field_errors %}
-                            {{ error }}<br>
-                        {% endfor %}
-                    {% endfor %}
-                </div>
-            {% endif %}
-
-            <!-- Formulario -->
-            <form method="post" class="needs-validation" novalidate>
-                {% csrf_token %}
-                
-                <!-- Campo hidden para medio_de_pago - FORZAR VALOR -->
-                <input type="hidden" name="medio_de_pago" value="{{ medio_de_pago.id }}" id="id_medio_de_pago">
-                
-                <div class="row">
-                    <!-- Información del Cliente -->
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5>Cliente</h5>
-                            </div>
-                            <div class="card-body">
-                                <input type="text" class="form-control" value="{{ cliente.nombre_completo }}" readonly>
-                            </div>
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="card-title mb-1">
+                                <i class="fas fa-credit-card me-2"></i>
+                                {{ action }} Medio de Pago
+                            </h3>
+                            <small>{{ medio_de_pago.nombre }} - {{ cliente.nombre_completo }}</small>
                         </div>
-                    </div>
-
-                    <!-- Información del Medio de Pago -->
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5>Medio de Pago</h5>
-                            </div>
-                            <div class="card-body">
-                                <input type="text" class="form-control" value="{{ medio_de_pago.nombre }}" readonly>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Campo es_principal -->
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <div class="form-check">
-                            {{ form.es_principal }}
-                            <label class="form-check-label" for="{{ form.es_principal.id_for_label }}">
-                                {{ form.es_principal.label }}
-                            </label>
-                            <div class="form-text">{{ form.es_principal.help_text }}</div>
-                            {% if form.es_principal.errors %}
-                                <div class="text-danger">{{ form.es_principal.errors }}</div>
+                        <div>
+                            {% if medio_de_pago.comision_porcentaje > 0 %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-percentage me-1"></i>{{ medio_de_pago.comision_porcentaje }}%
+                                </span>
                             {% endif %}
                         </div>
                     </div>
                 </div>
 
-                <!-- Campos Dinámicos - NUEVO MÉTODO DIRECTO -->
-                <div class="card mt-3">
-                    <div class="card-header">
-                        <h5>Datos del Medio de Pago</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <!-- Renderizar TODOS los campos que empiecen con 'campo_' -->
-                            {% for field in form %}
-                                {% if field.name|slice:":6" == "campo_" %}
-                                    <div class="col-md-6 mb-3">
-                                        <label for="{{ field.id_for_label }}" class="form-label">
-                                            {{ field.label }}
-                                            {% if field.field.required %}
-                                                <span class="text-danger">*</span>
-                                            {% endif %}
-                                        </label>
-                                        {{ field }}
-                                        
-                                        {% if field.help_text %}
-                                            <div class="form-text">{{ field.help_text }}</div>
-                                        {% endif %}
-                                        
-                                        {% if field.errors %}
-                                            <div class="text-danger">
-                                                {% for error in field.errors %}
-                                                    <small>{{ error }}</small><br>
-                                                {% endfor %}
+                <div class="card-body p-4">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Información sobre campos requeridos -->
+                    {% if campos %}
+                        <div class="alert alert-info border-0 mb-4">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-info-circle fa-lg me-3 mt-1 text-info"></i>
+                                <div class="flex-grow-1">
+                                    <h6 class="alert-heading mb-2">Campos requeridos para {{ medio_de_pago.nombre }}</h6>
+                                    <div class="row small">
+                                        {% for campo in campos %}
+                                            <div class="col-md-6 mb-1">
+                                                <i class="fas fa-check-circle text-success me-1"></i>
+                                                {{ campo.nombre_campo }}
+                                                {% if campo.is_required %}
+                                                    <span class="badge bg-danger ms-1">Requerido</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary ms-1">Opcional</span>
+                                                {% endif %}
                                             </div>
-                                        {% endif %}
+                                        {% endfor %}
                                     </div>
-                                {% endif %}
-                            {% endfor %}
-                            
-                            <!-- DEBUG: Mostrar información de campos dinámicos encontrados -->
-                            <div class="col-12">
-                                <div class="alert alert-secondary">
-                                    <strong>DEBUG Campos encontrados:</strong><br>
-                                    {% for field in form %}
-                                        {% if field.name|slice:":6" == "campo_" %}
-                                            - {{ field.name }}: {{ field.label }}<br>
-                                        {% endif %}
-                                    {% endfor %}
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    {% endif %}
 
-                <!-- Errores generales del formulario -->
-                {% if form.non_field_errors %}
-                    <div class="alert alert-danger mt-3">
-                        {% for error in form.non_field_errors %}
-                            <div>{{ error }}</div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+                    <form method="post" novalidate>
+                        {% csrf_token %}
 
-                <!-- Botones -->
-                <div class="d-flex justify-content-end mt-4">
-                    <a href="{% url 'clientes:medios_pago_cliente' %}" class="btn btn-secondary me-2">
-                        <i class="fas fa-times"></i> Cancelar
-                    </a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Guardar Cambios
-                    </button>
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger" role="alert">
+                                {% for error in form.non_field_errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Campos básicos del medio de pago -->
+                        <div class="row mb-4">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-credit-card me-2"></i>Tipo de Medio de Pago
+                                    </label>
+                                    <div class="p-3 bg-light border rounded-3 d-flex align-items-center">
+                                        <i class="fas fa-credit-card fa-lg text-primary me-3"></i>
+                                        <div>
+                                            <div class="fw-bold text-dark">{{ medio_de_pago.nombre }}</div>
+                                            <small class="text-muted">Medio de pago seleccionado</small>
+                                        </div>
+                                    </div>
+                                    {{ form.medio_de_pago.as_hidden }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.es_principal.id_for_label }}" class="form-label">
+                                        <i class="fas fa-star me-2"></i>Configuración
+                                    </label>
+                                    <div class="form-check form-switch">
+                                        {{ form.es_principal }}
+                                        <label class="form-check-label" for="{{ form.es_principal.id_for_label }}">
+                                            Marcar como medio principal
+                                        </label>
+                                    </div>
+                                    <div class="form-text">
+                                        El medio principal se usará por defecto en las transacciones.
+                                    </div>
+                                    {% if form.es_principal.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.es_principal.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="mb-4">
+
+                        <!-- Campos dinámicos específicos del medio de pago -->
+                        <h5 class="mb-3">
+                            <i class="fas fa-list-ul me-2"></i>Datos Específicos
+                        </h5>
+
+                        {% if campos %}
+                            <div class="row">
+                                <!-- MÉTODO DIRECTO: Renderizar todos los campos dinámicos -->
+                                {% for field in form %}
+                                    {% if field.name|slice:":6" == "campo_" %}
+                                        <div class="col-md-6 mb-3">
+                                            <label for="{{ field.id_for_label }}" class="form-label">
+                                                <i class="fas fa-edit me-2 text-primary"></i>
+                                                {{ field.label }}
+                                                {% if field.field.required %}
+                                                    <span class="text-danger">*</span>
+                                                {% endif %}
+                                            </label>
+                                            
+                                            {{ field }}
+                                            
+                                            {% if field.errors %}
+                                                <div class="text-danger small mt-1">
+                                                    {% for error in field.errors %}
+                                                        <div>{{ error }}</div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                            
+                                            {% if field.help_text %}
+                                                <div class="form-text">{{ field.help_text }}</div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning border-0">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-exclamation-triangle fa-lg me-3 text-warning"></i>
+                                    <div>
+                                        <strong>Sin campos específicos</strong><br>
+                                        <small>Este medio de pago no requiere datos adicionales.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Mostrar errores si los hay -->
+                        {% if form.errors %}
+                            <div class="alert alert-danger border-0 mt-3">
+                                <div class="d-flex align-items-start">
+                                    <i class="fas fa-exclamation-circle fa-lg me-3 mt-1 text-danger"></i>
+                                    <div class="flex-grow-1">
+                                        <h6 class="alert-heading mb-2">Por favor corrija los siguientes errores:</h6>
+                                        <ul class="mb-0 small">
+                                            {% for field, errors in form.errors.items %}
+                                                {% if field != '__all__' %}
+                                                    {% for error in errors %}
+                                                        <li>{{ error }}</li>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <hr class="mt-4 mb-4">
+
+                        <!-- Botones de acción -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex flex-column flex-md-row gap-3">
+                                    <button type="submit" class="btn btn-primary btn-lg flex-grow-1 shadow-sm">
+                                        <i class="fas fa-save me-2"></i>
+                                        {% if action == 'Agregar' %}
+                                            Guardar Medio de Pago
+                                        {% else %}
+                                            Actualizar Medio de Pago
+                                        {% endif %}
+                                    </button>
+                                    
+                                    <div class="d-flex gap-2">
+                                        <a href="{% url 'clientes:medios_pago_cliente' %}" class="btn btn-outline-secondary shadow-sm">
+                                            <i class="fas fa-times me-2"></i>Cancelar
+                                        </a>
+                                        
+                                        {% if action == 'Agregar' %}
+                                            <a href="{% url 'clientes:seleccionar_medio_pago' %}" class="btn btn-outline-primary shadow-sm">
+                                                <i class="fas fa-arrow-left me-2"></i>Volver
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer informativo -->
+                        <div class="mt-4 p-3 bg-light rounded-3 border">
+                            <div class="row text-center">
+                                <div class="col-md-4 mb-2 mb-md-0">
+                                    <small class="text-muted">
+                                        <i class="fas fa-shield-alt text-success me-1"></i>
+                                        <strong>Información segura</strong>
+                                    </small>
+                                </div>
+                                <div class="col-md-4 mb-2 mb-md-0">
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock text-primary me-1"></i>
+                                        <strong>Configuración rápida</strong>
+                                    </small>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">
+                                        <i class="fas fa-edit text-info me-1"></i>
+                                        <strong>Editable después</strong>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Debug y verificación del campo hidden
-    console.log('=== DEBUG TEMPLATE ===');
-    console.log('Medio de Pago ID:', '{{ medio_de_pago.id }}');
-    
-    const medioField = document.querySelector('input[name="medio_de_pago"]');
-    console.log('Campo medio_de_pago encontrado:', medioField);
-    console.log('Valor del campo:', medioField ? medioField.value : 'Campo no encontrado');
-    
-    // Asegurar que el campo tenga el valor correcto
-    if (medioField) {
-        medioField.value = '{{ medio_de_pago.id }}';
-        console.log('Valor asignado:', medioField.value);
+<style>
+/* Estilos para formularios */
+.form-control, .form-select {
+    border: 2px solid #e9ecef;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Estilos para alertas */
+.alert {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+    color: #0c5460;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #721c24;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    color: #856404;
+}
+
+/* Estilos para badges */
+.badge {
+    font-size: 0.7em;
+    padding: 0.35em 0.65em;
+    border-radius: 0.35rem;
+    font-weight: 500;
+}
+
+/* Estilos para la card principal */
+.card {
+    border-radius: 1rem;
+    overflow: hidden;
+    border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+}
+
+/* Estilos para botones */
+.btn {
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border-width: 2px;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
+}
+
+.btn-lg {
+    padding: 0.8rem 1.5rem;
+    font-size: 1.1rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #0056b3 0%, #003d82 100%);
+    border-color: #0056b3;
+}
+
+/* Estilos para iconos */
+.fas {
+    opacity: 0.8;
+}
+
+label .fas {
+    opacity: 1;
+}
+
+/* Footer informativo */
+.bg-light {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1.5rem !important;
     }
     
-    // Debug de todos los campos del formulario
-    const allFields = document.querySelectorAll('input, select, textarea');
-    console.log('Todos los campos del formulario:');
-    allFields.forEach(field => {
-        if (field.name.startsWith('campo_')) {
-            console.log(`- CAMPO DINÁMICO ${field.name}: "${field.value}" (${field.type})`);
+    .d-flex.flex-md-row {
+        flex-direction: column;
+    }
+    
+    .row.text-center {
+        text-align: left !important;
+    }
+    
+    .col-md-4 {
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Estados de validación */
+.form-control.is-invalid, .form-select.is-invalid {
+    border-color: #dc3545;
+    animation: shake 0.5s ease-in-out;
+}
+
+.form-control.is-valid, .form-select.is-valid {
+    border-color: #28a745;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Estados de carga */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Form switch mejorado */
+.form-switch .form-check-input:checked {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.form-switch .form-check-input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Mejoras visuales adicionales */
+hr {
+    border-color: #dee2e6;
+    opacity: 0.5;
+}
+
+.text-muted {
+    color: #6c757d !important;
+}
+
+.shadow-sm {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus en el primer campo disponible
+    const firstField = document.querySelector('.form-control:not([readonly]):not([disabled])');
+    if (firstField) {
+        setTimeout(() => firstField.focus(), 100);
+    }
+    
+    // Función para validar campo específico según su tipo
+    function validateField(field) {
+        const fieldName = field.name;
+        const value = field.value.trim();
+        
+        // Si el campo está vacío y es requerido
+        if (field.hasAttribute('required') && !value) {
+            return { isValid: false, message: 'Este campo es requerido' };
+        }
+        
+        // Si el campo está vacío y no es requerido, es válido
+        if (!value) {
+            return { isValid: true, message: '' };
+        }
+        
+        // Validaciones específicas por tipo de campo dinámico
+        if (fieldName.startsWith('campo_')) {
+            // Obtener información del campo desde el help-text o data attributes
+            const helpText = field.parentElement.querySelector('.form-text');
+            if (helpText) {
+                const helpContent = helpText.textContent.toLowerCase();
+                
+                // Validación para campos de tipo NUMERO
+                if (helpContent.includes('número') || helpContent.includes('numero')) {
+                    // Solo números, guiones, puntos y espacios
+                    const numeroPattern = /^[0-9\-\.\s]+$/;
+                    if (!numeroPattern.test(value)) {
+                        return { isValid: false, message: 'Solo se permiten números, guiones, puntos y espacios' };
+                    }
+                    // Verificar que tenga al menos un dígito
+                    if (!/\d/.test(value)) {
+                        return { isValid: false, message: 'Debe contener al menos un número' };
+                    }
+                }
+                
+                // Validación para campos de tipo EMAIL
+                else if (helpContent.includes('email')) {
+                    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailPattern.test(value)) {
+                        return { isValid: false, message: 'Formato de email inválido' };
+                    }
+                }
+                
+                // Validación para campos de tipo TELEFONO
+                else if (helpContent.includes('teléfono') || helpContent.includes('telefono')) {
+                    // Limpiar el valor para validación
+                    let cleanValue = value.replace(/[\s\-\(\)]/g, '');
+                    if (cleanValue.startsWith('+')) {
+                        cleanValue = cleanValue.substring(1);
+                    }
+                    
+                    if (!/^\d+$/.test(cleanValue)) {
+                        return { isValid: false, message: 'Formato de teléfono inválido' };
+                    }
+                    
+                    if (cleanValue.length < 6) {
+                        return { isValid: false, message: 'El teléfono debe tener al menos 6 dígitos' };
+                    }
+                    
+                    if (cleanValue.length > 15) {
+                        return { isValid: false, message: 'El teléfono no puede tener más de 15 dígitos' };
+                    }
+                }
+                
+                // Validación para campos de tipo URL
+                else if (helpContent.includes('url')) {
+                    if (!value.startsWith('http://') && !value.startsWith('https://')) {
+                        return { isValid: false, message: 'La URL debe comenzar con http:// o https://' };
+                    }
+                }
+            }
+        }
+        
+        return { isValid: true, message: '' };
+    }
+    
+    // Función para aplicar estilos de validación
+    function applyValidationStyles(field, isValid, errorMessage = '') {
+        // Remover clases anteriores
+        field.classList.remove('is-valid', 'is-invalid');
+        
+        // Remover mensaje de error anterior
+        const existingError = field.parentElement.querySelector('.validation-error');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        if (isValid) {
+            field.classList.add('is-valid');
         } else {
-            console.log(`- ${field.name}: "${field.value}"`);
+            field.classList.add('is-invalid');
+            
+            // Agregar mensaje de error personalizado
+            if (errorMessage) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'text-danger small mt-1 validation-error';
+                errorDiv.textContent = errorMessage;
+                field.parentElement.appendChild(errorDiv);
+            }
+        }
+    }
+    
+    // Validación en tiempo real mejorada
+    const formFields = document.querySelectorAll('.form-control, .form-select');
+    formFields.forEach(field => {
+        // Validación en blur (cuando el campo pierde el foco)
+        field.addEventListener('blur', function() {
+            const validation = validateField(this);
+            applyValidationStyles(this, validation.isValid, validation.message);
+        });
+        
+        // Validación en input (mientras escribe) - solo para limpiar errores
+        field.addEventListener('input', function() {
+            // Si el campo tenía error, re-validar
+            if (this.classList.contains('is-invalid')) {
+                const validation = validateField(this);
+                applyValidationStyles(this, validation.isValid, validation.message);
+            }
+        });
+        
+        // Validación especial para campos numéricos en tiempo real
+        field.addEventListener('input', function() {
+            if (this.name.startsWith('campo_')) {
+                const helpText = this.parentElement.querySelector('.form-text');
+                if (helpText && helpText.textContent.toLowerCase().includes('número')) {
+                    const value = this.value;
+                    // Permitir solo números, guiones, puntos y espacios mientras escribe
+                    if (value && !/^[0-9\-\.\s]*$/.test(value)) {
+                        // Remover caracteres no válidos
+                        this.value = value.replace(/[^0-9\-\.\s]/g, '');
+                    }
+                }
+            }
+        });
+    });
+    
+    // Validación completa antes de enviar el formulario
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        let hasErrors = false;
+        
+        formFields.forEach(field => {
+            const validation = validateField(field);
+            applyValidationStyles(field, validation.isValid, validation.message);
+            
+            if (!validation.isValid) {
+                hasErrors = true;
+            }
+        });
+        
+        // Si hay errores, prevenir envío y mostrar mensaje
+        if (hasErrors) {
+            e.preventDefault();
+            
+            // Scroll al primer campo con error
+            const firstError = document.querySelector('.form-control.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstError.focus();
+            }
+            
+            // Mostrar mensaje general
+            const existingAlert = document.querySelector('.validation-alert');
+            if (existingAlert) existingAlert.remove();
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger validation-alert mt-3';
+            alertDiv.innerHTML = `
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <strong>Por favor corrija los errores marcados antes de continuar.</strong>
+            `;
+            
+            form.insertBefore(alertDiv, form.querySelector('hr'));
+            
+            return false;
+        }
+        
+        // Si no hay errores, proceder con el efecto de loading
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Guardando...';
         }
     });
     
-    // Verificar que los campos dinámicos estén presentes
-    const camposDinamicos = document.querySelectorAll('input[name^="campo_"]');
-    console.log(`Total campos dinámicos encontrados: ${camposDinamicos.length}`);
+    // Confirmación antes de salir con cambios sin guardar
+    let formChanged = false;
+    const allFields = form.querySelectorAll('input, select, textarea');
+    
+    allFields.forEach(field => {
+        field.addEventListener('change', () => formChanged = true);
+    });
+    
+    // Advertir al usuario antes de salir
+    window.addEventListener('beforeunload', function(e) {
+        if (formChanged) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+    
+    // Enlaces de salida
+    const exitLinks = document.querySelectorAll('a[href]');
+    exitLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            if (formChanged && !confirm('Tienes cambios sin guardar. ¿Estás seguro de salir?')) {
+                e.preventDefault();
+            }
+        });
+    });
+    
+    // Animación suave para alertas
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach((alert, index) => {
+        alert.style.opacity = '0';
+        alert.style.transform = 'translateY(-20px)';
+        setTimeout(() => {
+            alert.style.transition = 'all 0.5s ease';
+            alert.style.opacity = '1';
+            alert.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
 });
 </script>
+{% endblock %}
