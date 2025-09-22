@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ action }} Medio de Pago</title>
+    <!-- Bootstrap CSS from CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .form-control:focus, .form-select:focus {
+            box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+            border-color: #007bff;
+        }
+
+        .card {
+            border-radius: 0.75rem;
+        }
+
+        .card-header {
+            border-radius: 0.75rem 0.75rem 0 0 !important;
+        }
+
+        .is-valid:focus {
+            box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.25);
+        }
+
+        .is-invalid:focus {
+            box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="card-title mb-1">
+                                <i class="fas fa-credit-card me-2"></i>
+                                {{ action }} Medio de Pago
+                            </h3>
+                            <small>{{ medio_de_pago.nombre }} - {{ cliente.nombre_completo }}</small>
+                        </div>
+                        <div>
+                            {% if medio_de_pago.comision_porcentaje > 0 %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-percentage me-1"></i>{{ medio_de_pago.comision_porcentaje }}%
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Cliente y Medio de Pago -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Cliente</label>
+                                <input type="text" class="form-control" value="{{ cliente.nombre_completo }}" disabled>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Medio de Pago</label>
+                                <input type="text" class="form-control" value="{{ medio_de_pago.nombre }}" disabled>
+                            </div>
+                        </div>
+
+                        <!-- Campos dinámicos -->
+                        <div class="row g-3">
+                            {% for field in form.visible_fields %}
+                                {% if field.name != 'cliente' and field.name != 'medio_de_pago' %}
+                                    <div class="col-12 mb-3">
+                                        <label for="{{ field.id_for_label }}" class="form-label">
+                                            {{ field.label }}
+                                            {% if field.field.required %}
+                                                <span class="text-danger">*</span>
+                                            {% endif %}
+                                        </label>
+                                        {{ field }}
+                                        {% if field.help_text %}
+                                            <div class="form-text">{{ field.help_text }}</div>
+                                        {% endif %}
+                                        {% for error in field.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        <hr class="my-4">
+                        
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'clientes:medios_pago_cliente' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación de salida -->
+<div class="modal fade" id="unsavedChangesModal" tabindex="-1" aria-labelledby="unsavedChangesModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="unsavedChangesModalLabel">Cambios sin guardar</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="continueLeavingBtn">Salir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Validación en tiempo real para campos
+        const form = document.querySelector('form');
+        const formFields = form.querySelectorAll('input, select, textarea');
+
+        formFields.forEach(field => {
+            field.addEventListener('blur', function() {
+                if (this.checkValidity()) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.remove('is-valid');
+                    this.classList.add('is-invalid');
+                }
+            });
+
+            field.addEventListener('input', function() {
+                if (this.value.trim() !== '') {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                }
+            });
+        });
+        
+        // Confirmación antes de salir si hay cambios sin guardar
+        let formChanged = false;
+        
+        formFields.forEach(field => {
+            field.addEventListener('change', function() {
+                formChanged = true;
+            });
+        });
+        
+        // Enlaces que salen del formulario
+        const exitLinks = document.querySelectorAll('a[href]');
+        const unsavedChangesModal = new bootstrap.Modal(document.getElementById('unsavedChangesModal'));
+        const continueLeavingBtn = document.getElementById('continueLeavingBtn');
+        let nextUrl = '';
+
+        exitLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (formChanged) {
+                    e.preventDefault();
+                    nextUrl = this.href;
+                    unsavedChangesModal.show();
+                }
+            });
+        });
+
+        continueLeavingBtn.addEventListener('click', function() {
+            window.location.href = nextUrl;
+        });
+        
+        // Deshabilitar el botón de submit después del envío para evitar doble envío
+        form.addEventListener('submit', function() {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Guardando...';
+            }
+        });
+    });
+</script>
+</body>
+</html>

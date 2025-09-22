@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white text-center">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        Agregar Medio de Pago
+                    </h3>
+                    <small>Cliente: <strong>{{ cliente.nombre_completo }}</strong></small>
+                </div>
+
+                <div class="card-body p-4">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Explicación del proceso -->
+                    <div class="alert alert-info border-0 mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-info-circle fa-lg me-3 mt-1 text-info"></i>
+                            <div>
+                                <h6 class="alert-heading mb-2">Proceso de configuración</h6>
+                                <p class="mb-1 small">
+                                    <strong>Paso 1:</strong> Selecciona el tipo de medio de pago que deseas agregar
+                                </p>
+                                <p class="mb-0 small">
+                                    <strong>Paso 2:</strong> Completa los datos específicos requeridos para ese medio
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.medio_de_pago.id_for_label }}" class="form-label">
+                                <i class="fas fa-credit-card me-2"></i>{{ form.medio_de_pago.label }}
+                            </label>
+                            {{ form.medio_de_pago }}
+                            {% if form.medio_de_pago.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.medio_de_pago.errors }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                Selecciona el tipo de medio de pago que deseas configurar.
+                            </div>
+                        </div>
+
+                        <!-- Mostrar medios disponibles como cards -->
+                        {% if form.medio_de_pago.field.queryset %}
+                            <div class="mb-4">
+                                <h6 class="text-muted mb-3">Medios disponibles:</h6>
+                                <div class="row">
+                                    {% for medio in form.medio_de_pago.field.queryset %}
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card border border-light h-100 medio-card" 
+                                                 data-medio-id="{{ medio.id }}"
+                                                 style="cursor: pointer;">
+                                                <div class="card-body text-center p-3">
+                                                    <div class="mb-2">
+                                                        <i class="fas fa-credit-card fa-2x text-primary"></i>
+                                                    </div>
+                                                    <h6 class="card-title">{{ medio.nombre }}</h6>
+                                                    {% if medio.comision_porcentaje > 0 %}
+                                                        <small class="text-muted">
+                                                            Comisión: {{ medio.comision_porcentaje }}%
+                                                        </small>
+                                                    {% endif %}
+                                                    <div class="mt-2">
+                                                        <span class="badge bg-light text-dark">
+                                                            {{ medio.total_campos_activos }} campo{{ medio.total_campos_activos|pluralize }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-arrow-right me-2"></i>
+                                Continuar con la Configuración
+                            </button>
+                            <a href="{% url 'clientes:medios_pago_cliente' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Volver a Medios de Pago
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.medio-card {
+    transition: all 0.3s ease;
+}
+
+.medio-card:hover {
+    border-color: #007bff !important;
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 123, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+.medio-card.selected {
+    border-color: #007bff !important;
+    background-color: #f8f9ff;
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 123, 255, 0.25);
+}
+
+.form-select {
+    border: 2px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+}
+
+.form-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.alert {
+    border-radius: 0.5rem;
+}
+
+.card {
+    border-radius: 0.75rem;
+}
+
+.card-header {
+    border-radius: 0.75rem 0.75rem 0 0 !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const select = document.getElementById('{{ form.medio_de_pago.id_for_label }}');
+    const cards = document.querySelectorAll('.medio-card');
+    
+    // Función para actualizar la selección visual
+    function updateSelection(selectedId) {
+        cards.forEach(card => {
+            const medioId = card.dataset.medioId;
+            if (medioId === selectedId) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+        });
+    }
+    
+    // Manejar clicks en las cards
+    cards.forEach(card => {
+        card.addEventListener('click', function() {
+            const medioId = this.dataset.medioId;
+            select.value = medioId;
+            updateSelection(medioId);
+        });
+    });
+    
+    // Manejar cambios en el select
+    select.addEventListener('change', function() {
+        updateSelection(this.value);
+    });
+    
+    // Inicializar selección si ya hay un valor
+    if (select.value) {
+        updateSelection(select.value);
+    }
+});
+</script>
+{% endblock %}
