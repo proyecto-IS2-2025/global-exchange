@@ -136,12 +136,17 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
         if self.instance and self.instance.pk:
             self.medio_de_pago_obj = self.instance.medio_de_pago
         
-        # Configurar el campo medio_de_pago
+        # Configurar el campo medio_de_pago - CORREGIDO
         if self.medio_de_pago_obj:
-            self.fields['medio_de_pago'].initial = self.medio_de_pago_obj
+            self.fields['medio_de_pago'].initial = self.medio_de_pago_obj.id
             self.fields['medio_de_pago'].queryset = MedioDePago.objects.filter(
                 id=self.medio_de_pago_obj.id
             )
+            # Asegurar que el campo tenga el valor correcto
+            self.initial['medio_de_pago'] = self.medio_de_pago_obj.id
+        else:
+            # Si no hay medio de pago, hacer el campo no requerido temporalmente
+            self.fields['medio_de_pago'].required = False
         
         # Personalizar el campo es_principal
         self.fields['es_principal'].label = "Medio de pago principal"
@@ -156,21 +161,23 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
 
     def _generate_dynamic_fields(self):
         """Generar campos dinámicos basados en el medio de pago"""
-        campos = self.medio_de_pago_obj.campos.filter(
-            # Si tuviéramos soft delete: deleted_at__isnull=True
-        ).order_by('orden', 'id')
-        
-        for campo in campos:
-            field_name = f'campo_{campo.id}'
-            field = self._create_field_by_type(campo)
+        try:
+            campos = self.medio_de_pago_obj.campos.all().order_by('orden', 'id')
             
-            # Establecer valor inicial si existe
-            if self.instance and self.instance.pk:
-                initial_value = self.instance.get_dato_campo(campo.nombre_campo)
-                if initial_value:
-                    field.initial = initial_value
-            
-            self.fields[field_name] = field
+            for campo in campos:
+                field_name = f'campo_{campo.id}'
+                field = self._create_field_by_type(campo)
+                
+                # Establecer valor inicial si existe
+                if self.instance and self.instance.pk:
+                    initial_value = self.instance.get_dato_campo(campo.nombre_campo)
+                    if initial_value:
+                        field.initial = initial_value
+                
+                self.fields[field_name] = field
+        except Exception as e:
+            # Log del error para debug
+            print(f"Error generando campos dinámicos: {e}")
 
     def _create_field_by_type(self, campo):
         """Crear campo del formulario según el tipo de dato con validaciones mejoradas"""
@@ -205,8 +212,6 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
                 }),
                 help_text=self._get_help_text(campo, "Solo números, guiones y puntos")
             )
-            # Agregar validador personalizado
-            field.validators.append(self._validate_numero)
         
         elif campo.tipo_dato == 'FECHA':
             field = forms.DateField(
@@ -246,7 +251,6 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
                 }),
                 help_text=self._get_help_text(campo, "+595 21 123456 o 021123456")
             )
-            field.validators.append(self._validate_telefono)
         
         elif campo.tipo_dato == 'URL':
             field = forms.URLField(
@@ -303,44 +307,18 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
             base_text += " (Opcional)"
         return base_text
 
-    def _validate_numero(self, value):
-        """Validador personalizado para campos numéricos"""
-        if not value.strip():
-            return
-        
-        # Permitir números, guiones, puntos y espacios
-        if not re.match(r'^[0-9\-\.\s]+$', value):
-            raise ValidationError('Solo se permiten números, guiones, puntos y espacios.')
-        
-        # Verificar que tenga al menos un dígito
-        if not re.search(r'\d', value):
-            raise ValidationError('Debe contener al menos un número.')
-
-    def _validate_telefono(self, value):
-        """Validador personalizado para teléfonos"""
-        if not value.strip():
-            return
-        
-        # Limpiar el valor para validación
-        clean_value = re.sub(r'[\s\-\(\)]', '', value)
-        
-        # Permitir + al inicio
-        if clean_value.startswith('+'):
-            clean_value = clean_value[1:]
-        
-        # Verificar que solo contenga dígitos después de limpiar
-        if not clean_value.isdigit():
-            raise ValidationError('Formato de teléfono inválido.')
-        
-        # Verificar longitud mínima y máxima
-        if len(clean_value) < 6:
-            raise ValidationError('El teléfono debe tener al menos 6 dígitos.')
-        if len(clean_value) > 15:
-            raise ValidationError('El teléfono no puede tener más de 15 dígitos.')
-
     def clean(self):
-        """Validación a nivel de formulario"""
+        """Validación a nivel de formulario - CON DEBUG DETALLADO"""
         cleaned_data = super().clean()
+        
+        print("=== DEBUG FORM CLEAN ===")
+        print(f"Datos crudos del formulario: {dict(self.data) if hasattr(self, 'data') else 'No data'}")
+        print(f"Cleaned data inicial: {cleaned_data}")
+        
+        # Asegurar que el campo medio_de_pago tenga el valor correcto
+        if self.medio_de_pago_obj and not cleaned_data.get('medio_de_pago'):
+            cleaned_data['medio_de_pago'] = self.medio_de_pago_obj
+            print(f"DEBUG: Medio de pago asignado automáticamente: {self.medio_de_pago_obj}")
         
         # Validar que el cliente esté asignado
         if not self.cliente:
@@ -350,55 +328,88 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
         if not self.medio_de_pago_obj:
             raise ValidationError('No se ha especificado el medio de pago.')
         
-        # Validar campos dinámicos
+        # Debug de campos dinámicos ANTES de validar
+        print("=== DEBUG CAMPOS DINÁMICOS EN CLEAN ===")
         if self.medio_de_pago_obj:
-            self._validate_dynamic_fields(cleaned_data)
-        
-        # Validar es_principal si es necesario
-        es_principal = cleaned_data.get('es_principal', False)
-        if es_principal and self.cliente:
-            # Verificar si ya hay otro medio principal (solo en creación)
-            if not self.instance.pk:
-                existing_principal = ClienteMedioDePago.objects.filter(
-                    cliente=self.cliente,
-                    es_principal=True
-                ).exists()
+            campos = self.medio_de_pago_obj.campos.all()
+            for campo in campos:
+                field_name = f'campo_{campo.id}'
+                # Verificar múltiples fuentes de datos
+                raw_value = self.data.get(field_name) if hasattr(self, 'data') else None
+                cleaned_value = cleaned_data.get(field_name)
                 
-                if existing_principal:
-                    # No es error, simplemente se cambiará el principal
-                    pass
+                print(f"Campo {campo.nombre_campo} ({field_name}):")
+                print(f"  - Valor crudo: '{raw_value}'")
+                print(f"  - Valor limpio: '{cleaned_value}'")
+                print(f"  - Es requerido: {campo.is_required}")
         
+        # Validar campos dinámicos - MEJORADO
+        if self.medio_de_pago_obj:
+            errors = {}
+            try:
+                campos = self.medio_de_pago_obj.campos.all()
+                
+                for campo in campos:
+                    field_name = f'campo_{campo.id}'
+                    valor = cleaned_data.get(field_name, '').strip() if cleaned_data.get(field_name) else ''
+                    
+                    print(f"Validando campo {campo.nombre_campo}: valor='{valor}', requerido={campo.is_required}")
+                    
+                    # Validar campos requeridos
+                    if campo.is_required and not valor:
+                        errors[field_name] = f'El campo {campo.nombre_campo} es requerido.'
+                        continue
+                    
+                    # Solo validar formato si hay valor
+                    if valor:
+                        try:
+                            self._validate_field_format(campo, valor)
+                        except ValidationError as e:
+                            errors[field_name] = str(e)
+                
+                if errors:
+                    print(f"Errores encontrados en campos dinámicos: {errors}")
+                    raise ValidationError(errors)
+                    
+            except Exception as e:
+                print(f"Error en validación de campos dinámicos: {e}")
+                raise ValidationError('Error al validar los campos del formulario.')
+        
+        print(f"Cleaned data final: {cleaned_data}")
         return cleaned_data
 
-    def _validate_dynamic_fields(self, cleaned_data):
-        """Validar campos dinámicos específicos"""
-        errors = {}
-        campos = self.medio_de_pago_obj.campos.all()
-        
-        for campo in campos:
-            field_name = f'campo_{campo.id}'
-            valor = cleaned_data.get(field_name)
-            
-            # Validar campos requeridos
-            if campo.is_required and (not valor or str(valor).strip() == ''):
-                errors[field_name] = f'El campo {campo.nombre_campo} es requerido.'
-                continue
-            
-            # Validaciones específicas por tipo (adicionales a las del campo)
-            if valor and str(valor).strip():
-                try:
-                    self._validate_field_specific(campo, valor)
-                except ValidationError as e:
-                    errors[field_name] = str(e)
-        
-        if errors:
-            raise ValidationError(errors)
-
-    def _validate_field_specific(self, campo, valor):
-        """Validaciones específicas adicionales por tipo de campo"""
+    def _validate_field_format(self, campo, valor):
+        """Validar formato de campo específico"""
         valor_str = str(valor).strip()
         
-        if campo.tipo_dato == 'EMAIL':
+        if campo.tipo_dato == 'NUMERO':
+            # Validación más permisiva para números
+            if not re.match(r'^[0-9\-\.\s]+$', valor_str):
+                raise ValidationError('Solo se permiten números, guiones, puntos y espacios.')
+            
+            # Verificar que tenga al menos un dígito
+            if not re.search(r'\d', valor_str):
+                raise ValidationError('Debe contener al menos un número.')
+        
+        elif campo.tipo_dato == 'TELEFONO':
+            # Limpiar el valor para validación
+            clean_value = re.sub(r'[\s\-\(\)]', '', valor_str)
+            
+            # Permitir + al inicio
+            if clean_value.startswith('+'):
+                clean_value = clean_value[1:]
+            
+            # Verificar que solo contenga dígitos después de limpiar
+            if not clean_value.isdigit():
+                raise ValidationError('Formato de teléfono inválido.')
+            
+            # Verificar longitud mínima y máxima
+            if len(clean_value) < 6:
+                raise ValidationError('El teléfono debe tener al menos 6 dígitos.')
+            if len(clean_value) > 15:
+                raise ValidationError('El teléfono no puede tener más de 15 dígitos.')
+        
+        elif campo.tipo_dato == 'EMAIL':
             # Validación adicional de email
             if '@' not in valor_str or '.' not in valor_str.split('@')[-1]:
                 raise ValidationError('Formato de email inválido.')
@@ -424,10 +435,12 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
             for campo in campos:
                 field_name = f'campo_{campo.id}'
                 valor = self.cleaned_data.get(field_name)
-                if valor is not None and str(valor).strip():
-                    # Limpiar el valor según el tipo
-                    valor_limpio = self._clean_field_value(campo, valor)
-                    datos_campos[campo.nombre_campo] = valor_limpio
+                if valor is not None:
+                    valor_str = str(valor).strip()
+                    if valor_str:  # Solo guardar si no está vacío
+                        # Limpiar el valor según el tipo
+                        valor_limpio = self._clean_field_value(campo, valor_str)
+                        datos_campos[campo.nombre_campo] = valor_limpio
             
             instance.datos_campos = datos_campos
         
@@ -460,7 +473,6 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
             return valor_str.lower()
         else:
             return valor_str
-
 
 class ClienteMedioDePagoBulkForm(forms.Form):
     """

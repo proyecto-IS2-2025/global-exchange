@@ -445,6 +445,10 @@ def select_medio_pago_view(request):
     })
 
 
+# clientes/views.py - Vista CreateView con debug mejorado
+
+# clientes/views.py - Vista CreateView con debug mejorado
+
 class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
     """
     Vista mejorada para crear un nuevo medio de pago para el cliente
@@ -485,25 +489,25 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
         kwargs = super().get_form_kwargs()
         kwargs['cliente'] = self.cliente
         kwargs['medio_de_pago'] = self.medio_de_pago
+        
+        # DEBUG: Verificar que se están pasando correctamente
+        print(f"DEBUG get_form_kwargs: cliente={self.cliente}, medio_de_pago={self.medio_de_pago}")
+        
         return kwargs
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({
-            'cliente': self.cliente,
-            'medio_de_pago': self.medio_de_pago,
-            'action': 'Agregar',
-            'campos': self.medio_de_pago.campos.all().order_by('orden', 'id'),
-            'breadcrumb': [
-                {'name': 'Medios de Pago', 'url': 'clientes:medios_pago_cliente'},
-                {'name': 'Seleccionar Medio', 'url': 'clientes:seleccionar_medio_pago'},
-                {'name': f'Agregar {self.medio_de_pago.nombre}', 'active': True}
-            ]
-        })
-        return context
-
     def form_valid(self, form):
-        """Procesar formulario válido con manejo de errores mejorado"""
+        """Procesar formulario válido con debug detallado"""
+        print("=== DEBUG FORM_VALID ===")
+        print(f"POST data RAW: {dict(self.request.POST)}")
+        print(f"Form cleaned_data: {form.cleaned_data}")
+        print(f"Form errors: {form.errors}")
+        print(f"Form non_field_errors: {form.non_field_errors()}")
+        
+        # Debug de campos dinámicos
+        for field_name, field_value in form.cleaned_data.items():
+            if field_name.startswith('campo_'):
+                print(f"Campo dinámico {field_name}: '{field_value}' (tipo: {type(field_value)})")
+        
         try:
             with transaction.atomic():
                 form.instance.creado_por = self.request.user
@@ -511,8 +515,13 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
                 # Si es el primer medio de pago, marcarlo como principal automáticamente
                 if not ClienteMedioDePago.objects.filter(cliente=self.cliente).exists():
                     form.instance.es_principal = True
+                    print("DEBUG: Marcado como principal (primer medio)")
+                
+                print(f"DEBUG: Antes de guardar - datos_campos: {getattr(form.instance, 'datos_campos', 'No definido')}")
                 
                 response = super().form_valid(form)
+                
+                print(f"DEBUG: Después de guardar - datos_campos: {self.object.datos_campos}")
                 
                 # Crear registro de historial
                 HistorialClienteMedioDePago.objects.create(
@@ -528,7 +537,6 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
                     f'¡Perfecto! El medio de pago "{self.medio_de_pago.nombre}" fue agregado exitosamente.'
                 )
                 
-                # Log para auditoría
                 logger.info(
                     f'Usuario {self.request.user.username} agregó medio de pago '
                     f'{self.medio_de_pago.nombre} al cliente {self.cliente.nombre_completo}'
@@ -537,20 +545,92 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
                 return response
                 
         except ValidationError as e:
-            messages.error(self.request, f'Error de validación: {e.message_dict}')
+            print(f"DEBUG ValidationError: {e}")
+            print(f"DEBUG ValidationError message_dict: {getattr(e, 'message_dict', 'No message_dict')}")
+            
+            if hasattr(e, 'message_dict'):
+                for field, errors in e.message_dict.items():
+                    for error in errors:
+                        messages.error(self.request, f"{field}: {error}")
+            else:
+                messages.error(self.request, f'Error de validación: {str(e)}')
+            
             return self.form_invalid(form)
+            
         except Exception as e:
+            print(f"DEBUG Exception: {str(e)}")
+            print(f"DEBUG Exception type: {type(e)}")
             messages.error(self.request, f'Error inesperado al guardar: {str(e)}')
             logger.error(f'Error al crear medio de pago: {str(e)}', exc_info=True)
             return self.form_invalid(form)
 
     def form_invalid(self, form):
-        """Manejar formulario inválido con mejor información al usuario"""
-        messages.error(
-            self.request, 
-            'Por favor, revise los campos marcados en rojo y corrija los errores.'
-        )
+        """Manejar formulario inválido con debug detallado"""
+        print("=== DEBUG FORM_INVALID ===")
+        print(f"POST data RAW: {dict(self.request.POST)}")
+        print(f"Form data: {form.data}")
+        print(f"Form errors: {form.errors}")
+        print(f"Form non_field_errors: {form.non_field_errors()}")
+        
+        # Debug específico de campos dinámicos
+        print("=== DEBUG CAMPOS DINÁMICOS ===")
+        for field_name in form.fields:
+            if field_name.startswith('campo_'):
+                post_value = self.request.POST.get(field_name)
+                form_value = form.data.get(field_name)
+                cleaned_value = form.cleaned_data.get(field_name) if hasattr(form, 'cleaned_data') else None
+                print(f"Campo {field_name}:")
+                print(f"  - POST: '{post_value}'")
+                print(f"  - Form data: '{form_value}'")
+                print(f"  - Cleaned: '{cleaned_value}'")
+        
+        # Debug detallado de cada campo con error - CORREGIDO
+        for field_name, errors in form.errors.items():
+            # Verificar si el campo existe y tiene label
+            field = form.fields.get(field_name)
+            if field and hasattr(field, 'label'):
+                field_label = field.label or field_name
+            else:
+                field_label = field_name
+            
+            print(f"Campo '{field_label}' ({field_name}): {errors}")
+            for error in errors:
+                messages.error(self.request, f"{field_label}: {error}")
+        
+        # Errores generales del formulario
+        for error in form.non_field_errors():
+            print(f"Error general: {error}")
+            messages.error(self.request, f"Error: {error}")
+        
+        if not form.errors:
+            messages.error(
+                self.request, 
+                'Por favor, revise los campos marcados en rojo y corrija los errores.'
+            )
+        
         return super().form_invalid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'cliente': self.cliente,
+            'medio_de_pago': self.medio_de_pago,
+            'action': 'Agregar',
+            'campos': self.medio_de_pago.campos.all().order_by('orden', 'id'),
+            'breadcrumb': [
+                {'name': 'Medios de Pago', 'url': 'clientes:medios_pago_cliente'},
+                {'name': 'Seleccionar Medio', 'url': 'clientes:seleccionar_medio_pago'},
+                {'name': f'Agregar {self.medio_de_pago.nombre}', 'active': True}
+            ]
+        })
+        
+        # DEBUG: Información del formulario
+        print("=== DEBUG CONTEXT ===")
+        print(f"Form fields disponibles: {list(context['form'].fields.keys())}")
+        print(f"Medio de pago ID: {self.medio_de_pago.id}")
+        print(f"Campos del medio: {[c.nombre_campo for c in self.medio_de_pago.campos.all()]}")
+        
+        return context
 
     def get_success_url(self):
         return reverse('clientes:medios_pago_cliente')
