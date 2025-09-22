@@ -1,30 +1,12 @@
 {% extends "banco/base.html" %}
+{% load banco_tags %}
 
 {% block title %}Transferencia{% endblock %}
 
 {% block extra_head %}
 <style>
-    body {
-        background-color: #f5f7fa;
-        font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        color: #212529;
-    }
-
-    .card-custom {
-        border-radius: 1rem;
-        border: none;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
-        background: #ffffff;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .card-custom:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
-    }
-
     .card-header-custom {
-        background: linear-gradient(135deg, #1d3557, #457b9d);
+        background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
         color: #fff;
         padding: 1.5rem;
         font-size: 1.3rem;
@@ -33,39 +15,8 @@
         border-bottom: none;
     }
 
-    .card-header-custom i {
-        margin-right: 0.5rem;
-    }
-
-    .card-body {
-        padding: 2rem;
-    }
-
-    .form-label {
-        font-weight: 500;
-        color: #495057;
-        margin-bottom: 0.4rem;
-        font-size: 0.95rem;
-    }
-
-    .form-control {
-        border-radius: 0.6rem;
-        border: 1px solid #d0d7de;
-        padding: 0.75rem 1rem;
-        transition: all 0.2s ease;
-        font-size: 0.95rem;
-        background-color: #fcfcfc;
-    }
-
-    .form-control:focus {
-        border-color: #0d6efd;
-        background-color: #fff;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
-        outline: none;
-    }
-
     .btn-send {
-        background: linear-gradient(135deg, #1d3557, #457b9d);
+        background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
         border: none;
         border-radius: 0.6rem;
         padding: 0.8rem 1.25rem;
@@ -76,25 +27,8 @@
     }
 
     .btn-send:hover {
-        background: linear-gradient(135deg, #1d3557, #457b9d);
+        background: linear-gradient(135deg, var(--color-secundario), var(--color-principal));
         transform: translateY(-2px);
-    }
-
-    .btn-outline-secondary {
-        border-radius: 0.6rem;
-        font-weight: 500;
-        padding: 0.65rem 1.2rem;
-        transition: all 0.2s ease;
-    }
-
-    .btn-outline-secondary:hover {
-        background-color: #f1f3f5;
-        color: #212529;
-    }
-
-    .alert {
-        font-size: 0.9rem;
-        border-radius: 0.6rem;
     }
 </style>
 {% endblock %}

@@ -1,7 +1,12 @@
 from django import forms
-from .models import Transferencia
+from .models import EntidadBancaria
 
 class TransferenciaForm(forms.Form):
+    entidad_destino = forms.ModelChoiceField(
+        queryset=EntidadBancaria.objects.all(),
+        label="Entidad bancaria destino",
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
     numero_cuenta_destino = forms.CharField(
         label="Número de cuenta destino",
         max_length=20,
@@ -13,3 +18,9 @@ class TransferenciaForm(forms.Form):
         decimal_places=2,
         widget=forms.NumberInput(attrs={"class": "form-control"})
     )
+
+    def clean_monto(self):
+        monto = self.cleaned_data["monto"]
+        if monto <= 0:
+            raise forms.ValidationError("El monto debe ser mayor a cero.")
+        return monto

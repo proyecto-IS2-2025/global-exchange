@@ -1,0 +1,152 @@
+[
+  {
+    "model": "banco.entidadbancaria",
+    "pk": 1,
+    "fields": {
+      "nombre": "Banco Central",
+      "codigo": "BAN001",
+      "color_principal": "#1d3557",
+      "color_secundario": "#457b9d",
+      "logo_url": ""
+    }
+  },
+  {
+    "model": "banco.entidadbancaria",
+    "pk": 2,
+    "fields": {
+      "nombre": "Banco del Sur",
+      "codigo": "BAN002",
+      "color_principal": "#2a9d8f",
+      "color_secundario": "#264653",
+      "logo_url": ""
+    }
+  },
+  {
+    "model": "banco.entidadbancaria",
+    "pk": 3,
+    "fields": {
+      "nombre": "Banco Ágil",
+      "codigo": "BAN003",
+      "color_principal": "#e63946",
+      "color_secundario": "#a8dadc",
+      "logo_url": ""
+    }
+  },
+
+  {
+    "model": "banco.bancouser",
+    "pk": 1,
+    "fields": {
+      "entidad": 1,
+      "email": "alice@central.com",
+      "password": "alice123"
+    }
+  },
+  {
+    "model": "banco.cuenta",
+    "pk": 1,
+    "fields": {
+      "entidad": 1,
+      "usuario": 1,
+      "numero_cuenta": "CUENTA001",
+      "saldo": "150000.00"
+    }
+  },
+  {
+    "model": "banco.bancouser",
+    "pk": 2,
+    "fields": {
+      "entidad": 1,
+      "email": "bob@central.com",
+      "password": "bob123"
+    }
+  },
+  {
+    "model": "banco.cuenta",
+    "pk": 2,
+    "fields": {
+      "entidad": 1,
+      "usuario": 2,
+      "numero_cuenta": "CUENTA002",
+      "saldo": "80000.00"
+    }
+  },
+
+  {
+    "model": "banco.bancouser",
+    "pk": 3,
+    "fields": {
+      "entidad": 2,
+      "email": "carla@sur.com",
+      "password": "carla123"
+    }
+  },
+  {
+    "model": "banco.cuenta",
+    "pk": 3,
+    "fields": {
+      "entidad": 2,
+      "usuario": 3,
+      "numero_cuenta": "CUENTA003",
+      "saldo": "120000.00"
+    }
+  },
+  {
+    "model": "banco.bancouser",
+    "pk": 4,
+    "fields": {
+      "entidad": 2,
+      "email": "daniel@sur.com",
+      "password": "daniel123"
+    }
+  },
+  {
+    "model": "banco.cuenta",
+    "pk": 4,
+    "fields": {
+      "entidad": 2,
+      "usuario": 4,
+      "numero_cuenta": "CUENTA004",
+      "saldo": "95000.00"
+    }
+  },
+
+  {
+    "model": "banco.bancouser",
+    "pk": 5,
+    "fields": {
+      "entidad": 3,
+      "email": "elena@agil.com",
+      "password": "elena123"
+    }
+  },
+  {
+    "model": "banco.cuenta",
+    "pk": 5,
+    "fields": {
+      "entidad": 3,
+      "usuario": 5,
+      "numero_cuenta": "CUENTA005",
+      "saldo": "200000.00"
+    }
+  },
+  {
+    "model": "banco.bancouser",
+    "pk": 6,
+    "fields": {
+      "entidad": 3,
+      "email": "fernando@agil.com",
+      "password": "fernando123"
+    }
+  },
+  {
+    "model": "banco.cuenta",
+    "pk": 6,
+    "fields": {
+      "entidad": 3,
+      "usuario": 6,
+      "numero_cuenta": "CUENTA006",
+      "saldo": "60000.00"
+    }
+  }
+]

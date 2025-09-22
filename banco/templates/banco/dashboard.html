@@ -5,7 +5,7 @@
 {% block extra_head %}
 <style>
   body {
-    background: linear-gradient(135deg, #0d1b2a, #1b263b);
+    background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
     font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     min-height: 100vh;
     color: #f8f9fa;
@@ -18,7 +18,7 @@
   }
 
   .navbar-custom .navbar-brand {
-    color: #1d3557;
+    color: var(--color-principal);
     font-weight: 700;
     font-size: 1.5rem;
   }
@@ -30,47 +30,11 @@
   }
 
   .navbar-custom .nav-link:hover {
-    color: #0d6efd;
-  }
-
-  .dashboard-card {
-    background: #ffffff;
-    border-radius: 1rem;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-    padding: 2.5rem;
-    border: none;
-    max-width: 600px;
-    margin: auto;
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-  }
-
-  .dashboard-card:hover {
-
-  }
-
-  .card-title {
-    font-size: 1.8rem;
-    color: #1d3557;
-    font-weight: 700;
-    margin-bottom: 2rem;
-  }
-
-  .card-title .fw-bold {
-    color: #e63946;
-  }
-
-  .info-item {
-    font-size: 1.1rem;
-    margin-bottom: 1.2rem;
-    color: #495057;
-  }
-
-  .info-item strong {
-    color: #1d3557;
+    color: var(--color-principal);
   }
 
   .badge-custom-dark {
-    background: #457b9d;
+    background: var(--color-secundario);
     font-size: 1rem;
     padding: 0.5em 1em;
     border-radius: 0.6rem;
@@ -91,7 +55,10 @@
 {% block content %}
 <nav class="navbar navbar-expand-lg navbar-custom mb-5">
   <div class="container-fluid">
-    <span class="navbar-brand">Banco Virtual</span>
+    {% if entidad.logo_url %}
+    <img src="{{ entidad.logo_url }}" height="40" class="me-2" alt="{{ entidad.nombre }} Logo">
+    {% endif %}
+    <span class="navbar-brand">{{ entidad.nombre }}</span>
     <div class="collapse navbar-collapse justify-content-end">
       <ul class="navbar-nav">
         <li class="nav-item">
@@ -115,6 +82,15 @@
 </nav>
 
 <div class="container mt-5">
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-success text-center" role="alert">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
   <div class="dashboard-card text-center">
     <h3 class="card-title">
       Bienvenido, <span class="fw-bold">{{ cuenta.usuario.email }}</span>
