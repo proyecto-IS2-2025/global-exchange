@@ -64,10 +64,19 @@
                         {% csrf_token %}
 
                         {% if form.non_field_errors %}
-                            <div class="alert alert-danger" role="alert">
-                                {% for error in form.non_field_errors %}
-                                    <div>{{ error }}</div>
-                                {% endfor %}
+                            <div class="alert alert-danger border-0" role="alert">
+                                <div class="d-flex align-items-start">
+                                    <i class="fas fa-exclamation-circle fa-lg me-3 mt-1 text-danger"></i>
+                                    <div class="flex-grow-1">
+                                        <h6 class="alert-heading mb-2">No se puede agregar este medio de pago</h6>
+                                        {% for error in form.non_field_errors %}
+                                            <p class="mb-1">{{ error }}</p>
+                                        {% endfor %}
+                                        <small class="text-muted mt-2 d-block">
+                                            <strong>Sugerencia:</strong> Verifique que los datos sean diferentes a los medios existentes.
+                                        </small>
+                                    </div>
+                                </div>
                             </div>
                         {% endif %}
 
@@ -120,7 +129,7 @@
 
                         {% if campos %}
                             <div class="row">
-                                <!-- MÉTODO DIRECTO: Renderizar todos los campos dinámicos -->
+                                <!-- Renderizar todos los campos dinámicos -->
                                 {% for field in form %}
                                     {% if field.name|slice:":6" == "campo_" %}
                                         <div class="col-md-6 mb-3">
@@ -241,7 +250,9 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_css %}
 <style>
 /* Estilos para formularios */
 .form-control, .form-select {
@@ -347,25 +358,6 @@ label .fas {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .card-body {
-        padding: 1.5rem !important;
-    }
-    
-    .d-flex.flex-md-row {
-        flex-direction: column;
-    }
-    
-    .row.text-center {
-        text-align: left !important;
-    }
-    
-    .col-md-4 {
-        margin-bottom: 0.5rem;
-    }
-}
-
 /* Estados de validación */
 .form-control.is-invalid, .form-select.is-invalid {
     border-color: #dc3545;
@@ -413,10 +405,36 @@ hr {
 .shadow-sm {
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
 }
-</style>
 
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1.5rem !important;
+    }
+    
+    .d-flex.flex-md-row {
+        flex-direction: column;
+    }
+    
+    .row.text-center {
+        text-align: left !important;
+    }
+    
+    .col-md-4 {
+        margin-bottom: 0.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Variables globales
+    const form = document.querySelector('form');
+    const formFields = document.querySelectorAll('.form-control, .form-select');
+    let formChanged = false;
+
     // Auto-focus en el primer campo disponible
     const firstField = document.querySelector('.form-control:not([readonly]):not([disabled])');
     if (firstField) {
@@ -440,19 +458,16 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Validaciones específicas por tipo de campo dinámico
         if (fieldName.startsWith('campo_')) {
-            // Obtener información del campo desde el help-text o data attributes
             const helpText = field.parentElement.querySelector('.form-text');
             if (helpText) {
                 const helpContent = helpText.textContent.toLowerCase();
                 
                 // Validación para campos de tipo NUMERO
                 if (helpContent.includes('número') || helpContent.includes('numero')) {
-                    // Solo números, guiones, puntos y espacios
                     const numeroPattern = /^[0-9\-\.\s]+$/;
                     if (!numeroPattern.test(value)) {
                         return { isValid: false, message: 'Solo se permiten números, guiones, puntos y espacios' };
                     }
-                    // Verificar que tenga al menos un dígito
                     if (!/\d/.test(value)) {
                         return { isValid: false, message: 'Debe contener al menos un número' };
                     }
@@ -468,7 +483,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Validación para campos de tipo TELEFONO
                 else if (helpContent.includes('teléfono') || helpContent.includes('telefono')) {
-                    // Limpiar el valor para validación
                     let cleanValue = value.replace(/[\s\-\(\)]/g, '');
                     if (cleanValue.startsWith('+')) {
                         cleanValue = cleanValue.substring(1);
@@ -501,10 +515,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Función para aplicar estilos de validación
     function applyValidationStyles(field, isValid, errorMessage = '') {
-        // Remover clases anteriores
         field.classList.remove('is-valid', 'is-invalid');
         
-        // Remover mensaje de error anterior
         const existingError = field.parentElement.querySelector('.validation-error');
         if (existingError) {
             existingError.remove();
@@ -515,7 +527,6 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             field.classList.add('is-invalid');
             
-            // Agregar mensaje de error personalizado
             if (errorMessage) {
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'text-danger small mt-1 validation-error';
@@ -525,42 +536,100 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Validación en tiempo real mejorada
-    const formFields = document.querySelectorAll('.form-control, .form-select');
+    // Función para verificar duplicados
+    function checkForDuplicates() {
+        const criticalFields = ['numero', 'cuenta', 'tarjeta', 'cbu', 'email'];
+        const currentValues = {};
+        let hasCriticalData = false;
+        
+        formFields.forEach(field => {
+            if (field.name.startsWith('campo_')) {
+                const label = field.parentElement.querySelector('label');
+                if (label) {
+                    const labelText = label.textContent.toLowerCase();
+                    const isCritical = criticalFields.some(critical => 
+                        labelText.includes(critical)
+                    );
+                    
+                    if (isCritical && field.value.trim()) {
+                        currentValues[labelText] = field.value.trim();
+                        hasCriticalData = true;
+                    }
+                }
+            }
+        });
+        
+        if (hasCriticalData) {
+            // En producción, aquí harías una llamada AJAX real
+            // simulateAjaxDuplicateCheck(currentValues);
+            
+            // Por ahora, ocultar la advertencia hasta implementar la funcionalidad completa
+            hideDuplicateWarning();
+        } else {
+            hideDuplicateWarning();
+        }
+    }
+    
+    function showDuplicateWarning(duplicateInfo) {
+        const warningDiv = document.getElementById('duplicate-warning');
+        const detailsDiv = document.getElementById('duplicate-details');
+        
+        if (warningDiv && detailsDiv) {
+            detailsDiv.innerHTML = `
+                <div class="bg-light p-2 rounded">
+                    <strong>${duplicateInfo.tipo}</strong><br>
+                    <small class="text-muted">
+                        Número: ${duplicateInfo.numero}<br>
+                        Agregado: ${duplicateInfo.fechaCreacion}
+                    </small>
+                </div>
+            `;
+            
+            warningDiv.classList.remove('d-none');
+        }
+    }
+    
+    function hideDuplicateWarning() {
+        const warningDiv = document.getElementById('duplicate-warning');
+        if (warningDiv) {
+            warningDiv.classList.add('d-none');
+        }
+    }
+    
+    // Event listeners
     formFields.forEach(field => {
-        // Validación en blur (cuando el campo pierde el foco)
+        // Validación al perder el foco
         field.addEventListener('blur', function() {
             const validation = validateField(this);
             applyValidationStyles(this, validation.isValid, validation.message);
         });
         
-        // Validación en input (mientras escribe) - solo para limpiar errores
+        // Validación en tiempo real para campos con errores
         field.addEventListener('input', function() {
-            // Si el campo tenía error, re-validar
             if (this.classList.contains('is-invalid')) {
                 const validation = validateField(this);
                 applyValidationStyles(this, validation.isValid, validation.message);
             }
         });
         
-        // Validación especial para campos numéricos en tiempo real
+        // Filtrado en tiempo real para campos numéricos
         field.addEventListener('input', function() {
             if (this.name.startsWith('campo_')) {
                 const helpText = this.parentElement.querySelector('.form-text');
                 if (helpText && helpText.textContent.toLowerCase().includes('número')) {
                     const value = this.value;
-                    // Permitir solo números, guiones, puntos y espacios mientras escribe
                     if (value && !/^[0-9\-\.\s]*$/.test(value)) {
-                        // Remover caracteres no válidos
                         this.value = value.replace(/[^0-9\-\.\s]/g, '');
                     }
                 }
             }
         });
+        
+        // Detectar cambios en el formulario
+        field.addEventListener('change', () => formChanged = true);
     });
     
-    // Validación completa antes de enviar el formulario
-    const form = document.querySelector('form');
+    // Validación antes de enviar el formulario
     form.addEventListener('submit', function(e) {
         let hasErrors = false;
         
@@ -573,7 +642,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Si hay errores, prevenir envío y mostrar mensaje
         if (hasErrors) {
             e.preventDefault();
             
@@ -595,12 +663,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 <strong>Por favor corrija los errores marcados antes de continuar.</strong>
             `;
             
-            form.insertBefore(alertDiv, form.querySelector('hr'));
+            form.insertBefore(alertDiv, form.querySelector('hr:last-of-type'));
             
             return false;
         }
         
-        // Si no hay errores, proceder con el efecto de loading
+        // Mostrar estado de carga
         const submitBtn = form.querySelector('button[type="submit"]');
         if (submitBtn) {
             submitBtn.disabled = true;
@@ -608,15 +676,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Confirmación antes de salir con cambios sin guardar
-    let formChanged = false;
-    const allFields = form.querySelectorAll('input, select, textarea');
-    
-    allFields.forEach(field => {
-        field.addEventListener('change', () => formChanged = true);
-    });
-    
-    // Advertir al usuario antes de salir
+    // Advertir antes de salir sin guardar
     window.addEventListener('beforeunload', function(e) {
         if (formChanged) {
             e.preventDefault();
@@ -624,7 +684,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Enlaces de salida
+    // Enlaces de salida con confirmación
     const exitLinks = document.querySelectorAll('a[href]');
     exitLinks.forEach(link => {
         link.addEventListener('click', function(e) {
@@ -634,7 +694,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Animación suave para alertas
+    // Animación de alertas
     const alerts = document.querySelectorAll('.alert');
     alerts.forEach((alert, index) => {
         alert.style.opacity = '0';

@@ -33,35 +33,29 @@
                                 <p class="mb-1 small">
                                     <strong>Paso 1:</strong> Selecciona el tipo de medio de pago que deseas agregar
                                 </p>
+                                <p class="mb-1 small">
+                                    <strong>Paso 2:</strong> Completa los datos específicos para esta instancia
+                                </p>
                                 <p class="mb-0 small">
-                                    <strong>Paso 2:</strong> Completa los datos específicos requeridos para ese medio
+                                    <strong>Nota:</strong> Puedes agregar múltiples medios del mismo tipo (ej: varias tarjetas)
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    <form method="post">
+                    <form method="post" id="medioForm">
                         {% csrf_token %}
                         
-                        <div class="mb-4">
-                            <label for="{{ form.medio_de_pago.id_for_label }}" class="form-label">
-                                <i class="fas fa-credit-card me-2"></i>{{ form.medio_de_pago.label }}
-                            </label>
-                            {{ form.medio_de_pago }}
-                            {% if form.medio_de_pago.errors %}
-                                <div class="text-danger small mt-1">
-                                    {{ form.medio_de_pago.errors }}
-                                </div>
-                            {% endif %}
-                            <div class="form-text">
-                                Selecciona el tipo de medio de pago que deseas configurar.
-                            </div>
-                        </div>
+                        <!-- Campo oculto para el medio seleccionado -->
+                        <input type="hidden" id="medio_seleccionado" name="{{ form.medio_de_pago.html_name }}" value="">
 
                         <!-- Mostrar medios disponibles como cards -->
                         {% if form.medio_de_pago.field.queryset %}
                             <div class="mb-4">
-                                <h6 class="text-muted mb-3">Medios disponibles:</h6>
+                                <h6 class="text-muted mb-3">
+                                    <i class="fas fa-credit-card me-2"></i>
+                                    Selecciona un medio de pago configurado:
+                                </h6>
                                 <div class="row">
                                     {% for medio in form.medio_de_pago.field.queryset %}
                                         <div class="col-md-6 mb-3">
@@ -74,25 +68,63 @@
                                                     </div>
                                                     <h6 class="card-title">{{ medio.nombre }}</h6>
                                                     {% if medio.comision_porcentaje > 0 %}
-                                                        <small class="text-muted">
+                                                        <small class="text-muted d-block">
                                                             Comisión: {{ medio.comision_porcentaje }}%
                                                         </small>
                                                     {% endif %}
                                                     <div class="mt-2">
-                                                        <span class="badge bg-light text-dark">
+                                                        <span class="badge bg-success text-white">
+                                                            <i class="fas fa-check-circle me-1"></i>
                                                             {{ medio.total_campos_activos }} campo{{ medio.total_campos_activos|pluralize }}
                                                         </span>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
+                                    {% empty %}
+                                        <!-- Este empty se ejecutará si el queryset está vacío después del filtro -->
+                                        <div class="col-12">
+                                            <div class="alert alert-warning text-center" role="alert">
+                                                <i class="fas fa-exclamation-triangle fa-2x mb-3 text-warning"></i>
+                                                <h5 class="alert-heading">No hay medios de pago configurados</h5>
+                                                <p class="mb-3">
+                                                    No se encontraron medios de pago con campos configurados. 
+                                                    Los medios de pago deben tener al menos un campo activo para poder ser utilizados.
+                                                </p>
+                                                <hr>
+                                                <p class="mb-0 small">
+                                                    <strong>Solución:</strong> Contacte al administrador para configurar los campos necesarios en los medios de pago.
+                                                </p>
+                                            </div>
+                                        </div>
                                     {% endfor %}
                                 </div>
+                            </div>
+                        {% else %}
+                            <!-- Mensaje cuando no hay medios en el sistema -->
+                            <div class="alert alert-info text-center" role="alert">
+                                <i class="fas fa-info-circle fa-2x mb-3 text-info"></i>
+                                <h5 class="alert-heading">No hay medios de pago disponibles</h5>
+                                <p class="mb-0">
+                                    No se encontraron medios de pago disponibles en el sistema.
+                                    Contacte al administrador del sistema.
+                                </p>
+                            </div>
+                        {% endif %}
+
+                        <!-- Mostrar errores si los hay -->
+                        {% if form.medio_de_pago.errors %}
+                            <div class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Error de selección:</strong>
+                                {% for error in form.medio_de_pago.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
                             </div>
                         {% endif %}
 
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg">
+                            <button type="submit" class="btn btn-primary btn-lg" id="continuarBtn" disabled>
                                 <i class="fas fa-arrow-right me-2"></i>
                                 Continuar con la Configuración
                             </button>
@@ -111,78 +143,264 @@
 <style>
 .medio-card {
     transition: all 0.3s ease;
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
 }
 
 .medio-card:hover {
     border-color: #007bff !important;
-    box-shadow: 0 0.25rem 0.5rem rgba(0, 123, 255, 0.25);
-    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 123, 255, 0.15);
+    transform: translateY(-3px);
 }
 
 .medio-card.selected {
     border-color: #007bff !important;
-    background-color: #f8f9ff;
-    box-shadow: 0 0.25rem 0.5rem rgba(0, 123, 255, 0.25);
+    background: linear-gradient(145deg, #f8f9ff 0%, #e3f2fd 100%);
+    box-shadow: 0 0.5rem 1rem rgba(0, 123, 255, 0.25);
+    position: relative;
+    transform: translateY(-2px);
 }
 
-.form-select {
-    border: 2px solid #dee2e6;
-    border-radius: 0.5rem;
-    padding: 0.75rem 1rem;
+.medio-card.selected::after {
+    content: '\f00c';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    position: absolute;
+    top: 12px;
+    right: 15px;
+    color: #007bff;
+    font-size: 1.2rem;
+    background: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.form-select:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+.medio-card .card-body {
+    position: relative;
+    overflow: hidden;
+}
+
+.medio-card .fas.fa-credit-card {
+    transition: all 0.3s ease;
+}
+
+.medio-card:hover .fas.fa-credit-card {
+    transform: scale(1.1);
+    color: #007bff !important;
+}
+
+.medio-card.selected .fas.fa-credit-card {
+    color: #007bff !important;
+    transform: scale(1.05);
+}
+
+.badge.bg-success {
+    background: linear-gradient(45deg, #28a745, #20c997) !important;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
 }
 
 .alert {
     border-radius: 0.5rem;
+    border: 0;
 }
 
 .card {
     border-radius: 0.75rem;
+    overflow: hidden;
 }
 
 .card-header {
     border-radius: 0.75rem 0.75rem 0 0 !important;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(0, 123, 255, 0.4);
+}
+
+.btn-outline-secondary {
+    transition: all 0.3s ease;
+}
+
+.btn-outline-secondary:hover {
+    transform: translateY(-1px);
+}
+
+/* Animaciones para cuando aparecen mensajes */
+@keyframes slideInDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.alert {
+    animation: slideInDown 0.5s ease-out;
+}
+
+/* Mejorar la visualización en móviles */
+@media (max-width: 768px) {
+    .medio-card {
+        margin-bottom: 1rem;
+    }
+    
+    .card-title {
+        font-size: 1rem;
+    }
+    
+    .btn-lg {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+    }
 }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const select = document.getElementById('{{ form.medio_de_pago.id_for_label }}');
+    const hiddenInput = document.getElementById('medio_seleccionado');
     const cards = document.querySelectorAll('.medio-card');
+    const continuarBtn = document.getElementById('continuarBtn');
+    const form = document.getElementById('medioForm');
     
     // Función para actualizar la selección visual
     function updateSelection(selectedId) {
+        let hasSelection = false;
+        
         cards.forEach(card => {
             const medioId = card.dataset.medioId;
             if (medioId === selectedId) {
                 card.classList.add('selected');
+                hasSelection = true;
             } else {
                 card.classList.remove('selected');
             }
         });
+        
+        // Habilitar/deshabilitar botón continuar
+        continuarBtn.disabled = !hasSelection;
+        
+        // Actualizar campo oculto
+        hiddenInput.value = selectedId || '';
+        
+        // Cambiar texto del botón según el estado
+        if (hasSelection) {
+            continuarBtn.innerHTML = '<i class="fas fa-arrow-right me-2"></i>Continuar con la Configuración';
+            continuarBtn.classList.remove('btn-secondary');
+            continuarBtn.classList.add('btn-primary');
+        } else {
+            continuarBtn.innerHTML = '<i class="fas fa-hand-pointer me-2"></i>Selecciona un Medio de Pago';
+            continuarBtn.classList.remove('btn-primary');
+            continuarBtn.classList.add('btn-secondary');
+        }
     }
     
     // Manejar clicks en las cards
     cards.forEach(card => {
         card.addEventListener('click', function() {
             const medioId = this.dataset.medioId;
-            select.value = medioId;
-            updateSelection(medioId);
+            
+            // Si ya está seleccionada, deseleccionar
+            if (this.classList.contains('selected')) {
+                updateSelection('');
+            } else {
+                updateSelection(medioId);
+            }
         });
+        
+        // Agregar efecto de enfoque con teclado
+        card.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.click();
+            }
+        });
+        
+        // Hacer las cards accesibles por teclado
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('role', 'button');
+        card.setAttribute('aria-label', `Seleccionar medio de pago ${this.querySelector('.card-title').textContent}`);
     });
     
-    // Manejar cambios en el select
-    select.addEventListener('change', function() {
-        updateSelection(this.value);
+    // Validación antes de envío del formulario
+    form.addEventListener('submit', function(e) {
+        if (!hiddenInput.value) {
+            e.preventDefault();
+            
+            // Mostrar mensaje de error temporal
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-warning alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Selección requerida:</strong> Debe seleccionar un medio de pago antes de continuar.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // Insertar el mensaje después del formulario
+            const cardBody = document.querySelector('.card-body');
+            const processAlert = cardBody.querySelector('.alert-info');
+            processAlert.insertAdjacentElement('afterend', alertDiv);
+            
+            // Hacer scroll hacia arriba para mostrar el mensaje
+            alertDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Auto-remover después de 5 segundos
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+            
+            return false;
+        }
     });
     
-    // Inicializar selección si ya hay un valor
-    if (select.value) {
-        updateSelection(select.value);
+    // Inicializar si ya hay un valor (útil para mantener selección en caso de errores)
+    if (hiddenInput.value) {
+        updateSelection(hiddenInput.value);
+    } else {
+        // Estado inicial
+        updateSelection('');
+    }
+    
+    // Si solo hay una opción, pre-seleccionarla automáticamente
+    if (cards.length === 1) {
+        const soloCard = cards[0];
+        setTimeout(() => {
+            updateSelection(soloCard.dataset.medioId);
+            
+            // Mostrar mensaje informativo
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'alert alert-info fade show mt-3';
+            infoDiv.innerHTML = `
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Selección automática:</strong> Se seleccionó automáticamente el único medio disponible.
+            `;
+            soloCard.closest('.col-md-6').appendChild(infoDiv);
+            
+            setTimeout(() => infoDiv.remove(), 3000);
+        }, 500);
     }
 });
 </script>

@@ -10,7 +10,7 @@ from .views import (
     ClienteMedioDePagoListView, ClienteMedioDePagoCreateView, ClienteMedioDePagoUpdateView,
     ClienteMedioDePagoToggleView, ClienteMedioDePagoDeleteView,
     select_medio_pago_view, medio_pago_detail_ajax, dashboard_medios_pago,
-    exportar_medios_pago
+    exportar_medios_pago, verificar_duplicados_ajax
 )
 
 app_name = 'clientes'
@@ -51,4 +51,8 @@ urlpatterns = [
     
     # APIs AJAX
     path('medios-pago/<int:pk>/detalle/', medio_pago_detail_ajax, name='detalle_medio_pago_ajax'),
+
+    # AJAX para verificación de duplicados
+    path('medios-pago/verificar-duplicados/', verificar_duplicados_ajax, name='verificar_duplicados_ajax'),
+
 ]

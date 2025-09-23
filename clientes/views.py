@@ -313,6 +313,7 @@ from django.db.models import Count, Q
 from medios_pago.models import MedioDePago
 from .models import Cliente, ClienteMedioDePago, HistorialClienteMedioDePago, AsignacionCliente
 from .forms import ClienteMedioDePagoCompleteForm, SelectMedioDePagoForm
+import re 
 
 import logging
 logger = logging.getLogger(__name__)
@@ -413,7 +414,10 @@ class ClienteMedioDePagoListView(LoginRequiredMixin, ListView):
 def select_medio_pago_view(request):
     """
     Vista mejorada para seleccionar el tipo de medio de pago antes de agregar
+    FILTRO APLICADO: Solo muestra medios con campos configurados
     """
+    from django.db.models import Count
+    
     cliente = get_cliente_activo(request)
     if not cliente:
         messages.warning(request, 'Debe seleccionar un cliente primero.')
@@ -429,19 +433,30 @@ def select_medio_pago_view(request):
     else:
         form = SelectMedioDePagoForm(cliente=cliente)
 
-    # Verificar si quedan medios por asociar
-    medios_disponibles = form.fields['medio_de_pago'].queryset
-    if not medios_disponibles.exists():
-        messages.info(
+    # CALCULAR campos activos dinámicamente y filtrar
+    medios_con_campos = form.fields['medio_de_pago'].queryset.annotate(
+        total_campos=Count('campos', distinct=True)
+    ).filter(
+        total_campos__gt=0  # Solo medios con al menos 1 campo
+    ).order_by('nombre')
+    
+    # Actualizar el queryset del formulario
+    form.fields['medio_de_pago'].queryset = medios_con_campos
+    
+    # Verificar si quedan medios disponibles después del filtro
+    if not medios_con_campos.exists():
+        messages.warning(
             request, 
-            'Ya tiene todos los medios de pago disponibles asociados a este cliente.'
+            'No hay medios de pago con campos configurados disponibles. '
+            'Contacte al administrador para configurar los campos necesarios.'
         )
         return redirect('clientes:medios_pago_cliente')
 
     return render(request, 'clientes/medios_pago/seleccionar_medio.html', {
         'form': form,
         'cliente': cliente,
-        'medios_disponibles': medios_disponibles
+        'medios_disponibles': medios_con_campos,
+        'total_medios_configurados': medios_con_campos.count()
     })
 
 
@@ -472,16 +487,8 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
             messages.error(request, 'Medio de pago no encontrado o inactivo.')
             return redirect('clientes:seleccionar_medio_pago')
             
-        # Verificar que no esté ya asociado
-        if ClienteMedioDePago.objects.filter(
-            cliente=self.cliente, 
-            medio_de_pago=self.medio_de_pago
-        ).exists():
-            messages.warning(
-                request, 
-                f'El medio de pago "{self.medio_de_pago.nombre}" ya está asociado a este cliente.'
-            )
-            return redirect('clientes:medios_pago_cliente')
+        # ELIMINAR: Verificación de duplicados
+        # Ya no verificamos si está asociado porque pueden tener múltiples del mismo tipo
             
         return super().dispatch(request, *args, **kwargs)
 
@@ -1030,3 +1037,144 @@ def exportar_medios_pago(request):
         writer.writerow(row)
     
     return response
+@login_required
+def verificar_duplicados_ajax(request):
+    """Vista AJAX para verificar posibles duplicados de medios de pago"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    
+    cliente = get_cliente_activo(request)
+    if not cliente:
+        return JsonResponse({'error': 'Cliente no seleccionado'}, status=400)
+    
+    try:
+        medio_id = request.POST.get('medio_id')
+        campos_data = {}
+        
+        # Recopilar datos de campos
+        for key, value in request.POST.items():
+            if key.startswith('campo_') and value.strip():
+                campos_data[key] = value.strip()
+        
+        if not medio_id or not campos_data:
+            return JsonResponse({'duplicados': []})
+        
+        medio_de_pago = get_object_or_404(MedioDePago, id=medio_id, is_active=True)
+        
+        # Buscar posibles duplicados
+        duplicados = []
+        existing_medios = ClienteMedioDePago.objects.filter(
+            cliente=cliente,
+            medio_de_pago=medio_de_pago
+        ).prefetch_related('medio_de_pago__campos')
+        
+        for existing in existing_medios:
+            similitud = calcular_similitud_medio(campos_data, existing, medio_de_pago)
+            
+            if similitud['score'] > 0.7:  # 70% de similitud
+                duplicados.append({
+                    'id': existing.id,
+                    'tipo': existing.medio_de_pago.nombre,
+                    'score': similitud['score'],
+                    'campos_similares': similitud['campos'],
+                    'fecha_creacion': existing.fecha_creacion.strftime('%d/%m/%Y'),
+                    'es_activo': existing.es_activo,
+                    'es_principal': existing.es_principal
+                })
+        
+        return JsonResponse({
+            'duplicados': duplicados,
+            'total': len(duplicados)
+        })
+        
+    except Exception as e:
+        logger.error(f'Error en verificación de duplicados: {str(e)}', exc_info=True)
+        return JsonResponse({'error': 'Error interno'}, status=500)
+
+
+def calcular_similitud_medio(campos_form, existing_medio, medio_de_pago):
+    """Calcular similitud entre campos del formulario y un medio existente"""
+    campos_similares = []
+    total_peso = 0
+    peso_similitud = 0
+    
+    # Pesos para diferentes tipos de campos
+    pesos_campos = {
+        'numero': 1.0,
+        'cuenta': 1.0,
+        'tarjeta': 1.0,
+        'cbu': 1.0,
+        'email': 0.9,
+        'telefono': 0.7,
+        'nombre': 0.3
+    }
+    
+    # Mapear campos del formulario con campos del medio de pago
+    campos_medio = {f'campo_{campo.id}': campo for campo in medio_de_pago.campos.all()}
+    
+    for campo_form, valor_form in campos_form.items():
+        if campo_form in campos_medio:
+            campo_obj = campos_medio[campo_form]
+            nombre_campo = campo_obj.nombre_campo.lower()
+            
+            # Obtener valor existente
+            valor_existente = existing_medio.get_dato_campo(campo_obj.nombre_campo)
+            
+            if valor_existente:
+                # Determinar peso del campo
+                peso = 0
+                for indicador, peso_indicador in pesos_campos.items():
+                    if indicador in nombre_campo:
+                        peso = peso_indicador
+                        break
+                
+                if peso > 0:
+                    total_peso += peso
+                    
+                    # Normalizar valores para comparación
+                    valor_form_norm = normalizar_valor(valor_form, campo_obj.tipo_dato)
+                    valor_exist_norm = normalizar_valor(str(valor_existente), campo_obj.tipo_dato)
+                    
+                    # Calcular similitud
+                    if valor_form_norm == valor_exist_norm:
+                        peso_similitud += peso
+                        campos_similares.append({
+                            'campo': campo_obj.nombre_campo,
+                            'valor_actual': valor_form,
+                            'valor_existente': str(valor_existente),
+                            'similitud': 100
+                        })
+                    elif campo_obj.tipo_dato == 'NUMERO' and len(valor_form_norm) > 4 and len(valor_exist_norm) > 4:
+                        # Para números largos, verificar últimos dígitos
+                        if valor_form_norm[-4:] == valor_exist_norm[-4:]:
+                            peso_parcial = peso * 0.6
+                            peso_similitud += peso_parcial
+                            campos_similares.append({
+                                'campo': campo_obj.nombre_campo,
+                                'valor_actual': f"****{valor_form[-4:]}",
+                                'valor_existente': f"****{str(valor_existente)[-4:]}",
+                                'similitud': 60
+                            })
+    
+    score = peso_similitud / total_peso if total_peso > 0 else 0
+    
+    return {
+        'score': round(score, 2),
+        'campos': campos_similares
+    }
+
+
+def normalizar_valor(valor, tipo_dato):
+    """Normalizar valor para comparación"""
+    if not valor:
+        return ''
+    
+    valor_str = str(valor).strip().lower()
+    
+    if tipo_dato in ['NUMERO', 'TELEFONO']:
+        # Remover espacios, guiones, paréntesis
+        return re.sub(r'[\s\-\(\)]', '', valor_str)
+    elif tipo_dato == 'EMAIL':
+        return valor_str
+    else:
+        return valor_str

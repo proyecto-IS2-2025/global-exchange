@@ -75,46 +75,40 @@ import re
 
 class SelectMedioDePagoForm(forms.Form):
     """
-    Formulario mejorado para seleccionar el tipo de medio de pago antes de completar los datos
+    Formulario para seleccionar el tipo de medio de pago - PERMITIR DUPLICADOS
     """
     medio_de_pago = forms.ModelChoiceField(
-        queryset=MedioDePago.objects.none(),  # Se define en __init__
+        queryset=MedioDePago.objects.none(),
         empty_label="Seleccione un medio de pago",
         widget=forms.Select(attrs={
             'class': 'form-select form-select-lg',
             'data-placeholder': 'Seleccione un tipo de medio de pago...'
         }),
         label="Tipo de medio de pago",
-        help_text="Seleccione el tipo de medio de pago que desea configurar para este cliente."
+        help_text="Puede agregar múltiples medios del mismo tipo (ej: varias tarjetas de crédito)."
     )
 
     def __init__(self, cliente=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
         if cliente:
-            # Obtener medios ya asociados al cliente
-            medios_asociados = ClienteMedioDePago.objects.filter(
-                cliente=cliente
-            ).values_list('medio_de_pago_id', flat=True)
-            
-            # Filtrar solo medios activos no asociados
+            # PERMITIR TODOS LOS MEDIOS ACTIVOS - NO FILTRAR POR YA ASOCIADOS
             self.fields['medio_de_pago'].queryset = MedioDePago.objects.filter(
                 is_active=True
-            ).exclude(
-                id__in=medios_asociados
             ).order_by('nombre')
             
-            # Personalizar label si no hay opciones
-            if not self.fields['medio_de_pago'].queryset.exists():
-                self.fields['medio_de_pago'].empty_label = "No hay medios disponibles"
+            # Mensaje actualizado
+            total_medios = self.fields['medio_de_pago'].queryset.count()
+            if total_medios > 0:
                 self.fields['medio_de_pago'].help_text = (
-                    "Todos los medios de pago disponibles ya están asociados a este cliente."
+                    f"Seleccione el tipo de medio de pago que desea configurar. "
+                    f"Puede agregar múltiples medios del mismo tipo."
                 )
 
 
 class ClienteMedioDePagoCompleteForm(forms.ModelForm):
     """
-    Formulario dinámico mejorado que incluye los campos específicos del medio de pago
+    Formulario con validación estricta que BLOQUEA duplicados
     """
     class Meta:
         model = ClienteMedioDePago
@@ -136,16 +130,14 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
         if self.instance and self.instance.pk:
             self.medio_de_pago_obj = self.instance.medio_de_pago
         
-        # Configurar el campo medio_de_pago - CORREGIDO
+        # Configurar el campo medio_de_pago
         if self.medio_de_pago_obj:
             self.fields['medio_de_pago'].initial = self.medio_de_pago_obj.id
             self.fields['medio_de_pago'].queryset = MedioDePago.objects.filter(
                 id=self.medio_de_pago_obj.id
             )
-            # Asegurar que el campo tenga el valor correcto
             self.initial['medio_de_pago'] = self.medio_de_pago_obj.id
         else:
-            # Si no hay medio de pago, hacer el campo no requerido temporalmente
             self.fields['medio_de_pago'].required = False
         
         # Personalizar el campo es_principal
@@ -176,18 +168,16 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
                 
                 self.fields[field_name] = field
         except Exception as e:
-            # Log del error para debug
             print(f"Error generando campos dinámicos: {e}")
 
     def _create_field_by_type(self, campo):
-        """Crear campo del formulario según el tipo de dato con validaciones mejoradas"""
+        """Crear campo del formulario según el tipo de dato"""
         base_attrs = {
             'class': 'form-control',
             'data-campo-tipo': campo.tipo_dato,
             'data-campo-id': campo.id
         }
         
-        # Añadir placeholder personalizado
         placeholder = self._get_placeholder(campo)
         if placeholder:
             base_attrs['placeholder'] = placeholder
@@ -200,7 +190,6 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
                 widget=forms.TextInput(attrs=base_attrs),
                 help_text=self._get_help_text(campo)
             )
-        
         elif campo.tipo_dato == 'NUMERO':
             field = forms.CharField(
                 label=campo.nombre_campo,
@@ -212,7 +201,6 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
                 }),
                 help_text=self._get_help_text(campo, "Solo números, guiones y puntos")
             )
-        
         elif campo.tipo_dato == 'FECHA':
             field = forms.DateField(
                 label=campo.nombre_campo,
@@ -224,7 +212,6 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
                 }),
                 help_text=self._get_help_text(campo, "Seleccione una fecha")
             )
-        
         elif campo.tipo_dato == 'EMAIL':
             field = forms.EmailField(
                 label=campo.nombre_campo,
@@ -236,7 +223,6 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
                 }),
                 help_text=self._get_help_text(campo, "ejemplo@correo.com")
             )
-        
         elif campo.tipo_dato == 'TELEFONO':
             field = forms.CharField(
                 label=campo.nombre_campo,
@@ -251,7 +237,6 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
                 }),
                 help_text=self._get_help_text(campo, "+595 21 123456 o 021123456")
             )
-        
         elif campo.tipo_dato == 'URL':
             field = forms.URLField(
                 label=campo.nombre_campo,
@@ -263,9 +248,7 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
                 }),
                 help_text=self._get_help_text(campo, "https://ejemplo.com")
             )
-        
         else:
-            # Fallback a texto
             field = forms.CharField(
                 label=campo.nombre_campo,
                 required=campo.is_required,
@@ -308,114 +291,247 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
         return base_text
 
     def clean(self):
-        """Validación a nivel de formulario - CON DEBUG DETALLADO"""
+        """Validación ESTRICTA que BLOQUEA duplicados automáticamente"""
         cleaned_data = super().clean()
         
-        print("=== DEBUG FORM CLEAN ===")
-        print(f"Datos crudos del formulario: {dict(self.data) if hasattr(self, 'data') else 'No data'}")
-        print(f"Cleaned data inicial: {cleaned_data}")
+        print("=== DEBUG VALIDACIÓN DUPLICADOS ===")
+        print(f"Cliente: {self.cliente}")
+        print(f"Medio de pago: {self.medio_de_pago_obj}")
+        print(f"Cleaned data: {cleaned_data}")
         
-        # Asegurar que el campo medio_de_pago tenga el valor correcto
-        if self.medio_de_pago_obj and not cleaned_data.get('medio_de_pago'):
-            cleaned_data['medio_de_pago'] = self.medio_de_pago_obj
-            print(f"DEBUG: Medio de pago asignado automáticamente: {self.medio_de_pago_obj}")
-        
-        # Validar que el cliente esté asignado
+        # Validaciones básicas
         if not self.cliente:
             raise ValidationError('No se ha especificado el cliente.')
         
-        # Validar medio de pago
         if not self.medio_de_pago_obj:
             raise ValidationError('No se ha especificado el medio de pago.')
         
-        # Debug de campos dinámicos ANTES de validar
-        print("=== DEBUG CAMPOS DINÁMICOS EN CLEAN ===")
-        if self.medio_de_pago_obj:
-            campos = self.medio_de_pago_obj.campos.all()
-            for campo in campos:
-                field_name = f'campo_{campo.id}'
-                # Verificar múltiples fuentes de datos
-                raw_value = self.data.get(field_name) if hasattr(self, 'data') else None
-                cleaned_value = cleaned_data.get(field_name)
-                
-                print(f"Campo {campo.nombre_campo} ({field_name}):")
-                print(f"  - Valor crudo: '{raw_value}'")
-                print(f"  - Valor limpio: '{cleaned_value}'")
-                print(f"  - Es requerido: {campo.is_required}")
+        # Asegurar que el medio de pago esté en cleaned_data
+        if not cleaned_data.get('medio_de_pago'):
+            cleaned_data['medio_de_pago'] = self.medio_de_pago_obj
         
-        # Validar campos dinámicos - MEJORADO
-        if self.medio_de_pago_obj:
-            errors = {}
-            try:
-                campos = self.medio_de_pago_obj.campos.all()
-                
-                for campo in campos:
-                    field_name = f'campo_{campo.id}'
-                    valor = cleaned_data.get(field_name, '').strip() if cleaned_data.get(field_name) else ''
-                    
-                    print(f"Validando campo {campo.nombre_campo}: valor='{valor}', requerido={campo.is_required}")
-                    
-                    # Validar campos requeridos
-                    if campo.is_required and not valor:
-                        errors[field_name] = f'El campo {campo.nombre_campo} es requerido.'
-                        continue
-                    
-                    # Solo validar formato si hay valor
-                    if valor:
-                        try:
-                            self._validate_field_format(campo, valor)
-                        except ValidationError as e:
-                            errors[field_name] = str(e)
-                
-                if errors:
-                    print(f"Errores encontrados en campos dinámicos: {errors}")
-                    raise ValidationError(errors)
-                    
-            except Exception as e:
-                print(f"Error en validación de campos dinámicos: {e}")
-                raise ValidationError('Error al validar los campos del formulario.')
+        # VALIDACIÓN ESTRICTA DE DUPLICADOS
+        duplicado_encontrado = self._check_strict_duplicates()
+        if duplicado_encontrado:
+            raise ValidationError({
+                '__all__': f'Ya existe un medio de pago idéntico: {duplicado_encontrado["mensaje"]}'
+            })
         
-        print(f"Cleaned data final: {cleaned_data}")
+        # Validar campos dinámicos
+        self._validate_dynamic_fields(cleaned_data)
+        
         return cleaned_data
+
+    def _check_strict_duplicates(self):
+        """
+        Verificación ESTRICTA de duplicados - BLOQUEA si encuentra exactamente lo mismo
+        """
+        if not self.cliente or not self.medio_de_pago_obj:
+            return None
+        
+        # Obtener medios existentes del mismo tipo
+        existing_medios = ClienteMedioDePago.objects.filter(
+            cliente=self.cliente,
+            medio_de_pago=self.medio_de_pago_obj
+        )
+        
+        # Excluir el objeto actual si estamos editando
+        if self.instance.pk:
+            existing_medios = existing_medios.exclude(pk=self.instance.pk)
+        
+        if not existing_medios.exists():
+            return None
+        
+        # Recopilar datos actuales del formulario
+        current_data = {}
+        for campo in self.medio_de_pago_obj.campos.all():
+            field_name = f'campo_{campo.id}'
+            valor = self.cleaned_data.get(field_name)
+            if valor is not None:
+                valor_normalizado = self._normalize_for_comparison(str(valor).strip(), campo.tipo_dato)
+                if valor_normalizado:  # Solo incluir si no está vacío
+                    current_data[campo.nombre_campo] = valor_normalizado
+        
+        print(f"Datos actuales normalizados: {current_data}")
+        
+        # Comparar con medios existentes
+        for existing in existing_medios:
+            if self._is_exact_duplicate(current_data, existing):
+                return {
+                    'mensaje': f'"{existing.medio_de_pago.nombre}" con los mismos datos ya existe',
+                    'existing_id': existing.id
+                }
+        
+        return None
+
+    def _is_exact_duplicate(self, current_data, existing_medio):
+        """
+        Determinar si es un duplicado EXACTO comparando todos los campos importantes
+        """
+        existing_data = existing_medio.datos_campos or {}
+        
+        print(f"Comparando actual: {current_data}")
+        print(f"Con existente: {existing_data}")
+        
+        # Si no hay datos en ninguno de los dos, no es duplicado
+        if not current_data and not existing_data:
+            return False
+        
+        # Obtener campos críticos que deben coincidir
+        critical_fields = self._get_critical_fields()
+        
+        critical_matches = 0
+        total_critical = 0
+        
+        # Verificar campos críticos
+        for campo_name, current_value in current_data.items():
+            if self._is_critical_field(campo_name, critical_fields):
+                total_critical += 1
+                existing_value = existing_data.get(campo_name)
+                
+                if existing_value:
+                    # Normalizar valor existente para comparación
+                    campo_obj = self._get_campo_by_name(campo_name)
+                    if campo_obj:
+                        existing_normalized = self._normalize_for_comparison(
+                            str(existing_value), 
+                            campo_obj.tipo_dato
+                        )
+                        
+                        print(f"Campo crítico '{campo_name}': '{current_value}' vs '{existing_normalized}'")
+                        
+                        if current_value == existing_normalized:
+                            critical_matches += 1
+
+        # Es duplicado si coinciden TODOS los campos críticos y hay al menos uno
+        if total_critical > 0 and critical_matches == total_critical:
+            print(f"DUPLICADO DETECTADO: {critical_matches}/{total_critical} campos críticos coinciden")
+            return True
+        
+        # Verificación adicional: si tienen exactamente los mismos datos
+        if self._have_identical_data(current_data, existing_data):
+            print("DUPLICADO DETECTADO: datos idénticos")
+            return True
+        
+        return False
+
+    def _get_critical_fields(self):
+        """
+        Definir campos críticos que no deberían duplicarse
+        """
+        return {
+            'numero', 'cuenta', 'tarjeta', 'cbu', 'numero_cuenta', 
+            'numero_tarjeta', 'email', 'correo', 'usuario'
+        }
+
+    def _is_critical_field(self, field_name, critical_fields):
+        """
+        Verificar si un campo es crítico comparando con palabras clave
+        """
+        field_lower = field_name.lower()
+        return any(critical in field_lower for critical in critical_fields)
+
+    def _get_campo_by_name(self, campo_name):
+        """
+        Obtener objeto Campo por su nombre
+        """
+        try:
+            return self.medio_de_pago_obj.campos.filter(nombre_campo=campo_name).first()
+        except:
+            return None
+
+    def _have_identical_data(self, current_data, existing_data):
+        """
+        Verificar si dos conjuntos de datos son idénticos
+        """
+        # Normalizar ambos conjuntos
+        current_normalized = {k: v for k, v in current_data.items() if v}
+        existing_normalized = {}
+        
+        for k, v in existing_data.items():
+            if v:
+                campo_obj = self._get_campo_by_name(k)
+                if campo_obj:
+                    normalized_val = self._normalize_for_comparison(str(v), campo_obj.tipo_dato)
+                    if normalized_val:
+                        existing_normalized[k] = normalized_val
+        
+        # Comparar si son exactamente iguales
+        return current_normalized == existing_normalized
+
+    def _normalize_for_comparison(self, value, tipo_dato):
+        """
+        Normalizar valor para comparación estricta
+        """
+        if not value:
+            return ''
+        
+        value_str = str(value).strip()
+        
+        if tipo_dato in ['NUMERO', 'TELEFONO']:
+            # Remover todos los espacios, guiones, puntos y paréntesis
+            normalized = re.sub(r'[\s\-\.\(\)]', '', value_str)
+            return normalized.upper()
+        elif tipo_dato == 'EMAIL':
+            return value_str.lower()
+        elif tipo_dato == 'URL':
+            return value_str.lower().rstrip('/')
+        else:
+            return value_str.upper()
+
+    def _validate_dynamic_fields(self, cleaned_data):
+        """Validar formato de campos dinámicos"""
+        if not self.medio_de_pago_obj:
+            return
+        
+        errors = {}
+        
+        for campo in self.medio_de_pago_obj.campos.all():
+            field_name = f'campo_{campo.id}'
+            valor = cleaned_data.get(field_name, '').strip() if cleaned_data.get(field_name) else ''
+            
+            # Validar campos requeridos
+            if campo.is_required and not valor:
+                errors[field_name] = f'El campo {campo.nombre_campo} es requerido.'
+                continue
+            
+            # Validar formato si hay valor
+            if valor:
+                try:
+                    self._validate_field_format(campo, valor)
+                except ValidationError as e:
+                    errors[field_name] = str(e)
+        
+        if errors:
+            raise ValidationError(errors)
 
     def _validate_field_format(self, campo, valor):
         """Validar formato de campo específico"""
         valor_str = str(valor).strip()
         
         if campo.tipo_dato == 'NUMERO':
-            # Validación más permisiva para números
             if not re.match(r'^[0-9\-\.\s]+$', valor_str):
                 raise ValidationError('Solo se permiten números, guiones, puntos y espacios.')
-            
-            # Verificar que tenga al menos un dígito
             if not re.search(r'\d', valor_str):
                 raise ValidationError('Debe contener al menos un número.')
         
         elif campo.tipo_dato == 'TELEFONO':
-            # Limpiar el valor para validación
             clean_value = re.sub(r'[\s\-\(\)]', '', valor_str)
-            
-            # Permitir + al inicio
             if clean_value.startswith('+'):
                 clean_value = clean_value[1:]
             
-            # Verificar que solo contenga dígitos después de limpiar
             if not clean_value.isdigit():
                 raise ValidationError('Formato de teléfono inválido.')
-            
-            # Verificar longitud mínima y máxima
             if len(clean_value) < 6:
                 raise ValidationError('El teléfono debe tener al menos 6 dígitos.')
             if len(clean_value) > 15:
                 raise ValidationError('El teléfono no puede tener más de 15 dígitos.')
         
         elif campo.tipo_dato == 'EMAIL':
-            # Validación adicional de email
             if '@' not in valor_str or '.' not in valor_str.split('@')[-1]:
                 raise ValidationError('Formato de email inválido.')
         
         elif campo.tipo_dato == 'URL':
-            # Validación básica de URL
             if not (valor_str.startswith('http://') or valor_str.startswith('https://')):
                 raise ValidationError('La URL debe comenzar con http:// o https://')
 
@@ -438,7 +554,6 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
                 if valor is not None:
                     valor_str = str(valor).strip()
                     if valor_str:  # Solo guardar si no está vacío
-                        # Limpiar el valor según el tipo
                         valor_limpio = self._clean_field_value(campo, valor_str)
                         datos_campos[campo.nombre_campo] = valor_limpio
             
@@ -446,7 +561,6 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
         
         # Manejar el campo es_principal
         if instance.es_principal and self.cliente:
-            # Desmarcar otros medios como principales
             ClienteMedioDePago.objects.filter(
                 cliente=self.cliente,
                 es_principal=True
@@ -462,10 +576,8 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
         valor_str = str(valor).strip()
         
         if campo.tipo_dato == 'NUMERO':
-            # Mantener formato original pero limpiar espacios excesivos
             return re.sub(r'\s+', ' ', valor_str)
         elif campo.tipo_dato == 'TELEFONO':
-            # Normalizar formato de teléfono
             return re.sub(r'\s+', ' ', valor_str)
         elif campo.tipo_dato == 'EMAIL':
             return valor_str.lower()

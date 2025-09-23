@@ -227,7 +227,7 @@ class ClienteMedioDePago(models.Model):
     class Meta:
         verbose_name = 'Medio de Pago del Cliente'
         verbose_name_plural = 'Medios de Pago de Clientes'
-        unique_together = ['cliente', 'medio_de_pago']
+        # ELIMINAR: unique_together = ['cliente', 'medio_de_pago']  
         ordering = ['-es_principal', '-fecha_actualizacion']
 
 
