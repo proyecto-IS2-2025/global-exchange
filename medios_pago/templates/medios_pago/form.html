@@ -44,6 +44,56 @@
 .contextual-alert {
     border-left: 4px solid #007bff;
 }
+
+.template-creator {
+    background: linear-gradient(135deg, #fff8e1, #ffe0b2);
+    border: 2px solid #ff9800;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-top: 1rem;
+    box-shadow: 0 4px 8px rgba(255, 152, 0, 0.1);
+    animation: slideDown 0.3s ease-out;
+}
+
+.template-creator.show {
+    display: block !important;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.template-creator .form-label.fw-bold {
+    color: #e65100;
+    font-size: 1.1rem;
+}
+
+.template-creator .form-control {
+    border: 2px solid #ffb74d;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.template-creator .form-control:focus {
+    border-color: #ff9800;
+    box-shadow: 0 0 0 0.25rem rgba(255, 152, 0, 0.15);
+    background-color: #fff;
+}
+
+.no-fields-message {
+    text-align: center;
+    padding: 2rem;
+    color: #6c757d;
+}
 </style>
 {% endblock %}
 
@@ -70,7 +120,7 @@
                 </div>
             {% endif %}
 
-            <!-- InformaciÃ³n bÃ¡sica del medio de pago -->
+            <!-- Información básica del medio de pago -->
             <div class="row">
                 <div class="col-md-8">
                     <div class="mb-3">
@@ -105,12 +155,18 @@
                 </div>
             </div>
 
-            <!-- Selector de template (solo en creaciÃ³n) -->
+            <!-- Selector de template (solo en creación) -->
             {% if not is_edit %}
                 <div class="template-selector">
-                    <div class="d-flex align-items-center mb-3">
-                        <i class="fas fa-magic text-primary me-2"></i>
-                        <h5 class="mb-0">ConfiguraciÃ³n RÃ¡pida</h5>
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-magic text-primary me-2"></i>
+                            <h5 class="mb-0">Configuración Rápida</h5>
+                        </div>
+                        <button type="button" id="toggle-template-creator" class="btn btn-warning btn-sm">
+                            <i class="fas fa-plus-circle me-1"></i>
+                            Crear Template Personalizado
+                        </button>
                     </div>
                     
                     <div class="mb-3">
@@ -126,14 +182,41 @@
                         <strong>Tip:</strong> Selecciona un template para autocompletar campos comunes, o elige "Personalizado" para agregar campos manualmente.
                     </div>
                 </div>
+
+                <!-- Sección para crear template personalizado -->
+                <div class="template-creator" id="template-creator" style="display: none;">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-plus-circle text-warning me-2"></i>
+                        <h5 class="mb-0">Crear Template Personalizado</h5>
+                        <span class="badge bg-warning text-dark ms-2">Nuevo</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.crear_template.id_for_label }}" class="form-label fw-bold">{{ form.crear_template.label }}</label>
+                        {{ form.crear_template }}
+                        {% if form.crear_template.help_text %}
+                            <div class="form-text">{{ form.crear_template.help_text }}</div>
+                        {% endif %}
+                        {% if form.crear_template.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.crear_template.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="alert alert-warning alert-sm mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Nota:</strong> El template se creará con los campos que agregues abajo. Una vez guardado, estará disponible para futuros medios de pago.
+                    </div>
+                </div>
             {% endif %}
 
             <hr class="my-4">
 
-            <!-- Campos dinÃ¡micos -->
+            <!-- Campos dinámicos -->
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4 class="mb-0">
-                    <i class="fas fa-list me-2"></i>Campos EspecÃ­ficos
+                    <i class="fas fa-list me-2"></i>Campos Específicos
                 </h4>
                 <button type="button" id="add-campo" class="btn btn-outline-primary btn-sm">
                     <i class="fas fa-plus me-1"></i>
@@ -181,6 +264,12 @@
                                             </label>
                                         </div>
                                     {% endif %}
+                                    
+                                    {% if not is_edit %}
+                                        <button type="button" class="btn btn-sm btn-outline-danger remove-campo-btn">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    {% endif %}
                                 </div>
                             </div>
                             
@@ -205,7 +294,7 @@
                                             </div>
                                         {% endif %}
                                         
-                                        <!-- InformaciÃ³n del campo seleccionado -->
+                                        <!-- Información del campo seleccionado -->
                                         <div class="field-info field-info-hidden mt-2" id="field-info-{{ forloop.counter0 }}">
                                             <div class="row">
                                                 <div class="col-6">
@@ -225,7 +314,7 @@
                                 <div class="col-md-4">
                                     <div class="mb-3">
                                         <label class="form-label">
-                                            <i class="fas fa-asterisk me-1 text-danger"></i>Â¿Es requerido?
+                                            <i class="fas fa-asterisk me-1 text-danger"></i>¿Es requerido?
                                         </label>
                                         <div class="form-check">
                                             {{ form_campo.is_required }}
@@ -244,15 +333,12 @@
                         </div>
                     </div>
                 {% empty %}
-                    <div class="alert alert-info text-center">
+                    <div class="alert alert-info text-center no-fields-message" id="no-fields-message">
                         <i class="fas fa-info-circle me-2"></i>
                         {% if is_edit %}
-                            Este medio de pago no tiene campos especÃ­ficos definidos.
+                            Este medio de pago no tiene campos específicos definidos.
                         {% else %}
-                            No hay campos definidos aÃºn. 
-                            {% if not is_edit %}
-                                Selecciona un template arriba o agrega campos manualmente.
-                            {% endif %}
+                            No hay campos definidos aún. Selecciona un template arriba o agrega campos manualmente.
                         {% endif %}
                     </div>
                 {% endfor %}
@@ -272,6 +358,10 @@
                                             <i class="fas fa-trash"></i> Eliminar
                                         </label>
                                     </div>
+                                {% else %}
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-campo-btn">
+                                        <i class="fas fa-times"></i>
+                                    </button>
                                 {% endif %}
                             </div>
                         </div>
@@ -286,7 +376,7 @@
                                     </label>
                                     {{ campos_formset.empty_form.campo_api }}
                                     
-                                    <!-- InformaciÃ³n del campo -->
+                                    <!-- Información del campo -->
                                     <div class="field-info field-info-hidden mt-2" id="field-info-__prefix__">
                                         <div class="row">
                                             <div class="col-6">
@@ -306,7 +396,7 @@
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label">
-                                        <i class="fas fa-asterisk me-1 text-danger"></i>Â¿Es requerido?
+                                        <i class="fas fa-asterisk me-1 text-danger"></i>¿Es requerido?
                                     </label>
                                     <div class="form-check">
                                         {{ campos_formset.empty_form.is_required }}
@@ -319,7 +409,7 @@
                 </div>
             </div>
 
-            <!-- Botones de acciÃ³n -->
+            <!-- Botones de acción -->
             <div class="d-grid gap-2 mt-4">
                 <button type="submit" class="btn btn-success btn-lg">
                     <i class="fas fa-save me-2"></i>Guardar Medio de Pago
@@ -335,135 +425,150 @@
 <!-- Datos JavaScript para campos predefinidos -->
 <script id="predefined-fields-data" type="application/json">
 {
-    "card_number": {"label": "NÃºmero de tarjeta", "type": "NUMERO", "description": "NÃºmero de 16 dÃ­gitos de la tarjeta"},
-    "exp_month": {"label": "Mes de vencimiento", "type": "NUMERO", "description": "Mes de vencimiento (1-12)"},
-    "exp_year": {"label": "AÃ±o de vencimiento", "type": "NUMERO", "description": "AÃ±o de vencimiento (4 dÃ­gitos)"},
-    "cvc": {"label": "CÃ³digo de seguridad", "type": "NUMERO", "description": "CÃ³digo CVV/CVC de 3 o 4 dÃ­gitos"},
-    "cardholder_name": {"label": "Nombre en la tarjeta", "type": "TEXTO", "description": "Nombre como aparece en la tarjeta"},
-    "paypal_email": {"label": "Email de PayPal", "type": "EMAIL", "description": "DirecciÃ³n de email asociada a PayPal"},
-    "account_number": {"label": "NÃºmero de cuenta", "type": "NUMERO", "description": "NÃºmero de cuenta bancaria"},
-    "bank_name": {"label": "Nombre del banco", "type": "TEXTO", "description": "Nombre completo del banco"},
-    "account_holder": {"label": "Titular de la cuenta", "type": "TEXTO", "description": "Nombre del titular de la cuenta"},
-    "routing_number": {"label": "CÃ³digo de routing", "type": "NUMERO", "description": "CÃ³digo de routing bancario (USA)"},
-    "swift_code": {"label": "CÃ³digo SWIFT", "type": "TEXTO", "description": "CÃ³digo SWIFT para transferencias internacionales"},
-    "cbu_cvu": {"label": "CBU/CVU", "type": "NUMERO", "description": "Clave Bancaria Uniforme o Clave Virtual Uniforme"},
-    "email": {"label": "Email", "type": "EMAIL", "description": "DirecciÃ³n de correo electrÃ³nico"},
-    "phone": {"label": "TelÃ©fono", "type": "TELEFONO", "description": "NÃºmero de telÃ©fono"},
-    "amount": {"label": "Monto", "type": "NUMERO", "description": "Monto de la transacciÃ³n"},
-    "currency": {"label": "Moneda", "type": "TEXTO", "description": "CÃ³digo de moneda (USD, EUR, etc.)"},
-    "description": {"label": "DescripciÃ³n", "type": "TEXTO", "description": "DescripciÃ³n de la transacciÃ³n"},
-    "wallet_address": {"label": "DirecciÃ³n de billetera", "type": "TEXTO", "description": "DirecciÃ³n de billetera de criptomoneda"},
-    "network": {"label": "Red", "type": "TEXTO", "description": "Red blockchain (ETH, BTC, etc.)"}
-}
-</script>
-
-<script id="payment-templates-data" type="application/json">
-{
-    "stripe": {"name": "Stripe (Tarjeta)", "fields": ["card_number", "exp_month", "exp_year", "cvc", "cardholder_name", "email"]},
-    "paypal": {"name": "PayPal", "fields": ["paypal_email", "amount", "currency", "description"]},
-    "bank_transfer": {"name": "Transferencia Bancaria", "fields": ["account_number", "bank_name", "account_holder", "cbu_cvu"]},
-    "international_transfer": {"name": "Transferencia Internacional", "fields": ["account_number", "bank_name", "account_holder", "swift_code", "routing_number"]},
-    "bitcoin": {"name": "Bitcoin", "fields": ["wallet_address", "network", "amount"]},
-    "efectivo": {"name": "Efectivo", "fields": ["amount", "description"]}
+    "card_number": {"label": "Número de tarjeta", "type": "NUMERO", "description": "Número de 16 dígitos de la tarjeta", "required": true},
+    "exp_month": {"label": "Mes de vencimiento", "type": "NUMERO", "description": "Mes de vencimiento (1-12)", "required": true},
+    "exp_year": {"label": "Año de vencimiento", "type": "NUMERO", "description": "Año de vencimiento (4 dígitos)", "required": true},
+    "cvc": {"label": "Código de seguridad", "type": "NUMERO", "description": "Código CVV/CVC de 3 o 4 dígitos", "required": true},
+    "cardholder_name": {"label": "Nombre en la tarjeta", "type": "TEXTO", "description": "Nombre como aparece en la tarjeta", "required": true},
+    "paypal_email": {"label": "Email de PayPal", "type": "EMAIL", "description": "Dirección de email asociada a PayPal", "required": true},
+    "account_number": {"label": "Número de cuenta", "type": "NUMERO", "description": "Número de cuenta bancaria", "required": true},
+    "bank_name": {"label": "Nombre del banco", "type": "TEXTO", "description": "Nombre completo del banco", "required": true},
+    "account_holder": {"label": "Titular de la cuenta", "type": "TEXTO", "description": "Nombre del titular de la cuenta", "required": true},
+    "routing_number": {"label": "Código de routing", "type": "NUMERO", "description": "Código de routing bancario (USA)", "required": false},
+    "swift_code": {"label": "Código SWIFT", "type": "TEXTO", "description": "Código SWIFT para transferencias internacionales", "required": false},
+    "cbu_cvu": {"label": "CBU/CVU", "type": "NUMERO", "description": "Clave Bancaria Uniforme o Clave Virtual Uniforme", "required": true},
+    "email": {"label": "Email", "type": "EMAIL", "description": "Dirección de correo electrónico", "required": true},
+    "phone": {"label": "Teléfono", "type": "TELEFONO", "description": "Número de teléfono", "required": false},
+    "amount": {"label": "Monto", "type": "NUMERO", "description": "Monto de la transacción", "required": true},
+    "currency": {"label": "Moneda", "type": "TEXTO", "description": "Código de moneda (USD, EUR, etc.)", "required": true},
+    "description": {"label": "Descripción", "type": "TEXTO", "description": "Descripción de la transacción", "required": false},
+    "wallet_address": {"label": "Dirección de billetera", "type": "TEXTO", "description": "Dirección de billetera de criptomoneda", "required": true},
+    "network": {"label": "Red", "type": "TEXTO", "description": "Red blockchain (ETH, BTC, etc.)", "required": true}
 }
 </script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Cargar datos de campos y templates
-    const predefinedFields = JSON.parse(document.getElementById('predefined-fields-data').textContent);
-    const paymentTemplates = JSON.parse(document.getElementById('payment-templates-data').textContent);
+    console.log('🔧 Iniciando sistema de templates dinámicos...');
     
-    // Referencias DOM
+    // Cargar datos de campos predefinidos
+    const predefinedFields = JSON.parse(document.getElementById('predefined-fields-data').textContent);
+    console.log('📋 Campos predefinidos cargados:', Object.keys(predefinedFields).length);
+    
+    // Templates predefinidos (disponibles inmediatamente)
+    let allTemplates = {
+        "stripe": {"name": "Stripe (Tarjeta)", "fields": ["card_number", "exp_month", "exp_year", "cvc", "cardholder_name", "email"], "is_custom": false},
+        "paypal": {"name": "PayPal", "fields": ["paypal_email", "amount", "currency", "description"], "is_custom": false},
+        "bank_transfer": {"name": "Transferencia Bancaria", "fields": ["account_number", "bank_name", "account_holder", "cbu_cvu"], "is_custom": false},
+        "international_transfer": {"name": "Transferencia Internacional", "fields": ["account_number", "bank_name", "account_holder", "swift_code", "routing_number"], "is_custom": false},
+        "bitcoin": {"name": "Bitcoin", "fields": ["wallet_address", "network", "amount"], "is_custom": false},
+        "efectivo": {"name": "Efectivo", "fields": ["amount", "description"], "is_custom": false}
+    };
+    
+    // Referencias DOM - buscar por múltiples métodos
     const addButton = document.getElementById('add-campo');
     const container = document.getElementById('campos-formset-container');
     const managementForm = document.querySelector('input[name$="TOTAL_FORMS"]');
     const emptyFormTemplate = document.getElementById('empty-form-template');
-    const templateSelector = document.getElementById('id_template_selector');
+    const noFieldsMessage = document.getElementById('no-fields-message');
+    const templateCreator = document.getElementById('template-creator');
+    const toggleTemplateCreatorBtn = document.getElementById('toggle-template-creator');
+    
+    // Buscar template selector por múltiples métodos
+    let templateSelector = document.getElementById('id_aplicar_template') ||
+                          document.querySelector('select[name="aplicar_template"]') ||
+                          document.querySelector('[name*="aplicar_template"]') ||
+                          document.querySelector('.template-selector select');
+    
+    console.log('🎯 Referencias DOM:', {
+        addButton: !!addButton,
+        container: !!container,
+        managementForm: !!managementForm,
+        emptyFormTemplate: !!emptyFormTemplate,
+        templateSelector: !!templateSelector,
+        noFieldsMessage: !!noFieldsMessage,
+        templateCreator: !!templateCreator,
+        toggleTemplateCreatorBtn: !!toggleTemplateCreatorBtn
+    });
+    
+    // Debugging del template selector
+    if (!templateSelector) {
+        console.error('❌ Template selector no encontrado!');
+        console.log('🔍 Selectores disponibles:');
+        document.querySelectorAll('select').forEach((select, index) => {
+            console.log(`   Select ${index}:`, {
+                id: select.id,
+                name: select.name,
+                className: select.className
+            });
+        });
+    } else {
+        console.log('✅ Template selector encontrado:', {
+            id: templateSelector.id,
+            name: templateSelector.name,
+            opciones: templateSelector.options.length
+        });
+    }
     
     const isEdit = "{{ is_edit|yesno:'true,false' }}" === "true";
 
-    // FunciÃ³n para actualizar informaciÃ³n de campo
+    // Función para actualizar información de campo
     function updateFieldInfo(selectElement) {
+        if (!selectElement) return;
+        
         const selectedValue = selectElement.value;
-        const fieldInfoDiv = selectElement.closest('.form-campo').querySelector('.field-info');
+        const fieldInfoDiv = selectElement.closest('.form-campo')?.querySelector('.field-info');
+        
+        if (!fieldInfoDiv) return;
         
         if (selectedValue && predefinedFields[selectedValue]) {
             const fieldData = predefinedFields[selectedValue];
             
-            fieldInfoDiv.querySelector('.field-name').textContent = fieldData.label;
-            fieldInfoDiv.querySelector('.field-type').textContent = fieldData.type;
-            fieldInfoDiv.querySelector('.field-description').textContent = fieldData.description;
+            fieldInfoDiv.querySelector('.field-name').textContent = fieldData.label || '-';
+            fieldInfoDiv.querySelector('.field-type').textContent = fieldData.type || '-';
+            fieldInfoDiv.querySelector('.field-description').textContent = fieldData.description || '-';
             
             fieldInfoDiv.classList.remove('field-info-hidden');
+            console.log('ℹ️ Campo actualizado:', selectedValue, fieldData.label);
         } else {
             fieldInfoDiv.classList.add('field-info-hidden');
         }
     }
 
-    // FunciÃ³n para actualizar numeraciÃ³n
+    // Función para actualizar numeración
     function updateFieldNumbers() {
-        const campos = container.querySelectorAll('.form-campo:not(#empty-form-template):not(.marked-for-deletion)');
+        const campos = container.querySelectorAll('.form-campo:not(#empty-form-template):not(.marked-for-deletion):not(.d-none)');
         campos.forEach((campo, index) => {
             const numberSpan = campo.querySelector('.field-number');
             if (numberSpan) {
                 numberSpan.textContent = index + 1;
             }
         });
+        console.log('🔢 Numeración actualizada:', campos.length, 'campos');
     }
 
-    // Aplicar template predefinido
-    if (templateSelector) {
-        templateSelector.addEventListener('change', function() {
-            if (!this.value) return;
-            
-            const template = paymentTemplates[this.value];
-            if (!template) return;
-            
-            // Confirmar aplicaciÃ³n del template
-            if (!confirm(`Â¿Aplicar template "${template.name}"? Esto agregarÃ¡ ${template.fields.length} campos predefinidos.`)) {
-                this.value = '';
-                return;
-            }
-            
-            // Limpiar campos existentes
-            container.querySelectorAll('.form-campo:not(#empty-form-template)').forEach(campo => {
-                campo.remove();
-            });
-            
-            // Agregar campos del template
-            let totalForms = 0;
-            template.fields.forEach((fieldKey, index) => {
-                if (predefinedFields[fieldKey]) {
-                    addCampoFromTemplate(fieldKey, totalForms);
-                    totalForms++;
-                }
-            });
-            
-            managementForm.value = totalForms;
-            updateFieldNumbers();
-            
-            // Mostrar mensaje de Ã©xito
-            const successAlert = document.createElement('div');
-            successAlert.className = 'alert alert-success alert-dismissible fade show mt-3';
-            successAlert.innerHTML = `
-                <i class="fas fa-check me-2"></i>
-                Template "${template.name}" aplicado exitosamente. Se agregaron ${template.fields.length} campos.
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            templateSelector.closest('.template-selector').appendChild(successAlert);
-            
-            // Auto-hide alert
-            setTimeout(() => {
-                if (successAlert.parentNode) {
-                    successAlert.remove();
-                }
-            }, 5000);
-        });
+    // Función para limpiar campos existentes
+    function clearExistingFields() {
+        console.log('🧹 Limpiando campos existentes...');
+        const existingCampos = container.querySelectorAll('.form-campo:not(#empty-form-template)');
+        existingCampos.forEach(campo => campo.remove());
+        
+        // Ocultar mensaje de "no hay campos"
+        if (noFieldsMessage) {
+            noFieldsMessage.style.display = 'none';
+        }
+        console.log('🗑️ Eliminados:', existingCampos.length, 'campos');
     }
 
-    // FunciÃ³n para agregar campo desde template
+    // Función para agregar campo desde template
     function addCampoFromTemplate(fieldKey, formIndex) {
+        console.log('➕ Agregando campo:', fieldKey, 'en índice:', formIndex);
+        
+        if (!predefinedFields[fieldKey]) {
+            console.error('❌ Campo no existe en predefinedFields:', fieldKey);
+            return;
+        }
+        
         const fieldData = predefinedFields[fieldKey];
         let newFormHtml = emptyFormTemplate.innerHTML.replace(/__prefix__/g, formIndex);
         
@@ -471,74 +576,333 @@ document.addEventListener('DOMContentLoaded', function() {
         newDiv.className = 'card mb-3 form-campo campo-predefinido';
         newDiv.innerHTML = newFormHtml;
         
-        // Configurar el campo
+        // Configurar el select con el valor correcto
         const select = newDiv.querySelector('select[name*="campo_api"]');
         if (select) {
             select.value = fieldKey;
+            console.log('✅ Campo seleccionado:', fieldKey);
         }
         
+        // Configurar checkbox de required
         const requiredCheckbox = newDiv.querySelector('input[name*="is_required"]');
         if (requiredCheckbox && fieldData.required !== undefined) {
             requiredCheckbox.checked = fieldData.required;
         }
         
-        // Actualizar informaciÃ³n
+        // Actualizar información del campo
         updateFieldInfo(select);
         
-        // Agregar al container
+        // Insertar en el container
         container.insertBefore(newDiv, emptyFormTemplate);
+        console.log('✅ Campo agregado exitosamente');
+    }
+
+    // APLICAR TEMPLATE - Función principal
+    function initializeTemplateSelector() {
+        if (!templateSelector) {
+            console.warn('⚠️ Template selector no disponible');
+            return;
+        }
+        
+        console.log('🎨 Configurando evento de template selector...');
+        
+        templateSelector.addEventListener('change', async function() {
+            const selectedValue = this.value;
+            console.log('🎯 Template seleccionado:', selectedValue);
+            
+            if (!selectedValue) {
+                console.log('⭕ Valor vacío, no hacer nada');
+                return;
+            }
+            
+            let template = allTemplates[selectedValue];
+            
+            // Si es template personalizado, cargar campos dinámicamente
+            if (template && template.is_custom && (!template.fields || template.fields.length === 0)) {
+                console.log('🔥 Cargando template personalizado:', selectedValue);
+                try {
+                    const url = `{% url "medios_pago:template_data" "TEMPLATE_KEY" %}`.replace('TEMPLATE_KEY', selectedValue);
+                    console.log('🌐 Fetching:', url);
+                    
+                    const response = await fetch(url);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.fields) {
+                            template.fields = data.fields;
+                            console.log('✅ Template personalizado cargado:', data.fields);
+                        } else {
+                            console.error('❌ Respuesta inválida:', data);
+                        }
+                    } else {
+                        console.error('❌ Error HTTP:', response.status);
+                    }
+                } catch (error) {
+                    console.error('❌ Error cargando template personalizado:', error);
+                    alert('Error cargando el template personalizado: ' + error.message);
+                    this.value = '';
+                    return;
+                }
+            }
+            
+            if (!template || !template.fields) {
+                console.error('❌ Template no válido:', selectedValue, template);
+                return;
+            }
+            
+            // Limpiar campos existentes
+            clearExistingFields();
+            
+            console.log('📝 Agregando campos del template:', template.fields);
+            
+            // Agregar campos del template
+            let totalForms = 0;
+            template.fields.forEach((fieldKey, index) => {
+                console.log(`➕ Procesando campo ${index + 1}/${template.fields.length}:`, fieldKey);
+                if (predefinedFields[fieldKey]) {
+                    addCampoFromTemplate(fieldKey, totalForms);
+                    totalForms++;
+                } else {
+                    console.warn('⚠️ Campo no encontrado en predefinedFields:', fieldKey);
+                }
+            });
+            
+            // Actualizar management form
+            if (managementForm) {
+                managementForm.value = totalForms;
+                console.log('📊 Management form actualizado:', totalForms);
+            }
+            
+            updateFieldNumbers();
+            
+            // Mostrar mensaje de éxito
+            showTemplateMessage(`Template "${template.name.replace(' 🎨', '')}" aplicado. ${totalForms} campos agregados.`);
+        });
+    }
+
+    // Mostrar mensaje de template aplicado
+    function showTemplateMessage(message) {
+        console.log('💬 Mostrando mensaje:', message);
+        if (!templateSelector) return;
+        
+        const successAlert = document.createElement('div');
+        successAlert.className = 'alert alert-success alert-dismissible fade show mt-3';
+        successAlert.innerHTML = `
+            <i class="fas fa-check me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        templateSelector.closest('.template-selector').appendChild(successAlert);
+        
+        // Auto-hide alert
+        setTimeout(() => {
+            if (successAlert.parentNode) {
+                successAlert.remove();
+            }
+        }, 5000);
+    }
+
+    // Toggle para mostrar/ocultar creador de templates
+    if (toggleTemplateCreatorBtn && templateCreator) {
+        toggleTemplateCreatorBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            if (templateCreator.style.display === 'none' || !templateCreator.style.display) {
+                // Mostrar
+                templateCreator.style.display = 'block';
+                templateCreator.classList.add('show');
+                this.innerHTML = '<i class="fas fa-times-circle me-1"></i>Cancelar Template';
+                this.className = 'btn btn-outline-secondary btn-sm';
+                
+                // Focus en el input
+                const inputField = templateCreator.querySelector('input[type="text"]');
+                if (inputField) {
+                    setTimeout(() => inputField.focus(), 100);
+                }
+                
+                console.log('📝 Sección de crear template mostrada');
+            } else {
+                // Ocultar
+                templateCreator.style.display = 'none';
+                templateCreator.classList.remove('show');
+                this.innerHTML = '<i class="fas fa-plus-circle me-1"></i>Crear Template Personalizado';
+                this.className = 'btn btn-warning btn-sm';
+                
+                // Limpiar el campo
+                const inputField = templateCreator.querySelector('input[type="text"]');
+                if (inputField) {
+                    inputField.value = '';
+                }
+                
+                console.log('❌ Sección de crear template ocultada');
+            }
+        });
     }
 
     // Agregar campo manual
     if (addButton && emptyFormTemplate && managementForm) {
         addButton.addEventListener('click', function() {
-            const totalForms = parseInt(managementForm.value);
+            console.log('➕ Agregando campo manual...');
+            
+            // Ocultar mensaje de "no hay campos" si está visible
+            if (noFieldsMessage) {
+                noFieldsMessage.style.display = 'none';
+            }
+            
+            const totalForms = parseInt(managementForm.value) || 0;
             let newFormHtml = emptyFormTemplate.innerHTML.replace(/__prefix__/g, totalForms);
             
             const newDiv = document.createElement('div');
             newDiv.className = 'card mb-3 form-campo campo-predefinido';
             newDiv.innerHTML = newFormHtml;
             
-            // Actualizar numeraciÃ³n
-            const numberSpan = newDiv.querySelector('.field-number');
-            if (numberSpan) {
-                numberSpan.textContent = totalForms + 1;
-            }
-            
             // Insertar antes del template
             container.insertBefore(newDiv, emptyFormTemplate);
             managementForm.value = totalForms + 1;
             
             updateFieldNumbers();
+            console.log('✅ Campo manual agregado');
         });
     }
+
+    // Manejar eliminación de campos (para creación)
+    document.body.addEventListener('click', function(e) {
+        if (e.target.matches('.remove-campo-btn, .remove-campo-btn *')) {
+            const button = e.target.closest('.remove-campo-btn');
+            if (button) {
+                const formDiv = button.closest('.form-campo');
+                if (formDiv && !formDiv.id.includes('empty-form-template')) {
+                    formDiv.remove();
+                    
+                    // Actualizar management form
+                    if (managementForm) {
+                        const currentTotal = parseInt(managementForm.value) || 0;
+                        managementForm.value = Math.max(0, currentTotal - 1);
+                    }
+                    
+                    updateFieldNumbers();
+                    
+                    // Mostrar mensaje si no hay campos
+                    const remainingCampos = container.querySelectorAll('.form-campo:not(#empty-form-template)');
+                    if (remainingCampos.length === 0 && noFieldsMessage) {
+                        noFieldsMessage.style.display = 'block';
+                    }
+                    
+                    console.log('🗑️ Campo eliminado');
+                }
+            }
+        }
+    });
 
     // Manejar cambios en selectores de campo
     document.body.addEventListener('change', function(e) {
         if (e.target.matches('select[name*="campo_api"]')) {
+            console.log('🔄 Campo API cambiado:', e.target.value);
             updateFieldInfo(e.target);
         }
         
-        // Manejar marcado para eliminaciÃ³n
+        // Manejar marcado para eliminación (solo en edición)
         if (e.target && e.target.name && e.target.name.indexOf('DELETE') > -1) {
             const formDiv = e.target.closest('.form-campo');
             if (formDiv) {
                 if (e.target.checked) {
                     formDiv.classList.add('marked-for-deletion');
+                    console.log('🗑️ Campo marcado para eliminación');
                 } else {
                     formDiv.classList.remove('marked-for-deletion');
+                    console.log('↩️ Marca de eliminación removida');
                 }
                 updateFieldNumbers();
             }
         }
     });
 
+    // Cargar templates personalizados (no bloqueante)
+    async function loadCustomTemplates() {
+        console.log('🔥 Cargando templates personalizados...');
+        try {
+            const response = await fetch('{% url "medios_pago:template_list" %}');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.templates) {
+                    console.log('📦 Templates personalizados encontrados:', data.templates.length);
+                    
+                    // Agregar templates personalizados
+                    data.templates.forEach(template => {
+                        if (template.is_custom) {
+                            allTemplates[template.key] = {
+                                name: template.name + ' 🎨',
+                                fields: [], // Se cargarán cuando se necesiten
+                                is_custom: true
+                            };
+                            console.log('➕ Template personalizado agregado:', template.key);
+                        }
+                    });
+                    
+                    // Actualizar opciones del selector
+                    if (templateSelector) {
+                        updateTemplateOptions();
+                    }
+                }
+            }
+        } catch (error) {
+            console.warn('⚠️ Error cargando templates personalizados:', error);
+        }
+    }
+
+    function updateTemplateOptions() {
+        if (!templateSelector) return;
+        
+        console.log('🔄 Actualizando opciones del selector...');
+        
+        // Guardar valor actual
+        const currentValue = templateSelector.value;
+        
+        // Limpiar opciones manteniendo la primera
+        const firstOption = templateSelector.querySelector('option[value=""]');
+        templateSelector.innerHTML = '';
+        
+        // Agregar opción vacía
+        if (firstOption) {
+            templateSelector.appendChild(firstOption);
+        } else {
+            const emptyOption = document.createElement('option');
+            emptyOption.value = '';
+            emptyOption.textContent = '--- Personalizado ---';
+            templateSelector.appendChild(emptyOption);
+        }
+        
+        // Agregar templates
+        Object.entries(allTemplates).forEach(([key, template]) => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = template.name;
+            templateSelector.appendChild(option);
+        });
+        
+        // Restaurar valor
+        if (currentValue && allTemplates[currentValue]) {
+            templateSelector.value = currentValue;
+        }
+        
+        console.log('✅ Opciones actualizadas:', Object.keys(allTemplates).length, 'templates disponibles');
+    }
+
+    // Inicializar sistema
+    console.log('🚀 Inicializando sistema...');
+    
+    // Configurar template selector
+    initializeTemplateSelector();
+    
     // Inicializar campos existentes
     document.querySelectorAll('select[name*="campo_api"]').forEach(select => {
         updateFieldInfo(select);
     });
     
     updateFieldNumbers();
+    
+    // Cargar templates personalizados al final (no bloquea la UI)
+    loadCustomTemplates();
+    
 });
 </script>
 {% endblock %}

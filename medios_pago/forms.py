@@ -1,24 +1,35 @@
-# forms.py - VersiÃ³n con campos predefinidos
+# forms.py - Versión con templates dinámicos
 from django import forms
 from django.forms import inlineformset_factory
 from django.core.exceptions import ValidationError
-from .models import MedioDePago, CampoMedioDePago, PREDEFINED_FIELDS, PAYMENT_TEMPLATES
+from .models import MedioDePago, CampoMedioDePago, PaymentTemplate, PREDEFINED_FIELDS
 
 
 class MedioDePagoForm(forms.ModelForm):
     """
-    Formulario para la creaciÃ³n y ediciÃ³n de un Medio de Pago.
-    Ahora incluye la opciÃ³n de aplicar templates predefinidos.
+    Formulario para la creación y edición de un Medio de Pago.
+    Ahora incluye la opción de aplicar templates predefinidos y dinámicos.
     """
     aplicar_template = forms.ChoiceField(
         label='Usar template predefinido',
-        choices=[('', '--- Personalizado ---')] + [(k, v['name']) for k, v in PAYMENT_TEMPLATES.items()],
+        choices=[],  # Se cargarán dinámicamente
         required=False,
         widget=forms.Select(attrs={
             'class': 'form-select',
             'id': 'id_template_selector'
         }),
         help_text='Selecciona un template para autocompletar campos comunes'
+    )
+    
+    # Campo para crear nuevo template
+    crear_template = forms.CharField(
+        label='Crear nuevo template',
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nombre del nuevo template...'
+        }),
+        help_text='Opcional: Registra la configuración actual como un nuevo template'
     )
     
     class Meta:
@@ -34,6 +45,21 @@ class MedioDePagoForm(forms.ModelForm):
             }),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Cargar templates dinámicamente
+        all_templates = PaymentTemplate.get_all_templates()
+        choices = [('', '--- Personalizado ---')]
+        
+        for key, template in all_templates.items():
+            label = template['name']
+            if template.get('is_custom'):
+                label += ' 🎨'  # Indicador visual para templates personalizados
+            choices.append((key, label))
+        
+        self.fields['aplicar_template'].choices = choices
     
     def clean_nombre(self):
         nombre = (self.cleaned_data.get('nombre') or '').strip()
@@ -46,8 +72,16 @@ class MedioDePagoForm(forms.ModelForm):
         if comision is None:
             return 0
         if comision < 0 or comision > 100:
-            raise forms.ValidationError('La comisiÃ³n debe ser un valor entre 0 y 100.')
+            raise forms.ValidationError('La comisión debe ser un valor entre 0 y 100.')
         return comision
+
+    def clean_crear_template(self):
+        nombre_template = self.cleaned_data.get('crear_template', '').strip()
+        if nombre_template:
+            # Validar que no existe un template con el mismo nombre
+            if PaymentTemplate.objects.filter(name__iexact=nombre_template).exists():
+                raise forms.ValidationError(f'Ya existe un template con el nombre "{nombre_template}"')
+        return nombre_template
 
 
 class CampoMedioDePagoForm(forms.ModelForm):
@@ -84,7 +118,7 @@ class CampoMedioDePagoForm(forms.ModelForm):
             raise forms.ValidationError('Debe seleccionar un campo de la lista.')
         
         if campo_api not in PREDEFINED_FIELDS:
-            raise forms.ValidationError('El campo seleccionado no es vÃ¡lido.')
+            raise forms.ValidationError('El campo seleccionado no es válido.')
         
         return campo_api
 
@@ -99,7 +133,7 @@ class CampoMedioDePagoForm(forms.ModelForm):
                 campo_api=campo_api
             )
             
-            # Excluir el objeto actual si estÃ¡ siendo editado
+            # Excluir el objeto actual si está siendo editado
             if self.instance.pk:
                 existing = existing.exclude(pk=self.instance.pk)
             
@@ -114,7 +148,7 @@ class CampoMedioDePagoForm(forms.ModelForm):
     def save(self, commit=True):
         instance = super().save(commit=False)
         
-        # Auto-completar informaciÃ³n desde PREDEFINED_FIELDS
+        # Auto-completar información desde PREDEFINED_FIELDS
         if instance.campo_api in PREDEFINED_FIELDS:
             field_def = PREDEFINED_FIELDS[instance.campo_api]
             instance.nombre_campo = field_def['label']
@@ -140,7 +174,7 @@ class CampoMedioDePagoFormSet(forms.BaseInlineFormSet):
             if not form.cleaned_data:
                 continue
                 
-            # Solo considerar formularios que no serÃ¡n eliminados
+            # Solo considerar formularios que no serán eliminados
             if form.cleaned_data.get('DELETE', False):
                 continue
                 
@@ -149,14 +183,14 @@ class CampoMedioDePagoFormSet(forms.BaseInlineFormSet):
                 if campo_api in campos_api:
                     campo_label = PREDEFINED_FIELDS[campo_api]['label']
                     raise forms.ValidationError(
-                        f'No puede seleccionar el mismo campo "{campo_label}" mÃºltiples veces.'
+                        f'No puede seleccionar el mismo campo "{campo_label}" múltiples veces.'
                     )
                 campos_api.append(campo_api)
 
 
 def create_campo_formset(is_edit=False):
     """
-    Factory para crear formsets con configuraciÃ³n especÃ­fica.
+    Factory para crear formsets con configuración específica.
     """
     extra_forms = 0 if is_edit else 1
     
@@ -169,26 +203,17 @@ def create_campo_formset(is_edit=False):
         extra=extra_forms,
         can_delete=True,
         validate_max=True,
-        max_num=len(PREDEFINED_FIELDS),  # MÃ¡ximo: todos los campos disponibles
+        max_num=len(PREDEFINED_FIELDS),  # Máximo: todos los campos disponibles
     )
 
 
-class TemplateApplicationForm(forms.Form):
+class DeleteTemplateForm(forms.Form):
     """
-    Formulario auxiliar para aplicar templates a medios existentes.
+    Formulario para confirmar eliminación de template personalizado
     """
-    template = forms.ChoiceField(
-        label='Template a aplicar',
-        choices=[(k, v['name']) for k, v in PAYMENT_TEMPLATES.items()],
-        widget=forms.Select(attrs={'class': 'form-select'})
-    )
-    
-    sobrescribir_existentes = forms.BooleanField(
-        label='Sobrescribir campos existentes',
-        required=False,
-        initial=False,
-        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-        help_text='Si estÃ¡ marcado, eliminarÃ¡ los campos actuales y aplicarÃ¡ solo los del template'
+    confirm = forms.BooleanField(
+        required=True,
+        widget=forms.HiddenInput()
     )
 
 
