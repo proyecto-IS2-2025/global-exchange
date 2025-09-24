@@ -1,19 +1,41 @@
 # banco/templatetags/banco_tags.py
 from django import template
+from billetera.models import TransferenciaBilleteraABanco
 
 register = template.Library()
 
 @register.simple_tag
-def get_banco_styles(entidad):
-    if not entidad:
-        return {
-            'color_principal': '#1d3557',
-            'color_secundario': '#457b9d',
-            'logo_url': ''
-        }
-    
-    return {
-        'color_principal': entidad.color_principal,
-        'color_secundario': entidad.color_secundario,
-        'logo_url': entidad.logo_url if entidad.logo_url else ''
-    }
+def get_tipo_display(movimiento):
+    """Devuelve el tipo de movimiento legible"""
+    if hasattr(movimiento, 'cuenta_origen') and hasattr(movimiento, 'cuenta_destino'):
+        return "Transferencia"
+    elif hasattr(movimiento, 'tipo'):
+        return f"Pago {movimiento.get_tipo_display()}"
+    return "Movimiento"
+
+@register.simple_tag
+def get_movimiento_tipo(movimiento):
+    """Determina el tipo de movimiento para el template"""
+    if hasattr(movimiento, 'cuenta_origen') and hasattr(movimiento, 'cuenta_destino'):
+        return 'TRANSFERENCIA'
+    elif hasattr(movimiento, 'tipo'):
+        return f'PAGO_{movimiento.tipo}'
+    return 'DESCONOCIDO'
+
+@register.filter
+def currency_format(value):
+    """Formatea el valor como moneda paraguaya"""
+    try:
+        return f"₲ {float(value):,.2f}".replace(',', '.')
+    except (ValueError, TypeError):
+        return "₲ 0.00"
+
+@register.filter
+def absolute(value):
+    """Devuelve el valor absoluto de un número."""
+    return abs(value)
+
+@register.filter
+def is_transferencia_billetera(movimiento):
+    """Comprueba si el objeto de movimiento es una TransferenciaBilleteraABanco."""
+    return isinstance(movimiento, TransferenciaBilleteraABanco)

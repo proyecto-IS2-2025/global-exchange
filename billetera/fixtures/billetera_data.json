@@ -1,0 +1,18 @@
+[
+  {
+    "model": "billetera.billeterauser",
+    "pk": 1,
+    "fields": {
+      "numero_telefono": "595981123456",
+      "password": "user123"
+    }
+  },
+  {
+    "model": "billetera.billeterauser",
+    "pk": 2,
+    "fields": {
+      "numero_telefono": "595972789012",
+      "password": "user456"
+    }
+  }
+]

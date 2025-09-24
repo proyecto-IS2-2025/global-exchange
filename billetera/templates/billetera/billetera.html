@@ -1,0 +1,54 @@
+{% extends "billetera/base.html" %}
+
+{% block title %}Mi Billetera{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4 text-center">
+        <i class="bi bi-wallet2"></i> Mi Billetera Electrónica
+    </h2>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card card-custom shadow-sm text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Saldo Actual</h5>
+                    <span class="badge bg-success" style="font-size: 1.5rem;">
+                        ₲ {{ billetera.saldo|floatformat:2 }}
+                    </span>
+                    <hr>
+                    <h5 class="card-title">Recargar Fondos desde el Banco</h5>
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="recargar_form" value="1">
+                        {% if messages %}
+                            <div class="alert-container">
+                                {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        {{ form_recarga.as_p }}
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                Recargar
+                            </button>
+                        </div>
+                    </form>
+                    <div class="d-grid gap-2 mt-4">
+                        <a href="{% url 'billetera:transferir_billetera' %}" class="btn btn-secondary">
+                            <i class="bi bi-send"></i> Enviar a otro usuario
+                        </a>
+                        <a href="{% url 'billetera:transferir_a_banco' %}" class="btn btn-secondary mt-2">
+                             <i class="bi bi-bank"></i> Enviar a una cuenta bancaria
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

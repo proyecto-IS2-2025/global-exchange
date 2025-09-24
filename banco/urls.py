@@ -1,3 +1,4 @@
+# banco/urls.py
 from django.urls import path
 from . import views
 
@@ -9,4 +10,6 @@ urlpatterns = [
     path("", views.dashboard, name="dashboard"),
     path("transferir/", views.transferir, name="transferir"),
     path("historial/", views.historial, name="historial"),
+    # ✅ La ruta correcta para la API de recarga.
+    path("api/recargar/", views.api_recargar, name="api_recargar"),
 ]

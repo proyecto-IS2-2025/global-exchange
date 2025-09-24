@@ -36,34 +36,61 @@
   .badge-custom-dark {
     background: var(--color-secundario);
     font-size: 1rem;
-    padding: 0.5em 1em;
-    border-radius: 0.6rem;
-    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+  }
+  
+  .badge-custom-credit {
+    background: #28a745;
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+  }
+  
+  .dashboard-card {
+    background: #ffffff;
+    padding: 2.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    color: #495057;
   }
 
-  .badge-custom-success {
-    background: linear-gradient(135deg, #2ecc71, #27ae60);
-    font-size: 1.1rem;
-    padding: 0.6em 1.2em;
-    border-radius: 0.6rem;
-    font-weight: 600;
-    color: #fff;
+  .info-item {
+    padding: 1rem 0;
+    border-bottom: 1px solid #eceeef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .info-item:last-child {
+    border-bottom: none;
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<nav class="navbar navbar-expand-lg navbar-custom mb-5">
+<nav class="navbar navbar-expand-lg navbar-custom">
   <div class="container-fluid">
-    {% if entidad.logo_url %}
-    <img src="{{ entidad.logo_url }}" height="40" class="me-2" alt="{{ entidad.nombre }} Logo">
-    {% endif %}
-    <span class="navbar-brand">{{ entidad.nombre }}</span>
-    <div class="collapse navbar-collapse justify-content-end">
-      <ul class="navbar-nav">
+    <a class="navbar-brand" href="{% url 'banco:dashboard' %}">
+      {% if entidad.logo_url %}
+          <img src="{{ entidad.logo_url }}" alt="Logo de {{ entidad.nombre }}" height="30" class="me-2">
+      {% endif %}
+      Banco
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link active" href="{% url 'banco:dashboard' %}">
+            <i class="bi bi-grid me-2"></i> Panel de control
+          </a>
+        </li>
         <li class="nav-item">
           <a class="nav-link" href="{% url 'banco:transferir' %}">
-            <i class="bi bi-arrow-right-circle-fill me-2"></i> Transferir
+            <i class="bi bi-send-fill me-2"></i> Transferir
           </a>
         </li>
         <li class="nav-item">
@@ -93,17 +120,38 @@
 
   <div class="dashboard-card text-center">
     <h3 class="card-title">
-      Bienvenido, <span class="fw-bold">{{ cuenta.usuario.email }}</span>
+      Bienvenido
     </h3>
 
     <div class="info-item">
-      <strong>Número de cuenta:</strong><br>
-      <span class="badge badge-custom-dark mt-2">{{ cuenta.numero_cuenta }}</span>
+        <h5><i class="bi bi-bank me-2"></i> Saldo en Débito</h5>
+        {% if cuenta_debito %}
+            <span class="badge badge-custom-dark">₲ {{ cuenta_debito.saldo|floatformat:2 }}</span>
+        {% else %}
+            <span class="badge badge-custom-dark">No disponible</span>
+        {% endif %}
     </div>
-
+    
     <div class="info-item">
-      <strong>Saldo disponible:</strong><br>
-      <span class="badge badge-custom-success mt-2">₲ {{ cuenta.saldo }}</span>
+      <h5><i class="bi bi-credit-card me-2"></i> Saldo en Crédito</h5>
+      {% if cuenta_credito %}
+          <span class="badge badge-custom-credit">₲ {{ cuenta_credito.saldo|floatformat:2 }}</span>
+        
+      {% else %}
+          <span class="badge badge-custom-credit">No disponible</span>
+      {% endif %}
+    </div>
+    
+    <div class="info-item">
+      <h5><i class="bi bi-calculator me-2"></i> Total Disponible</h5>
+      {% if cuenta_debito and cuenta_credito %}
+          {% comment %} Para crédito: si el saldo es negativo, significa límite disponible {% endcomment %}
+          <span class="badge badge-custom-dark">
+            ₲ {% widthratio cuenta_debito.saldo 1 1 %}{% if cuenta_credito.saldo|floatformat:0 < 0 %}{{ cuenta_credito.saldo|floatformat:2 }}{% endif %}
+          </span>
+      {% else %}
+          <span class="badge badge-custom-dark">Calculando...</span>
+      {% endif %}
     </div>
   </div>
 </div>
