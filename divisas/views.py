@@ -17,7 +17,7 @@ from simulador.views import calcular_simulacion_api
 from django.http import JsonResponse
 import json
 from django.test import RequestFactory
-
+from clientes.views import get_medio_acreditacion_seleccionado
 """
 Vistas para la gestión de divisas y tasas de cambio.
 
@@ -368,3 +368,14 @@ class VentaConfirmacionView(LoginRequiredMixin, TemplateView):
 
 class VentaMediosView(LoginRequiredMixin, TemplateView):
     template_name = "operaciones/venta_medios.html"
+
+from .views import get_medio_acreditacion_seleccionado
+
+class SumarioOperacionView(TemplateView):
+    template_name = "operaciones/venta_sumario.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["operacion"] = self.request.session.get("operacion")
+        ctx["medio"] = get_medio_acreditacion_seleccionado(self.request)  
+        return ctx

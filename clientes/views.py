@@ -1178,3 +1178,84 @@ def normalizar_valor(valor, tipo_dato):
         return valor_str
     else:
         return valor_str
+    
+# Agrega esta vista al final de tu views.py
+class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
+    """
+    Vista para seleccionar medios de acreditación en operaciones de venta de divisas
+    """
+    template_name = 'operaciones/seleccionar_medio_acreditacion.html'
+
+    def get(self, request):
+        cliente = get_cliente_activo(request)
+        if not cliente:
+            messages.warning(request, 'Debe seleccionar un cliente primero.')
+            return redirect('clientes:seleccionar_cliente')
+
+        # Obtener solo medios activos del cliente
+        medios_activos = ClienteMedioDePago.objects.filter(
+            cliente=cliente,
+            es_activo=True
+        ).select_related('medio_de_pago').prefetch_related(
+            'medio_de_pago__campos'
+        ).order_by('-es_principal', '-fecha_actualizacion')
+
+        # Medio previamente seleccionado (guardado en sesión)
+        medio_seleccionado = request.session.get('medio_seleccionado')
+
+        context = {
+            'cliente': cliente,
+            'medios_activos': medios_activos,
+            'medio_seleccionado': medio_seleccionado,
+            'total_medios': medios_activos.count()
+        }
+        
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        cliente = get_cliente_activo(request)
+        if not cliente:
+            return JsonResponse({'error': 'Cliente no seleccionado'}, status=400)
+
+        medio_id = request.POST.get('medio_id')
+        accion = request.POST.get('accion')
+
+        if accion == 'seleccionar' and medio_id:
+            try:
+                medio = ClienteMedioDePago.objects.select_related("medio_de_pago").get(
+                    id=medio_id,
+                    cliente=cliente,
+                    es_activo=True
+                )
+                
+                # Guardar en sesión (detalle completo para el sumario)
+                request.session['medio_seleccionado'] = {
+                    "id": medio.id,
+                    "nombre": medio.medio_de_pago.nombre,
+                    "comision": medio.medio_de_pago.comision_porcentaje,
+                }
+                request.session.modified = True
+
+                return JsonResponse({
+                    'success': True,
+                    'redirect_url': reverse('divisas:venta_sumario'),  # redirigir al sumario
+                    'message': f'Medio seleccionado: {medio.medio_de_pago.nombre}'
+                })
+
+            except ClienteMedioDePago.DoesNotExist:
+                return JsonResponse({'error': 'Medio de pago no válido'}, status=400)
+
+        elif accion == 'limpiar':
+            # Limpiar selección
+            request.session.pop('medio_seleccionado', None)
+            return JsonResponse({'success': True, 'message': 'Selección limpiada'})
+
+        return JsonResponse({'error': 'Acción no válida'}, status=400)
+
+
+# Función helper para obtener el medio seleccionado
+def get_medio_acreditacion_seleccionado(request):
+    """
+    Obtener el medio de acreditación seleccionado para la operación actual
+    """
+    return request.session.get("medio_seleccionado")

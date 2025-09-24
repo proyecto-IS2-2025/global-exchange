@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="h4 mb-1">
+                                <i class="fas fa-credit-card text-primary me-2"></i>
+                                Medios de Acreditación
+                            </h2>
+                            <p class="mb-0 text-muted">Seleccione el medio para realizar el pago/transferencia</p>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-primary fs-6">{{ total_medios }} medios activos</span>
+                            {% if medio_seleccionado %}
+                                <div class="mt-2">
+                                    <span class="badge bg-success fs-6">
+                                        <i class="fas fa-check me-1"></i>
+                                        {{ medio_seleccionado.medio_de_pago.nombre }}
+                                    </span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Medios de Acreditación -->
+    <div class="row">
+        {% if medios_activos %}
+            {% for medio in medios_activos %}
+                <div class="col-xl-4 col-lg-6 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm border-0 {% if medio_seleccionado and medio_seleccionado.id == medio.id %}border-success border-2{% else %}border-light{% endif %}">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold">
+                                <i class="fas fa-{{ medio.medio_de_pago.icono|default:'credit-card' }} me-2 text-primary"></i>
+                                {{ medio.medio_de_pago.nombre }}
+                            </h6>
+                            <div>
+                                {% if medio.es_principal %}
+                                    <span class="badge bg-primary me-1">Principal</span>
+                                {% endif %}
+                                <span class="badge bg-success">Activo</span>
+                            </div>
+                        </div>
+                        
+                        <div class="card-body">
+                            <!-- Información de los campos -->
+                            <div class="mb-3">
+                                {% for campo in medio.medio_de_pago.campos.all %}
+                                    {% with valor=medio.datos_campos|get_item:campo.nombre_campo %}
+                                        {% if valor %}
+                                            <div class="mb-2">
+                                                <small class="text-muted fw-bold">{{ campo.nombre_campo }}:</small>
+                                                <div class="fw-semibold text-dark">{{ valor }}</div>
+                                            </div>
+                                        {% endif %}
+                                    {% endwith %}
+                                {% endfor %}
+                            </div>
+
+                            <!-- Comisión -->
+                            <div class="mb-3 p-3 bg-light rounded">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-muted fw-bold">Comisión:</span>
+                                    <span class="badge bg-info fs-6">{{ medio.medio_de_pago.comision_porcentaje }}%</span>
+                                </div>
+                            </div>
+
+                            <!-- Información adicional -->
+                            <div class="small text-muted">
+                                <div class="d-flex justify-content-between">
+                                    <span>Agregado:</span>
+                                    <span>{{ medio.fecha_creacion|date:"d/m/Y" }}</span>
+                                </div>
+                                {% if medio.es_principal %}
+                                    <div class="d-flex justify-content-between">
+                                        <span>Tipo:</span>
+                                        <span class="text-primary">Medio Principal</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="card-footer bg-transparent border-0 pt-0">
+                            {% if medio_seleccionado and medio_seleccionado.id == medio.id %}
+                                <button class="btn btn-success w-100 btn-seleccionar-medio" disabled>
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    Seleccionado
+                                </button>
+                                <button class="btn btn-outline-secondary w-100 mt-2 btn-limpiar-seleccion" 
+                                        data-medio-id="{{ medio.id }}">
+                                    <i class="fas fa-times me-2"></i>
+                                    Cambiar Selección
+                                </button>
+                            {% else %}
+                                <button class="btn btn-outline-primary w-100 btn-seleccionar-medio" 
+                                        data-medio-id="{{ medio.id }}"
+                                        data-medio-nombre="{{ medio.medio_de_pago.nombre }}">
+                                    <i class="fas fa-hand-pointer me-2"></i>
+                                    Seleccionar este Medio
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <!-- Estado sin medios -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-credit-card fa-4x text-muted mb-3"></i>
+                        <h3 class="text-muted">No hay medios de acreditación disponibles</h3>
+                        <p class="text-muted mb-4">
+                            Este cliente no tiene medios de pago activos configurados. 
+                            Es necesario configurar al menos un medio de acreditación para realizar operaciones.
+                        </p>
+                        <div class="d-flex justify-content-center gap-3">
+                            <a href="{% url 'clientes:medios_pago_cliente' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Gestionar Medios de Pago
+                            </a>
+                            <a href="{% url 'clientes:seleccionar_medio_pago' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-credit-card me-2"></i>Agregar Nuevo Medio
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Barra de acciones fija si hay selección -->
+    {% if medio_seleccionado %}
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+            <div class="card shadow-lg border-success">
+                <div class="card-body">
+                    <h6 class="card-title text-success">
+                        <i class="fas fa-check-circle me-2"></i>Medio Seleccionado
+                    </h6>
+                    <p class="card-text mb-2">
+                        <strong>{{ medio_seleccionado.medio_de_pago.nombre }}</strong>
+                    </p>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success btn-sm" id="btn-continuar-operacion">
+                            <i class="fas fa-arrow-right me-1"></i>Continuar Operación
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" id="btn-cambiar-medio">
+                            <i class="fas fa-exchange-alt me-1"></i>Cambiar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Seleccionar medio de acreditación
+$('.btn-seleccionar-medio').on('click', function() {
+    const medioId = $(this).data('medio-id');
+    const medioNombre = $(this).data('medio-nombre');
+
+    if ($(this).prop('disabled')) return;
+
+    // Mostrar loading
+    const $btn = $(this);
+    const originalHtml = $btn.html();
+    $btn.html('<i class="fas fa-spinner fa-spin me-2"></i>Seleccionando...');
+    $btn.prop('disabled', true);
+
+    $.ajax({
+        url: window.location.href,
+        type: 'POST',
+        data: {
+            'medio_id': medioId,
+            'accion': 'seleccionar',
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        success: function(response) {
+            if (response.success) {
+                mostrarMensajeExito(response.message || 'Medio seleccionado correctamente');
+
+                // Redirigir automáticamente al sumario si viene en la respuesta
+                if (response.redirect_url) {
+                    setTimeout(() => {
+                        window.location.href = response.redirect_url;
+                    }, 1000); // 1s para mostrar mensaje antes de redirigir
+                } else {
+                    // fallback: recargar la página
+                    window.location.reload();
+                }
+            } else {
+                mostrarMensajeError(response.error || 'Error al seleccionar el medio');
+                $btn.html(originalHtml);
+                $btn.prop('disabled', false);
+            }
+        },
+        error: function(xhr) {
+            mostrarMensajeError('Error de conexión');
+            $btn.html(originalHtml);
+            $btn.prop('disabled', false);
+        }
+    });
+});
+
+</script>
+
+<style>
+.card {
+    transition: all 0.3s ease;
+    border: 1px solid #e0e0e0;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.border-success {
+    box-shadow: 0 0 0 2px #19875420;
+}
+
+.btn-seleccionar-medio:disabled {
+    cursor: not-allowed;
+}
+
+.position-fixed .card {
+    min-width: 300px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .position-fixed {
+        position: relative !important;
+        margin-top: 20px;
+    }
+}
+</style>
+{% endblock %}

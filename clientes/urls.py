@@ -10,7 +10,7 @@ from .views import (
     ClienteMedioDePagoListView, ClienteMedioDePagoCreateView, ClienteMedioDePagoUpdateView,
     ClienteMedioDePagoToggleView, ClienteMedioDePagoDeleteView,
     select_medio_pago_view, medio_pago_detail_ajax, dashboard_medios_pago,
-    exportar_medios_pago, verificar_duplicados_ajax
+    exportar_medios_pago, verificar_duplicados_ajax, SeleccionarMedioAcreditacionView,
 )
 
 app_name = 'clientes'
@@ -54,5 +54,8 @@ urlpatterns = [
 
     # AJAX para verificación de duplicados
     path('medios-pago/verificar-duplicados/', verificar_duplicados_ajax, name='verificar_duplicados_ajax'),
+
+    # Agrega esta URL a tu urlpatterns
+    path('seleccionar-medio-acreditacion/', SeleccionarMedioAcreditacionView.as_view(), name='seleccionar_medio_acreditacion'),
 
 ]

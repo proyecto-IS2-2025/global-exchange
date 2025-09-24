@@ -30,4 +30,8 @@ urlpatterns = [
     path("venta/", VentaDivisaView.as_view(), name="venta"),
     path("venta/confirmacion/", VentaConfirmacionView.as_view(), name="venta_confirmacion"),
     path("venta/medios/", VentaMediosView.as_view(), name="venta_medios"),
+
+    # urls.py (app operaciones)
+    path("venta/sumario/", views.SumarioOperacionView.as_view(), name="venta_sumario"),
+
 ]
