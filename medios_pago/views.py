@@ -1,4 +1,4 @@
-# views.py - Versión con filtros por estado en lugar de soft delete
+# views.py - VersiÃ³n con filtros por estado en lugar de soft delete
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, View
@@ -30,12 +30,12 @@ class MedioDePagoListView(LoginRequiredMixin, PermissionRequiredMixin, ListView)
 
     def get_queryset(self):
         """
-        Devuelve el queryset filtrado según el parámetro 'estado'.
+        Devuelve el queryset filtrado segÃºn el parÃ¡metro 'estado'.
         """
         # Obtener todos los medios (sin soft delete)
         queryset = MedioDePago.objects.all()
         
-        # Aplicar filtro según el parámetro GET
+        # Aplicar filtro segÃºn el parÃ¡metro GET
         estado_filtro = self.request.GET.get('estado', 'todos')
         
         if estado_filtro == 'activos':
@@ -48,7 +48,7 @@ class MedioDePagoListView(LoginRequiredMixin, PermissionRequiredMixin, ListView)
 
     def get_context_data(self, **kwargs):
         """
-        Añade información del filtro actual al contexto.
+        AÃ±ade informaciÃ³n del filtro actual al contexto.
         """
         context = super().get_context_data(**kwargs)
         
@@ -56,7 +56,7 @@ class MedioDePagoListView(LoginRequiredMixin, PermissionRequiredMixin, ListView)
         estado_actual = self.request.GET.get('estado', 'todos')
         context['estado_filtro'] = estado_actual
         
-        # Estadísticas para mostrar en la interfaz
+        # EstadÃ­sticas para mostrar en la interfaz
         total_medios = MedioDePago.objects.count()
         medios_activos = MedioDePago.objects.filter(is_active=True).count()
         medios_inactivos = MedioDePago.objects.filter(is_active=False).count()
@@ -79,10 +79,10 @@ class MedioDePagoListView(LoginRequiredMixin, PermissionRequiredMixin, ListView)
 
 class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     """
-    Vista para la creación de un nuevo Medio de Pago.
+    Vista para la creaciÃ³n de un nuevo Medio de Pago.
     
     Requiere el permiso 'medios_pago.add_mediodepago'.
-    Permite la creación de campos dinámicos a través de un formset.
+    Permite la creaciÃ³n de campos dinÃ¡micos a travÃ©s de un formset.
     """
     permission_required = 'medios_pago.add_mediodepago'
     model = MedioDePago
@@ -92,14 +92,14 @@ class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, Cr
 
     def get_context_data(self, **kwargs):
         """
-        Añade el formset de campos al contexto.
+        AÃ±ade el formset de campos al contexto.
         """
         ctx = super().get_context_data(**kwargs)
         ctx['action'] = 'Crear'
         ctx['is_edit'] = False
-        ctx['can_edit_freely'] = True  # En creación siempre se puede editar todo
+        ctx['can_edit_freely'] = True  # En creaciÃ³n siempre se puede editar todo
         
-        # Usar factory para formset de creación (con extra=1)
+        # Usar factory para formset de creaciÃ³n (con extra=1)
         CampoFormSet = create_campo_formset(is_edit=False)
         
         if self.request.POST:
@@ -117,7 +117,7 @@ class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, Cr
         self.object = None
         form = self.get_form()
         
-        # Usar factory para formset de creación
+        # Usar factory para formset de creaciÃ³n
         CampoFormSet = create_campo_formset(is_edit=False)
         campos_formset = CampoFormSet(
             request.POST,
@@ -129,6 +129,7 @@ class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, Cr
         else:
             return self.form_invalid(form, campos_formset)
 
+    # En views.py, agregar al form_valid:
     def form_valid(self, form, campos_formset):
         """
         Guarda el medio de pago y sus campos asociados.
@@ -136,8 +137,16 @@ class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, Cr
         try:
             with transaction.atomic():
                 self.object = form.save()
-                campos_formset.instance = self.object
-                campos_formset.save()
+                
+                # Aplicar template si fue seleccionado (solo en creaciÃ³n)
+                template_key = form.cleaned_data.get('aplicar_template')
+                if template_key:
+                    self.object.aplicar_template(template_key)
+                    messages.info(self.request, f'Template "{template_key}" aplicado automÃ¡ticamente.')
+                else:
+                    # Si no hay template, guardar los campos del formset
+                    campos_formset.instance = self.object
+                    campos_formset.save()
                 
                 messages.success(self.request, f'Medio de pago "{self.object.nombre}" creado exitosamente.')
                 return redirect(self.success_url)
@@ -155,10 +164,10 @@ class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, Cr
 
 class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     """
-    Vista para la edición de un Medio de Pago existente.
+    Vista para la ediciÃ³n de un Medio de Pago existente.
     
     Requiere el permiso 'medios_pago.change_mediodepago'.
-    Permite la edición de campos dinámicos.
+    Permite la ediciÃ³n de campos dinÃ¡micos.
     """
     permission_required = 'medios_pago.change_mediodepago'
     model = MedioDePago
@@ -168,14 +177,14 @@ class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateV
 
     def get_context_data(self, **kwargs):
         """
-        Añade el formset de campos al contexto en modo edición.
+        AÃ±ade el formset de campos al contexto en modo ediciÃ³n.
         """
         ctx = super().get_context_data(**kwargs)
         ctx['action'] = 'Editar'
         ctx['is_edit'] = True
         ctx['can_edit_freely'] = self.object.can_be_edited_freely
         
-        # Usar factory para formset de edición (con extra=0)
+        # Usar factory para formset de ediciÃ³n (con extra=0)
         CampoFormSet = create_campo_formset(is_edit=True)
         
         if self.request.POST:
@@ -199,7 +208,7 @@ class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateV
         self.object = self.get_object()
         form = self.get_form()
         
-        # Usar factory para formset de edición
+        # Usar factory para formset de ediciÃ³n
         CampoFormSet = create_campo_formset(is_edit=True)
         campos_formset = CampoFormSet(
             request.POST,
@@ -256,7 +265,7 @@ class MedioDePagoToggleActivoView(LoginRequiredMixin, PermissionRequiredMixin, V
 
 class MedioDePagoDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
     """
-    Vista para eliminación real (no soft delete) de un medio de pago.
+    Vista para eliminaciÃ³n real (no soft delete) de un medio de pago.
     Solo disponible si no tiene dependencias.
     """
     permission_required = 'medios_pago.delete_mediodepago'
@@ -265,7 +274,7 @@ class MedioDePagoDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
         medio_de_pago = get_object_or_404(MedioDePago, pk=pk)
         
         try:
-            # Verificar si se puede eliminar (lógica de negocio)
+            # Verificar si se puede eliminar (lÃ³gica de negocio)
             if hasattr(medio_de_pago, 'transacciones') and medio_de_pago.transacciones.exists():
                 messages.error(request, f'No se puede eliminar "{medio_de_pago.nombre}" porque tiene transacciones asociadas.')
                 return redirect('medios_pago:lista')

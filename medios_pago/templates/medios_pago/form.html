@@ -1,6 +1,52 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block extra_css %}
+<style>
+.field-info {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.field-info-hidden {
+    display: none;
+}
+
+.template-selector {
+    background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+    border: 2px dashed #2196f3;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.campo-predefinido {
+    position: relative;
+}
+
+.campo-predefinido .badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    z-index: 10;
+}
+
+.marked-for-deletion {
+    opacity: 0.6;
+    background-color: #fff3cd !important;
+    border: 2px dashed #ffc107 !important;
+}
+
+.contextual-alert {
+    border-left: 4px solid #007bff;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <h1 class="h3 mb-4 text-center">{{ action }} Medio de Cobro</h1>
 
@@ -13,7 +59,7 @@
     {% endfor %}
 {% endif %}
 
-<div class="card shadow-sm mx-auto" style="max-width: 800px;" data-is-edit="{% if is_edit %}true{% else %}false{% endif %}">
+<div class="card shadow-sm mx-auto" style="max-width: 900px;">
     <div class="card-body">
         <form method="post" novalidate>
             {% csrf_token %}
@@ -24,12 +70,7 @@
                 </div>
             {% endif %}
 
-            {% if campos_formset.non_form_errors %}
-                <div class="alert alert-danger" role="alert">
-                    {{ campos_formset.non_form_errors }}
-                </div>
-            {% endif %}
-
+            <!-- InformaciÃ³n bÃ¡sica del medio de pago -->
             <div class="row">
                 <div class="col-md-8">
                     <div class="mb-3">
@@ -62,17 +103,38 @@
                         {{ form.is_active.label }}
                     </label>
                 </div>
-                {% if form.is_active.errors %}
-                    <div class="text-danger small mt-1">
-                        {{ form.is_active.errors }}
-                    </div>
-                {% endif %}
             </div>
+
+            <!-- Selector de template (solo en creaciÃ³n) -->
+            {% if not is_edit %}
+                <div class="template-selector">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-magic text-primary me-2"></i>
+                        <h5 class="mb-0">ConfiguraciÃ³n RÃ¡pida</h5>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.aplicar_template.id_for_label }}" class="form-label">{{ form.aplicar_template.label }}</label>
+                        {{ form.aplicar_template }}
+                        {% if form.aplicar_template.help_text %}
+                            <div class="form-text">{{ form.aplicar_template.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="alert alert-info alert-sm mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>Tip:</strong> Selecciona un template para autocompletar campos comunes, o elige "Personalizado" para agregar campos manualmente.
+                    </div>
+                </div>
+            {% endif %}
 
             <hr class="my-4">
 
+            <!-- Campos dinÃ¡micos -->
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="mb-0">Campos Específicos</h4>
+                <h4 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Campos EspecÃ­ficos
+                </h4>
                 <button type="button" id="add-campo" class="btn btn-outline-primary btn-sm">
                     <i class="fas fa-plus me-1"></i>
                     Agregar Campo
@@ -82,18 +144,33 @@
             <div id="campos-formset-container">
                 {{ campos_formset.management_form }}
                 
+                {% if campos_formset.non_form_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ campos_formset.non_form_errors }}
+                    </div>
+                {% endif %}
+                
                 {% for form_campo in campos_formset %}
-                    <div class="card mb-3 form-campo {% if form_campo.DELETE.value %}d-none{% endif %}" data-campo-id="{{ form_campo.instance.pk|default:'' }}">
+                    <div class="card mb-3 form-campo campo-predefinido {% if form_campo.DELETE.value %}d-none{% endif %}" 
+                         data-campo-id="{{ form_campo.instance.pk|default:'' }}">
+                        
+                        {% if form_campo.instance.campo_api %}
+                            <span class="badge bg-primary">Predefinido</span>
+                        {% else %}
+                            <span class="badge bg-success">Nuevo</span>
+                        {% endif %}
+                        
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="card-title mb-0">Campo #<span class="field-number">{{ forloop.counter }}</span></h6>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="card-title mb-0">
+                                    Campo #<span class="field-number">{{ forloop.counter }}</span>
+                                </h6>
+                                
                                 <div class="d-flex align-items-center gap-2">
                                     {% if form_campo.instance.pk %}
-                                        <span class="badge bg-info">Campo existente</span>
+                                        <small class="text-muted">Existente</small>
                                     {% else %}
-                                        <span class="badge bg-success">
-                                            {% if is_edit %}Nuevo campo{% else %}Campo inicial{% endif %}
-                                        </span>
+                                        <small class="text-success">Nuevo</small>
                                     {% endif %}
                                     
                                     {% if form_campo.DELETE and is_edit %}
@@ -116,57 +193,46 @@
                             {% endif %}
 
                             <div class="row">
-                                <div class="col-md-5">
-                                    <div class="mb-2">
-                                        <label for="{{ form_campo.nombre_campo.id_for_label }}" class="form-label small">{{ form_campo.nombre_campo.label }}</label>
-                                        {% if is_edit and form_campo.instance.pk and not can_edit_freely %}
-                                            <input type="text" class="form-control" value="{{ form_campo.nombre_campo.value }}" readonly>
-                                            {{ form_campo.nombre_campo.as_hidden }}
-                                        {% else %}
-                                            {{ form_campo.nombre_campo }}
-                                        {% endif %}
-                                        {% if form_campo.nombre_campo.errors %}
-                                            <div class="text-danger small">
-                                                {{ form_campo.nombre_campo.errors }}
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <label for="{{ form_campo.campo_api.id_for_label }}" class="form-label">
+                                            <i class="fas fa-cog me-1"></i>Campo Predefinido
+                                        </label>
+                                        {{ form_campo.campo_api }}
+                                        {% if form_campo.campo_api.errors %}
+                                            <div class="text-danger small mt-1">
+                                                {{ form_campo.campo_api.errors }}
                                             </div>
                                         {% endif %}
+                                        
+                                        <!-- InformaciÃ³n del campo seleccionado -->
+                                        <div class="field-info field-info-hidden mt-2" id="field-info-{{ forloop.counter0 }}">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <strong>Nombre:</strong> <span class="field-name">-</span>
+                                                </div>
+                                                <div class="col-6">
+                                                    <strong>Tipo:</strong> <span class="field-type">-</span>
+                                                </div>
+                                                <div class="col-12 mt-1">
+                                                    <small class="text-muted field-description">-</small>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
+                                
                                 <div class="col-md-4">
-                                    <div class="mb-2">
-                                        <label for="{{ form_campo.tipo_dato.id_for_label }}" class="form-label small">{{ form_campo.tipo_dato.label }}</label>
-                                        {% if is_edit and form_campo.instance.pk and not can_edit_freely %}
-                                            <input type="text" class="form-control" value="{{ form_campo.instance.get_tipo_dato_display }}" readonly>
-                                            {{ form_campo.tipo_dato.as_hidden }}
-                                        {% else %}
-                                            {{ form_campo.tipo_dato }}
-                                        {% endif %}
-                                        {% if form_campo.tipo_dato.errors %}
-                                            <div class="text-danger small">
-                                                {{ form_campo.tipo_dato.errors }}
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="mb-2">
-                                        <label class="form-label small">&nbsp;</label>
-                                        {% if is_edit and form_campo.instance.pk and not can_edit_freely %}
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" {% if form_campo.is_required.value %}checked{% endif %} disabled>
-                                                <label class="form-check-label small">
-                                                    {{ form_campo.is_required.label }}
-                                                </label>
-                                            </div>
-                                            {{ form_campo.is_required.as_hidden }}
-                                        {% else %}
-                                            <div class="form-check">
-                                                {{ form_campo.is_required }}
-                                                <label class="form-check-label small" for="{{ form_campo.is_required.id_for_label }}">
-                                                    {{ form_campo.is_required.label }}
-                                                </label>
-                                            </div>
-                                        {% endif %}
+                                    <div class="mb-3">
+                                        <label class="form-label">
+                                            <i class="fas fa-asterisk me-1 text-danger"></i>Â¿Es requerido?
+                                        </label>
+                                        <div class="form-check">
+                                            {{ form_campo.is_required }}
+                                            <label class="form-check-label" for="{{ form_campo.is_required.id_for_label }}">
+                                                Campo obligatorio
+                                            </label>
+                                        </div>
                                         {% if form_campo.is_required.errors %}
                                             <div class="text-danger small">
                                                 {{ form_campo.is_required.errors }}
@@ -178,25 +244,31 @@
                         </div>
                     </div>
                 {% empty %}
-                    {% if is_edit %}
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            Este medio de pago no tiene campos específicos definidos. Puedes agregar algunos usando el botón "Agregar Campo".
-                        </div>
-                    {% endif %}
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle me-2"></i>
+                        {% if is_edit %}
+                            Este medio de pago no tiene campos especÃ­ficos definidos.
+                        {% else %}
+                            No hay campos definidos aÃºn. 
+                            {% if not is_edit %}
+                                Selecciona un template arriba o agrega campos manualmente.
+                            {% endif %}
+                        {% endif %}
+                    </div>
                 {% endfor %}
                 
-                <div id="empty-form-template" class="card mb-3 form-campo d-none">
+                <!-- Template para nuevos campos -->
+                <div id="empty-form-template" class="card mb-3 form-campo campo-predefinido d-none">
+                    <span class="badge bg-success">Nuevo</span>
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
                             <h6 class="card-title mb-0">Campo #<span class="field-number"></span></h6>
                             <div class="d-flex align-items-center gap-2">
-                                <span class="badge bg-success">Nuevo campo</span>
-                                
-                                {% if campos_formset.empty_form.DELETE and is_edit %}
+                                <small class="text-success">Nuevo</small>
+                                {% if is_edit %}
                                     <div class="form-check m-0">
                                         {{ campos_formset.empty_form.DELETE }}
-                                        <label class="form-check-label text-danger" title="Marcar para eliminar al guardar">
+                                        <label class="form-check-label text-danger">
                                             <i class="fas fa-trash"></i> Eliminar
                                         </label>
                                     </div>
@@ -207,26 +279,38 @@
                         {{ campos_formset.empty_form.id }}
                         
                         <div class="row">
-                            <div class="col-md-5">
-                                <div class="mb-2">
-                                    <label class="form-label small">{{ campos_formset.empty_form.nombre_campo.label }}</label>
-                                    {{ campos_formset.empty_form.nombre_campo }}
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-cog me-1"></i>Campo Predefinido
+                                    </label>
+                                    {{ campos_formset.empty_form.campo_api }}
+                                    
+                                    <!-- InformaciÃ³n del campo -->
+                                    <div class="field-info field-info-hidden mt-2" id="field-info-__prefix__">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <strong>Nombre:</strong> <span class="field-name">-</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <strong>Tipo:</strong> <span class="field-type">-</span>
+                                            </div>
+                                            <div class="col-12 mt-1">
+                                                <small class="text-muted field-description">-</small>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                            
                             <div class="col-md-4">
-                                <div class="mb-2">
-                                    <label class="form-label small">{{ campos_formset.empty_form.tipo_dato.label }}</label>
-                                    {{ campos_formset.empty_form.tipo_dato }}
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="mb-2">
-                                    <label class="form-label small">&nbsp;</label>
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-asterisk me-1 text-danger"></i>Â¿Es requerido?
+                                    </label>
                                     <div class="form-check">
                                         {{ campos_formset.empty_form.is_required }}
-                                        <label class="form-check-label small">
-                                            {{ campos_formset.empty_form.is_required.label }}
-                                        </label>
+                                        <label class="form-check-label">Campo obligatorio</label>
                                     </div>
                                 </div>
                             </div>
@@ -235,195 +319,226 @@
                 </div>
             </div>
 
+            <!-- Botones de acciÃ³n -->
             <div class="d-grid gap-2 mt-4">
-                <button type="submit" class="btn btn-success">
-                    <i class="fas fa-save me-2"></i>Guardar
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="fas fa-save me-2"></i>Guardar Medio de Pago
                 </button>
                 <a href="{% url 'medios_pago:lista' %}" class="btn btn-outline-secondary">
-                    <i class="fas fa-times me-2"></i>Cancelar
+                    <i class="fas fa-arrow-left me-2"></i>Volver a la Lista
                 </a>
             </div>
         </form>
     </div>
 </div>
 
+<!-- Datos JavaScript para campos predefinidos -->
+<script id="predefined-fields-data" type="application/json">
+{
+    "card_number": {"label": "NÃºmero de tarjeta", "type": "NUMERO", "description": "NÃºmero de 16 dÃ­gitos de la tarjeta"},
+    "exp_month": {"label": "Mes de vencimiento", "type": "NUMERO", "description": "Mes de vencimiento (1-12)"},
+    "exp_year": {"label": "AÃ±o de vencimiento", "type": "NUMERO", "description": "AÃ±o de vencimiento (4 dÃ­gitos)"},
+    "cvc": {"label": "CÃ³digo de seguridad", "type": "NUMERO", "description": "CÃ³digo CVV/CVC de 3 o 4 dÃ­gitos"},
+    "cardholder_name": {"label": "Nombre en la tarjeta", "type": "TEXTO", "description": "Nombre como aparece en la tarjeta"},
+    "paypal_email": {"label": "Email de PayPal", "type": "EMAIL", "description": "DirecciÃ³n de email asociada a PayPal"},
+    "account_number": {"label": "NÃºmero de cuenta", "type": "NUMERO", "description": "NÃºmero de cuenta bancaria"},
+    "bank_name": {"label": "Nombre del banco", "type": "TEXTO", "description": "Nombre completo del banco"},
+    "account_holder": {"label": "Titular de la cuenta", "type": "TEXTO", "description": "Nombre del titular de la cuenta"},
+    "routing_number": {"label": "CÃ³digo de routing", "type": "NUMERO", "description": "CÃ³digo de routing bancario (USA)"},
+    "swift_code": {"label": "CÃ³digo SWIFT", "type": "TEXTO", "description": "CÃ³digo SWIFT para transferencias internacionales"},
+    "cbu_cvu": {"label": "CBU/CVU", "type": "NUMERO", "description": "Clave Bancaria Uniforme o Clave Virtual Uniforme"},
+    "email": {"label": "Email", "type": "EMAIL", "description": "DirecciÃ³n de correo electrÃ³nico"},
+    "phone": {"label": "TelÃ©fono", "type": "TELEFONO", "description": "NÃºmero de telÃ©fono"},
+    "amount": {"label": "Monto", "type": "NUMERO", "description": "Monto de la transacciÃ³n"},
+    "currency": {"label": "Moneda", "type": "TEXTO", "description": "CÃ³digo de moneda (USD, EUR, etc.)"},
+    "description": {"label": "DescripciÃ³n", "type": "TEXTO", "description": "DescripciÃ³n de la transacciÃ³n"},
+    "wallet_address": {"label": "DirecciÃ³n de billetera", "type": "TEXTO", "description": "DirecciÃ³n de billetera de criptomoneda"},
+    "network": {"label": "Red", "type": "TEXTO", "description": "Red blockchain (ETH, BTC, etc.)"}
+}
+</script>
+
+<script id="payment-templates-data" type="application/json">
+{
+    "stripe": {"name": "Stripe (Tarjeta)", "fields": ["card_number", "exp_month", "exp_year", "cvc", "cardholder_name", "email"]},
+    "paypal": {"name": "PayPal", "fields": ["paypal_email", "amount", "currency", "description"]},
+    "bank_transfer": {"name": "Transferencia Bancaria", "fields": ["account_number", "bank_name", "account_holder", "cbu_cvu"]},
+    "international_transfer": {"name": "Transferencia Internacional", "fields": ["account_number", "bank_name", "account_holder", "swift_code", "routing_number"]},
+    "bitcoin": {"name": "Bitcoin", "fields": ["wallet_address", "network", "amount"]},
+    "efectivo": {"name": "Efectivo", "fields": ["amount", "description"]}
+}
+</script>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const addButton = document.getElementById('add-campo');
-        const container = document.getElementById('campos-formset-container');
-        const managementForm = document.querySelector('input[name$="TOTAL_FORMS"]');
-        const emptyFormTemplate = document.getElementById('empty-form-template');
-        const isEdit = "{{ is_edit|yesno:'true,false' }}" === "true";
-        const canEditFreely = "{{ can_edit_freely|yesno:'true,false' }}" === "true";
+document.addEventListener('DOMContentLoaded', function() {
+    // Cargar datos de campos y templates
+    const predefinedFields = JSON.parse(document.getElementById('predefined-fields-data').textContent);
+    const paymentTemplates = JSON.parse(document.getElementById('payment-templates-data').textContent);
+    
+    // Referencias DOM
+    const addButton = document.getElementById('add-campo');
+    const container = document.getElementById('campos-formset-container');
+    const managementForm = document.querySelector('input[name$="TOTAL_FORMS"]');
+    const emptyFormTemplate = document.getElementById('empty-form-template');
+    const templateSelector = document.getElementById('id_template_selector');
+    
+    const isEdit = "{{ is_edit|yesno:'true,false' }}" === "true";
 
-        if (!managementForm) {
-            console.error('Management form not found');
-            return;
-        }
-
-        // Función para actualizar numeración de campos
-        function updateFieldNumbers() {
-            const campos = container.querySelectorAll('.form-campo:not(#empty-form-template):not(.marked-for-deletion)');
-            campos.forEach(function(campo, index) {
-                const numberSpan = campo.querySelector('.field-number');
-                if (numberSpan) {
-                    numberSpan.textContent = index + 1;
-                }
-            });
-        }
-
-        // Función para mostrar mensajes contextuales
-        function showContextualMessage() {
-            const existingAlerts = document.querySelectorAll('.contextual-alert');
-            existingAlerts.forEach(alert => alert.remove());
-
-            const camposCount = container.querySelectorAll('.form-campo:not(#empty-form-template):not(.marked-for-deletion)').length;
-            let messageHtml = '';
-
-            if (isEdit) {
-                if (canEditFreely) {
-                    messageHtml = `
-                        <div class="alert alert-success alert-sm mb-3 contextual-alert">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>Modo edición completa:</strong> Puedes agregar, modificar o eliminar campos libremente.
-                        </div>
-                    `;
-                    
-                    if (camposCount > 0) {
-                        messageHtml += `
-                            <div class="alert alert-info alert-sm mb-3 contextual-alert">
-                                <i class="fas fa-lightbulb me-2"></i>
-                                <strong>Para eliminar campos:</strong> Marca el checkbox "Eliminar" y luego presiona "Guardar" para aplicar los cambios.
-                            </div>
-                        `;
-                    }
-                } else {
-                    messageHtml = `
-                        <div class="alert alert-warning alert-sm mb-3 contextual-alert">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            <strong>Edición restringida:</strong> Este medio de pago tiene transacciones asociadas. Solo puedes agregar nuevos campos.
-                        </div>
-                    `;
-                }
-            } else {
-                if (camposCount === 0) {
-                    messageHtml = `
-                        <div class="alert alert-info alert-sm mb-3 contextual-alert">
-                            <i class="fas fa-lightbulb me-2"></i>
-                            <strong>Creando nuevo medio:</strong> Haz clic en "Agregar Campo" para definir los campos que necesita este medio de pago.
-                        </div>
-                    `;
-                } else {
-                    messageHtml = `
-                        <div class="alert alert-info alert-sm mb-3 contextual-alert">
-                            <i class="fas fa-lightbulb me-2"></i>
-                            <strong>Creando nuevo medio:</strong> Ya tienes ${camposCount} campo${camposCount > 1 ? 's' : ''} definido${camposCount > 1 ? 's' : ''}. Puedes agregar más si los necesitas.
-                        </div>
-                    `;
-                }
-            }
-
-            // Buscar el contenedor de campos para insertar el mensaje antes
-            const camposContainer = document.getElementById('campos-formset-container');
-            if (camposContainer && messageHtml) {
-                camposContainer.insertAdjacentHTML('beforebegin', messageHtml);
-            }
-        }
-
-        // Agregar nuevo campo
-        if (addButton && emptyFormTemplate) {
-            addButton.addEventListener('click', function() {
-                const totalForms = parseInt(managementForm.value);
-                let newFormHtml = emptyFormTemplate.innerHTML.replace(/__prefix__/g, totalForms);
-                
-                const newDiv = document.createElement('div');
-                newDiv.className = 'card mb-3 form-campo';
-                newDiv.innerHTML = newFormHtml;
-
-                // Actualizar el número del campo
-                const numberSpan = newDiv.querySelector('.field-number');
-                if (numberSpan) {
-                    numberSpan.textContent = totalForms + 1;
-                }
-
-                // Insertar antes del template
-                container.insertBefore(newDiv, emptyFormTemplate);
-                managementForm.value = totalForms + 1;
-                
-                updateFieldNumbers();
-                showContextualMessage();
-            });
-        }
-
-        // Manejar marcado/desmarcado para eliminación
-        document.body.addEventListener('change', function(e) {
-            if (e.target && e.target.name && e.target.name.indexOf('DELETE') > -1) {
-                const formDiv = e.target.closest('.form-campo');
-                if (formDiv) {
-                    if (e.target.checked) {
-                        // Marcar visualmente como "pendiente de eliminación"
-                        formDiv.classList.add('marked-for-deletion');
-                        formDiv.style.opacity = '0.6';
-                        formDiv.style.backgroundColor = '#fff3cd';
-                        formDiv.style.border = '2px dashed #ffc107';
-                        
-                        // Agregar indicador visual
-                        let indicator = formDiv.querySelector('.delete-indicator');
-                        if (!indicator) {
-                            indicator = document.createElement('div');
-                            indicator.className = 'delete-indicator alert alert-warning alert-sm mt-2 mb-0';
-                            indicator.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i><strong>Campo marcado para eliminar.</strong> Los cambios se aplicarán al guardar. Puedes desmarcar si cambias de opinión.';
-                            formDiv.querySelector('.card-body').appendChild(indicator);
-                        }
-                    } else {
-                        // Restaurar apariencia normal
-                        formDiv.classList.remove('marked-for-deletion');
-                        formDiv.style.opacity = '1';
-                        formDiv.style.backgroundColor = '';
-                        formDiv.style.border = '';
-                        
-                        // Remover indicador
-                        const indicator = formDiv.querySelector('.delete-indicator');
-                        if (indicator) {
-                            indicator.remove();
-                        }
-                    }
-                    updateFieldNumbers();
-                    showContextualMessage();
-                }
-            }
-        });
-
-        // Advertencia al salir sin guardar si hay cambios pendientes
-        window.addEventListener('beforeunload', function(e) {
-            const markedFields = document.querySelectorAll('.marked-for-deletion').length;
-            
-            if (markedFields > 0) {
-                const message = 'Tienes campos marcados para eliminar. Los cambios se perderán si no guardas.';
-                e.returnValue = message;
-                return message;
-            }
-        });
-
-        // Inicializar al cargar la página
-        updateFieldNumbers();
-        showContextualMessage();
+    // FunciÃ³n para actualizar informaciÃ³n de campo
+    function updateFieldInfo(selectElement) {
+        const selectedValue = selectElement.value;
+        const fieldInfoDiv = selectElement.closest('.form-campo').querySelector('.field-info');
         
-        // Revisar campos ya marcados para eliminación al cargar la página
-        document.querySelectorAll('input[name*="DELETE"]:checked').forEach(function(checkbox) {
-            const formDiv = checkbox.closest('.form-campo');
-            if (formDiv) {
-                formDiv.classList.add('marked-for-deletion');
-                formDiv.style.opacity = '0.6';
-                formDiv.style.backgroundColor = '#fff3cd';
-                formDiv.style.border = '2px dashed #ffc107';
-                
-                const indicator = document.createElement('div');
-                indicator.className = 'delete-indicator alert alert-warning alert-sm mt-2 mb-0';
-                indicator.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i><strong>Campo marcado para eliminar.</strong> Los cambios se aplicarán al guardar.';
-                formDiv.querySelector('.card-body').appendChild(indicator);
+        if (selectedValue && predefinedFields[selectedValue]) {
+            const fieldData = predefinedFields[selectedValue];
+            
+            fieldInfoDiv.querySelector('.field-name').textContent = fieldData.label;
+            fieldInfoDiv.querySelector('.field-type').textContent = fieldData.type;
+            fieldInfoDiv.querySelector('.field-description').textContent = fieldData.description;
+            
+            fieldInfoDiv.classList.remove('field-info-hidden');
+        } else {
+            fieldInfoDiv.classList.add('field-info-hidden');
+        }
+    }
+
+    // FunciÃ³n para actualizar numeraciÃ³n
+    function updateFieldNumbers() {
+        const campos = container.querySelectorAll('.form-campo:not(#empty-form-template):not(.marked-for-deletion)');
+        campos.forEach((campo, index) => {
+            const numberSpan = campo.querySelector('.field-number');
+            if (numberSpan) {
+                numberSpan.textContent = index + 1;
             }
         });
+    }
+
+    // Aplicar template predefinido
+    if (templateSelector) {
+        templateSelector.addEventListener('change', function() {
+            if (!this.value) return;
+            
+            const template = paymentTemplates[this.value];
+            if (!template) return;
+            
+            // Confirmar aplicaciÃ³n del template
+            if (!confirm(`Â¿Aplicar template "${template.name}"? Esto agregarÃ¡ ${template.fields.length} campos predefinidos.`)) {
+                this.value = '';
+                return;
+            }
+            
+            // Limpiar campos existentes
+            container.querySelectorAll('.form-campo:not(#empty-form-template)').forEach(campo => {
+                campo.remove();
+            });
+            
+            // Agregar campos del template
+            let totalForms = 0;
+            template.fields.forEach((fieldKey, index) => {
+                if (predefinedFields[fieldKey]) {
+                    addCampoFromTemplate(fieldKey, totalForms);
+                    totalForms++;
+                }
+            });
+            
+            managementForm.value = totalForms;
+            updateFieldNumbers();
+            
+            // Mostrar mensaje de Ã©xito
+            const successAlert = document.createElement('div');
+            successAlert.className = 'alert alert-success alert-dismissible fade show mt-3';
+            successAlert.innerHTML = `
+                <i class="fas fa-check me-2"></i>
+                Template "${template.name}" aplicado exitosamente. Se agregaron ${template.fields.length} campos.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            templateSelector.closest('.template-selector').appendChild(successAlert);
+            
+            // Auto-hide alert
+            setTimeout(() => {
+                if (successAlert.parentNode) {
+                    successAlert.remove();
+                }
+            }, 5000);
+        });
+    }
+
+    // FunciÃ³n para agregar campo desde template
+    function addCampoFromTemplate(fieldKey, formIndex) {
+        const fieldData = predefinedFields[fieldKey];
+        let newFormHtml = emptyFormTemplate.innerHTML.replace(/__prefix__/g, formIndex);
+        
+        const newDiv = document.createElement('div');
+        newDiv.className = 'card mb-3 form-campo campo-predefinido';
+        newDiv.innerHTML = newFormHtml;
+        
+        // Configurar el campo
+        const select = newDiv.querySelector('select[name*="campo_api"]');
+        if (select) {
+            select.value = fieldKey;
+        }
+        
+        const requiredCheckbox = newDiv.querySelector('input[name*="is_required"]');
+        if (requiredCheckbox && fieldData.required !== undefined) {
+            requiredCheckbox.checked = fieldData.required;
+        }
+        
+        // Actualizar informaciÃ³n
+        updateFieldInfo(select);
+        
+        // Agregar al container
+        container.insertBefore(newDiv, emptyFormTemplate);
+    }
+
+    // Agregar campo manual
+    if (addButton && emptyFormTemplate && managementForm) {
+        addButton.addEventListener('click', function() {
+            const totalForms = parseInt(managementForm.value);
+            let newFormHtml = emptyFormTemplate.innerHTML.replace(/__prefix__/g, totalForms);
+            
+            const newDiv = document.createElement('div');
+            newDiv.className = 'card mb-3 form-campo campo-predefinido';
+            newDiv.innerHTML = newFormHtml;
+            
+            // Actualizar numeraciÃ³n
+            const numberSpan = newDiv.querySelector('.field-number');
+            if (numberSpan) {
+                numberSpan.textContent = totalForms + 1;
+            }
+            
+            // Insertar antes del template
+            container.insertBefore(newDiv, emptyFormTemplate);
+            managementForm.value = totalForms + 1;
+            
+            updateFieldNumbers();
+        });
+    }
+
+    // Manejar cambios en selectores de campo
+    document.body.addEventListener('change', function(e) {
+        if (e.target.matches('select[name*="campo_api"]')) {
+            updateFieldInfo(e.target);
+        }
+        
+        // Manejar marcado para eliminaciÃ³n
+        if (e.target && e.target.name && e.target.name.indexOf('DELETE') > -1) {
+            const formDiv = e.target.closest('.form-campo');
+            if (formDiv) {
+                if (e.target.checked) {
+                    formDiv.classList.add('marked-for-deletion');
+                } else {
+                    formDiv.classList.remove('marked-for-deletion');
+                }
+                updateFieldNumbers();
+            }
+        }
     });
+
+    // Inicializar campos existentes
+    document.querySelectorAll('select[name*="campo_api"]').forEach(select => {
+        updateFieldInfo(select);
+    });
+    
+    updateFieldNumbers();
+});
 </script>
 {% endblock %}

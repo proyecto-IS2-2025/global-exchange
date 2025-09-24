@@ -1,4 +1,4 @@
-# urls.py - Versión simplificada sin soft delete
+# urls.py - VersiÃ³n simplificada sin soft delete
 from django.urls import path
 from .views import (
     MedioDePagoListView, MedioDePagoUpdateView,
@@ -12,7 +12,7 @@ urlpatterns = [
     # Vista principal con filtros
     path('', MedioDePagoListView.as_view(), name='lista'),
     
-    # CRUD básico
+    # CRUD bÃ¡sico
     path('admin/nuevo/', MedioDePagoCreateAdminView.as_view(), name='crear_admin'),
     path('<int:pk>/editar/', MedioDePagoUpdateView.as_view(), name='editar'),
     path('<int:pk>/toggle/', MedioDePagoToggleActivoView.as_view(), name='toggle'),
