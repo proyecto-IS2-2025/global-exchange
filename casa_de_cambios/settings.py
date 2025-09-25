@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'medios_pago',
     'widget_tweaks',
     'simulador',
+    'transacciones',
 ]
 
 MIDDLEWARE = [
