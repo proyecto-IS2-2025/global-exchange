@@ -8,6 +8,7 @@ from clientes.models import Cliente, Segmento, AsignacionCliente # Importa los m
 from divisas.models import Divisa, CotizacionSegmento # Importa los modelos de divisas y cotizaciones
 from decimal import Decimal
 import json
+import datetime
 
 @login_required
 def iniciar_transaccion(request):
@@ -188,3 +189,41 @@ def historial_transacciones(request):
         'transacciones': transacciones
     }
     return render(request, 'historial_transacciones.html', context)
+
+@login_required
+def historial_admin(request):
+    """
+    Vista para que el administrador vea y filtre todas las transacciones.
+    """
+    # Asegura que solo los administradores puedan acceder a esta vista
+    if not request.user.is_superuser: # o cualquier otro grupo que defina a un admin
+        return redirect('inicio') # o una página de acceso denegado
+
+    transacciones = Transaccion.objects.all().order_by('-fecha_creacion')
+    clientes = Cliente.objects.all().order_by('nombre_completo')
+
+    # Lógica de filtrado
+    cliente_id = request.GET.get('cliente_id')
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_fin = request.GET.get('fecha_fin')
+
+    if cliente_id:
+        transacciones = transacciones.filter(cliente_id=cliente_id)
+
+    if fecha_inicio:
+        transacciones = transacciones.filter(fecha_creacion__gte=fecha_inicio)
+    
+    if fecha_fin:
+        # Añade 1 día a la fecha fin para incluir transacciones de todo el día
+        end_date = datetime.datetime.strptime(fecha_fin, '%Y-%m-%d').date() + datetime.timedelta(days=1)
+        transacciones = transacciones.filter(fecha_creacion__lt=end_date)
+    
+    context = {
+        'transacciones': transacciones,
+        'clientes': clientes,
+        'selected_cliente_id': cliente_id,
+        'selected_fecha_inicio': fecha_inicio,
+        'selected_fecha_fin': fecha_fin,
+    }
+    
+    return render(request, 'historial_admin.html', context)

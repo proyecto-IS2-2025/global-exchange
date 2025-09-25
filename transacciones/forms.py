@@ -14,3 +14,11 @@ class TransaccionForm(forms.Form):
         label="Divisa a Comprar/Vender"
     )
     monto_a_cambiar = forms.DecimalField(max_digits=15, decimal_places=2, label="Monto")
+
+    def clean_monto_a_cambiar(self):
+        monto = self.cleaned_data.get('monto_a_cambiar')
+        if monto is not None:
+            if monto <= 0:
+                raise forms.ValidationError("El monto debe ser un número positivo.")
+        return monto
+

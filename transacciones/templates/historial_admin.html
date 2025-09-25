@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-12 col-lg-10">
+            <div class="card border-0 shadow-lg rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <h1 class="card-title text-center fw-bold mb-4">
+                        <i class="fas fa-list-alt me-2"></i>
+                        Panel de Transacciones
+                    </h1>
+                    <p class="card-text text-center text-muted mb-4 fs-5">
+                        Ver y filtrar todas las transacciones del sistema.
+                    </p>
+
+                    <form method="get" class="mb-4">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-4">
+                                <label for="cliente_id" class="form-label">Filtrar por Cliente</label>
+                                <select class="form-select" id="cliente_id" name="cliente_id">
+                                    <option value="">Todos los clientes</option>
+                                    {% for cliente in clientes %}
+                                        <option value="{{ cliente.id }}" {% if cliente.id|stringformat:"s" == selected_cliente_id %}selected{% endif %}>
+                                            {{ cliente.nombre_completo }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
+                                <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" value="{{ selected_fecha_inicio }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="fecha_fin" class="form-label">Fecha Fin</label>
+                                <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" value="{{ selected_fecha_fin }}">
+                            </div>
+                            <div class="col-md-2 d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-filter"></i>
+                                    Filtrar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle shadow-sm rounded-3 overflow-hidden">
+                            <thead class="table-dark text-center">
+                                <tr>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Cliente</th>
+                                    <th scope="col">Fecha</th>
+                                    <th scope="col">Monto Origen</th>
+                                    <th scope="col">Monto Destino</th>
+                                    <th scope="col">Tasa Cambio Aplicada</th>
+                                    <th scope="col">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaccion in transacciones %}
+                                <tr class="text-center">
+                                    <td>#{{ transaccion.id }}</td>
+                                    <td>{{ transaccion.cliente.nombre_completo }}</td>
+                                    <td>{{ transaccion.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ transaccion.monto_origen|floatformat:2 }} {{ transaccion.divisa_origen.code }}</td>
+                                    <td>{{ transaccion.monto_destino|floatformat:2 }} {{ transaccion.divisa_destino.code }}</td>
+                                    <td>{{ transaccion.tasa_de_cambio_aplicada|floatformat:4 }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if transaccion.estado == 'pagada' %}bg-success
+                                            {% elif transaccion.estado == 'cancelada' %}bg-danger
+                                            {% else %}bg-warning text-dark{% endif %}">
+                                            {{ transaccion.get_estado_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-3">
+                                        No se encontraron transacciones con los filtros seleccionados.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

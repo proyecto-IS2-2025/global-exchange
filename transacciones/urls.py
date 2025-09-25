@@ -10,4 +10,5 @@ urlpatterns = [
     path('exitosa/', views.transaccion_exitosa, name='transaccion_exitosa'),
     path('simulador/', simulador_views.simulador_view, name='visualizador'),
     path('historial/', views.historial_transacciones, name='historial'),
+    path('historial/admin/', views.historial_admin, name='historial_admin'),
 ]
