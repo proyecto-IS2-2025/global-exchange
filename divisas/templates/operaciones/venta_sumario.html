@@ -43,38 +43,35 @@
 
       <hr>
 
-      <!-- Medio de acreditación -->
-      <h5 class="mb-3">Medio de Acreditación</h5>
-      {% if medio %}
-        <table class="table table-sm">
-          <tbody>
-            <tr>
-              <th scope="row">Nombre</th>
-              <td>{{ medio.nombre }}</td>
-            </tr>
-            <tr>
-              <th scope="row">Tipo</th>
-              <td>{{ medio.tipo|default:"-" }}</td>
-            </tr>
-            <tr>
-              <th scope="row">Entidad</th>
-              <td>{{ medio.entidad|default:"-" }}</td>
-            </tr>
-            <tr>
-              <th scope="row">Comisión</th>
-              <td>
-                {% if medio.comision %}
-                  {{ medio.comision }}
-                {% else %}
-                  <span class="text-muted">No aplica</span>
-                {% endif %}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      {% else %}
-        <p class="text-warning">No seleccionaste un medio de acreditación.</p>
-      {% endif %}
+<!-- Medio de acreditación -->
+<h5 class="mb-3">Medio de Acreditación</h5>
+{% if medio %}
+  <table class="table table-sm">
+    <tbody>
+      <tr>
+        <th scope="row">Nombre</th>
+        <td>{{ medio.nombre }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Tipo</th>
+        <td>{{ medio.tipo }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Comisión</th>
+        <td>
+          {% if medio.comision %}
+            {{ medio.comision }}
+          {% else %}
+            <span class="text-muted">No aplica</span>
+          {% endif %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+{% else %}
+  <p class="text-warning">No seleccionaste un medio de acreditación.</p>
+{% endif %}
+
 
     </div>
     <div class="card-footer text-end">
