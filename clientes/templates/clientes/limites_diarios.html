@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Historial de Límites Diarios</h2>
+  <a href="{% url 'clientes:crear_limite_diario' %}" class="btn btn-primary mb-3">Nuevo Límite Diario</a>
+  <table class="table table-bordered">
+    <thead class="table-dark">
+      <tr>
+        <th>Fecha</th>
+        <th>Monto (Gs.)</th>
+        <th>Inicio Vigencia</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for l in limites %}
+      <tr>
+        <td>{{ l.fecha }}</td>
+        <td>{{ l.monto|intcomma }}</td>
+        <td>{{ l.inicio_vigencia|date:"d/m/Y H:i" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3">No hay límites definidos.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

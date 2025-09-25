@@ -11,7 +11,6 @@ categorización por segmentos.
 from django.db import models
 from users.models import CustomUser
 from django.core.validators import MinValueValidator, MaxValueValidator
-
 class Segmento(models.Model):
     """
     Modelo que representa un segmento de clientes.
@@ -178,3 +177,33 @@ class HistorialDescuentos(models.Model):
 
     def __str__(self):
         return f"Cambio en descuento de {self.descuento.segmento.name} el {self.fecha_cambio.strftime('%Y-%m-%d')}"
+
+
+
+class LimiteDiario(models.Model):
+    fecha = models.DateField(unique=True, help_text="Fecha a la que aplica el límite")
+    monto = models.DecimalField(max_digits=20, decimal_places=2)
+    inicio_vigencia = models.DateTimeField(help_text="Fecha y hora en que entra en vigencia el límite")
+
+    creado = models.DateTimeField(auto_now_add=True)
+    actualizado = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-fecha"]
+
+    def __str__(self):
+        return f"Límite Diario {self.fecha}: {self.monto}"
+
+
+class LimiteMensual(models.Model):
+    mes = models.DateField(unique=True, help_text="Se guarda como el primer día del mes")
+    monto = models.DecimalField(max_digits=15, decimal_places=2)
+    inicio_vigencia = models.DateTimeField()
+    creado = models.DateTimeField(auto_now_add=True)
+    actualizado = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-mes"]
+
+    def __str__(self):
+        return f"Límite Mensual {self.mes.strftime('%B %Y')}: {self.monto}"

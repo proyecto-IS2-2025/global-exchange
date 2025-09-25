@@ -26,7 +26,11 @@ urlpatterns = [
     path('configuracion/descuentos/<int:pk>/editar/', DescuentoUpdateView.as_view(), name='editar_descuento'),
     path('configuracion/descuentos/historial/', HistorialDescuentoListView.as_view(), name='historial_descuentos'),
     #Seleccionar cliente
-    path("seleccionar/", views.seleccionar_cliente_view, name="seleccionar_cliente"),    
+    path("seleccionar/", views.seleccionar_cliente_view, name="seleccionar_cliente"),
+    path("limites-diarios/", views.lista_limites_diarios, name="lista_limites_diarios"),
+    path("limites-mensuales/", views.lista_limites_mensuales, name="lista_limites_mensuales"),
+    path("limites-mensuales/nuevo/", views.crear_limite_mensual, name="crear_limite_mensual"),
+    path("limites-diarios/nuevo/", views.crear_limite_diario, name="crear_limite_diario"),
 ]
 
 """

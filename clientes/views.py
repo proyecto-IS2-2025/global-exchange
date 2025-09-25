@@ -1,19 +1,22 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView, CreateView
+from django.shortcuts import get_object_or_404
+from django.views.generic import ListView, UpdateView
 #Restringir si no está logueado y no tiene los permisos
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.db.models import Q
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
+from django.contrib.auth.decorators import user_passes_test
 from django.utils.decorators import method_decorator
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib import messages
 from django.contrib.auth.models import Group
-
-from .models import Cliente, AsignacionCliente, Descuento, Segmento, HistorialDescuentos
+from .models import Cliente, AsignacionCliente, Descuento, HistorialDescuentos
 from .forms import ClienteForm, DescuentoForm
-
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from datetime import datetime, time
+from .models import LimiteDiario, LimiteMensual
+from .forms import LimiteDiarioForm, LimiteMensualForm
 # Asociar clientes-usuarios
 
 User = get_user_model()
@@ -293,6 +296,70 @@ def seleccionar_cliente_view(request):
         "cliente_activo_id": cliente_activo_id,
     })
 
+
+
+
+# === LISTAS ===
+@login_required
+def lista_limites_diarios(request):
+    limites = LimiteDiario.objects.all()
+    return render(request, "clientes/limites_diarios.html", {"limites": limites})
+
+
+@login_required
+def lista_limites_mensuales(request):
+    limites = LimiteMensual.objects.all()
+    return render(request, "clientes/limites_mensuales.html", {"limites": limites})
+# === CREAR ===
+@login_required
+def crear_limite_diario(request):
+    if request.method == "POST":
+        form = LimiteDiarioForm(request.POST)
+        if form.is_valid():
+            limite = form.save(commit=False)
+            hoy = timezone.localdate()
+
+            # si es hoy → vigencia inmediata
+            if limite.fecha == hoy:
+                limite.inicio_vigencia = timezone.now()
+            else:
+                # si es futuro → medianoche de esa fecha
+                limite.inicio_vigencia = datetime.combine(
+                    limite.fecha,
+                    time.min,
+                    tzinfo=timezone.get_current_timezone()
+                )
+
+            limite.save()
+            return redirect("clientes:lista_limites_diarios")
+    else:
+        form = LimiteDiarioForm()
+    return render(request, "clientes/crear_limite_diario.html", {"form": form})
+
+
+@login_required
+def crear_limite_mensual(request):
+    if request.method == "POST":
+        print(">>> REQUEST METHOD:", request.method)
+        print(">>> REQUEST.POST:", request.POST)
+
+        form = LimiteMensualForm(request.POST)
+
+        if form.is_valid():
+            print(">>> FORMULARIO VÁLIDO")
+            limite = form.save()
+            print(">>> GUARDADO OK, ID:", limite.id)
+
+            messages.success(request, "Límite mensual guardado correctamente.")
+            return redirect("clientes:lista_limites_mensuales")
+        else:
+            print(">>> FORMULARIO INVÁLIDO")
+            print(">>> ERRORES:", form.errors)
+
+    else:
+        form = LimiteMensualForm()
+
+    return render(request, "clientes/nuevo_limite_mensual.html", {"form": form})
 
 
 
