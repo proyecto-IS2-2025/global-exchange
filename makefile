@@ -64,7 +64,26 @@ cargar-datos:
 	python manage.py loaddata medios_pago_initial_data.json
 	@echo "Datos iniciales cargados."
 
+loaddata:
+	@echo "Cargando datos iniciales..."
+	poetry run python manage.py loaddata roles_data.json
+	poetry run python manage.py loaddata users_data.json
+	poetry run python manage.py loaddata clientes_data.json
+	poetry run python manage.py loaddata divisas_initial_data.json
+#poetry run python manage.py loaddata medios_pago_initial_data.json
+	@echo "Datos iniciales cargados."
+
 run:
 	@echo "Ejecutando el servidor de desarrollo con recarga automática..."
 	poetry run python manage.py runserver 
 	@echo "Servidor detenido."
+
+db-init:
+	@echo "Inicializando la base de datos..."
+	poetry run python manage.py makemigrations
+	poetry run python manage.py migrate
+	poetry run python manage.py loaddata roles_data.json
+	poetry run python manage.py loaddata users_data.json
+	poetry run python manage.py loaddata clientes_data.json
+	poetry run python manage.py loaddata divisas_initial_data.json
+	@echo "Datos cargados."

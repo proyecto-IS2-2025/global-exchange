@@ -1,0 +1,545 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+.field-info {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.field-info-hidden {
+    display: none;
+}
+
+.campo-template {
+    position: relative;
+    border: 2px solid #e9ecef;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.campo-template:hover {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    z-index: 10;
+}
+
+.marked-for-deletion {
+    opacity: 0.6;
+    background-color: #fff3cd !important;
+    border: 2px dashed #ffc107 !important;
+}
+
+.sortable-handle {
+    cursor: grab;
+    color: #6c757d;
+}
+
+.sortable-handle:hover {
+    color: #007bff;
+}
+
+.preview-section {
+    background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+    border: 2px dashed #2196f3;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4 text-center">{{ action }} Template Personalizado</h1>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="card shadow-sm mx-auto" style="max-width: 1000px;">
+    <div class="card-body">
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <!-- Información básica del template -->
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label for="{{ form.nombre.id_for_label }}" class="form-label">
+                            <i class="fas fa-tag me-1"></i>{{ form.nombre.label }}
+                        </label>
+                        {{ form.nombre }}
+                        {% if form.nombre.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.nombre.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-toggle-on me-1"></i>Estado
+                        </label>
+                        <div class="form-check">
+                            {{ form.is_active }}
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                {{ form.is_active.label }}
+                            </label>
+                        </div>
+                        {% if form.is_active.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.is_active.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="{{ form.descripcion.id_for_label }}" class="form-label">
+                    <i class="fas fa-align-left me-1"></i>{{ form.descripcion.label }}
+                </label>
+                {{ form.descripcion }}
+                {% if form.descripcion.errors %}
+                    <div class="text-danger small mt-1">
+                        {{ form.descripcion.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Previsualización de campos -->
+            <div class="preview-section" id="template-preview">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="fas fa-eye text-primary me-2"></i>
+                    <h5 class="mb-0">Previsualización del Template</h5>
+                </div>
+                <div id="preview-content">
+                    <div class="text-muted text-center">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Los campos configurados aparecerán aquí en tiempo real
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campos del template -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Campos del Template
+                </h4>
+                <button type="button" id="add-campo-template" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i>
+                    Agregar Campo
+                </button>
+            </div>
+
+            <div id="campos-template-container">
+                {{ campos_formset.management_form }}
+                
+                {% if campos_formset.non_form_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ campos_formset.non_form_errors }}
+                    </div>
+                {% endif %}
+                
+                {% for form_campo in campos_formset %}
+                    <div class="card mb-3 form-campo campo-template {% if form_campo.DELETE.value %}d-none{% endif %}" 
+                         data-campo-id="{{ form_campo.instance.pk|default:'' }}">
+                        
+                        <span class="badge bg-success">Campo #<span class="field-number">{{ forloop.counter }}</span></span>
+                        
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-grip-vertical sortable-handle me-2" title="Arrastrar para reordenar"></i>
+                                    <h6 class="card-title mb-0">
+                                        Campo #<span class="field-number">{{ forloop.counter }}</span>
+                                    </h6>
+                                </div>
+                                
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if form_campo.instance.pk %}
+                                        <small class="text-muted">Existente</small>
+                                    {% else %}
+                                        <small class="text-success">Nuevo</small>
+                                    {% endif %}
+                                    
+                                    {% if form_campo.DELETE and is_edit %}
+                                        <div class="form-check m-0">
+                                            {{ form_campo.DELETE }}
+                                            <label class="form-check-label text-danger" for="{{ form_campo.DELETE.id_for_label }}">
+                                                <i class="fas fa-trash"></i> Eliminar
+                                            </label>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            {{ form_campo.id }}
+                            
+                            {% if form_campo.non_field_errors %}
+                                <div class="alert alert-danger alert-sm">
+                                    {{ form_campo.non_field_errors }}
+                                </div>
+                            {% endif %}
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form_campo.campo_api.id_for_label }}" class="form-label">
+                                            <i class="fas fa-cog me-1"></i>Campo API
+                                        </label>
+                                        {{ form_campo.campo_api }}
+                                        {% if form_campo.campo_api.errors %}
+                                            <div class="text-danger small mt-1">
+                                                {{ form_campo.campo_api.errors }}
+                                            </div>
+                                        {% endif %}
+                                        
+                                        <!-- Información del campo seleccionado -->
+                                        <div class="field-info field-info-hidden mt-2" id="field-info-{{ forloop.counter0 }}">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <strong>Nombre:</strong> <span class="field-name">-</span>
+                                                </div>
+                                                <div class="col-6">
+                                                    <strong>Tipo:</strong> <span class="field-type">-</span>
+                                                </div>
+                                                <div class="col-12 mt-1">
+                                                    <small class="text-muted field-description">-</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">
+                                            <i class="fas fa-asterisk me-1 text-danger"></i>¿Es requerido?
+                                        </label>
+                                        <div class="form-check">
+                                            {{ form_campo.is_required }}
+                                            <label class="form-check-label" for="{{ form_campo.is_required.id_for_label }}">
+                                                Campo obligatorio
+                                            </label>
+                                        </div>
+                                        {% if form_campo.is_required.errors %}
+                                            <div class="text-danger small">
+                                                {{ form_campo.is_required.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="{{ form_campo.orden.id_for_label }}" class="form-label">
+                                            <i class="fas fa-sort-numeric-down me-1"></i>Orden
+                                        </label>
+                                        {{ form_campo.orden }}
+                                        {% if form_campo.orden.errors %}
+                                            <div class="text-danger small">
+                                                {{ form_campo.orden.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle me-2"></i>
+                        {% if is_edit %}
+                            Este template no tiene campos definidos.
+                        {% else %}
+                            No hay campos definidos aún. Agrega campos usando el botón "Agregar Campo".
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                
+                <!-- Template para nuevos campos -->
+                <div id="empty-form-template" class="card mb-3 form-campo campo-template d-none">
+                    <span class="badge bg-success">Campo #<span class="field-number"></span></span>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-grip-vertical sortable-handle me-2" title="Arrastrar para reordenar"></i>
+                                <h6 class="card-title mb-0">Campo #<span class="field-number"></span></h6>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <small class="text-success">Nuevo</small>
+                                {% if is_edit %}
+                                    <div class="form-check m-0">
+                                        {{ campos_formset.empty_form.DELETE }}
+                                        <label class="form-check-label text-danger">
+                                            <i class="fas fa-trash"></i> Eliminar
+                                        </label>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {{ campos_formset.empty_form.id }}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-cog me-1"></i>Campo API
+                                    </label>
+                                    {{ campos_formset.empty_form.campo_api }}
+                                    
+                                    <!-- Información del campo -->
+                                    <div class="field-info field-info-hidden mt-2" id="field-info-__prefix__">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <strong>Nombre:</strong> <span class="field-name">-</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <strong>Tipo:</strong> <span class="field-type">-</span>
+                                            </div>
+                                            <div class="col-12 mt-1">
+                                                <small class="text-muted field-description">-</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-asterisk me-1 text-danger"></i>¿Es requerido?
+                                    </label>
+                                    <div class="form-check">
+                                        {{ campos_formset.empty_form.is_required }}
+                                        <label class="form-check-label">Campo obligatorio</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-sort-numeric-down me-1"></i>Orden
+                                    </label>
+                                    {{ campos_formset.empty_form.orden }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="fas fa-save me-2"></i>Guardar Template
+                </button>
+                <a href="{% url 'medios_pago:lista_templates' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver a la Lista de Templates
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Datos JavaScript para campos predefinidos -->
+<script id="predefined-fields-data" type="application/json">
+{
+    "card_number": {"label": "Número de tarjeta", "type": "NUMERO", "description": "Número de 16 dígitos de la tarjeta"},
+    "exp_month": {"label": "Mes de vencimiento", "type": "NUMERO", "description": "Mes de vencimiento (1-12)"},
+    "exp_year": {"label": "Año de vencimiento", "type": "NUMERO", "description": "Año de vencimiento (4 dígitos)"},
+    "cvc": {"label": "Código de seguridad", "type": "NUMERO", "description": "Código CVV/CVC de 3 o 4 dígitos"},
+    "cardholder_name": {"label": "Nombre en la tarjeta", "type": "TEXTO", "description": "Nombre como aparece en la tarjeta"},
+    "paypal_email": {"label": "Email de PayPal", "type": "EMAIL", "description": "Dirección de email asociada a PayPal"},
+    "account_number": {"label": "Número de cuenta", "type": "NUMERO", "description": "Número de cuenta bancaria"},
+    "bank_name": {"label": "Nombre del banco", "type": "TEXTO", "description": "Nombre completo del banco"},
+    "account_holder_name": {"label": "Titular de la cuenta", "type": "TEXTO", "description": "Nombre del titular de la cuenta"},
+    "routing_number": {"label": "Código de routing", "type": "NUMERO", "description": "Código de routing bancario (USA)"},
+    "swift_code": {"label": "Código SWIFT", "type": "TEXTO", "description": "Código SWIFT para transferencias internacionales"},
+    "iban": {"label": "IBAN", "type": "TEXTO", "description": "International Bank Account Number"},
+    "cbu_cvu": {"label": "CBU/CVU", "type": "NUMERO", "description": "Clave Bancaria Uniforme o Clave Virtual Uniforme"},
+    "email": {"label": "Email", "type": "EMAIL", "description": "Dirección de correo electrónico"},
+    "phone": {"label": "Teléfono", "type": "TELEFONO", "description": "Número de teléfono"},
+    "billing_address": {"label": "Dirección de facturación", "type": "TEXTO", "description": "Dirección de facturación completa"},
+    "shipping_address": {"label": "Dirección de envío", "type": "TEXTO", "description": "Dirección de envío completa"},
+    "amount": {"label": "Monto", "type": "NUMERO", "description": "Monto de la transacción"},
+    "currency": {"label": "Moneda", "type": "TEXTO", "description": "Código de moneda (USD, EUR, etc.)"},
+    "description": {"label": "Descripción", "type": "TEXTO", "description": "Descripción de la transacción"},
+    "metadata": {"label": "Datos adicionales", "type": "TEXTO", "description": "Información adicional en formato JSON"},
+    "wallet_address": {"label": "Dirección de billetera", "type": "TEXTO", "description": "Dirección de billetera de criptomoneda"},
+    "network": {"label": "Red", "type": "TEXTO", "description": "Red blockchain (ETH, BTC, etc.)"}
+}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Cargar datos de campos predefinidos
+    const predefinedFields = JSON.parse(document.getElementById('predefined-fields-data').textContent);
+    
+    // Referencias DOM
+    const addButton = document.getElementById('add-campo-template');
+    const container = document.getElementById('campos-template-container');
+    const managementForm = document.querySelector('input[name$="TOTAL_FORMS"]');
+    const emptyFormTemplate = document.getElementById('empty-form-template');
+    const previewContent = document.getElementById('preview-content');
+    
+    const isEdit = "{{ is_edit|yesno:'true,false' }}" === "true";
+
+    // Función para actualizar información de campo
+    function updateFieldInfo(selectElement) {
+        const selectedValue = selectElement.value;
+        const fieldInfoDiv = selectElement.closest('.form-campo').querySelector('.field-info');
+        
+        if (selectedValue && predefinedFields[selectedValue]) {
+            const fieldData = predefinedFields[selectedValue];
+            
+            fieldInfoDiv.querySelector('.field-name').textContent = fieldData.label;
+            fieldInfoDiv.querySelector('.field-type').textContent = fieldData.type;
+            fieldInfoDiv.querySelector('.field-description').textContent = fieldData.description;
+            
+            fieldInfoDiv.classList.remove('field-info-hidden');
+        } else {
+            fieldInfoDiv.classList.add('field-info-hidden');
+        }
+        
+        updatePreview();
+    }
+
+    // Función para actualizar numeración
+    function updateFieldNumbers() {
+        const campos = container.querySelectorAll('.form-campo:not(#empty-form-template):not(.marked-for-deletion)');
+        campos.forEach((campo, index) => {
+            const numberSpans = campo.querySelectorAll('.field-number');
+            numberSpans.forEach(span => {
+                span.textContent = index + 1;
+            });
+        });
+        updatePreview();
+    }
+
+    // Función para actualizar previsualización
+    function updatePreview() {
+        const campos = container.querySelectorAll('.form-campo:not(#empty-form-template):not(.marked-for-deletion)');
+        let previewHtml = '';
+        
+        if (campos.length === 0) {
+            previewHtml = '<div class="text-muted text-center"><i class="fas fa-info-circle me-2"></i>Los campos configurados aparecerán aquí en tiempo real</div>';
+        } else {
+            previewHtml = '<div class="row">';
+            campos.forEach((campo, index) => {
+                const select = campo.querySelector('select[name*="campo_api"]');
+                const requiredCheckbox = campo.querySelector('input[name*="is_required"]');
+                
+                if (select && select.value && predefinedFields[select.value]) {
+                    const fieldData = predefinedFields[select.value];
+                    const isRequired = requiredCheckbox ? requiredCheckbox.checked : false;
+                    
+                    previewHtml += `
+                        <div class="col-md-6 mb-2">
+                            <div class="card card-body p-2 small">
+                                <strong>${fieldData.label}</strong>
+                                ${isRequired ? '<span class="badge bg-danger ms-1">Req</span>' : '<span class="badge bg-secondary ms-1">Opc</span>'}
+                                <div class="text-muted" style="font-size: 0.7em;">${fieldData.type} - ${fieldData.description}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            previewHtml += '</div>';
+        }
+        
+        previewContent.innerHTML = previewHtml;
+    }
+
+    // Agregar campo manual
+    if (addButton && emptyFormTemplate && managementForm) {
+        addButton.addEventListener('click', function() {
+            const totalForms = parseInt(managementForm.value);
+            let newFormHtml = emptyFormTemplate.innerHTML.replace(/__prefix__/g, totalForms);
+            
+            const newDiv = document.createElement('div');
+            newDiv.className = 'card mb-3 form-campo campo-template';
+            newDiv.innerHTML = newFormHtml;
+            
+            // Actualizar numeración
+            const numberSpans = newDiv.querySelectorAll('.field-number');
+            numberSpans.forEach(span => {
+                span.textContent = totalForms + 1;
+            });
+            
+            // Asignar orden automático
+            const ordenInput = newDiv.querySelector('input[name*="orden"]');
+            if (ordenInput) {
+                ordenInput.value = totalForms;
+            }
+            
+            // Insertar antes del template
+            container.insertBefore(newDiv, emptyFormTemplate);
+            managementForm.value = totalForms + 1;
+            
+            updateFieldNumbers();
+        });
+    }
+
+    // Manejar cambios en selectores de campo
+    document.body.addEventListener('change', function(e) {
+        if (e.target.matches('select[name*="campo_api"]')) {
+            updateFieldInfo(e.target);
+        }
+        
+        // Manejar cambios en checkbox requerido
+        if (e.target.matches('input[name*="is_required"]')) {
+            updatePreview();
+        }
+        
+        // Manejar marcado para eliminación
+        if (e.target && e.target.name && e.target.name.indexOf('DELETE') > -1) {
+            const formDiv = e.target.closest('.form-campo');
+            if (formDiv) {
+                if (e.target.checked) {
+                    formDiv.classList.add('marked-for-deletion');
+                } else {
+                    formDiv.classList.remove('marked-for-deletion');
+                }
+                updateFieldNumbers();
+            }
+        }
+    });
+
+    // Inicializar campos existentes
+    document.querySelectorAll('select[name*="campo_api"]').forEach(select => {
+        updateFieldInfo(select);
+    });
+    
+    updateFieldNumbers();
+});
+</script>
+{% endblock %}

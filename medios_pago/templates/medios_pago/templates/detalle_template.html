@@ -1,0 +1,454 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">
+                        <i class="fas fa-file-alt me-2"></i>{{ template.nombre }}
+                    </h1>
+                    <div class="d-flex align-items-center gap-3">
+                        {% if template.is_active %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check me-1"></i>Activo
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning">
+                                <i class="fas fa-pause me-1"></i>Inactivo
+                            </span>
+                        {% endif %}
+                        <small class="text-muted">
+                            Creado por {{ template.creado_por.username }} el {{ template.created_at|date:"d/m/Y" }}
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <a href="{% url 'medios_pago:lista_templates' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Volver
+                    </a>
+                    <a href="{% url 'medios_pago:editar_template' template.pk %}" class="btn btn-primary">
+                        <i class="fas fa-edit me-1"></i>Editar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Información del template -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Información del Template
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Nombre:</dt>
+                                <dd class="col-sm-8">{{ template.nombre }}</dd>
+                                
+                                <dt class="col-sm-4">Estado:</dt>
+                                <dd class="col-sm-8">
+                                    {% if template.is_active %}
+                                        <span class="badge bg-success">Activo</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Inactivo</span>
+                                    {% endif %}
+                                </dd>
+                                
+                                <dt class="col-sm-4">Creado por:</dt>
+                                <dd class="col-sm-8">
+                                    <i class="fas fa-user me-1"></i>{{ template.creado_por.username }}
+                                </dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Creado:</dt>
+                                <dd class="col-sm-8">{{ template.created_at|date:"d/m/Y H:i" }}</dd>
+                                
+                                <dt class="col-sm-4">Actualizado:</dt>
+                                <dd class="col-sm-8">{{ template.updated_at|date:"d/m/Y H:i" }}</dd>
+                                
+                                <dt class="col-sm-4">Veces usado:</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge bg-info">{{ template.veces_usado }} ve{{ template.veces_usado|pluralize:"z,ces" }}</span>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                    
+                    {% if template.descripcion %}
+                        <div class="mt-3">
+                            <h6>Descripción:</h6>
+                            <p class="text-muted">{{ template.descripcion }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Campos configurados -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Campos Configurados
+                        <span class="badge bg-primary ms-2">{{ campos_configurados|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if campos_configurados %}
+                        <div class="row">
+                            {% for campo in campos_configurados %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-start border-primary border-3">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="card-title mb-1">
+                                                        {{ campo.get_field_info.label }}
+                                                        {% if campo.is_required %}
+                                                            <span class="badge bg-danger ms-1">Requerido</span>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary ms-1">Opcional</span>
+                                                        {% endif %}
+                                                    </h6>
+                                                    <div class="small text-muted mb-2">
+                                                        <strong>API:</strong> <code>{{ campo.campo_api }}</code>
+                                                    </div>
+                                                    <div class="small text-muted">
+                                                        <strong>Tipo:</strong> {{ campo.get_field_info.type }}
+                                                    </div>
+                                                    <div class="small text-muted">
+                                                        {{ campo.get_field_info.description }}
+                                                    </div>
+                                                </div>
+                                                <span class="badge bg-light text-dark">{{ campo.orden }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-info-circle fa-2x mb-3"></i>
+                            <p>Este template no tiene campos configurados.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar con estadísticas y medios relacionados -->
+        <div class="col-lg-4">
+            <!-- Estadísticas de uso -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Estadísticas de Uso
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="h4 text-primary">{{ template.veces_usado }}</div>
+                            <div class="small text-muted">Veces Usado</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="h4 text-success">{{ campos_configurados|length }}</div>
+                            <div class="small text-muted">Campos</div>
+                        </div>
+                    </div>
+                    
+                    {% if template.veces_usado > 0 %}
+                        <hr>
+                        <div class="small text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Este template ha sido aplicado {{ template.veces_usado }} ve{{ template.veces_usado|pluralize:"z,ces" }} 
+                            a diferentes medios de pago.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Medios de pago que usan este template -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-credit-card me-2"></i>Medios de Pago Asociados
+                        <span class="badge bg-primary ms-2">{{ medios_usando_template|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if medios_usando_template %}
+                        <div class="list-group list-group-flush">
+                            {% for medio in medios_usando_template %}
+                                <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-semibold">{{ medio.nombre }}</div>
+                                        <div class="small text-muted">
+                                            {% if medio.is_active %}
+                                                <i class="fas fa-circle text-success me-1"></i>Activo
+                                            {% else %}
+                                                <i class="fas fa-circle text-secondary me-1"></i>Inactivo
+                                            {% endif %}
+                                            • {{ medio.comision_porcentaje }}% comisión
+                                        </div>
+                                    </div>
+                                    <a href="{% url 'medios_pago:editar' medio.pk %}" 
+                                       class="btn btn-sm btn-outline-primary"
+                                       title="Editar medio">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        {% if medios_usando_template|length > 5 %}
+                            <div class="text-center mt-3">
+                                <a href="{% url 'medios_pago:lista' %}?template={{ template.pk }}" class="btn btn-sm btn-outline-primary">
+                                    Ver todos los medios
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-info-circle fa-2x mb-3"></i>
+                            <p class="mb-0">Ningún medio de pago está usando este template actualmente.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Acciones rápidas -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tools me-2"></i>Acciones Rápidas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'medios_pago:editar_template' template.pk %}" class="btn btn-primary">
+                            <i class="fas fa-edit me-2"></i>Editar Template
+                        </a>
+                        
+                        <form action="{% url 'medios_pago:toggle_template' template.pk %}" method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn {% if template.is_active %}btn-warning{% else %}btn-success{% endif %} w-100">
+                                <i class="fas {% if template.is_active %}fa-pause{% else %}fa-play{% endif %} me-2"></i>
+                                {% if template.is_active %}Desactivar{% else %}Activar{% endif %}
+                            </button>
+                        </form>
+                        
+                        <a href="{% url 'medios_pago:crear_admin' %}?template=custom_{{ template.pk }}" class="btn btn-outline-success">
+                            <i class="fas fa-plus me-2"></i>Crear Medio con este Template
+                        </a>
+                        
+                        <hr>
+                        
+                        <button type="button" class="btn btn-outline-info btn-sm" onclick="copyTemplateConfig()">
+                            <i class="fas fa-copy me-2"></i>Copiar Configuración
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para mostrar configuración copiable -->
+<div class="modal fade" id="configModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-code me-2"></i>Configuración del Template
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Esta es la configuración JSON del template que puedes usar para referencia o backup.
+                </div>
+                <pre id="template-config" class="bg-light p-3 rounded"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" onclick="copyToClipboard()">
+                    <i class="fas fa-copy me-2"></i>Copiar al Portapapeles
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="application/json" id="template-data">
+{
+    "id": {{ template.pk }},
+    "nombre": "{{ template.nombre|escapejs }}",
+    "descripcion": "{{ template.descripcion|escapejs }}",
+    "is_active": {{ template.is_active|yesno:"true,false" }},
+    "creado_por": "{{ template.creado_por.username|escapejs }}",
+    "veces_usado": {{ template.veces_usado }},
+    "campos": [
+        {% for campo in campos_configurados %}
+        {
+            "campo_api": "{{ campo.campo_api|escapejs }}",
+            "nombre": "{{ campo.get_field_info.label|escapejs }}",
+            "tipo": "{{ campo.get_field_info.type|escapejs }}",
+            "descripcion": "{{ campo.get_field_info.description|escapejs }}",
+            "is_required": {{ campo.is_required|yesno:"true,false" }},
+            "orden": {{ campo.orden }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ]
+}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const scriptElement = document.getElementById('template-data');
+    const templateData = JSON.parse(scriptElement.textContent);
+    
+    console.log(templateData);
+
+function copyTemplateConfig() {
+    const configText = JSON.stringify(templateData, null, 2);
+    document.getElementById('template-config').textContent = configText;
+    
+    const modal = new bootstrap.Modal(document.getElementById('configModal'));
+    modal.show();
+}
+
+function copyToClipboard() {
+    const configText = document.getElementById('template-config').textContent;
+    
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(configText).then(() => {
+            // Mostrar toast de éxito
+            showToast('Configuración copiada al portapapeles', 'success');
+        }).catch(() => {
+            // Fallback para navegadores sin soporte
+            fallbackCopyTextToClipboard(configText);
+        });
+    } else {
+        // Fallback para navegadores sin soporte
+        fallbackCopyTextToClipboard(configText);
+    }
+}
+
+function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+    
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        document.execCommand('copy');
+        showToast('Configuración copiada al portapapeles', 'success');
+    } catch (err) {
+        showToast('Error al copiar. Selecciona manualmente el texto.', 'error');
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+function showToast(message, type = 'success') {
+    // Crear toast dinámicamente
+    const toastContainer = document.getElementById('toast-container') || createToastContainer();
+    
+    const toastId = 'toast-' + Date.now();
+    const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
+    const icon = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+    
+    const toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="${icon} me-2"></i>${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+    
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+    
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+    toast.show();
+    
+    // Remover el elemento después de que se oculte
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+    container.style.zIndex = '1055';
+    document.body.appendChild(container);
+    return container;
+}
+</script>
+
+{% block extra_css %}
+<style>
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.border-start {
+    border-left-width: 3px !important;
+}
+
+.list-group-item {
+    border: none;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+
+pre {
+    max-height: 400px;
+    overflow-y: auto;
+    font-size: 0.875rem;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.toast-container {
+    z-index: 1055;
+}
+</style>
+{% endblock %}
+
+{% endblock %}

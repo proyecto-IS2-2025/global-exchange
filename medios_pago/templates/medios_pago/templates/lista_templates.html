@@ -1,0 +1,390 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<h1 class="h3 mb-4 text-center">Templates Personalizados</h1>
+
+<!-- Header con filtros y acciones -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h5 mb-1">Gestión de Templates</h2>
+        <small class="text-muted">
+            Mostrando: {{ templates|length }} de {{ stats.total }} template{{ stats.total|pluralize }}
+        </small>
+    </div>
+    
+    <div class="d-flex align-items-center gap-3">
+        <!-- Menú desplegable de filtros -->
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filtroDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-filter me-2"></i>
+                {% if estado_filtro == 'activos' %}
+                    Activos
+                {% elif estado_filtro == 'inactivos' %}
+                    Inactivos
+                {% else %}
+                    Todos
+                {% endif %}
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="filtroDropdown">
+                <li class="dropdown-header">Filtrar por estado</li>
+                <li>
+                    <a class="dropdown-item {% if estado_filtro == 'todos' %}active{% endif %}" href="?estado=todos">
+                        {% if estado_filtro == 'todos' %}
+                            <i class="fas fa-check text-success me-2"></i>
+                        {% else %}
+                            <span class="me-4"></span>
+                        {% endif %}
+                        Todos
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item {% if estado_filtro == 'activos' %}active{% endif %}" href="?estado=activos">
+                        {% if estado_filtro == 'activos' %}
+                            <i class="fas fa-check text-success me-2"></i>
+                        {% else %}
+                            <span class="me-4"></span>
+                        {% endif %}
+                        Activos
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item {% if estado_filtro == 'inactivos' %}active{% endif %}" href="?estado=inactivos">
+                        {% if estado_filtro == 'inactivos' %}
+                            <i class="fas fa-check text-success me-2"></i>
+                        {% else %}
+                            <span class="me-4"></span>
+                        {% endif %}
+                        Inactivos
+                    </a>
+                </li>
+                
+                <li><hr class="dropdown-divider"></li>
+                
+                <!-- Estadísticas rápidas -->
+                <li class="dropdown-item-text">
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>Total:</span>
+                        <span>{{ stats.total }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between small text-success">
+                        <span>Activos:</span>
+                        <span>{{ stats.activos }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between small text-warning">
+                        <span>Inactivos:</span>
+                        <span>{{ stats.inactivos }}</span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Acciones principales -->
+        <div class="btn-group">
+            <a href="{% url 'medios_pago:lista' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Volver a Medios
+            </a>
+            <a href="{% url 'medios_pago:crear_template' %}" class="btn btn-success">
+                <i class="fas fa-plus me-2"></i>Nuevo Template
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Barra de resumen visual -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">{{ stats.total }}</h5>
+                <p class="card-text small mb-0">Templates Personalizados</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">{{ stats.activos }}</h5>
+                <p class="card-text small mb-0">Templates Activos</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">{{ templates_sistema|length }}</h5>
+                <p class="card-text small mb-0">Templates del Sistema</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">{{ stats.inactivos }}</h5>
+                <p class="card-text small mb-0">Templates Inactivos</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sección de Templates del Sistema -->
+{% if templates_sistema %}
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-cogs me-2"></i>Templates del Sistema (Solo lectura)
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for key, template in templates_sistema.items %}
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card border-info">
+                    <div class="card-body">
+                        <h6 class="card-title">{{ template.name }}</h6>
+                        <p class="card-text small text-muted">{{ template.description }}</p>
+                        <div class="small">
+                            <strong>Campos:</strong> {{ template.fields|length }}
+                            <div class="mt-1">
+                                {% for field in template.fields|slice:":3" %}
+                                    <span class="badge bg-light text-dark me-1">{{ field }}</span>
+                                {% endfor %}
+                                {% if template.fields|length > 3 %}
+                                    <span class="text-muted">+{{ template.fields|length|add:"-3" }} más</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Tabla de templates personalizados -->
+{% if templates %}
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-user-cog me-2"></i>Templates Personalizados
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col">
+                                <i class="fas fa-tag me-2"></i>Nombre
+                            </th>
+                            <th scope="col">
+                                <i class="fas fa-user me-2"></i>Creado por
+                            </th>
+                            <th scope="col">
+                                <i class="fas fa-list me-2"></i>Campos
+                            </th>
+                            <th scope="col">
+                                <i class="fas fa-chart-line me-2"></i>Uso
+                            </th>
+                            <th scope="col">
+                                <i class="fas fa-toggle-on me-2"></i>Estado
+                            </th>
+                            <th scope="col" class="text-center">
+                                <i class="fas fa-cog me-2"></i>Acciones
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for template in templates %}
+                        <tr class="{% if not template.is_active %}table-secondary{% endif %}">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if template.is_active %}
+                                        <i class="fas fa-circle text-success me-2" title="Activo"></i>
+                                    {% else %}
+                                        <i class="fas fa-circle text-secondary me-2" title="Inactivo"></i>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ template.nombre }}</strong>
+                                        {% if template.descripcion %}
+                                            <div class="small text-muted">{{ template.descripcion|truncatechars:50 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user-circle text-muted me-2"></i>
+                                    <div>
+                                        <span>{{ template.creado_por.username }}</span>
+                                        <div class="small text-muted">{{ template.created_at|date:"d M Y" }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">
+                                    {{ template.campos_template.count }} campo{{ template.campos_template.count|pluralize }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-chart-bar text-info me-2"></i>
+                                    <span class="badge bg-info">{{ template.veces_usado }} ve{{ template.veces_usado|pluralize:"z,ces" }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                {% if template.is_active %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check me-1"></i>Activo
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-pause me-1"></i>Inactivo
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <!-- Botón ver detalle -->
+                                    <a href="{% url 'medios_pago:detalle_template' template.pk %}" 
+                                       class="btn btn-sm btn-outline-info" 
+                                       title="Ver detalle">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    
+                                    <!-- Botón editar -->
+                                    <a href="{% url 'medios_pago:editar_template' template.pk %}" 
+                                       class="btn btn-sm btn-outline-primary" 
+                                       title="Editar template">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    
+                                    <!-- Botón toggle activo/inactivo -->
+                                    <form action="{% url 'medios_pago:toggle_template' template.pk %}" 
+                                          method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" 
+                                                title="{% if template.is_active %}Desactivar{% else %}Activar{% endif %}"
+                                                class="btn btn-sm {% if template.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}">
+                                            <i class="fas {% if template.is_active %}fa-pause{% else %}fa-play{% endif %}"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Paginación -->
+    {% if is_paginated %}
+        <nav aria-label="Navegación de páginas" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">
+                        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+    
+{% else %}
+    <!-- Estado vacío -->
+    <div class="text-center mt-5">
+        <div class="card border-0">
+            <div class="card-body">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                {% if estado_filtro == 'todos' %}
+                    <h5>No hay templates personalizados</h5>
+                    <p class="text-muted">Comienza creando tu primer template personalizado.</p>
+                    <a href="{% url 'medios_pago:crear_template' %}" class="btn btn-success">
+                        <i class="fas fa-plus me-2"></i>Crear Primer Template
+                    </a>
+                {% elif estado_filtro == 'activos' %}
+                    <h5>No hay templates personalizados activos</h5>
+                    <p class="text-muted">Todos los templates están desactivados o no hay templates registrados.</p>
+                    <div class="btn-group" role="group">
+                        <a href="?estado=todos" class="btn btn-outline-primary">
+                            <i class="fas fa-list me-2"></i>Ver Todos
+                        </a>
+                        <a href="{% url 'medios_pago:crear_template' %}" class="btn btn-success">
+                            <i class="fas fa-plus me-2"></i>Crear Nuevo
+                        </a>
+                    </div>
+                {% else %}
+                    <h5>No hay templates personalizados inactivos</h5>
+                    <p class="text-muted">Todos los templates están activados.</p>
+                    <a href="?estado=todos" class="btn btn-outline-primary">
+                        <i class="fas fa-list me-2"></i>Ver Todos los Templates
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+{% block extra_css %}
+<style type="text/css">
+/* Active dropdown items */
+.dropdown-item.active {
+    background-color: var(--bs-primary);
+    color: white;
+}
+
+.dropdown-item.active i {
+    color: white;
+}
+
+/* Table styles */
+.table-secondary td {
+    opacity: 0.8;
+}
+
+/* Card body centering */
+.card.h-100 .card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Badge spacing */
+.badge {
+    font-size: 0.75em;
+}
+</style>
+{% endblock %}
+
+{% endblock %}
