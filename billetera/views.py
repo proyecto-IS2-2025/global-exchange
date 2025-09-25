@@ -48,7 +48,7 @@ def billetera_view(request):
     if not user:
         return redirect("billetera:login")
 
-    billetera = user.billetera
+    billetera, _ = Billetera.objects.get_or_create(usuario=user)
     error = None
 
     try:
@@ -134,7 +134,7 @@ def transferir_billetera_view(request):
     if not user:
         return redirect("billetera:login")
         
-    billetera_origen = user.billetera
+    billetera_origen, _ = Billetera.objects.get_or_create(usuario=user)
     error = None
     
     if request.method == "POST":
@@ -173,7 +173,7 @@ def transferir_a_banco_view(request):
     if not user:
         return redirect("billetera:login")
         
-    billetera_origen = user.billetera
+    billetera_origen, _ = Billetera.objects.get_or_create(usuario=user)
     error = None
     
     if request.method == "POST":
