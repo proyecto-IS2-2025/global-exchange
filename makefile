@@ -69,16 +69,18 @@ test-simulador:
 	python manage.py test simulador
 	@echo "Pruebas de simulador completadas."
 
-cargar-datos:
+docker-loaddata:
 	@echo "Cargando datos iniciales..."
-	python manage.py loaddata roles_data.json
-	python manage.py loaddata users_data.json
-	python manage.py loaddata clientes_data.json
-	python manage.py loaddata divisas_initial_data.json
-	python manage.py loaddata medios_pago_initial_data.json
+	docker exec web python manage.py loaddata roles_data.json
+	docker exec web python manage.py loaddata roles_data.json
+	docker exec web python manage.py loaddata users_data.json
+	docker exec web python manage.py loaddata clientes_data.json
+	docker exec web python manage.py loaddata divisas_initial_data.json
+#	python manage.py loaddata medios_pago_initial_data.json
 	@echo "Datos iniciales cargados."
 
-run:
-	@echo "Ejecutando el servidor de desarrollo con recarga automática..."
-	poetry run python manage.py runserver 
-	@echo "Servidor detenido."
+docker-setup:
+	@echo "Configurando la aplicación..."
+	docker compose up -d --build
+	docker compose -f docker-compose.yml run --rm --no-deps web poetry run python manage.py makemigrations
+	docker compose -f docker-compose.yml run --rm --no-deps web poetry run python manage.py migrate

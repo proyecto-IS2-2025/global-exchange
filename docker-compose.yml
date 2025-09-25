@@ -1,16 +1,29 @@
 services:
-  db:
-    image: postgres:17
-    restart: always
-    ports:
-      - "5433:5432"  # Puerto 5433 externo para evitar conflictos
-    shm_size: 128mb
-    environment:
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_DB: casa_de_cambios
+  web:
+    container_name: glx-web
+    build: .
+    command: /usr/local/bin/python /app/manage.py runserver 0.0.0.0:8000
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+
+  db:
+    container_name: glx-db
+    image: postgres:17 
+    restart: always
+    environment:
+      - POSTGRES_DB=glex
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "5433:5432"
 
 volumes:
   postgres_data:

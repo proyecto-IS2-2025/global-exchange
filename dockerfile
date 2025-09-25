@@ -2,7 +2,7 @@
 
 # Base image
 ARG PYTHON_VERSION=3.13
-FROM python:${PYTHON_VERSION}-slim AS app
+FROM python:3.13-slim AS app
 
 # Environment settings
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -16,7 +16,7 @@ WORKDIR /app
 # System deps (kept minimal because psycopg[binary] is used)
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-       ca-certificates \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Poetry
@@ -32,8 +32,11 @@ RUN poetry config virtualenvs.create false \
 # Copy application source
 COPY . .
 
-# Set up user permissions
-RUN useradd --create-home --shell /bin/bash appuser \
+# Build documentation and set up user permissions
+# Si no usas Sphinx, puedes eliminar esta línea
+RUN poetry run sphinx-build -M html "$(pwd)/docs/source" "$(pwd)/docs/_build" \
+    && chmod +x scripts/entrypoint.sh \
+    && useradd --create-home --shell /bin/bash appuser \
     && chown -R appuser:appuser /app
 
 USER appuser
@@ -41,5 +44,5 @@ USER appuser
 # Default port (can be overridden with PORT env var)
 EXPOSE 8000
 
-# Default command to run Django development server
-CMD ["poetry", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Entrypoint runs migrations and starts Django dev server (per README)
+ENTRYPOINT ["/app/scripts/entrypoint.sh"]
