@@ -75,11 +75,13 @@
       </div>
 
       <div class="d-flex justify-content-between mt-4">
-        <form method="get" action="{% url 'clientes:seleccionar_medio_acreditacion' %}" class="w-100 me-3">
-          <button class="btn btn-success btn-lg rounded-3 w-100 py-3 fw-bold">
-            <i class="bi bi-check-circle me-2"></i> Confirmar y continuar
-          </button>
-        </form>
+<form method="post" action="" class="w-100 me-3">
+  {% csrf_token %}
+  <button class="btn btn-success btn-lg rounded-3 w-100 py-3 fw-bold" type="submit">
+    <i class="bi bi-check-circle me-2"></i> Confirmar y continuar
+  </button>
+</form>
+
         
         <a href="{% url 'divisas:venta' %}" class="btn btn-outline-secondary btn-lg rounded-3 py-3">
           <i class="bi bi-arrow-left-circle me-2"></i> Volver

@@ -150,9 +150,11 @@
                         <strong>{{ medio_seleccionado.medio_de_pago.nombre }}</strong>
                     </p>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-success btn-sm" id="btn-continuar-operacion">
-                            <i class="fas fa-arrow-right me-1"></i>Continuar Operación
-                        </button>
+                    <button id="btn-continuar-operacion"
+                            class="btn btn-success"
+                            data-medio-id="{{ medio_seleccionado.id }}">
+                        Continuar Operación
+                    </button>
                         <button class="btn btn-outline-secondary btn-sm" id="btn-cambiar-medio">
                             <i class="fas fa-exchange-alt me-1"></i>Cambiar
                         </button>
@@ -166,14 +168,13 @@
 
 {% block extra_js %}
 <script>
-// Seleccionar medio de acreditación
+// Seleccionar medio de acreditación (tarjeta en la grilla)
 $('.btn-seleccionar-medio').on('click', function() {
     const medioId = $(this).data('medio-id');
     const medioNombre = $(this).data('medio-nombre');
 
     if ($(this).prop('disabled')) return;
 
-    // Mostrar loading
     const $btn = $(this);
     const originalHtml = $btn.html();
     $btn.html('<i class="fas fa-spinner fa-spin me-2"></i>Seleccionando...');
@@ -191,13 +192,11 @@ $('.btn-seleccionar-medio').on('click', function() {
             if (response.success) {
                 mostrarMensajeExito(response.message || 'Medio seleccionado correctamente');
 
-                // Redirigir automáticamente al sumario si viene en la respuesta
                 if (response.redirect_url) {
                     setTimeout(() => {
                         window.location.href = response.redirect_url;
-                    }, 1000); // 1s para mostrar mensaje antes de redirigir
+                    }, 1000);
                 } else {
-                    // fallback: recargar la página
                     window.location.reload();
                 }
             } else {
@@ -206,7 +205,7 @@ $('.btn-seleccionar-medio').on('click', function() {
                 $btn.prop('disabled', false);
             }
         },
-        error: function(xhr) {
+        error: function() {
             mostrarMensajeError('Error de conexión');
             $btn.html(originalHtml);
             $btn.prop('disabled', false);
@@ -214,6 +213,59 @@ $('.btn-seleccionar-medio').on('click', function() {
     });
 });
 
+// Barra fija: continuar o cambiar selección
+document.addEventListener("DOMContentLoaded", function () {
+  const continuarBtn = document.querySelector("#btn-continuar-operacion");
+  const cambiarBtn = document.querySelector("#btn-cambiar-medio");
+
+  if (continuarBtn) {
+    continuarBtn.addEventListener("click", function () {
+      const medioId = continuarBtn.dataset.medioId;
+      fetch("", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": "{{ csrf_token }}",
+        },
+        body: new URLSearchParams({
+          accion: "seleccionar",
+          medio_id: medioId,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.redirect_url) {
+            window.location.href = data.redirect_url;
+          } else {
+            alert(data.error || "No se pudo continuar");
+          }
+        });
+    });
+  }
+
+  if (cambiarBtn) {
+    cambiarBtn.addEventListener("click", function () {
+      fetch("", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": "{{ csrf_token }}",
+        },
+        body: new URLSearchParams({
+          accion: "limpiar",
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.redirect_url) {
+            window.location.href = data.redirect_url;
+          } else {
+            window.location.reload();
+          }
+        });
+    });
+  }
+});
 </script>
 
 <style>

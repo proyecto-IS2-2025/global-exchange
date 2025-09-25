@@ -18,6 +18,9 @@ from django.http import JsonResponse
 import json
 from django.test import RequestFactory
 from clientes.views import get_medio_acreditacion_seleccionado
+from decimal import Decimal, InvalidOperation
+
+
 """
 Vistas para la gestión de divisas y tasas de cambio.
 
@@ -319,6 +322,19 @@ def visualizador_tasas_admin(request):
 
 
 # --- VISTAS PARA VENTA USANDO LOGICA DEL SIMULADOR ---
+def decimal_to_str(data):
+    """
+    Convierte todos los Decimal en dict/list a str (recursivo).
+    """
+    if isinstance(data, dict):
+        return {k: decimal_to_str(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [decimal_to_str(v) for v in data]
+    elif isinstance(data, Decimal):
+        return str(data)
+    return data
+
+
 class VentaDivisaView(LoginRequiredMixin, FormView):
     template_name = "operaciones/venta.html"
     form_class = VentaDivisaForm
@@ -328,19 +344,20 @@ class VentaDivisaView(LoginRequiredMixin, FormView):
         monto = form.cleaned_data['monto']
 
         payload = {
-            "tipo_operacion": "venta",   # FORZAMOS venta
-            "monto": str(monto),
+            "tipo_operacion": "venta",
+            "monto": str(monto),  # ya es str
             "moneda": divisa.code
         }
 
-        # Construir una petición POST "limpia" e inyectar session/user
         rf = RequestFactory()
-        post_req = rf.post('/simulador/calcular/', data=json.dumps(payload), content_type='application/json')
-        # adjuntamos session y usuario para que el simulador pueda usarlos
+        post_req = rf.post(
+            '/simulador/calcular/',
+            data=json.dumps(payload),
+            content_type='application/json'
+        )
         post_req.session = self.request.session
         post_req.user = self.request.user
 
-        # Llamamos la vista del simulador que ya hace todo el cálculo
         resp = calcular_simulacion_api(post_req)
         try:
             data = json.loads(resp.content)
@@ -352,8 +369,10 @@ class VentaDivisaView(LoginRequiredMixin, FormView):
             form.add_error(None, data.get("error", "Error en la simulación"))
             return self.form_invalid(form)
 
-        # Guardamos el resultado en sesión para mostrar en confirmación
-        self.request.session['venta_resultado'] = data
+        # 🔹 Convertir Decimals antes de guardar
+        self.request.session['venta_resultado'] = decimal_to_str(data)
+        self.request.session.modified = True
+
         return redirect('divisas:venta_confirmacion')
 
 
@@ -365,6 +384,26 @@ class VentaConfirmacionView(LoginRequiredMixin, TemplateView):
         ctx['resultado'] = self.request.session.get('venta_resultado')
         return ctx
 
+    def post(self, request, *args, **kwargs):
+        resultado = request.session.get("venta_resultado")
+        if not resultado:
+            messages.error(request, "No hay simulación para confirmar.")
+            return redirect("divisas:venta")
+
+        # 🔹 Guardar operación simplificada en sesión
+        operacion = {
+            "tipo": "venta",
+            "divisa": resultado.get("moneda_code"),
+            "divisa_nombre": resultado.get("moneda_nombre"),
+            "monto_divisa": resultado.get("monto_original"),
+            "monto_guaranies": resultado.get("monto_resultado"),
+            "tasa_cambio": resultado.get("tasa_aplicada"),
+            "comision": resultado.get("comision_aplicada"),
+        }
+        request.session["operacion"] = operacion
+        request.session.modified = True
+
+        return redirect("clientes:seleccionar_medio_acreditacion")
 
 class VentaMediosView(LoginRequiredMixin, TemplateView):
     template_name = "operaciones/venta_medios.html"
@@ -376,6 +415,25 @@ class SumarioOperacionView(TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+
         ctx["operacion"] = self.request.session.get("operacion")
-        ctx["medio"] = get_medio_acreditacion_seleccionado(self.request)  
+        ctx["medio"] = get_medio_acreditacion_seleccionado(self.request)
+
         return ctx
+
+def post(self, request, *args, **kwargs):
+    medio_id = request.POST.get("medio_id")
+    if not medio_id:
+        messages.error(request, "Debe seleccionar un medio de acreditación.")
+        return redirect("clientes:seleccionar_medio_acreditacion")
+
+    medio = ClienteMedioDePago.objects.get(id=medio_id, cliente=request.user)
+
+    # Guardar en sesión como diccionario simple
+    request.session["medio"] = {
+        "nombre": medio.medio_de_pago.nombre,
+        "comision": str(medio.comision) if medio.comision else None,
+    }
+    request.session.modified = True
+
+    return redirect("divisas:venta_sumario")

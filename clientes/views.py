@@ -13,6 +13,7 @@ from django.contrib.auth.models import Group
 
 from .models import Cliente, AsignacionCliente, Descuento, Segmento, HistorialDescuentos
 from .forms import ClienteForm, DescuentoForm
+from decimal import Decimal, InvalidOperation
 
 # Asociar clientes-usuarios
 
@@ -1179,11 +1180,21 @@ def normalizar_valor(valor, tipo_dato):
     else:
         return valor_str
     
-# Agrega esta vista al final de tu views.py
+
+def to_serializable(value):
+    """
+    Convierte valores no serializables (como Decimal) a string antes de guardarlos en sesión
+    """
+    if isinstance(value, dict):
+        return {k: to_serializable(v) for k, v in value.items()}
+    elif isinstance(value, list):
+        return [to_serializable(v) for v in value]
+    elif isinstance(value, Decimal):
+        return str(value)  # 👈 convierte Decimal a string
+    return value
+
+
 class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
-    """
-    Vista para seleccionar medios de acreditación en operaciones de venta de divisas
-    """
     template_name = 'operaciones/seleccionar_medio_acreditacion.html'
 
     def get(self, request):
@@ -1192,7 +1203,6 @@ class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
             messages.warning(request, 'Debe seleccionar un cliente primero.')
             return redirect('clientes:seleccionar_cliente')
 
-        # Obtener solo medios activos del cliente
         medios_activos = ClienteMedioDePago.objects.filter(
             cliente=cliente,
             es_activo=True
@@ -1200,16 +1210,12 @@ class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
             'medio_de_pago__campos'
         ).order_by('-es_principal', '-fecha_actualizacion')
 
-        # Medio previamente seleccionado (guardado en sesión)
-        medio_seleccionado = request.session.get('medio_seleccionado')
-
         context = {
             'cliente': cliente,
             'medios_activos': medios_activos,
-            'medio_seleccionado': medio_seleccionado,
+            'medio_seleccionado': request.session.get('medio_seleccionado'),
             'total_medios': medios_activos.count()
         }
-        
         return render(request, self.template_name, context)
 
     def post(self, request):
@@ -1227,30 +1233,31 @@ class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
                     cliente=cliente,
                     es_activo=True
                 )
-                
-                # Guardar en sesión (detalle completo para el sumario)
                 request.session['medio_seleccionado'] = {
                     "id": medio.id,
                     "nombre": medio.medio_de_pago.nombre,
-                    "comision": medio.medio_de_pago.comision_porcentaje,
+                    "comision": str(medio.medio_de_pago.comision_porcentaje),
                 }
                 request.session.modified = True
 
                 return JsonResponse({
                     'success': True,
-                    'redirect_url': reverse('divisas:venta_sumario'),  # redirigir al sumario
-                    'message': f'Medio seleccionado: {medio.medio_de_pago.nombre}'
+                    'redirect_url': reverse('divisas:venta_sumario'),
                 })
 
             except ClienteMedioDePago.DoesNotExist:
                 return JsonResponse({'error': 'Medio de pago no válido'}, status=400)
 
-        elif accion == 'limpiar':
-            # Limpiar selección
+        elif accion == 'cancelar':
+            # limpiar medio seleccionado
             request.session.pop('medio_seleccionado', None)
-            return JsonResponse({'success': True, 'message': 'Selección limpiada'})
+            return JsonResponse({
+                'success': True,
+                'redirect_url': reverse('divisas:venta_medios'),
+            })
 
         return JsonResponse({'error': 'Acción no válida'}, status=400)
+
 
 
 # Función helper para obtener el medio seleccionado

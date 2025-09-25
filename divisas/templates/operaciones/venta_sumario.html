@@ -1,108 +1,90 @@
 {% extends "base.html" %}
+
+{% block title %}Resumen de la Operación{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-  <div class="row justify-content-center">
-    <div class="col-lg-8">
-      <!-- Header -->
-      <div class="d-flex align-items-center mb-4">
-        <a href="{% url 'clientes:seleccionar_medio_acreditacion' %}" class="btn btn-outline-secondary btn-sm me-2">
-          <i class="bi bi-arrow-left"></i>
-        </a>
-        <h3 class="mb-0 text-primary">Resumen de la Operación</h3>
-      </div>
+<div class="container mt-5">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">Resumen de la Operación</h4>
+    </div>
+    <div class="card-body">
+      
+      <!-- Operación -->
+      <h5 class="mb-3">Detalles de la Operación</h5>
+      {% if operacion %}
+        <table class="table table-sm">
+          <tbody>
+            <tr>
+              <th scope="row">Tipo de operación</th>
+              <td class="text-capitalize">{{ operacion.tipo|default:"-" }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Divisa</th>
+              <td>{{ operacion.divisa }} - {{ operacion.divisa_nombre }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Monto a vender</th>
+              <td>{{ operacion.monto_divisa }} {{ operacion.divisa }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Tasa de cambio aplicada</th>
+              <td>{{ operacion.tasa_cambio }}</td>
+            </tr>
+            <tr class="table-success">
+              <th scope="row">Monto a recibir (Gs.)</th>
+              <td><strong>{{ operacion.monto_guaranies }}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      {% else %}
+        <p class="text-muted">No se encontraron datos de la operación.</p>
+      {% endif %}
 
-      <!-- Card de Resumen -->
-      <div class="card shadow-sm border-0 rounded-4">
-        <div class="card-header bg-primary text-white py-3 rounded-top-4">
-          <h4 class="mb-0"><i class="bi bi-receipt me-2"></i>Detalles de tu venta</h4>
-        </div>
+      <hr>
 
-        <div class="card-body p-4">
-          <!-- Datos de la conversión -->
-          {% if operacion %}
-          <div class="row mb-4">
-            <div class="col-md-6 mb-3">
-              <div class="p-3 bg-light rounded-3 h-100">
-                <p class="mb-1 text-muted"><i class="bi bi-currency-exchange me-1"></i> Divisa</p>
-                <h5 class="mb-0">{{ operacion.moneda_code }} - {{ operacion.moneda_nombre }}</h5>
-              </div>
-            </div>
+      <!-- Medio de acreditación -->
+      <h5 class="mb-3">Medio de Acreditación</h5>
+      {% if medio %}
+        <table class="table table-sm">
+          <tbody>
+            <tr>
+              <th scope="row">Nombre</th>
+              <td>{{ medio.nombre }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Tipo</th>
+              <td>{{ medio.tipo|default:"-" }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Entidad</th>
+              <td>{{ medio.entidad|default:"-" }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Comisión</th>
+              <td>
+                {% if medio.comision %}
+                  {{ medio.comision }}
+                {% else %}
+                  <span class="text-muted">No aplica</span>
+                {% endif %}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      {% else %}
+        <p class="text-warning">No seleccionaste un medio de acreditación.</p>
+      {% endif %}
 
-            <div class="col-md-6 mb-3">
-              <div class="p-3 bg-light rounded-3 h-100">
-                <p class="mb-1 text-muted"><i class="bi bi-cash me-1"></i> Monto vendido</p>
-                <h5 class="mb-0">{{ operacion.monto_original }} {{ operacion.moneda_code }}</h5>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-success bg-opacity-10 p-4 rounded-3 mb-4 text-center">
-            <p class="text-muted mb-1">Recibirás en Guaraníes</p>
-            <h2 class="text-success mb-0">{{ operacion.monto_resultado }}</h2>
-          </div>
-
-          <div class="row mb-4">
-            <div class="col-md-6 mb-3">
-              <div class="p-3 border rounded-3 h-100">
-                <p class="mb-1 text-muted"><i class="bi bi-graph-up me-1"></i> Tasa aplicada</p>
-                <h5 class="mb-0 text-success">{{ operacion.tasa_aplicada }}</h5>
-              </div>
-            </div>
-            <div class="col-md-6 mb-3">
-              <div class="p-3 border rounded-3 h-100">
-                <p class="mb-1 text-muted"><i class="bi bi-percent me-1"></i> Comisión</p>
-                <h5 class="mb-0 text-success">{{ operacion.comision_aplicada }}</h5>
-              </div>
-            </div>
-          </div>
-          {% endif %}
-
-          <!-- Medio de acreditación -->
-          {% if medio %}
-          <div class="p-3 bg-light rounded-3 mb-4">
-            <h6 class="text-primary mb-2"><i class="bi bi-credit-card me-2"></i>Medio de acreditación</h6>
-            <p class="mb-1 fw-bold">{{ medio.medio_de_pago.nombre }}</p>
-            <div class="small text-muted">
-              Seleccionado el {{ medio.fecha_creacion|date:"d/m/Y" }}
-            </div>
-          </div>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- Acciones -->
-      <div class="d-flex justify-content-between mt-4">
-        <form method="post" action="{% url 'divisas:realizar_venta' %}" class="w-100 me-3">
-          {% csrf_token %}
-          <button class="btn btn-success btn-lg rounded-3 w-100 py-3 fw-bold">
-            <i class="bi bi-check-circle me-2"></i> Confirmar Operación
-          </button>
-        </form>
-
-        <a href="{% url 'clientes:seleccionar_medio_acreditacion' %}" 
-           class="btn btn-outline-secondary btn-lg rounded-3 py-3">
-          <i class="bi bi-arrow-left-circle me-2"></i> Volver
-        </a>
-      </div>
+    </div>
+    <div class="card-footer text-end">
+      <a href="{% url 'clientes:seleccionar_medio_acreditacion' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Volver
+      </a>
+      <a href="#" class="btn btn-success">
+        <i class="bi bi-check-circle"></i> Confirmar Operación
+      </a>
     </div>
   </div>
 </div>
-
-<style>
-  .card {
-    overflow: hidden;
-  }
-  .btn {
-    transition: all 0.2s ease;
-  }
-  .btn-success {
-    background: linear-gradient(to right, #198754, #0f6848);
-    border: none;
-  }
-  .btn-success:hover {
-    background: linear-gradient(to right, #0f6848, #094c34);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  }
-</style>
 {% endblock %}
