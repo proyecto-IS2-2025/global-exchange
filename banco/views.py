@@ -1,16 +1,16 @@
-# banco/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from .models import BancoUser, Cuenta, Transferencia, PagoTarjeta
-from billetera.models import TransferenciaBilleteraABanco  # ✅ Importación del modelo de la otra app
+from billetera.models import TransferenciaBilleteraABanco  # ✅ Importación necesaria
 from .forms import TransferenciaForm
 from django.contrib import messages
 from django.db import transaction
 from decimal import Decimal
 import json
 import logging
+import requests  # ✅ Asegúrate de tener esta importación para las llamadas a la API
 
 logger = logging.getLogger(__name__)
 
@@ -67,109 +67,81 @@ def dashboard(request):
     return render(request, "banco/dashboard.html", context)
 
 
-# --------- VISTA PARA TRANSFERENCIAS Y PAGOS (MEJORADA) ---------
+# --------- VISTA PARA TRANSFERENCIAS Y PAGOS (CORREGIDA) ---------
 def transferir(request):
     user = get_logged_user(request)
     if not user:
         return redirect("banco:login")
-        
+
+    form = TransferenciaForm(request.POST or None)
     error = None
-    
+
     if request.method == "POST":
-        form = TransferenciaForm(request.POST)
         if form.is_valid():
             tipo_pago = form.cleaned_data['tipo_pago']
-            entidad_destino = form.cleaned_data['entidad_destino']
-            numero_cuenta_destino = form.cleaned_data['numero_cuenta_destino']
             monto = form.cleaned_data['monto']
-            
+
             try:
                 with transaction.atomic():
-                    # Lógica para PAGO CON DÉBITO O CRÉDITO
-                    if tipo_pago in ['PAGO_DEBITO', 'PAGO_CREDITO']:
-                        cuenta_origen = user.cuentas.get(tipo_cuenta='DEBITO' if tipo_pago == 'PAGO_DEBITO' else 'CREDITO')
-                        
-                        if tipo_pago == 'PAGO_DEBITO':
-                            if cuenta_origen.saldo < monto:
-                                error = "Saldo insuficiente en la cuenta de débito."
-                                raise ValueError("Saldo insuficiente")
+                    if tipo_pago == 'TRANSFERENCIA':
+                        entidad_destino = form.cleaned_data['entidad_destino']
+                        numero_cuenta_destino = form.cleaned_data['numero_cuenta_destino']
 
-                        # Se genera el PagoTarjeta
-                        PagoTarjeta.objects.create(
-                            cuenta=cuenta_origen,
-                            monto=monto,
-                            tipo=tipo_pago.replace('PAGO_', ''), # 'DEBITO' o 'CREDITO'
-                            entidad_destino=entidad_destino.nombre,
-                            numero_cuenta_destino=numero_cuenta_destino
-                        )
-                        
-                        # Actualizar saldo
-                        if tipo_pago == 'PAGO_DEBITO':
-                            cuenta_origen.saldo -= monto
-                        elif tipo_pago == 'PAGO_CREDITO':
-                            # En el caso de crédito, el saldo es un valor negativo
-                            cuenta_origen.saldo -= monto
-                            
-                        cuenta_origen.save()
-                        messages.success(request, f"Pago con {tipo_pago.replace('PAGO_', '').lower()} de ₲ {monto} exitoso.")
-                    
-                    # Lógica para TRANSFERENCIA BANCARIA
-                    elif tipo_pago == 'TRANSFERENCIA':
                         cuenta_origen = user.cuentas.get(tipo_cuenta='DEBITO')
+                        cuenta_destino = Cuenta.objects.get(entidad=entidad_destino, numero_cuenta=numero_cuenta_destino)
+                        
                         if cuenta_origen.saldo < monto:
-                            error = "Saldo insuficiente en la cuenta de débito para la transferencia."
-                            raise ValueError("Saldo insuficiente")
+                            error = "Saldo insuficiente en la cuenta de débito."
+                        else:
+                            cuenta_origen.saldo -= monto
+                            cuenta_destino.saldo += monto
+                            cuenta_origen.save()
+                            cuenta_destino.save()
+                            Transferencia.objects.create(cuenta_origen=cuenta_origen, cuenta_destino=cuenta_destino, monto=monto)
+                            messages.success(request, f"Transferencia de ₲{monto} realizada con éxito.")
+                            return redirect("banco:dashboard")
 
-                        # Buscar cuenta de destino
-                        try:
-                            cuenta_destino = Cuenta.objects.get(
-                                numero_cuenta=numero_cuenta_destino,
-                                entidad=entidad_destino
-                            )
-                        except Cuenta.DoesNotExist:
-                            error = "La cuenta de destino no existe en la entidad seleccionada."
-                            raise ValueError("Cuenta destino no encontrada")
+                    elif tipo_pago in ['PAGO_DEBITO', 'PAGO_CREDITO']:
+                        # --- LÓGICA AGREGADA PARA PAGOS CON TARJETA ---
+                        if tipo_pago == 'PAGO_DEBITO':
+                            cuenta = user.cuentas.get(tipo_cuenta='DEBITO')
+                            if cuenta.saldo < monto:
+                                error = "Saldo insuficiente en la cuenta de débito."
+                            else:
+                                cuenta.saldo -= monto
+                                cuenta.save()
+                                PagoTarjeta.objects.create(cuenta=cuenta, tipo='DEBITO', monto=monto)
+                                messages.success(request, f"Pago con tarjeta de débito de ₲{monto} realizado con éxito.")
+                                return redirect("banco:dashboard")
                         
-                        # Actualizar saldos
-                        cuenta_origen.saldo -= monto
-                        cuenta_destino.saldo += monto
-                        
-                        # Guardar cambios
-                        cuenta_origen.save()
-                        cuenta_destino.save()
-                        
-                        # Registrar transferencia
-                        Transferencia.objects.create(
-                            cuenta_origen=cuenta_origen,
-                            cuenta_destino=cuenta_destino,
-                            monto=monto
-                        )
-                        messages.success(request, f"Transferencia de ₲ {monto} a {numero_cuenta_destino} exitosa.")
-
-                    return redirect("banco:dashboard")
-            
-            except (Cuenta.DoesNotExist, ValueError) as e:
-                # El error ya está en la variable 'error'
-                pass
+                        elif tipo_pago == 'PAGO_CREDITO':
+                            cuenta = user.cuentas.get(tipo_cuenta='CREDITO')
+                            # Lógica para manejar el límite de crédito
+                            limite_credito = Decimal('2000000') # Ejemplo: 2,000,000
+                            nuevo_saldo = cuenta.saldo - monto
+                            if nuevo_saldo < -limite_credito:
+                                error = "Límite de crédito excedido."
+                            else:
+                                cuenta.saldo = nuevo_saldo
+                                cuenta.save()
+                                PagoTarjeta.objects.create(cuenta=cuenta, tipo='CREDITO', monto=monto)
+                                messages.success(request, f"Pago con tarjeta de crédito de ₲{monto} realizado con éxito.")
+                                return redirect("banco:dashboard")
+                        # ---------------------------------------------
+            except Cuenta.DoesNotExist:
+                error = "La cuenta de destino no existe."
             except Exception as e:
-                error = "Ocurrió un error inesperado al procesar la solicitud."
-                logger.error(f"Error inesperado en transferir: {e}")
-                
-    else:
-        form = TransferenciaForm()
-        
-    # Obtener el saldo de la cuenta de débito para mostrarlo en el formulario
-    try:
-        cuenta_debito = user.cuentas.get(tipo_cuenta="DEBITO")
-        saldo_debito = cuenta_debito.saldo
-    except (BancoUser.DoesNotExist, Cuenta.DoesNotExist):
-        saldo_debito = None
+                error = f"Ocurrió un error: {e}"
 
-    return render(
-        request,
-        "banco/transferir.html",
-        {"form": form, "error": error, "saldo_debito": saldo_debito}
-    )
+    context = {
+        'entidad': user.entidad,
+        'user': user,
+        'form': form,
+        'error': error,
+    }
+    return render(request, "banco/transferir.html", context)
+
+
 
 # --------- HISTORIAL DE MOVIMIENTOS (CORREGIDO) ---------
 def historial(request):
@@ -179,17 +151,11 @@ def historial(request):
 
     cuentas_usuario = user.cuentas.all()
 
-    # Obtener todas las transferencias enviadas y recibidas
     transferencias_enviadas = Transferencia.objects.filter(cuenta_origen__in=cuentas_usuario)
     transferencias_recibidas = Transferencia.objects.filter(cuenta_destino__in=cuentas_usuario)
-    
-    # Obtener pagos con tarjeta
     pagos_tarjeta = PagoTarjeta.objects.filter(cuenta__in=cuentas_usuario)
-    
-    # Obtener transferencias recibidas desde Billetera
     transferencias_billetera_recibidas = TransferenciaBilleteraABanco.objects.filter(cuenta_destino__in=cuentas_usuario)
 
-    # Combinar todos los movimientos y ordenarlos por fecha
     todos_movimientos = sorted(
         list(transferencias_enviadas) + list(transferencias_recibidas) + list(pagos_tarjeta) + list(transferencias_billetera_recibidas),
         key=lambda x: x.fecha,
@@ -201,7 +167,8 @@ def historial(request):
         "user": user,
     }
     return render(request, "banco/historial.html", context)
-    
+
+
 # --------- VISTA API DE RECARGA DE BILLETERA (MEJORADA) ---------
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -234,7 +201,7 @@ def api_recargar(request):
                 saldo_usado = abs(cuenta.saldo) + monto
                 if saldo_usado > limite_credito:
                     return JsonResponse({"error": "Límite de crédito excedido."}, status=400)
-                cuenta.saldo += monto
+                cuenta.saldo -= monto # Usamos -= para que el saldo se vuelva más negativo
             
             billetera.saldo += monto
             cuenta.save()
