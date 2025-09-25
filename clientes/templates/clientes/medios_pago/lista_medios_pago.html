@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 bg-gradient-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="card-title mb-1">
+                                <i class="fas fa-credit-card me-2"></i>
+                                Medios de Pago
+                            </h2>
+                            <p class="card-text mb-0">
+                                <strong>Cliente:</strong> {{ cliente.nombre_completo }}
+                                <span class="badge bg-light text-dark ms-2">{{ cliente.cedula }}</span>
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'clientes:seleccionar_medio_pago' %}" class="btn btn-light">
+                                    <i class="fas fa-plus me-2"></i>Agregar Medio
+                                </a>
+                                <a href="{% url 'inicio' %}" class="btn btn-outline-light">
+                                    <i class="fas fa-home me-1"></i>Inicio
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-center border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="display-6 text-primary mb-2">{{ stats.total }}</div>
+                    <h6 class="card-title text-muted">Total Medios</h6>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="display-6 text-success mb-2">{{ stats.activos }}</div>
+                    <h6 class="card-title text-muted">Medios Activos</h6>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center border-0 shadow-sm">
+                <div class="card-body">
+                    {% if stats.principal %}
+                        <div class="display-6 text-warning mb-2">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <h6 class="card-title text-muted">{{ stats.principal.medio_de_pago.nombre }}</h6>
+                        <small class="text-muted">Medio Principal</small>
+                    {% else %}
+                        <div class="display-6 text-muted mb-2">
+                            <i class="fas fa-star-o"></i>
+                        </div>
+                        <h6 class="card-title text-muted">Sin Principal</h6>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if medios_pago %}
+        <div class="row">
+            {% for medio in medios_pago %}
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="card h-100 border-0 shadow-sm {% if not medio.es_activo %}bg-light{% endif %}">
+                        <div class="card-header bg-white border-0 pb-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="card-title mb-1">
+                                        {{ medio.medio_de_pago.nombre }}
+                                        {% if medio.es_principal %}
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="fas fa-star"></i> Principal
+                                            </span>
+                                        {% endif %}
+                                        {% if medio.datos_campos %}
+                                            {% for campo, valor in medio.datos_campos.items %}
+                                                {% if valor %}
+                                                    <br><small class="text-muted fw-normal">
+                                                        {% if 'email' in campo|lower or 'correo' in campo|lower %}
+                                                            {{ valor|truncatechars:25 }}
+                                                        {% elif 'numero' in campo|lower or 'nro' in campo|lower or 'tarjeta' in campo|lower %}
+                                                            ****{{ valor|slice:"-4:" }}
+                                                        {% elif 'nombre' in campo|lower %}
+                                                            {{ valor|truncatechars:20 }}
+                                                        {% else %}
+                                                            {{ valor|truncatechars:20 }}
+                                                        {% endif %}
+                                                    </small>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endif %}
+                                    </h5>
+                                    <span class="badge {% if medio.es_activo %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {% if medio.es_activo %}
+                                            <i class="fas fa-check"></i> Activo
+                                        {% else %}
+                                            <i class="fas fa-pause"></i> Inactivo
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                            type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'clientes:editar_medio_pago' medio.pk %}">
+                                                <i class="fas fa-edit text-primary me-2"></i>Editar
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <form method="post" action="{% url 'clientes:toggle_medio_pago' medio.pk %}" class="m-0">
+                                                {% csrf_token %}
+                                                <button type="submit" class="dropdown-item">
+                                                    {% if medio.es_activo %}
+                                                        <i class="fas fa-pause text-warning me-2"></i>Desactivar
+                                                    {% else %}
+                                                        <i class="fas fa-play text-success me-2"></i>Activar
+                                                    {% endif %}
+                                                </button>
+                                            </form>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form method="post" action="{% url 'clientes:eliminar_medio_pago' medio.pk %}" 
+                                                  onsubmit="return confirm('¿Está seguro de eliminar este medio de pago?')" class="m-0">
+                                                {% csrf_token %}
+                                                <button type="submit" class="dropdown-item text-danger">
+                                                    <i class="fas fa-trash me-2"></i>Eliminar
+                                                </button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body pt-2">
+                            {% if medio.datos_campos %}
+                                <div class="row small">
+                                    {% for campo, valor in medio.datos_campos.items %}
+                                        {% if valor %}
+                                            <div class="col-12 mb-2">
+                                                <strong class="text-muted">{{ campo }}:</strong>
+                                                <div class="text-truncate">
+                                                    {% if campo|lower == 'email' %}
+                                                        <a href="mailto:{{ valor }}" class="text-decoration-none">{{ valor }}</a>
+                                                    {% elif campo|lower == 'telefono' %}
+                                                        <a href="tel:{{ valor }}" class="text-decoration-none">{{ valor }}</a>
+                                                    {% else %}
+                                                        {{ valor }}
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted small">Sin datos adicionales configurados.</p>
+                            {% endif %}
+
+                            <div class="mt-3 pt-2 border-top">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    Agregado: {{ medio.fecha_creacion|date:"d/m/Y" }}
+                                </small>
+                                {% if medio.medio_de_pago.comision_porcentaje > 0 %}
+                                    <br>
+                                    <small class="text-info">
+                                        <i class="fas fa-percentage me-1"></i>
+                                        Comisión: {{ medio.medio_de_pago.comision_porcentaje }}%
+                                    </small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if is_paginated %}
+            <nav aria-label="Paginación de medios de pago" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+
+    {% else %}
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card border-0 text-center">
+                    <div class="card-body py-5">
+                        <div class="mb-4">
+                            <i class="fas fa-credit-card fa-5x text-muted"></i>
+                        </div>
+                        <h3 class="card-title text-muted">No hay medios de pago</h3>
+                        <p class="card-text text-muted mb-4">
+                            Aún no tienes medios de pago configurados para este cliente.
+                            Agrega tu primer medio para empezar a realizar transacciones.
+                        </p>
+                        <a href="{% url 'clientes:seleccionar_medio_pago' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-plus me-2"></i>
+                            Agregar Primer Medio
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+}
+
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.text-truncate {
+    max-width: 200px;
+}
+
+@media (max-width: 768px) {
+    .card-header .d-flex {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .card-header .dropdown {
+        margin-top: 10px;
+    }
+}
+</style>
+{% endblock %}
