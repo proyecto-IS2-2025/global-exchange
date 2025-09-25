@@ -124,6 +124,18 @@ class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, Cr
                     # Si no hay template, guardar los campos del formset
                     campos_formset.instance = self.object
                     campos_formset.save()
+                    
+                    # Si no se seleccionó template pero no hay tipo_medio, requerir uno
+                    if not self.object.tipo_medio:
+                        messages.warning(
+                            self.request,
+                            'Se recomienda seleccionar un tipo de medio de pago para un mejor funcionamiento.'
+                        )
+                
+                # Validar configuración final
+                is_valid, message = self.object.validate_required_fields()
+                if not is_valid:
+                    messages.warning(self.request, f'Advertencia de configuración: {message}')
                 
                 # Crear template personalizado si fue solicitado
                 nuevo_template_nombre = form.cleaned_data.get('crear_template')
@@ -149,7 +161,7 @@ class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, Cr
         except Exception as e:
             messages.error(self.request, f'Error al crear el medio de pago: {str(e)}')
             return self.form_invalid(form, campos_formset)
-
+    
     def form_invalid(self, form, campos_formset):
         messages.error(self.request, 'Por favor, corrige los errores en el formulario.')
         return self.render_to_response(

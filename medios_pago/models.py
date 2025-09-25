@@ -5,6 +5,26 @@ from django.conf import settings
 import json
 from django.conf import settings
 
+# Tipos de medios de pago - Mapeo técnico a etiquetas de usuario
+TIPO_MEDIO_CHOICES = [
+    ('stripe', 'Tarjeta de Crédito/Débito'),
+    ('paypal', 'PayPal'),
+    ('bank_local', 'Transferencia Bancaria Local'),
+    ('bank_international', 'Transferencia Bancaria Internacional'),
+    ('bitcoin', 'Criptomonedas (Bitcoin, Ethereum)'),
+    ('efectivo', 'Pago en Efectivo'),
+]
+
+# Mapeo de tipos de medios a procesadores de API
+API_MAPPING = {
+    'stripe': 'StripeProcessor',
+    'paypal': 'PayPalProcessor', 
+    'bank_local': 'BankLocalProcessor',
+    'bank_international': 'BankInternationalProcessor',
+    'bitcoin': 'BitcoinProcessor',
+    'efectivo': 'CashProcessor'
+}
+
 # Definición de campos predefinidos por tipo de API
 PREDEFINED_FIELDS = {
     # Campos comunes para tarjetas de crédito/débito
@@ -133,34 +153,41 @@ PREDEFINED_FIELDS = {
 }
 
 # Templates predefinidos para tipos comunes de medios de pago
+# Reemplazar PAYMENT_TEMPLATES existente por esta versión:
 PAYMENT_TEMPLATES = {
-    'stripe': {
-        'name': 'Stripe (Tarjeta)',
+    'stripe_card': {
+        'name': 'Tarjeta de Crédito/Débito (Stripe)',
+        'tipo_medio': 'stripe',
         'fields': ['card_number', 'exp_month', 'exp_year', 'cvc', 'cardholder_name', 'email'],
         'is_custom': False
     },
-    'paypal': {
-        'name': 'PayPal',
+    'paypal_standard': {
+        'name': 'PayPal Estándar',
+        'tipo_medio': 'paypal',
         'fields': ['paypal_email', 'amount', 'currency', 'description'],
         'is_custom': False
     },
-    'bank_transfer': {
-        'name': 'Transferencia Bancaria',
+    'bank_local_ar': {
+        'name': 'Transferencia Bancaria Argentina',
+        'tipo_medio': 'bank_local',
         'fields': ['account_number', 'bank_name', 'account_holder', 'cbu_cvu'],
         'is_custom': False
     },
-    'international_transfer': {
-        'name': 'Transferencia Internacional',
+    'bank_international': {
+        'name': 'Transferencia Bancaria Internacional',
+        'tipo_medio': 'bank_international',
         'fields': ['account_number', 'bank_name', 'account_holder', 'swift_code', 'routing_number'],
         'is_custom': False
     },
-    'bitcoin': {
-        'name': 'Bitcoin',
+    'bitcoin_wallet': {
+        'name': 'Billetera Bitcoin',
+        'tipo_medio': 'bitcoin',
         'fields': ['wallet_address', 'network', 'amount'],
         'is_custom': False
     },
-    'efectivo': {
-        'name': 'Efectivo',
+    'efectivo_simple': {
+        'name': 'Pago en Efectivo',
+        'tipo_medio': 'efectivo',
         'fields': ['amount', 'description'],
         'is_custom': False
     }
@@ -238,6 +265,16 @@ class MedioDePago(models.Model):
         blank=True,
         help_text='Template predefinido o personalizado usado como base'
     )
+
+    tipo_medio = models.CharField(
+        'Tipo de Medio de Pago',
+        max_length=50,
+        choices=TIPO_MEDIO_CHOICES,
+        blank=True,  # AGREGAR ESTO
+        null=True,   # AGREGAR ESTO
+        help_text='Tipo de procesador que manejará este medio de pago'
+    )
+
     custom_template = models.ForeignKey(
         PaymentTemplate,
         on_delete=models.SET_NULL,
@@ -273,6 +310,87 @@ class MedioDePago(models.Model):
             raise ValidationError('El nombre del medio de pago no puede estar vacío.')
         self.full_clean()
         super().save(*args, **kwargs)
+
+    def get_processor_class(self):
+        """Retorna la clase de procesador para este medio de pago"""
+        if not self.tipo_medio:
+            return self._infer_processor_from_fields()  # Fallback
+        return API_MAPPING.get(self.tipo_medio)
+    
+    def _infer_processor_from_fields(self):
+        """Inferir procesador basado en campos cuando no hay tipo_medio definido"""
+        campos = list(self.campos.values_list('campo_api', flat=True))
+        
+        if 'card_number' in campos and 'cvc' in campos:
+            return 'StripeProcessor'
+        elif 'paypal_email' in campos:
+            return 'PayPalProcessor'
+        elif 'swift_code' in campos:
+            return 'BankInternationalProcessor'
+        elif 'account_number' in campos:
+            return 'BankLocalProcessor'
+        elif 'wallet_address' in campos:
+            return 'BitcoinProcessor'
+        else:
+            return 'CashProcessor'
+
+    def get_api_info(self):
+        """Retorna información del tipo de API"""
+        tipo_efectivo = self.tipo_medio or self._infer_tipo_from_fields()
+        
+        return {
+            'tipo_interno': tipo_efectivo,
+            'nombre_usuario': dict(TIPO_MEDIO_CHOICES).get(tipo_efectivo, 'No definido'),
+            'procesador': self.get_processor_class(),
+            'es_inferido': not bool(self.tipo_medio)
+        }
+
+    def _infer_tipo_from_fields(self):
+        """Inferir tipo basado en campos cuando no hay tipo_medio definido"""
+        campos = list(self.campos.values_list('campo_api', flat=True))
+        
+        if 'card_number' in campos and 'cvc' in campos:
+            return 'stripe'
+        elif 'paypal_email' in campos:
+            return 'paypal'
+        elif 'swift_code' in campos:
+            return 'bank_international'
+        elif 'account_number' in campos:
+            return 'bank_local'
+        elif 'wallet_address' in campos:
+            return 'bitcoin'
+        else:
+            return 'efectivo'
+
+    def validate_required_fields(self):
+        """Valida que el medio tenga los campos requeridos según su tipo"""
+        if not self.tipo_medio:
+            return False, "Tipo de medio de pago no definido"
+        
+        # Aquí puedes agregar validaciones específicas por tipo
+        required_fields = self.get_required_fields_for_type()
+        missing_fields = []
+        
+        for field_key in required_fields:
+            if not self.campos.filter(campo_api=field_key, is_required=True).exists():
+                missing_fields.append(field_key)
+        
+        if missing_fields:
+            return False, f"Campos requeridos faltantes: {', '.join(missing_fields)}"
+        
+        return True, "Validación exitosa"
+
+    def get_required_fields_for_type(self):
+        """Retorna los campos requeridos según el tipo de medio"""
+        required_by_type = {
+            'stripe': ['card_number', 'exp_month', 'exp_year', 'cvc'],
+            'paypal': ['paypal_email'],
+            'bank_local': ['account_number', 'bank_name', 'account_holder'],
+            'bank_international': ['account_number', 'bank_name', 'account_holder', 'swift_code'],
+            'bitcoin': ['wallet_address', 'network'],
+            'efectivo': []  # No requiere campos específicos
+        }
+        return required_by_type.get(self.tipo_medio, [])
 
     def __str__(self):
         estado = 'Activo' if self.is_active else 'Inactivo'
@@ -319,7 +437,7 @@ class MedioDePago(models.Model):
     def aplicar_template(self, template_key):
         """
         Aplica un template predefinido o personalizado al medio de pago,
-        creando automáticamente los campos necesarios.
+        creando automáticamente los campos necesarios y estableciendo el tipo_medio.
         """
         # Obtener todos los templates disponibles
         all_templates = PaymentTemplate.get_all_templates()
@@ -328,6 +446,10 @@ class MedioDePago(models.Model):
             raise ValueError(f"Template '{template_key}' no existe")
         
         template = all_templates[template_key]
+        
+        # Establecer tipo_medio si el template lo define
+        if template.get('tipo_medio'):
+            self.tipo_medio = template['tipo_medio']
         
         # Guardar referencia del template usado
         if template.get('is_custom'):

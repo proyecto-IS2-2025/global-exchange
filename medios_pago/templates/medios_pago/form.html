@@ -133,6 +133,20 @@
                         {% endif %}
                     </div>
                 </div>
+                <div class="col-md-12 mb-3">
+                    <label for="{{ form.tipo_medio.id_for_label }}" class="form-label">
+                        <i class="fas fa-cogs me-1"></i>{{ form.tipo_medio.label }}
+                    </label>
+                    {{ form.tipo_medio }}
+                    {% if form.tipo_medio.help_text %}
+                        <div class="form-text">{{ form.tipo_medio.help_text }}</div>
+                    {% endif %}
+                    {% if form.tipo_medio.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.tipo_medio.errors }}
+                        </div>
+                    {% endif %}
+                </div>
                 <div class="col-md-4">
                     <div class="mb-3">
                         <label for="{{ form.comision_porcentaje.id_for_label }}" class="form-label">{{ form.comision_porcentaje.label }}</label>
@@ -457,12 +471,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Templates predefinidos (disponibles inmediatamente)
     let allTemplates = {
-        "stripe": {"name": "Stripe (Tarjeta)", "fields": ["card_number", "exp_month", "exp_year", "cvc", "cardholder_name", "email"], "is_custom": false},
-        "paypal": {"name": "PayPal", "fields": ["paypal_email", "amount", "currency", "description"], "is_custom": false},
-        "bank_transfer": {"name": "Transferencia Bancaria", "fields": ["account_number", "bank_name", "account_holder", "cbu_cvu"], "is_custom": false},
-        "international_transfer": {"name": "Transferencia Internacional", "fields": ["account_number", "bank_name", "account_holder", "swift_code", "routing_number"], "is_custom": false},
-        "bitcoin": {"name": "Bitcoin", "fields": ["wallet_address", "network", "amount"], "is_custom": false},
-        "efectivo": {"name": "Efectivo", "fields": ["amount", "description"], "is_custom": false}
+        "stripe_card": {"name": "Tarjeta de Crédito/Débito (Stripe)", "fields": ["card_number", "exp_month", "exp_year", "cvc", "cardholder_name", "email"], "is_custom": false},
+        "paypal_standard": {"name": "PayPal Estándar", "fields": ["paypal_email", "amount", "currency", "description"], "is_custom": false},
+        "bank_local_ar": {"name": "Transferencia Bancaria Argentina", "fields": ["account_number", "bank_name", "account_holder", "cbu_cvu"], "is_custom": false},
+        "bank_international": {"name": "Transferencia Bancaria Internacional", "fields": ["account_number", "bank_name", "account_holder", "swift_code", "routing_number"], "is_custom": false},
+        "bitcoin_wallet": {"name": "Billetera Bitcoin", "fields": ["wallet_address", "network", "amount"], "is_custom": false},
+        "efectivo_simple": {"name": "Pago en Efectivo", "fields": ["amount", "description"], "is_custom": false}
     };
     
     // Referencias DOM - buscar por múltiples métodos

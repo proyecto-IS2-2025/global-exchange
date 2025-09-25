@@ -3,6 +3,7 @@ from django import forms
 from django.forms import inlineformset_factory
 from django.core.exceptions import ValidationError
 from .models import MedioDePago, CampoMedioDePago, PaymentTemplate, PREDEFINED_FIELDS
+from .models import MedioDePago, CampoMedioDePago, PaymentTemplate, PREDEFINED_FIELDS, TIPO_MEDIO_CHOICES
 
 
 class MedioDePagoForm(forms.ModelForm):
@@ -34,9 +35,14 @@ class MedioDePagoForm(forms.ModelForm):
     
     class Meta:
         model = MedioDePago
-        fields = ['nombre', 'comision_porcentaje', 'is_active']
+        fields = ['nombre', 'tipo_medio', 'comision_porcentaje', 'is_active']  # AGREGAR tipo_medio
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            # AGREGAR ESTE WIDGET:
+            'tipo_medio': forms.Select(attrs={
+                'class': 'form-select',
+                'id': 'id_tipo_medio'
+            }),
             'comision_porcentaje': forms.NumberInput(attrs={
                 'class': 'form-control', 
                 'step': '0.01', 
@@ -74,6 +80,16 @@ class MedioDePagoForm(forms.ModelForm):
         if comision < 0 or comision > 100:
             raise forms.ValidationError('La comisión debe ser un valor entre 0 y 100.')
         return comision
+    
+    def clean_tipo_medio(self):
+        tipo_medio = self.cleaned_data.get('tipo_medio')
+        # Ya no es obligatorio, pero si se proporciona debe ser válido
+        if tipo_medio:
+            valid_tipos = [choice[0] for choice in TIPO_MEDIO_CHOICES]
+            if tipo_medio not in valid_tipos:
+                raise forms.ValidationError('Tipo de medio de pago no válido.')
+        
+        return tipo_medio
 
     def clean_crear_template(self):
         nombre_template = self.cleaned_data.get('crear_template', '').strip()

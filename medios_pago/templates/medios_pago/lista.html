@@ -113,6 +113,9 @@
                         <i class="fas fa-credit-card me-2"></i>Nombre
                     </th>
                     <th scope="col">
+                        <i class="fas fa-tag me-2"></i>Tipo
+                    </th>
+                    <th scope="col">
                         <i class="fas fa-percentage me-2"></i>ComisiÃ³n (%)
                     </th>
                     <th scope="col">
@@ -137,6 +140,11 @@
                                 <i class="fas fa-circle text-secondary me-2" title="Inactivo"></i>
                             {% endif %}
                             <strong>{{ medio.nombre }}</strong>
+                            <td>
+                                <span class="badge bg-info">
+                                    {{ medio.get_tipo_medio_display|default:"Sin tipo" }}
+                                </span>
+                            </td>
                         </div>
                     </td>
                     <td>
