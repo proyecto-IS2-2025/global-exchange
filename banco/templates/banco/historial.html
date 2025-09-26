@@ -1,5 +1,4 @@
 {% extends "banco/base.html" %}
-{% load banco_tags %}
 
 {% block title %}Historial de Movimientos{% endblock %}
 
@@ -22,16 +21,6 @@
     color: var(--color-principal);
     font-weight: 700;
     font-size: 1.5rem;
-  }
-
-  .navbar-custom .nav-link {
-    color: #495057;
-    font-weight: 600;
-    transition: color 0.3s ease;
-  }
-
-  .navbar-custom .nav-link:hover {
-    color: var(--color-principal);
   }
 
   .card-header {
@@ -88,46 +77,46 @@
               </tr>
             </thead>
             <tbody>
-              {% for movimiento in movimientos %}
-              <tr>
-                <td>{{ movimiento.fecha|date:"d M, Y H:i" }}</td>
-                <td>
-                  {% if movimiento|is_transferencia_billetera %}
-                    <span class="badge bg-success">Recibido</span>
-                  {% else %}
-                    <span class="badge bg-danger">Enviado</span>
-                  {% endif %}
-                </td>
-                <td>
-                  {% if movimiento|is_transferencia_billetera %}
-                    <span class="text-success">
-                      + ₲ {{ movimiento.monto|floatformat:2 }}
-                    </span>
-                  {% else %}
-                    <span class="text-danger">
-                      - ₲ {{ movimiento.monto|absolute|floatformat:2 }}
-                    </span>
-                  {% endif %}
-                </td>
-                <td>
-                  {% if movimiento|is_transferencia_billetera %}
-                    Recarga desde Billetera
-                  {% elif movimiento.cuenta_origen %}
-                    {% for cuenta in user.cuentas.all %}
-                      {% if movimiento.cuenta_origen.pk == cuenta.pk %}
-                        Transferencia enviada a {{ movimiento.cuenta_destino.numero_cuenta }}
-                      {% elif movimiento.cuenta_destino.pk == cuenta.pk %}
-                        Transferencia recibida de {{ movimiento.cuenta_origen.numero_cuenta }}
+              {% for m in movimientos %}
+                <tr>
+                  <td>{{ m.fecha|date:"d M, Y H:i" }}</td>
+                  <td>
+                    {% if m.cuenta_origen %}
+                      <span class="badge bg-primary">Transferencia</span>
+                    {% else %}
+                      <span class="badge {% if m.tarjeta_debito %}bg-success{% else %}bg-warning{% endif %}">
+                        Pago {{ m.tarjeta_debito|yesno:"Débito,Crédito" }}
+                      </span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if m.cuenta_origen %}
+                      {% if m.cuenta_origen.usuario.id == user.id %}
+                        <span class="text-danger">- ₲ {{ m.monto|floatformat:2 }}</span>
+                      {% else %}
+                        <span class="text-success">+ ₲ {{ m.monto|floatformat:2 }}</span>
                       {% endif %}
-                    {% endfor %}
-                  {% else %}
-                    Pago con tarjeta de {{ movimiento.get_tipo_display|lower }}
-                  {% endif %}
-                </td>
-                <td>
-                  <code class="text-muted">{{ movimiento.comprobante|truncatechars:8 }}...</code>
-                </td>
-              </tr>
+                    {% else %}
+                      <span class="text-danger">- ₲ {{ m.monto|floatformat:2 }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if m.cuenta_origen %}
+                      {% if m.cuenta_origen.usuario.id == user.id %}
+                        A cuenta {{ m.cuenta_destino.numero_cuenta }}
+                      {% else %}
+                        De cuenta {{ m.cuenta_origen.numero_cuenta }}
+                      {% endif %}
+                    {% else %}
+                      {% if m.tarjeta_debito %}
+                        Pago con Débito (****{{ m.tarjeta_debito.numero|slice:"-4:" }})
+                      {% elif m.tarjeta_credito %}
+                        Pago con Crédito (****{{ m.tarjeta_credito.numero|slice:"-4:" }})
+                      {% endif %}
+                    {% endif %}
+                  </td>
+                  <td><code class="text-muted">{{ m.comprobante|truncatechars:8 }}</code></td>
+                </tr>
               {% endfor %}
             </tbody>
           </table>

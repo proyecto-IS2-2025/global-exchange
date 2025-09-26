@@ -12,4 +12,6 @@ urlpatterns = [
     path("historial/", views.historial, name="historial"),
     # ✅ La ruta correcta para la API de recarga.
     path("api/recargar/", views.api_recargar, name="api_recargar"),
+    path("pagar/", views.pagar, name="pagar"),
+
 ]

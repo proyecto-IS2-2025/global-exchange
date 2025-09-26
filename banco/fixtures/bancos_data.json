@@ -3,33 +3,22 @@
     "model": "banco.entidadbancaria",
     "pk": 1,
     "fields": {
-      "nombre": "Banco Central",
-      "codigo": "BAN001",
+      "nombre": "Banco Py",
+      "codigo": "BPY",
       "color_principal": "#1d3557",
       "color_secundario": "#457b9d",
-      "logo_url": ""
+      "logo_url": "https://example.com/logos/banco_py.png"
     }
   },
   {
     "model": "banco.entidadbancaria",
     "pk": 2,
     "fields": {
-      "nombre": "Banco del Sur",
-      "codigo": "BAN002",
-      "color_principal": "#2a9d8f",
-      "color_secundario": "#264653",
-      "logo_url": ""
-    }
-  },
-  {
-    "model": "banco.entidadbancaria",
-    "pk": 3,
-    "fields": {
-      "nombre": "Banco Ágil",
-      "codigo": "BAN003",
-      "color_principal": "#e63946",
-      "color_secundario": "#a8dadc",
-      "logo_url": ""
+      "nombre": "Banco Guaraní",
+      "codigo": "BGUA",
+      "color_principal": "#006d77",
+      "color_secundario": "#83c5be",
+      "logo_url": "https://example.com/logos/banco_guarani.png"
     }
   },
   {
@@ -37,92 +26,91 @@
     "pk": 1,
     "fields": {
       "entidad": 1,
-      "email": "alice@central.com",
-      "password": "alice123"
+      "email": "juan@bancopy.com",
+      "password": "1234"
+    }
+  },
+  {
+    "model": "banco.bancouser",
+    "pk": 2,
+    "fields": {
+      "entidad": 2,
+      "email": "maria@bancoguarani.com",
+      "password": "1234"
     }
   },
   {
     "model": "banco.cuenta",
     "pk": 1,
     "fields": {
-      "entidad": 1,
       "usuario": 1,
-      "numero_cuenta": "CUENTA001",
-      "saldo": "10000000.00",
-      "tipo_cuenta": "DEBITO"
+      "numero_cuenta": "000111222",
+      "entidad": 1,
+      "saldo": "5000000.00"
     }
   },
   {
     "model": "banco.cuenta",
     "pk": 2,
     "fields": {
-      "entidad": 1,
-      "usuario": 1,
-      "numero_cuenta": "CREDITO001",
-      "saldo": "-50000.00",
-      "tipo_cuenta": "CREDITO"
+      "usuario": 2,
+      "numero_cuenta": "000333444",
+      "entidad": 2,
+      "saldo": "3000000.00"
     }
   },
   {
-    "model": "banco.bancouser",
+    "model": "banco.tarjetadebito",
+    "pk": 1,
+    "fields": {
+      "usuario": 1,
+      "entidad": 1,
+      "cuenta": 1,
+      "numero": "4111111111111111",
+      "mes_vencimiento": 12,
+      "anho_vencimiento": 2027,
+      "cvv": "123"
+    }
+  },
+  {
+    "model": "banco.tarjetadebito",
     "pk": 2,
     "fields": {
-      "entidad": 1,
-      "email": "bob@central.com",
-      "password": "bob123"
-    }
-  },
-  {
-    "model": "banco.cuenta",
-    "pk": 3,
-    "fields": {
-      "entidad": 1,
       "usuario": 2,
-      "numero_cuenta": "CUENTA002",
-      "saldo": "80000.00",
-      "tipo_cuenta": "DEBITO"
+      "entidad": 2,
+      "cuenta": 2,
+      "numero": "4222222222222222",
+      "mes_vencimiento": 6,
+      "anho_vencimiento": 2026,
+      "cvv": "456"
     }
   },
   {
-    "model": "banco.cuenta",
-    "pk": 4,
+    "model": "banco.tarjetacredito",
+    "pk": 1,
     "fields": {
+      "usuario": 1,
       "entidad": 1,
+      "numero": "4333333333333333",
+      "mes_vencimiento": 9,
+      "anho_vencimiento": 2028,
+      "cvv": "789",
+      "limite_credito": "2000000.00",
+      "saldo_usado": "0.00"
+    }
+  },
+  {
+    "model": "banco.tarjetacredito",
+    "pk": 2,
+    "fields": {
       "usuario": 2,
-      "numero_cuenta": "CREDITO002",
-      "saldo": "-30000.00",
-      "tipo_cuenta": "CREDITO"
-    }
-  },
-  {
-    "model": "banco.bancouser",
-    "pk": 3,
-    "fields": {
       "entidad": 2,
-      "email": "carla@sur.com",
-      "password": "carla123"
-    }
-  },
-  {
-    "model": "banco.cuenta",
-    "pk": 5,
-    "fields": {
-      "entidad": 2,
-      "usuario": 3,
-      "numero_cuenta": "CUENTA003",
-      "saldo": "120000.00",
-      "tipo_cuenta": "DEBITO"
-    }
-  },
-  {
-    "model": "banco.cuenta",
-    "pk": 6,
-    "fields": {
-      "entidad": 2,
-      "usuario": 3,
-      "numero_cuenta": "CREDITO003",
-      "saldo": "-75000.00",
-      "tipo_cuenta": "CREDITO"
+      "numero": "4444444444444444",
+      "mes_vencimiento": 5,
+      "anho_vencimiento": 2029,
+      "cvv": "321",
+      "limite_credito": "2000000.00",
+      "saldo_usado": "500000.00"
     }
   }
 ]
