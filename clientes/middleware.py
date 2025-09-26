@@ -52,7 +52,7 @@ class ClienteActivoMiddleware:
         # Chequear si ya hay cliente en sesión (puede venir de versiones previas)
         cliente_id = request.session.get('cliente_activo_id') or request.session.get('cliente_id')
         if cliente_id:
-            # Validar que el cliente exista, esté activo y pertenezca al usuario
+            # Revisa si el cliente es válido (activo y asignado al usuario)
             exists = Cliente.objects.filter(
                 id=cliente_id,
                 esta_activo=True,
@@ -61,8 +61,10 @@ class ClienteActivoMiddleware:
             if exists:
                 # todo OK, continuar
                 return self.get_response(request)
-            # cliente inválido -> limpiar
-            request.session.pop('cliente_activo_id', None)
+            
+            # 🔴 CORRECCIÓN: Cliente inválido -> limpiar solo 'cliente_activo_id'
+            # y dejar que la siguiente lógica fuerce la redirección si es necesario.
+            request.session.pop('cliente_activo_id', None) 
             request.session.pop('cliente_id', None)
 
         # Buscar asignaciones activas del usuario

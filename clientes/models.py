@@ -246,12 +246,31 @@ class ClienteMedioDePago(models.Model):
 
     @property
     def campos_completos(self):
-        """Verificar si todos los campos requeridos están completos"""
-        try:
-            self.clean()
-            return True
-        except ValidationError:
+        """
+        Verifica si todos los campos requeridos del medio de pago están presentes y tienen
+        un valor no vacío en self.datos_campos (JSONField).
+        """
+        if not self.medio_de_pago:
             return False
+            
+        # Obtener los nombres amigables de los campos requeridos para ESTE medio de pago.
+        # CORRECCIÓN: Reemplazar el nombre de la relación incorrecto por 'campos'
+        campos_requeridos = self.medio_de_pago.campos.filter( 
+            is_required=True
+        ).values_list('nombre_campo', flat=True)
+        
+        # Si no hay campos requeridos, se considera completo
+        if not campos_requeridos:
+            return True
+
+        # Verificar cada nombre de campo requerido en los datos del cliente
+        for nombre_campo in campos_requeridos:
+            # 🔴 CORRECCIÓN: Verifica existencia y que el valor no esté vacío (e.g., '', None)
+            valor = self.datos_campos.get(nombre_campo)
+            if not valor: 
+                return False
+
+        return True
 
 class HistorialClienteMedioDePago(models.Model):
     """
