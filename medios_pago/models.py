@@ -1,4 +1,4 @@
-# models.py - Versión con templates dinámicos
+# models.py - Versión actualizada con billetera electrónica
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.conf import settings
@@ -12,6 +12,7 @@ TIPO_MEDIO_CHOICES = [
     ('bank_local', 'Transferencia Bancaria Local'),
     ('bank_international', 'Transferencia Bancaria Internacional'),
     ('bitcoin', 'Criptomonedas (Bitcoin, Ethereum)'),
+    ('billetera_electronica', 'Billetera Electrónica'),
     ('efectivo', 'Pago en Efectivo'),
 ]
 
@@ -22,6 +23,7 @@ API_MAPPING = {
     'bank_local': 'BankLocalProcessor',
     'bank_international': 'BankInternationalProcessor',
     'bitcoin': 'BitcoinProcessor',
+    'billetera_electronica': 'EWalletProcessor',
     'efectivo': 'CashProcessor'
 }
 
@@ -74,11 +76,11 @@ PREDEFINED_FIELDS = {
         'required': True,
         'description': 'Número de cuenta bancaria'
     },
-    'bank_name': {
-        'label': 'Nombre del banco',
+    'bank_name': {  # <-- CAMBIO: era 'entidad'
+        'label': 'Entidad',
         'type': 'TEXTO',
         'required': True,
-        'description': 'Nombre completo del banco'
+        'description': 'Nombre de la entidad financiera (banco, billetera, etc.)'
     },
     'account_holder': {
         'label': 'Titular de la cuenta',
@@ -104,6 +106,12 @@ PREDEFINED_FIELDS = {
         'required': True,
         'description': 'Clave Bancaria Uniforme o Clave Virtual Uniforme'
     },
+    'ruc': {
+        'label': 'RUC',
+        'type': 'NUMERO',
+        'required': False,
+        'description': 'Registro Único del Contribuyente'
+    },
     
     # Campos generales
     'email': {
@@ -118,25 +126,12 @@ PREDEFINED_FIELDS = {
         'required': False,
         'description': 'Número de teléfono'
     },
-    'amount': {
-        'label': 'Monto',
-        'type': 'NUMERO',
-        'required': True,
-        'description': 'Monto de la transacción'
-    },
-    'currency': {
-        'label': 'Moneda',
-        'type': 'TEXTO',
-        'required': True,
-        'description': 'Código de moneda (USD, EUR, etc.)'
-    },
     'description': {
         'label': 'Descripción',
         'type': 'TEXTO',
         'required': False,
-        'description': 'Descripción de la transacción'
+        'description': 'Descripción del medio de pago'
     },
-    
     # Campos para criptomonedas
     'wallet_address': {
         'label': 'Dirección de billetera',
@@ -150,10 +145,34 @@ PREDEFINED_FIELDS = {
         'required': True,
         'description': 'Red blockchain (ETH, BTC, etc.)'
     },
+    # Campos específicos para billeteras electrónicas
+    'wallet_phone': {
+        'label': 'Teléfono de billetera',
+        'type': 'TELEFONO',
+        'required': True,
+        'description': 'Número de teléfono asociado a la billetera'
+    },
+    'wallet_email': {
+        'label': 'Email de billetera',
+        'type': 'EMAIL',
+        'required': False,
+        'description': 'Email asociado a la billetera electrónica'
+    },
+    'wallet_user_id': {
+        'label': 'ID de usuario',
+        'type': 'TEXTO',
+        'required': False,
+        'description': 'Identificador de usuario en la billetera'
+    },
+    'document_number': {
+        'label': 'Número de documento',
+        'type': 'NUMERO',
+        'required': False,
+        'description': 'Número de cédula o documento de identidad'
+    },
 }
 
 # Templates predefinidos para tipos comunes de medios de pago
-# Reemplazar PAYMENT_TEMPLATES existente por esta versión:
 PAYMENT_TEMPLATES = {
     'stripe_card': {
         'name': 'Tarjeta de Crédito/Débito (Stripe)',
@@ -164,31 +183,37 @@ PAYMENT_TEMPLATES = {
     'paypal_standard': {
         'name': 'PayPal Estándar',
         'tipo_medio': 'paypal',
-        'fields': ['paypal_email', 'amount', 'currency', 'description'],
+        'fields': ['paypal_email', 'description'],
         'is_custom': False
     },
     'bank_local_ar': {
-        'name': 'Transferencia Bancaria Argentina',
+        'name': 'Transferencia Bancaria local',
         'tipo_medio': 'bank_local',
-        'fields': ['account_number', 'bank_name', 'account_holder', 'cbu_cvu'],
+        'fields': ['account_number', 'bank_name', 'account_holder', 'cbu_cvu', 'ruc'],  # <-- bank_name
         'is_custom': False
     },
     'bank_international': {
         'name': 'Transferencia Bancaria Internacional',
         'tipo_medio': 'bank_international',
-        'fields': ['account_number', 'bank_name', 'account_holder', 'swift_code', 'routing_number'],
+        'fields': ['account_number', 'bank_name', 'account_holder', 'swift_code', 'routing_number'],  # <-- bank_name
         'is_custom': False
     },
     'bitcoin_wallet': {
         'name': 'Billetera Bitcoin',
         'tipo_medio': 'bitcoin',
-        'fields': ['wallet_address', 'network', 'amount'],
+        'fields': ['wallet_address', 'network'],
+        'is_custom': False
+    },
+    'billetera_electronica_py': {
+        'name': 'Billetera Electrónica Paraguay',
+        'tipo_medio': 'billetera_electronica',
+        'fields': ['wallet_phone', 'bank_name', 'account_holder', 'document_number', 'wallet_email'],  # <-- bank_name
         'is_custom': False
     },
     'efectivo_simple': {
         'name': 'Pago en Efectivo',
         'tipo_medio': 'efectivo',
-        'fields': ['amount', 'description'],
+        'fields': ['description'],
         'is_custom': False
     }
 }
@@ -203,7 +228,7 @@ class PaymentTemplate(models.Model):
     fields_config = models.JSONField('Configuración de campos', default=list)
     is_active = models.BooleanField('Activo', default=True)
     created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,  # Sin comillas
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE, 
         verbose_name='Creado por',
         null=True, blank=True
@@ -270,8 +295,8 @@ class MedioDePago(models.Model):
         'Tipo de Medio de Pago',
         max_length=50,
         choices=TIPO_MEDIO_CHOICES,
-        blank=True,  # AGREGAR ESTO
-        null=True,   # AGREGAR ESTO
+        blank=True,
+        null=True,
         help_text='Tipo de procesador que manejará este medio de pago'
     )
 
@@ -314,7 +339,7 @@ class MedioDePago(models.Model):
     def get_processor_class(self):
         """Retorna la clase de procesador para este medio de pago"""
         if not self.tipo_medio:
-            return self._infer_processor_from_fields()  # Fallback
+            return self._infer_processor_from_fields()
         return API_MAPPING.get(self.tipo_medio)
     
     def _infer_processor_from_fields(self):
@@ -327,6 +352,8 @@ class MedioDePago(models.Model):
             return 'PayPalProcessor'
         elif 'swift_code' in campos:
             return 'BankInternationalProcessor'
+        elif 'wallet_phone' in campos or 'wallet_user_id' in campos:
+            return 'EWalletProcessor'
         elif 'account_number' in campos:
             return 'BankLocalProcessor'
         elif 'wallet_address' in campos:
@@ -355,6 +382,8 @@ class MedioDePago(models.Model):
             return 'paypal'
         elif 'swift_code' in campos:
             return 'bank_international'
+        elif 'wallet_phone' in campos or 'wallet_user_id' in campos:
+            return 'billetera_electronica'
         elif 'account_number' in campos:
             return 'bank_local'
         elif 'wallet_address' in campos:
@@ -367,7 +396,6 @@ class MedioDePago(models.Model):
         if not self.tipo_medio:
             return False, "Tipo de medio de pago no definido"
         
-        # Aquí puedes agregar validaciones específicas por tipo
         required_fields = self.get_required_fields_for_type()
         missing_fields = []
         
@@ -388,7 +416,8 @@ class MedioDePago(models.Model):
             'bank_local': ['account_number', 'bank_name', 'account_holder'],
             'bank_international': ['account_number', 'bank_name', 'account_holder', 'swift_code'],
             'bitcoin': ['wallet_address', 'network'],
-            'efectivo': []  # No requiere campos específicos
+            'billetera_electronica': ['wallet_phone', 'bank_name'],
+            'efectivo': []
         }
         return required_by_type.get(self.tipo_medio, [])
 
@@ -416,7 +445,6 @@ class MedioDePago(models.Model):
         """
         Crea un template basado en los campos actuales del medio de pago
         """
-        # Obtener configuración de campos actuales
         fields_config = []
         for campo in self.campos.all().order_by('orden', 'id'):
             fields_config.append({
@@ -424,7 +452,6 @@ class MedioDePago(models.Model):
                 'is_required': campo.is_required
             })
         
-        # Crear el template
         template = PaymentTemplate.objects.create(
             name=template_name,
             description=f'Template creado desde el medio de pago "{self.nombre}"',
@@ -439,7 +466,6 @@ class MedioDePago(models.Model):
         Aplica un template predefinido o personalizado al medio de pago,
         creando automáticamente los campos necesarios y estableciendo el tipo_medio.
         """
-        # Obtener todos los templates disponibles
         all_templates = PaymentTemplate.get_all_templates()
         
         if template_key not in all_templates:
@@ -519,11 +545,10 @@ class CampoMedioDePago(models.Model):
     class Meta:
         verbose_name = 'Campo de Medio de Pago'
         verbose_name_plural = 'Campos de Medios de Pago'
-        unique_together = ('medio_de_pago', 'campo_api')  # Evitar duplicados por API
+        unique_together = ('medio_de_pago', 'campo_api')
         ordering = ['orden', 'id']
 
     def clean(self):
-        # Si campo_api está definido, auto-completar antes de validar
         if self.campo_api in PREDEFINED_FIELDS:
             field_def = PREDEFINED_FIELDS[self.campo_api]
             self.nombre_campo = field_def['label']
@@ -531,7 +556,6 @@ class CampoMedioDePago(models.Model):
             if not self.descripcion:
                 self.descripcion = field_def['description']
         
-        # Validar después del auto-completado
         if not self.nombre_campo or not self.nombre_campo.strip():
             raise ValidationError({
                 'campo_api': 'Error en la configuración del campo seleccionado.'
@@ -543,23 +567,18 @@ class CampoMedioDePago(models.Model):
             })
 
     def save(self, *args, **kwargs):
-        # Auto-completar desde la definición predefinida si existe
         if self.campo_api in PREDEFINED_FIELDS:
             field_def = PREDEFINED_FIELDS[self.campo_api]
-            # Siempre auto-completar desde la definición
             self.nombre_campo = field_def['label']
             self.tipo_dato = field_def['type']
             if not self.descripcion:
                 self.descripcion = field_def['description']
         
-        # Validar que tenemos nombre_campo después del auto-completado
         if not self.nombre_campo:
             raise ValidationError('Error: No se pudo determinar el nombre del campo.')
         
-        # Limpiar el nombre
         self.nombre_campo = self.nombre_campo.strip()
         
-        # Llamar a full_clean solo si tenemos datos válidos
         if self.nombre_campo and self.tipo_dato:
             self.full_clean()
         

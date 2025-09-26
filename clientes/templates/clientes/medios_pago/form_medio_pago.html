@@ -212,7 +212,7 @@
                                         </a>
                                         
                                         {% if action == 'Agregar' %}
-                                            <a href="{% url 'clientes:seleccionar_medio_pago' %}" class="btn btn-outline-primary shadow-sm">
+                                            <a href="{% url 'clientes:seleccionar_medio_pago_crear' %}" class="btn btn-outline-primary shadow-sm">
                                                 <i class="fas fa-arrow-left me-2"></i>Volver
                                             </a>
                                         {% endif %}
@@ -432,8 +432,10 @@ hr {
 document.addEventListener('DOMContentLoaded', function() {
     // Variables globales
     const form = document.querySelector('form');
-    const formFields = document.querySelectorAll('.form-control, .form-select');
-    let formChanged = false;
+    // Seleccionar .form-control y .form-select del card-body para mayor especificidad
+    const formFields = document.querySelectorAll('.card-body .form-control, .card-body .form-select');
+    
+    // NOTA IMPORTANTE: Toda la lógica de la bandera 'formChanged' y la advertencia de salida fue eliminada.
 
     // Auto-focus en el primer campo disponible
     const firstField = document.querySelector('.form-control:not([readonly]):not([disabled])');
@@ -441,82 +443,121 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => firstField.focus(), 100);
     }
     
-    // Función para validar campo específico según su tipo
-    function validateField(field) {
-        const fieldName = field.name;
-        const value = field.value.trim();
+    // Función para validar número de tarjeta con algoritmo Luhn
+    function isValidCardNumber(cardNumber) {
+        let sum = 0;
+        let shouldDouble = false;
         
-        // Si el campo está vacío y es requerido
-        if (field.hasAttribute('required') && !value) {
-            return { isValid: false, message: 'Este campo es requerido' };
+        for (let i = cardNumber.length - 1; i >= 0; i--) {
+            let digit = parseInt(cardNumber.charAt(i));
+            
+            if (shouldDouble) {
+                digit *= 2;
+                if (digit > 9) {
+                    digit -= 9;
+                }
+            }
+            
+            sum += digit;
+            shouldDouble = !shouldDouble;
         }
         
-        // Si el campo está vacío y no es requerido, es válido
-        if (!value) {
-            return { isValid: true, message: '' };
+        return (sum % 10) === 0;
+    }
+
+    // Funciones de formateo (Críticas para la limpieza de datos)
+    function formatCardNumber(input) {
+        const value = input.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+        // Máximo 19 dígitos para tarjetas de crédito/débito
+        const match = value.match(/\d{1,19}/) && value.match(/\d{1,19}/)[0] || '';
+        const parts = [];
+        
+        for (let i = 0, len = match.length; i < len; i += 4) {
+            parts.push(match.substring(i, i + 4));
         }
         
-        // Validaciones específicas por tipo de campo dinámico
-        if (fieldName.startsWith('campo_')) {
-            const helpText = field.parentElement.querySelector('.form-text');
-            if (helpText) {
-                const helpContent = helpText.textContent.toLowerCase();
-                
-                // Validación para campos de tipo NUMERO
-                if (helpContent.includes('número') || helpContent.includes('numero')) {
-                    const numeroPattern = /^[0-9\-\.\s]+$/;
-                    if (!numeroPattern.test(value)) {
-                        return { isValid: false, message: 'Solo se permiten números, guiones, puntos y espacios' };
-                    }
-                    if (!/\d/.test(value)) {
-                        return { isValid: false, message: 'Debe contener al menos un número' };
-                    }
-                }
-                
-                // Validación para campos de tipo EMAIL
-                else if (helpContent.includes('email')) {
-                    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    if (!emailPattern.test(value)) {
-                        return { isValid: false, message: 'Formato de email inválido' };
-                    }
-                }
-                
-                // Validación para campos de tipo TELEFONO
-                else if (helpContent.includes('teléfono') || helpContent.includes('telefono')) {
-                    let cleanValue = value.replace(/[\s\-\(\)]/g, '');
-                    if (cleanValue.startsWith('+')) {
-                        cleanValue = cleanValue.substring(1);
-                    }
-                    
-                    if (!/^\d+$/.test(cleanValue)) {
-                        return { isValid: false, message: 'Formato de teléfono inválido' };
-                    }
-                    
-                    if (cleanValue.length < 6) {
-                        return { isValid: false, message: 'El teléfono debe tener al menos 6 dígitos' };
-                    }
-                    
-                    if (cleanValue.length > 15) {
-                        return { isValid: false, message: 'El teléfono no puede tener más de 15 dígitos' };
-                    }
-                }
-                
-                // Validación para campos de tipo URL
-                else if (helpContent.includes('url')) {
-                    if (!value.startsWith('http://') && !value.startsWith('https://')) {
-                        return { isValid: false, message: 'La URL debe comenzar con http:// o https://' };
-                    }
-                }
+        input.value = parts.join(' ');
+    }
+    
+    // 🆕 NUEVA FUNCIÓN: Formatear Número de Cuenta Bancaria
+    function formatCuentaBancaria(input) {
+        const value = input.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+        // Máximo 20 dígitos para número de cuenta
+        const match = value.match(/\d{1,20}/) && value.match(/\d{1,20}/)[0] || '';
+        const parts = [];
+        
+        // Separación de 4 en 4
+        for (let i = 0, len = match.length; i < len; i += 4) {
+            parts.push(match.substring(i, i + 4));
+        }
+        
+        input.value = parts.join(' ');
+    }
+    // 🔚 FIN NUEVA FUNCIÓN
+
+    function formatCBU(input) {
+        let value = input.value.replace(/[^0-9]/g, '');
+        if (value.length > 22) {
+            value = value.substring(0, 22);
+        }
+        const formatted = value.replace(/(\d{4})(?=\d)/g, '$1-');
+        input.value = formatted;
+    }
+
+    function formatMonth(input) {
+        let value = input.value.replace(/[^0-9]/g, '');
+        if (value.length === 1 && parseInt(value) > 1) {
+            value = '0' + value;
+        }
+        if (value.length > 2) {
+            value = value.substring(0, 2);
+        }
+        input.value = value;
+    }
+
+    // Formateo visual (opcional en blur, pero la lógica de validación es la clave)
+    function formatYear(input) {
+        let value = input.value.replace(/[^0-9]/g, '');
+        
+        if (value.length === 2) {
+            const year = parseInt(value);
+            const currentYear = new Date().getFullYear();
+            const currentCentury = Math.floor(currentYear / 100) * 100;
+            
+            if (year <= (currentYear % 100) + 20) {
+                value = currentCentury + year;
+            } else {
+                value = (currentCentury - 100) + year;
             }
         }
         
-        return { isValid: true, message: '' };
+        if (value.length > 4) {
+            value = value.substring(0, 4);
+        }
+        
+        input.value = value;
+    }
+
+    function formatCVC(input) {
+        let value = input.value.replace(/[^0-9]/g, '');
+        if (value.length > 4) {
+            value = value.substring(0, 4);
+        }
+        input.value = value;
     }
     
-    // Función para aplicar estilos de validación
+    // Función para aplicar estilos de validación y manejar errores de Django
     function applyValidationStyles(field, isValid, errorMessage = '') {
         field.classList.remove('is-valid', 'is-invalid');
         
+        // Ocultar errores de Django
+        const djangoErrors = field.parentElement.querySelectorAll('.text-danger.small.mt-1');
+        djangoErrors.forEach(errorDiv => {
+            if (!errorDiv.classList.contains('validation-error')) {
+                errorDiv.style.display = 'none';
+            }
+        });
+
         const existingError = field.parentElement.querySelector('.validation-error');
         if (existingError) {
             existingError.remove();
@@ -536,104 +577,349 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Función para verificar duplicados
-    function checkForDuplicates() {
-        const criticalFields = ['numero', 'cuenta', 'tarjeta', 'cbu', 'email'];
-        const currentValues = {};
-        let hasCriticalData = false;
+    // ✅ FUNCIÓN validateField - CON LÓGICA DE PAGO
+    function validateField(field) {
+        const fieldName = field.name;
+        const value = field.value.trim();
+        // Buscar el label en el elemento padre
+        const label = field.closest('.col-md-6.mb-3')?.querySelector('label')?.textContent.toLowerCase() || '';
         
-        formFields.forEach(field => {
-            if (field.name.startsWith('campo_')) {
-                const label = field.parentElement.querySelector('label');
-                if (label) {
-                    const labelText = label.textContent.toLowerCase();
-                    const isCritical = criticalFields.some(critical => 
-                        labelText.includes(critical)
-                    );
+        // 1. Si el campo está vacío y es requerido
+        if (field.hasAttribute('required') && !value) {
+            return { isValid: false, message: 'Este campo es requerido' };
+        }
+        
+        // Si el campo está vacío y no es requerido, es válido
+        if (!value) {
+            return { isValid: true, message: '' };
+        }
+        
+        // Validaciones específicas por tipo de campo
+        if (fieldName.startsWith('campo_')) {
+            const helpText = field.parentElement.querySelector('.form-text');
+            const helpContent = helpText ? helpText.textContent.toLowerCase() : '';
+            
+            // NÚMERO DE TARJETA
+            if ((label.includes('número') || label.includes('numero')) && (label.includes('tarjeta') || label.includes('card'))) {
+                const cleanValue = value.replace(/\s/g, '');
+                
+                if (!/^\d{13,19}$/.test(cleanValue)) {
+                    return { isValid: false, message: 'Número de tarjeta debe tener entre 13-19 dígitos' };
+                }
+                
+                if (!isValidCardNumber(cleanValue)) {
+                    return { isValid: false, message: 'Número de tarjeta inválido (Luhn check)' };
+                }
+            }
+            
+            // NOMBRE EN LA TARJETA
+            else if (label.includes('nombre') && label.includes('tarjeta')) {
+                const namePattern = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\-\.]+$/;
+                
+                if (!namePattern.test(value)) {
+                    return { isValid: false, message: 'Solo se permiten letras, espacios, guiones y puntos.' };
+                }
+                
+                if (value.length < 3) {
+                    return { isValid: false, message: 'El nombre debe tener al menos 3 caracteres' };
+                }
+            }
+            
+            // MES DE VENCIMIENTO
+            else if (label.includes('mes') && label.includes('vencimiento')) {
+                if (!/^\d{1,2}$/.test(value)) {
+                    return { isValid: false, message: 'Formato de mes inválido (ej: 01-12)' };
+                }
+                const month = parseInt(value);
+                if (isNaN(month) || month < 1 || month > 12) {
+                    return { isValid: false, message: 'Mes debe estar entre 1 y 12' };
+                }
+            }
+            
+            // 🎯 AÑO DE VENCIMIENTO - CONVERSIÓN CRÍTICA
+            else if (label.includes('año') && label.includes('vencimiento')) {
+                let yearValue = value;
+                
+                // ✅ CONVERSIÓN YY → YYYY OBLIGATORIA ANTES DE VALIDAR
+                if (/^\d{2}$/.test(yearValue)) {
+                    const year = parseInt(yearValue);
+                    const currentYear = new Date().getFullYear();
+                    const currentCentury = Math.floor(currentYear / 100) * 100;
                     
-                    if (isCritical && field.value.trim()) {
-                        currentValues[labelText] = field.value.trim();
-                        hasCriticalData = true;
+                    if (year <= (currentYear % 100) + 20) {
+                        yearValue = String(currentCentury + year);
+                    } else {
+                        yearValue = String((currentCentury - 100) + year);
+                    }
+                    
+                    // 🔑 CLAVE: Actualizar el campo inmediatamente (PARA QUE DJANGO RECIBA YYYY)
+                    field.value = yearValue;
+                }
+                
+                // ✅ VALIDACIÓN FLEXIBLE: Acepta 2 O 4 dígitos, pero convierte automáticamente
+                if (!/^\d{2,4}$/.test(value)) {
+                    return { isValid: false, message: 'Ingrese un año válido (ej: 25 o 2025)' };
+                }
+                
+                // Ahora validamos con el año convertido
+                const year = parseInt(yearValue);
+                const currentYear = new Date().getFullYear();
+                const maxYear = currentYear + 20;
+
+                if (isNaN(year) || year < currentYear || year > maxYear) {
+                    return { isValid: false, message: `Año debe estar entre ${currentYear} y ${maxYear}` };
+                }
+                
+                // Validación de expiración con mes
+                // Usando un selector más genérico basado en la estructura HTML del form:
+                const mesField = field.closest('.row').querySelector('label[for*="mes"]')?.parentElement.querySelector('.form-control');
+
+                if (mesField && mesField.value) {
+                    const mesValue = parseInt(mesField.value);
+                    const currentMonth = new Date().getMonth() + 1;
+                    
+                    if (year === currentYear && mesValue && mesValue < currentMonth) {
+                        return { isValid: false, message: 'La tarjeta está expirada' };
                     }
                 }
             }
-        });
-        
-        if (hasCriticalData) {
-            // En producción, aquí harías una llamada AJAX real
-            // simulateAjaxDuplicateCheck(currentValues);
             
-            // Por ahora, ocultar la advertencia hasta implementar la funcionalidad completa
-            hideDuplicateWarning();
-        } else {
-            hideDuplicateWarning();
-        }
-    }
-    
-    function showDuplicateWarning(duplicateInfo) {
-        const warningDiv = document.getElementById('duplicate-warning');
-        const detailsDiv = document.getElementById('duplicate-details');
-        
-        if (warningDiv && detailsDiv) {
-            detailsDiv.innerHTML = `
-                <div class="bg-light p-2 rounded">
-                    <strong>${duplicateInfo.tipo}</strong><br>
-                    <small class="text-muted">
-                        Número: ${duplicateInfo.numero}<br>
-                        Agregado: ${duplicateInfo.fechaCreacion}
-                    </small>
-                </div>
-            `;
+            // CÓDIGO DE SEGURIDAD (CVC)
+            else if (label.includes('código') && label.includes('seguridad') || label.includes('cvc') || label.includes('cvv')) {
+                if (!/^\d{3,4}$/.test(value)) {
+                    return { isValid: false, message: 'Código debe tener 3 o 4 dígitos' };
+                }
+            }
             
-            warningDiv.classList.remove('d-none');
+            // CBU/CVU
+            else if (label.includes('cbu') || label.includes('cvu')) {
+                const cleanValue = value.replace(/[\s\-]/g, '');
+                if (!/^\d{22}$/.test(cleanValue)) {
+                    return { isValid: false, message: 'CBU/CVU debe tener exactamente 22 dígitos' };
+                }
+            }
+            
+            // RUC
+            else if (label.includes('ruc')) {
+                const cleanValue = value.replace(/[\s\-]/g, '');
+                if (!/^\d{8,11}$/.test(cleanValue)) {
+                    return { isValid: false, message: 'RUC debe tener entre 8 y 11 dígitos' };
+                }
+            }
+            
+            // NÚMERO DE CUENTA BANCARIA
+            else if (label.includes('cuenta') && helpContent.includes('número')) {
+                // 📝 CAMBIO: Usar cleanValue sin espacios para validación de longitud
+                const cleanValue = value.replace(/[\s\-]/g, '');
+                
+                if (!/^\d{8,20}$/.test(cleanValue)) {
+                    return { isValid: false, message: 'Número de cuenta debe tener entre 8 y 20 dígitos' };
+                }
+                
+                // 📝 NUEVA VALIDACIÓN: Asegurar que el formato sea solo números y espacios
+                if (!/^[0-9\s]*$/.test(value)) {
+                    return { isValid: false, message: 'Solo se permiten números y espacios' };
+                }
+            }
+            
+            // VALIDACIÓN GENÉRICA POR TIPO DE DATO (Manteniendo las de la versión anterior)
+            else if (helpContent.includes('número') || helpContent.includes('numero')) {
+                const numeroPattern = /^[0-9\-\.\s]+$/;
+                if (!numeroPattern.test(value)) {
+                    return { isValid: false, message: 'Solo se permiten números, guiones, puntos y espacios' };
+                }
+                if (!/\d/.test(value)) {
+                    return { isValid: false, message: 'Debe contener al menos un número' };
+                }
+            }
+            
+            // EMAIL
+            else if (helpContent.includes('email') || label.includes('email')) {
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailPattern.test(value)) {
+                    return { isValid: false, message: 'Formato de email inválido' };
+                }
+            }
+            
+            // TELÉFONO
+            else if (helpContent.includes('teléfono') || helpContent.includes('telefono')) {
+                let cleanValue = value.replace(/[\s\-\(\)]/g, '');
+                if (cleanValue.startsWith('+')) {
+                    cleanValue = cleanValue.substring(1);
+                }
+                
+                if (!/^\d+$/.test(cleanValue)) {
+                    return { isValid: false, message: 'Formato de teléfono inválido (solo números y signo +)' };
+                }
+                
+                if (cleanValue.length < 6 || cleanValue.length > 15) {
+                    return { isValid: false, message: 'El teléfono debe tener entre 6 y 15 dígitos' };
+                }
+            }
+            
+            // URL
+            else if (helpContent.includes('url')) {
+                if (!value.startsWith('http://') && !value.startsWith('https://')) {
+                    return { isValid: false, message: 'La URL debe comenzar con http:// o https://' };
+                }
+            }
+            
+            // TEXTO GENÉRICO
+            else if (helpContent.includes('texto') || label.includes('nombre') || label.includes('apellido') || label.includes('razón')) {
+                if (value.length < 3) {
+                    return { isValid: false, message: 'El valor debe tener al menos 3 caracteres' };
+                }
+                if (/^\d+$/.test(value.replace(/\s/g, ''))) {
+                     return { isValid: false, message: 'El campo de texto no puede contener solo números.' };
+                }
+            }
         }
+        
+        return { isValid: true, message: '' };
     }
     
-    function hideDuplicateWarning() {
-        const warningDiv = document.getElementById('duplicate-warning');
-        if (warningDiv) {
-            warningDiv.classList.add('d-none');
-        }
-    }
+    // --- Event Listeners y Lógica Principal ---
     
-    // Event listeners
     formFields.forEach(field => {
-        // Validación al perder el foco
-        field.addEventListener('blur', function() {
-            const validation = validateField(this);
-            applyValidationStyles(this, validation.isValid, validation.message);
-        });
+        const label = field.closest('.col-md-6.mb-3')?.querySelector('label')?.textContent.toLowerCase() || '';
+        const helpText = field.parentElement.querySelector('.form-text');
+        const helpContent = helpText ? helpText.textContent.toLowerCase() : '';
         
-        // Validación en tiempo real para campos con errores
-        field.addEventListener('input', function() {
-            if (this.classList.contains('is-invalid')) {
+        // 1. Formateo y atributos
+        
+        // Formateo de Número de Tarjeta
+        if ((label.includes('número') || label.includes('numero')) && (label.includes('tarjeta') || label.includes('card'))) {
+            field.addEventListener('input', () => formatCardNumber(field));
+            field.setAttribute('maxlength', '23'); 
+            field.setAttribute('inputmode', 'numeric');
+        }
+        
+        // 📝 NUEVO: Formateo de Número de Cuenta Bancaria
+        else if (label.includes('cuenta') && helpContent.includes('número')) {
+            field.addEventListener('input', () => formatCuentaBancaria(field));
+            // 20 dígitos + 4 espacios (cada 4) = 24. Usamos 24 como máximo.
+            field.setAttribute('maxlength', '24');
+            field.setAttribute('inputmode', 'numeric');
+            field.setAttribute('placeholder', '0000 0000 0000 0000');
+        }
+        // 🔚 FIN NUEVO: Formateo de Número de Cuenta Bancaria
+        
+        else if (label.includes('cbu') || label.includes('cvu')) {
+            field.addEventListener('input', () => formatCBU(field));
+            field.setAttribute('maxlength', '27');
+            field.setAttribute('inputmode', 'numeric');
+        }
+        
+        else if (label.includes('mes') && label.includes('vencimiento')) {
+            field.addEventListener('input', () => formatMonth(field));
+            field.setAttribute('maxlength', '2');
+            field.setAttribute('placeholder', 'MM');
+            field.setAttribute('inputmode', 'numeric');
+        }
+        
+        // AÑO DE VENCIMIENTO (Simplificado)
+        else if (label.includes('año') && label.includes('vencimiento')) {
+            // Solo filtro numérico y actualización visual en input
+            field.addEventListener('input', function() {
+                let value = this.value.replace(/[^0-9]/g, ''); 
+                if (value.length > 4) {
+                    value = value.substring(0, 4);
+                }
+                this.value = value;
+                
+                // Validación inmediata (que incluye conversión automática YY -> YYYY)
+                if (this.classList.contains('is-invalid') || this.classList.contains('is-valid')) {
+                    const validation = validateField(this);
+                    applyValidationStyles(this, validation.isValid, validation.message);
+                }
+            });
+            
+            // Formateo visual solo en blur para UX 
+            field.addEventListener('blur', function() {
+                if (this.value && this.value.length >= 2) {
+                    // Esta función formatYear solo formatea visualmente si el usuario deja el campo
+                    // La validación en submit/validateField es la que asegura el valor YYYY para Django
+                    formatYear(this); 
+                }
+                
+                // Aplicar validación también en blur
                 const validation = validateField(this);
                 applyValidationStyles(this, validation.isValid, validation.message);
-            }
-        });
+            });
+            
+            field.setAttribute('maxlength', '4');
+            field.setAttribute('placeholder', 'Ej: 25 o 2025'); 
+            field.setAttribute('inputmode', 'numeric');
+            field.setAttribute('pattern', '[0-9]*');
+        }
         
-        // Filtrado en tiempo real para campos numéricos
+        else if (label.includes('código') && (label.includes('seguridad') || label.includes('cvc') || label.includes('cvv'))) {
+            field.addEventListener('input', () => formatCVC(field));
+            field.setAttribute('maxlength', '4');
+            field.setAttribute('placeholder', '123');
+            field.setAttribute('inputmode', 'numeric');
+        }
+        
+        // Mejorar placeholders y atributos
+        if (label.includes('email')) {
+            field.setAttribute('placeholder', 'ejemplo@correo.com');
+            field.setAttribute('type', 'email');
+        }
+        
+        if (label.includes('teléfono') || label.includes('telefono')) {
+            field.setAttribute('placeholder', '+595 21 123456');
+            field.setAttribute('type', 'tel');
+        }
+        
+        // Añadir atributo 'required' si tiene el asterisco en el label
+        if (field.closest('.col-md-6.mb-3')?.querySelector('label span.text-danger')) {
+            field.setAttribute('required', 'required');
+        }
+        
+        // 2. Validaciones en Blur/Input (para campos no-año)
+        const isYearField = label.includes('año') && label.includes('vencimiento');
+        if (!isYearField) {
+            field.addEventListener('blur', function() {
+                if (this.name.startsWith('campo_')) {
+                    const validation = validateField(this);
+                    applyValidationStyles(this, validation.isValid, validation.message);
+                }
+            });
+            
+            field.addEventListener('input', function() {
+                if (this.classList.contains('is-invalid') || this.classList.contains('is-valid')) {
+                    const validation = validateField(this);
+                    applyValidationStyles(this, validation.isValid, validation.message);
+                }
+            });
+        }
+        
+        // Filtrado/restricción en tiempo real para campos genéricos 'número'
         field.addEventListener('input', function() {
-            if (this.name.startsWith('campo_')) {
-                const helpText = this.parentElement.querySelector('.form-text');
-                if (helpText && helpText.textContent.toLowerCase().includes('número')) {
-                    const value = this.value;
-                    if (value && !/^[0-9\-\.\s]*$/.test(value)) {
-                        this.value = value.replace(/[^0-9\-\.\s]/g, '');
-                    }
+            const helpText = this.parentElement.querySelector('.form-text');
+            const helpContent = helpText ? helpText.textContent.toLowerCase() : '';
+            const isCuentaBancaria = label.includes('cuenta') && helpContent.includes('número');
+
+            // Solo aplica a campos genéricos 'número', no a Tarjeta/CBU y ahora NO a Cuenta Bancaria
+            if (this.name.startsWith('campo_') && (helpContent.includes('número') || helpContent.includes('numero')) && !label.includes('tarjeta') && !label.includes('cbu') && !isCuentaBancaria) {
+                const value = this.value;
+                if (value && !/^[0-9\-\.\s]*$/.test(value)) {
+                    this.value = value.replace(/[^0-9\-\.\s]/g, '');
                 }
             }
         });
         
-        // Detectar cambios en el formulario
-        field.addEventListener('change', () => formChanged = true);
+        // Los listeners 'change' y 'input' ya no establecen ninguna bandera, manteniendo la fluidez de navegación.
     });
     
-    // Validación antes de enviar el formulario
+    // ✅ SIMPLIFICAR EL SUBMIT - Event Listener
     form.addEventListener('submit', function(e) {
         let hasErrors = false;
         
         formFields.forEach(field => {
+            if (field.type === 'hidden' || field.disabled) return;
+            
+            // La función validateField se encarga de la limpieza de datos (ej. YY->YYYY) antes de validar.
             const validation = validateField(field);
             applyValidationStyles(field, validation.isValid, validation.message);
             
@@ -652,7 +938,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 firstError.focus();
             }
             
-            // Mostrar mensaje general
+            // Mostrar mensaje de error general
             const existingAlert = document.querySelector('.validation-alert');
             if (existingAlert) existingAlert.remove();
             
@@ -663,39 +949,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 <strong>Por favor corrija los errores marcados antes de continuar.</strong>
             `;
             
-            form.insertBefore(alertDiv, form.querySelector('hr:last-of-type'));
+            // Insertar antes del último hr
+            const hr = form.querySelector('hr:last-of-type');
+            if (hr) {
+                form.insertBefore(alertDiv, hr);
+            }
             
             return false;
         }
-        
-        // Mostrar estado de carga
+
+        // Mostrar estado de carga al enviar
         const submitBtn = form.querySelector('button[type="submit"]');
         if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Guardando...';
+            const actionText = submitBtn.textContent.includes('Actualizar') ? 'Actualizando' : 'Guardando';
+            submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>${actionText}...`;
         }
     });
-    
-    // Advertir antes de salir sin guardar
-    window.addEventListener('beforeunload', function(e) {
-        if (formChanged) {
-            e.preventDefault();
-            e.returnValue = '';
-        }
-    });
-    
-    // Enlaces de salida con confirmación
-    const exitLinks = document.querySelectorAll('a[href]');
-    exitLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            if (formChanged && !confirm('Tienes cambios sin guardar. ¿Estás seguro de salir?')) {
-                e.preventDefault();
-            }
-        });
-    });
-    
-    // Animación de alertas
-    const alerts = document.querySelectorAll('.alert');
+
+    // --- LÓGICA DE ADVERTENCIA ELIMINADA ---
+    // Se han quitado: window.addEventListener('beforeunload'), exitLinks.forEach, y la lógica de reseteo post-carga.
+    // ------------------------------------------
+
+    // Animación de alertas iniciales
+    const alerts = document.querySelectorAll('.alert:not(.validation-alert)');
     alerts.forEach((alert, index) => {
         alert.style.opacity = '0';
         alert.style.transform = 'translateY(-20px)';
@@ -704,6 +981,13 @@ document.addEventListener('DOMContentLoaded', function() {
             alert.style.opacity = '1';
             alert.style.transform = 'translateY(0)';
         }, index * 100);
+    });
+    
+    // Asegurar que los errores de Django en campos individuales estén ocultos al cargar
+    document.querySelectorAll('.row .col-md-6 .text-danger.small.mt-1').forEach(errorDiv => {
+        if (!errorDiv.classList.contains('validation-error')) {
+             errorDiv.style.display = 'none';
+        }
     });
 });
 </script>

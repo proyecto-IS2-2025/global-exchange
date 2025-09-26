@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Resumen de la Compra{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">Resumen de la Compra</h4>
+    </div>
+    <div class="card-body">
+      
+      <!-- Operación -->
+      <h5 class="mb-3">Detalles de la Operación</h5>
+      {% if operacion %}
+        <table class="table table-sm">
+          <tbody>
+            <tr>
+              <th scope="row">Tipo de operación</th>
+              <td class="text-capitalize">{{ operacion.tipo|default:"-" }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Divisa</th>
+              <td>{{ operacion.divisa }} - {{ operacion.divisa_nombre }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Monto a comprar</th>
+              <td>{{ operacion.monto_divisa }} {{ operacion.divisa }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Tasa de cambio aplicada</th>
+              <td>{{ operacion.tasa_cambio }}</td>
+            </tr>
+            <tr class="table-success">
+              <th scope="row">Monto a pagar (Gs.)</th>
+              <td><strong>{{ operacion.monto_guaranies }}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      {% else %}
+        <p class="text-muted">No se encontraron datos de la operación.</p>
+      {% endif %}
+
+      <hr>
+
+      <!-- Medio de pago -->
+      <h5 class="mb-3">Medio de Pago</h5>
+      {% if medio %}
+        <table class="table table-sm">
+          <tbody>
+            <tr>
+              <th scope="row">Nombre</th>
+              <td>{{ medio.nombre }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Tipo</th>
+              <td>{{ medio.tipo }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Comisión</th>
+              <td>
+                {% if medio.comision %}
+                  {{ medio.comision }}
+                {% else %}
+                  <span class="text-muted">No aplica</span>
+                {% endif %}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      {% else %}
+        <p class="text-warning">No seleccionaste un medio de pago.</p>
+      {% endif %}
+
+    </div>
+    <div class="card-footer text-end">
+      <a href="{% url 'divisas:compra' %}" class="btn btn-outline-secondary me-2">
+        <i class="bi bi-arrow-left"></i> Volver
+      </a>
+      
+      <!-- Formulario para crear transacción -->
+      <form method="post" action="{% url 'transacciones:crear_desde_compra' %}" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success">
+          <i class="bi bi-check-circle"></i> Confirmar Compra
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -17,7 +17,7 @@ from simulador.views import calcular_simulacion_api
 from django.http import JsonResponse
 import json
 from django.test import RequestFactory
-from clientes.views import get_medio_acreditacion_seleccionado
+from clientes.views import get_medio_acreditacion_seleccionado, get_medio_pago_seleccionado
 from decimal import Decimal, InvalidOperation
 import logging
 
@@ -555,3 +555,170 @@ def post(self, request, *args, **kwargs):
     request.session.modified = True
 
     return redirect("divisas:venta_sumario")
+
+
+# divisas/views.py
+
+from .forms import CompraDivisaForm
+
+class CompraDivisaView(LoginRequiredMixin, FormView):
+    template_name = "operaciones/compra.html"
+    form_class = CompraDivisaForm
+
+    def form_valid(self, form):
+        divisa = form.cleaned_data['divisa']
+        monto = form.cleaned_data['monto']
+
+        payload = {
+            "tipo_operacion": "compra",
+            "monto": str(monto),  # Monto en guaraníes
+            "moneda": divisa.code
+        }
+
+        rf = RequestFactory()
+        post_req = rf.post(
+            '/simulador/calcular/',
+            data=json.dumps(payload),
+            content_type='application/json'
+        )
+        post_req.session = self.request.session
+        post_req.user = self.request.user
+
+        resp = calcular_simulacion_api(post_req)
+        try:
+            data = json.loads(resp.content)
+        except Exception:
+            form.add_error(None, "Error interno al comunicarse con el simulador.")
+            return self.form_invalid(form)
+
+        if not data.get("success"):
+            form.add_error(None, data.get("error", "Error en la simulación"))
+            return self.form_invalid(form)
+
+        # Convertir Decimals antes de guardar
+        self.request.session['compra_resultado'] = decimal_to_str(data)
+        self.request.session.modified = True
+
+        return redirect('divisas:compra_confirmacion')
+
+
+class CompraConfirmacionView(LoginRequiredMixin, TemplateView):
+    template_name = "operaciones/compra_confirmacion.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['resultado'] = self.request.session.get('compra_resultado')
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        resultado = request.session.get("compra_resultado")
+        if not resultado:
+            messages.error(request, "No hay simulación para confirmar.")
+            return redirect("divisas:compra")
+
+        # Guardar operación simplificada en sesión
+        operacion = {
+            "tipo": "compra",
+            "divisa": resultado.get("moneda_code"),
+            "divisa_nombre": resultado.get("moneda_nombre"),
+            "monto_guaranies": resultado.get("monto_original"),  # Lo que paga en Gs.
+            "monto_divisa": resultado.get("monto_resultado"),    # Lo que recibe en divisa
+            "tasa_cambio": resultado.get("tasa_aplicada"),
+            "comision": resultado.get("comision_aplicada"),
+        }
+        request.session["operacion"] = operacion
+        request.session.modified = True
+
+        # Para compra vamos a seleccionar medio de PAGO (no acreditación)
+        return redirect("clientes:seleccionar_medio_pago")
+
+
+class SumarioCompraView(TemplateView):
+    template_name = "operaciones/compra_sumario.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["operacion"] = self.request.session.get("operacion")
+        
+        # Para compra usamos medio de pago (no acreditación)
+        medio_inst = get_medio_pago_seleccionado(self.request)
+        medio_ctx = None
+
+        if medio_inst:
+            if hasattr(medio_inst, "medio_de_pago"):
+                medio_model = medio_inst.medio_de_pago
+                tipo_label = "No definido"
+                try:
+                    if medio_model.tipo_medio:
+                        from medios_pago.models import TIPO_MEDIO_CHOICES
+                        tipo_dict = dict(TIPO_MEDIO_CHOICES)
+                        tipo_label = tipo_dict.get(medio_model.tipo_medio, f"Tipo desconocido: {medio_model.tipo_medio}")
+                    else:
+                        api_info = medio_model.get_api_info()
+                        tipo_label = api_info.get("nombre_usuario", "No definido")
+                except Exception:
+                    tipo_label = "No definido"
+
+                try:
+                    com = Decimal(str(medio_model.comision_porcentaje))
+                    com_str = f"{com:.2f}%"
+                except Exception:
+                    com_str = str(medio_model.comision_porcentaje)
+
+                medio_ctx = {
+                    "id": medio_inst.id,
+                    "nombre": medio_model.nombre,
+                    "tipo": tipo_label,
+                    "comision": com_str,
+                }
+
+            elif isinstance(medio_inst, dict):
+                medio_id = medio_inst.get("id")
+                if medio_id:
+                    try:
+                        from clientes.models import ClienteMedioDePago
+                        medio_real = ClienteMedioDePago.objects.select_related('medio_de_pago').get(id=medio_id)
+                        medio_model = medio_real.medio_de_pago
+                        
+                        tipo_label = "No definido"
+                        try:
+                            if medio_model.tipo_medio:
+                                from medios_pago.models import TIPO_MEDIO_CHOICES
+                                tipo_dict = dict(TIPO_MEDIO_CHOICES)
+                                tipo_label = tipo_dict.get(medio_model.tipo_medio, f"Tipo desconocido: {medio_model.tipo_medio}")
+                            else:
+                                api_info = medio_model.get_api_info()
+                                tipo_label = api_info.get("nombre_usuario", "No definido")
+                        except Exception:
+                            tipo_label = "No definido"
+                        
+                        try:
+                            com = Decimal(str(medio_model.comision_porcentaje))
+                            com_str = f"{com:.2f}%"
+                        except Exception:
+                            com_str = str(medio_model.comision_porcentaje)
+                        
+                        medio_ctx = {
+                            "id": medio_id,
+                            "nombre": medio_inst.get("nombre", medio_model.nombre),
+                            "tipo": tipo_label,
+                            "comision": com_str,
+                        }
+                        
+                    except Exception as e:
+                        logger.error(f"Error al obtener medio real: {e}")
+                        medio_ctx = {
+                            "id": medio_inst.get("id"),
+                            "nombre": medio_inst.get("nombre"),
+                            "tipo": "Error al determinar tipo",
+                            "comision": "No aplica" if medio_inst.get("comision") == "0.000" else f"{medio_inst.get('comision', '0')}%",
+                        }
+
+        ctx["medio"] = medio_ctx
+        return ctx
+    
+
+from django.shortcuts import render
+
+def seleccionar_operacion_view(request):
+    return render(request, "operaciones/seleccionar_operacion.html")

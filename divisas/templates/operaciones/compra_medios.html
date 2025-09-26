@@ -12,9 +12,9 @@
                         <div>
                             <h2 class="h4 mb-1">
                                 <i class="fas fa-credit-card text-primary me-2"></i>
-                                Medios de Acreditación
+                                Medios de Pago
                             </h2>
-                            <p class="mb-0 text-muted">Seleccione el medio para realizar el pago/transferencia</p>
+                            <p class="mb-0 text-muted">Seleccione el medio para realizar la compra</p>
                         </div>
                         <div class="text-end">
                             <span class="badge bg-primary fs-6">{{ total_medios }} medios activos</span>
@@ -33,7 +33,7 @@
         </div>
     </div>
 
-    <!-- Medios de Acreditación -->
+    <!-- Medios de Pago -->
     <div class="row">
         {% if medios_activos %}
             {% for medio in medios_activos %}
@@ -119,10 +119,10 @@
                 <div class="card">
                     <div class="card-body text-center py-5">
                         <i class="fas fa-credit-card fa-4x text-muted mb-3"></i>
-                        <h3 class="text-muted">No hay medios de acreditación disponibles</h3>
+                        <h3 class="text-muted">No hay medios de pago disponibles</h3>
                         <p class="text-muted mb-4">
                             Este cliente no tiene medios de pago activos configurados. 
-                            Es necesario configurar al menos un medio de acreditación para realizar operaciones.
+                            Es necesario configurar al menos un medio de pago para realizar la compra.
                         </p>
                         <div class="d-flex justify-content-center gap-3">
                             <a href="{% url 'clientes:medios_pago_cliente' %}" class="btn btn-primary">
@@ -153,7 +153,7 @@
                     <button id="btn-continuar-operacion"
                             class="btn btn-success"
                             data-medio-id="{{ medio_seleccionado.id }}">
-                        Continuar Operación
+                        Continuar Compra
                     </button>
                         <button class="btn btn-outline-secondary btn-sm" id="btn-cambiar-medio">
                             <i class="fas fa-exchange-alt me-1"></i>Cambiar
@@ -168,7 +168,7 @@
 
 {% block extra_js %}
 <script>
-// Seleccionar medio de acreditación (tarjeta en la grilla)
+// Seleccionar medio de pago (tarjeta en la grilla)
 $('.btn-seleccionar-medio').on('click', function() {
     const medioId = $(this).data('medio-id');
     const medioNombre = $(this).data('medio-nombre');
@@ -189,16 +189,22 @@ $('.btn-seleccionar-medio').on('click', function() {
             'csrfmiddlewaretoken': '{{ csrf_token }}'
         },
         success: function(response) {
-            if (response.success && response.redirect_url) {
-                // Redirige inmediatamente al sumario
-                window.location.href = response.redirect_url;
-                return;
-            } 
-            
-            mostrarMensajeError(response.error || 'Error al seleccionar el medio');
-            $btn.html(originalHtml).prop('disabled', false);
-        },
+            if (response.success) {
+                mostrarMensajeExito(response.message || 'Medio seleccionado correctamente');
 
+                if (response.redirect_url) {
+                    setTimeout(() => {
+                        window.location.href = response.redirect_url;
+                    }, 1000);
+                } else {
+                    window.location.reload();
+                }
+            } else {
+                mostrarMensajeError(response.error || 'Error al seleccionar el medio');
+                $btn.html(originalHtml);
+                $btn.prop('disabled', false);
+            }
+        },
         error: function() {
             mostrarMensajeError('Error de conexión');
             $btn.html(originalHtml);

@@ -5,10 +5,10 @@
     <div class="row justify-content-center">
         <div class="col-xl-7 col-lg-8">
             <div class="d-flex align-items-center mb-4">
-                <a href="{% url 'divisas:venta' %}" class="btn btn-outline-secondary btn-back me-3" aria-label="Volver a Venta de Divisas">
+                <a href="{% url 'divisas:compra' %}" class="btn btn-outline-secondary btn-back me-3" aria-label="Volver a Compra de Divisas">
                     <i class="bi bi-arrow-left fs-5"></i>
                 </a>
-                <h2 class="mb-0 text-dark fw-bold">Confirmar venta de divisas</h2>
+                <h2 class="mb-0 text-dark fw-bold">Confirmar compra de divisas</h2>
             </div>
             {% if resultado %}
             <div class="card shadow-lg border-0 rounded-5 mb-4 overflow-hidden">
@@ -25,35 +25,35 @@
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <div class="d-flex align-items-center p-3 border rounded-4 h-100 bg-light-subtle detail-box">
-                                <i class="bi bi-currency-exchange text-primary me-3 fs-3"></i>
+                                <i class="bi bi-cash-stack text-success me-3 fs-3"></i>
                                 <div>
-                                    <p class="mb-0 text-muted small">Divisa</p>
-                                    <h5 class="mb-0 fw-semibold">{{ resultado.moneda_code }} - {{ resultado.moneda_nombre }}</h5>
+                                    <p class="mb-0 text-muted small">Vas a pagar</p>
+                                    <h5 class="mb-0 fw-semibold">{{ resultado.monto_original }} Gs.</h5>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="d-flex align-items-center p-3 border rounded-4 h-100 bg-light-subtle detail-box">
-                                <i class="bi bi-cash-coin text-primary me-3 fs-3"></i>
+                                <i class="bi bi-currency-exchange text-success me-3 fs-3"></i>
                                 <div>
-                                    <p class="mb-0 text-muted small">Monto ingresado</p>
-                                    <h5 class="mb-0 fw-semibold">{{ resultado.monto_original }} {{ resultado.moneda_code }}</h5>
+                                    <p class="mb-0 text-muted small">Divisa a recibir</p>
+                                    <h5 class="mb-0 fw-semibold">{{ resultado.moneda_code }} - {{ resultado.moneda_nombre }}</h5>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="text-center p-4 p-md-5 rounded-4 mb-4 highlight-result">
-                        <p class="text-white mb-2 fs-5 fw-light">Recibirás</p>
-                        <h1 class="text-white mb-0 display-4 fw-bolder"> Gs. {{ resultado.monto_resultado|floatformat:0 }}</h1>
+                    <div class="text-center p-4 p-md-5 rounded-4 mb-4 highlight-result-success">
+                        <p class="text-white mb-2 fs-5 fw-light">Recibirás (en divisa extranjera)</p>
+                        <h1 class="text-white mb-0 display-4 fw-bolder">{{ resultado.monto_resultado|floatformat:2 }} {{ resultado.moneda_code }}</h1>
                     </div>
                     <div class="row justify-content-center">
                         <div class="col-md-8">
                             <div class="p-3 border rounded-4 text-center rate-box">
                                 <p class="mb-1 text-muted small fw-medium">
-                                    <i class="bi bi-graph-up me-1 text-success"></i> Tasa de Venta Aplicada
+                                    <i class="bi bi-graph-up me-1 text-success"></i> Tasa de Compra Aplicada
                                 </p>
-                                <h5 class="mb-0 fw-bold text-dark"> 1 {{ resultado.moneda_code }} = Gs. {{ resultado.tasa_aplicada|floatformat:0 }}</h5>
+                                <h5 class="mb-0 fw-bold text-dark"> Gs. {{ resultado.tasa_aplicada|floatformat:0 }} = 1 {{ resultado.moneda_code }}</h5>
                             </div>
                         </div>
                     </div>
@@ -62,12 +62,12 @@
             <div class="d-flex justify-content-between gap-3 mt-4">
                 <form method="post" action="" class="w-100">
                     {% csrf_token %}
-                    <button class="btn btn-primary-gradient btn-lg rounded-4 w-100 py-3 fw-bold shadow-sm" type="submit">
+                    <button class="btn btn-success-gradient btn-lg rounded-4 w-100 py-3 fw-bold shadow-sm" type="submit">
                         <i class="bi bi-check-circle me-2"></i> Confirmar y continuar
                     </button>
                 </form>
                 
-                <a href="{% url 'divisas:venta' %}" class="btn btn-outline-secondary btn-lg rounded-4 py-3 px-4 fw-bold">
+                <a href="{% url 'divisas:compra' %}" class="btn btn-outline-secondary btn-lg rounded-4 py-3 px-4 fw-bold">
                     <i class="bi bi-x-circle me-2"></i> Cancelar
                 </a>
             </div>
@@ -77,8 +77,8 @@
                     <i class="bi bi-exclamation-circle display-1 text-warning mb-3"></i>
                     <h4 class="mt-3 text-dark fw-bold">No hay simulación disponible</h4>
                     <p class="text-muted">Parece que no hay datos de conversión para mostrar. Por favor, inicia una nueva operación.</p>
-                    <a href="{% url 'divisas:venta' %}" class="btn btn-primary-gradient mt-3 rounded-4 py-2 px-4">
-                        <i class="bi bi-currency-exchange me-2"></i> Iniciar Venta
+                    <a href="{% url 'divisas:compra' %}" class="btn btn-success-gradient mt-3 rounded-4 py-2 px-4">
+                        <i class="bi bi-currency-exchange me-2"></i> Iniciar Compra
                     </a>
                 </div>
             </div>
@@ -88,38 +88,38 @@
 </div>
 
 <style>
-    /* Custom Styles for Aesthetic Enhancement */
+    /* Custom Styles for Aesthetic Enhancement (Consistent with the previous template) */
     .my-5 {
         margin-top: 4rem !important;
         margin-bottom: 4rem !important;
     }
 
-    /* Gradient for Success Header */
+    /* Gradient for Success Header and Primary Button (Green theme for Buy/Receive Foreign Currency) */
     .bg-success-gradient {
         background: linear-gradient(135deg, #198754, #0f6848); /* Primary Success/Green */
     }
 
-    /* Highlighted Result Section */
-    .highlight-result {
+    /* Highlighted Result Section (Green theme) */
+    .highlight-result-success {
         background: linear-gradient(135deg, #198754, #28a745);
         box-shadow: 0 10px 20px rgba(25, 135, 84, 0.3); /* Green shadow */
     }
     
-    .highlight-result h1 {
+    .highlight-result-success h1 {
         text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
     }
     
-    /* Primary Gradient Button (for Confirm) */
-    .btn-primary-gradient {
-        background: linear-gradient(45deg, #007bff, #0056b3); /* A rich blue gradient */
+    /* Success Gradient Button (for Confirm) */
+    .btn-success-gradient {
+        background: linear-gradient(45deg, #198754, #0f6848); /* Green gradient */
         border: none;
         color: white;
         transition: all 0.3s ease;
     }
 
-    .btn-primary-gradient:hover {
-        background: linear-gradient(45deg, #0056b3, #003a75);
-        box-shadow: 0 6px 12px rgba(0, 123, 255, 0.4);
+    .btn-success-gradient:hover {
+        background: linear-gradient(45deg, #0f6848, #094c34);
+        box-shadow: 0 6px 12px rgba(25, 135, 84, 0.4);
         transform: translateY(-1px);
     }
     
@@ -138,7 +138,7 @@
 
     /* Subtle hover effect for detail boxes */
     .detail-box:hover {
-        box-shadow: 0 0 10px rgba(0, 123, 255, 0.1);
+        box-shadow: 0 0 10px rgba(25, 135, 84, 0.1); /* Subtle green shadow on hover */
         transform: translateY(-1px);
         transition: all 0.3s ease;
     }
