@@ -4,7 +4,6 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from .models import BancoUser, Cuenta, Transferencia, PagoTarjeta, TarjetaDebito, TarjetaCredito
-from billetera.models import TransferenciaBilleteraABanco
 from .forms import TransferenciaForm
 from django.contrib import messages
 from django.db import transaction
@@ -68,63 +67,53 @@ def dashboard(request):
     }
     return render(request, "banco/dashboard.html", context)
 
-# --------- TRANSFERENCIAS Y PAGOS ---------
+# --------- TRANSFERENCIAS (solo con cuenta corriente) ---------
+# views.py
+
 def transferir(request):
     user = get_logged_user(request)
     if not user:
         return redirect("banco:login")
 
-    form = TransferenciaForm(request.POST or None)
+    # ✅ Pasamos el usuario al form
+    form = TransferenciaForm(request.POST or None, user=user)
     error = None
 
     if request.method == "POST":
         if form.is_valid():
-            tipo_pago = form.cleaned_data['tipo_pago']
             monto = form.cleaned_data['monto']
+            entidad_destino = form.cleaned_data['entidad_destino']
+            numero_cuenta_destino = form.cleaned_data['numero_cuenta_destino']
 
             try:
                 with transaction.atomic():
-                    if tipo_pago == 'TRANSFERENCIA':
-                        entidad_destino = form.cleaned_data['entidad_destino']
-                        numero_cuenta_destino = form.cleaned_data['numero_cuenta_destino']
+                    cuenta_origen = user.cuentas.first()
+                    cuenta_destino = Cuenta.objects.get(
+                        entidad=entidad_destino,
+                        numero_cuenta=numero_cuenta_destino
+                    )
 
-                        cuenta_origen = user.cuentas.first()
-                        cuenta_destino = Cuenta.objects.get(
-                            entidad=entidad_destino, numero_cuenta=numero_cuenta_destino
+                    # 🚨 Extra validación redundante (por seguridad)
+                    if cuenta_destino.usuario == user:
+                        error = "No podés transferir a tu propia cuenta."
+                    elif cuenta_origen.saldo < monto:
+                        error = "Saldo insuficiente en la cuenta."
+                    else:
+                        cuenta_origen.saldo -= monto
+                        cuenta_destino.saldo += monto
+                        cuenta_origen.save()
+                        cuenta_destino.save()
+
+                        Transferencia.objects.create(
+                            cuenta_origen=cuenta_origen,
+                            cuenta_destino=cuenta_destino,
+                            monto=monto
                         )
-
-                        if cuenta_origen.saldo < monto:
-                            error = "Saldo insuficiente en la cuenta."
-                        else:
-                            cuenta_origen.saldo -= monto
-                            cuenta_destino.saldo += monto
-                            cuenta_origen.save()
-                            cuenta_destino.save()
-                            Transferencia.objects.create(
-                                cuenta_origen=cuenta_origen,
-                                cuenta_destino=cuenta_destino,
-                                monto=monto
-                            )
-                            messages.success(request, f"Transferencia de ₲{monto} realizada con éxito.")
-                            return redirect("banco:dashboard")
-
-                    elif tipo_pago == 'PAGO_DEBITO':
-                        tarjeta_debito = user.tarjetas_debito.first()
-                        if not tarjeta_debito:
-                            error = "No tenés tarjeta de débito."
-                        else:
-                            PagoTarjeta.objects.create(tarjeta_debito=tarjeta_debito, monto=monto)
-                            messages.success(request, f"Pago con débito de ₲{monto} realizado con éxito.")
-                            return redirect("banco:dashboard")
-
-                    elif tipo_pago == 'PAGO_CREDITO':
-                        tarjeta_credito = user.tarjetas_credito.first()
-                        if not tarjeta_credito:
-                            error = "No tenés tarjeta de crédito."
-                        else:
-                            PagoTarjeta.objects.create(tarjeta_credito=tarjeta_credito, monto=monto)
-                            messages.success(request, f"Pago con crédito de ₲{monto} realizado con éxito.")
-                            return redirect("banco:dashboard")
+                        messages.success(
+                            request,
+                            f"Transferencia de ₲{monto} realizada con éxito."
+                        )
+                        return redirect("banco:dashboard")
 
             except Cuenta.DoesNotExist:
                 error = "La cuenta de destino no existe."
@@ -140,6 +129,7 @@ def transferir(request):
         "error": error,
     }
     return render(request, "banco/transferir.html", context)
+
 
 # --------- HISTORIAL ---------
 # views.py

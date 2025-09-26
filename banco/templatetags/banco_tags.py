@@ -1,6 +1,5 @@
 # banco/templatetags/banco_tags.py
 from django import template
-from billetera.models import TransferenciaBilleteraABanco
 
 register = template.Library()
 

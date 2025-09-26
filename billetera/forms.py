@@ -1,116 +1,174 @@
 # billetera/forms.py
 from django import forms
-from decimal import Decimal, InvalidOperation
-from banco.models import EntidadBancaria, Cuenta
+from django.core.exceptions import ValidationError
+from .models import UsuarioBilletera, Billetera, RecargaBilletera, TransferenciaBilletera
+from banco.models import EntidadBancaria, TarjetaDebito
+from decimal import Decimal
 
-# --------- FORMULARIO DE RECARGA DESDE BANCO (MEJORADO) ---------
-class RecargaForm(forms.Form):
-    cuenta_origen = forms.ModelChoiceField(
-        queryset=Cuenta.objects.none(),
-        label="Selecciona la cuenta de origen",
-        widget=forms.Select(attrs={"class": "form-control"}),
-        empty_label="-- Selecciona una cuenta --"
-    )
-    monto = forms.DecimalField(
-        label="Monto a recargar",
-        max_digits=12,
-        decimal_places=2,
-        min_value=Decimal('0.01'),
-        max_value=Decimal('1000000.00'),
-        widget=forms.NumberInput(attrs={
-            "class": "form-control",
-            "step": "0.01",
-            "placeholder": "Ejemplo: 10000.00"
-        })
-    )
 
-    def clean_monto(self):
-        monto = self.cleaned_data.get("monto")
-        if not monto:
-            raise forms.ValidationError("El monto es requerido.")
+class RegistroUsuarioForm(forms.ModelForm):
+    password_confirm = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label="Confirmar contraseña"
+    )
+    
+    class Meta:
+        model = UsuarioBilletera
+        fields = ['numero_celular', 'nombre', 'apellido', 'password']
+        widgets = {
+            'numero_celular': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+595981234567'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'apellido': forms.TextInput(attrs={'class': 'form-control'}),
+            'password': forms.PasswordInput(attrs={'class': 'form-control'}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('password')
+        password_confirm = cleaned_data.get('password_confirm')
         
-        # ✅ Validación adicional con Decimal
-        try:
-            monto_decimal = Decimal(str(monto))
-            if monto_decimal <= 0:
-                raise forms.ValidationError("El monto debe ser mayor a cero.")
-            if monto_decimal > Decimal('1000000'):
-                raise forms.ValidationError("El monto máximo es ₲1,000,000.")
-            return monto_decimal
-        except (InvalidOperation, ValueError):
-            raise forms.ValidationError("Ingrese un monto válido.")
+        if password and password_confirm and password != password_confirm:
+            raise ValidationError("Las contraseñas no coinciden.")
+        
+        return cleaned_data
 
-# --------- FORMULARIO DE TRANSFERENCIA DESDE BILLETERA A OTRO USUARIO (MEJORADO) ---------
-class BilleteraTransferenciaForm(forms.Form):
-    destinatario_telefono = forms.CharField(
-        label="Número de teléfono del destinatario",
-        max_length=20,
+
+class CrearBilleteraForm(forms.ModelForm):
+    class Meta:
+        model = Billetera
+        fields = ['entidad']
+        widgets = {
+            'entidad': forms.Select(attrs={'class': 'form-control'})
+        }
+
+
+class LoginForm(forms.Form):
+    numero_celular = forms.CharField(
+        max_length=15,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+595981234567'})
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'})
+    )
+
+
+class RecargaBilleteraForm(forms.Form):
+    numero_tarjeta = forms.CharField(
+        max_length=16,
         widget=forms.TextInput(attrs={
-            "class": "form-control",
-            "placeholder": "Ejemplo: 595981123456"
-        })
+            'class': 'form-control', 
+            'placeholder': '1234567890123456',
+            'maxlength': '16'
+        }),
+        label="Número de tarjeta"
+    )
+    mes_vencimiento = forms.IntegerField(
+        min_value=1, 
+        max_value=12,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '12'}),
+        label="Mes de vencimiento"
+    )
+    anho_vencimiento = forms.IntegerField(
+        min_value=2024,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '2025'}),
+        label="Año de vencimiento"
+    )
+    cvv = forms.CharField(
+        max_length=3,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control', 
+            'placeholder': '123',
+            'maxlength': '3'
+        }),
+        label="CVV"
     )
     monto = forms.DecimalField(
-        label="Monto a transferir",
         max_digits=12,
         decimal_places=2,
-        min_value=Decimal('0.01'),
-        max_value=Decimal('500000.00'),
-        widget=forms.NumberInput(attrs={
-            "class": "form-control",
-            "step": "0.01"
-        })
+        min_value=Decimal('1000.00'),
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '50000.00'}),
+        label="Monto a recargar"
     )
 
-    def clean_monto(self):
-        monto = self.cleaned_data["monto"]
-        if monto <= 0:
-            raise forms.ValidationError("El monto debe ser mayor a cero.")
-        return monto
+    def clean(self):
+        cleaned_data = super().clean()
+        numero_tarjeta = cleaned_data.get('numero_tarjeta')
+        mes_vencimiento = cleaned_data.get('mes_vencimiento')
+        anho_vencimiento = cleaned_data.get('anho_vencimiento')
+        cvv = cleaned_data.get('cvv')
+        monto = cleaned_data.get('monto')
 
-    def clean_destinatario_telefono(self):
-        telefono = self.cleaned_data["destinatario_telefono"]
-        # Validación básica del formato de teléfono
-        if not telefono.isdigit() or len(telefono) < 8:
-            raise forms.ValidationError("Ingrese un número de teléfono válido.")
-        return telefono
+        if numero_tarjeta and mes_vencimiento and anho_vencimiento and cvv:
+            try:
+                tarjeta = TarjetaDebito.objects.get(
+                    numero=numero_tarjeta,
+                    mes_vencimiento=mes_vencimiento,
+                    anho_vencimiento=anho_vencimiento,
+                    cvv=cvv
+                )
+                
+                if not tarjeta.cuenta:
+                    raise ValidationError("La tarjeta no tiene cuenta asociada.")
+                
+                if monto and tarjeta.cuenta.saldo < monto:
+                    raise ValidationError(f"Saldo insuficiente. Saldo disponible: ₲{tarjeta.cuenta.saldo}")
+                
+                cleaned_data['tarjeta_debito'] = tarjeta
+                
+            except TarjetaDebito.DoesNotExist:
+                raise ValidationError("Los datos de la tarjeta no son válidos.")
+        
+        return cleaned_data
 
-# --------- FORMULARIO DE TRANSFERENCIA DESDE BILLETERA A CUENTA BANCARIA (MEJORADO) ---------
-class BilleteraABancoForm(forms.Form):
+
+class TransferirFondosForm(forms.Form):
     entidad_destino = forms.ModelChoiceField(
         queryset=EntidadBancaria.objects.all(),
-        label="Entidad bancaria destino",
-        widget=forms.Select(attrs={"class": "form-select"}),
-        empty_label="-- Selecciona un banco --"
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label="Entidad de destino"
     )
-    numero_cuenta_destino = forms.CharField(
-        label="Número de cuenta destino",
-        max_length=20,
-        widget=forms.TextInput(attrs={
-            "class": "form-control",
-            "placeholder": "Ejemplo: CUENTA001"
-        })
+    numero_celular_destino = forms.CharField(
+        max_length=15,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+595981234567'}),
+        label="Número de celular de destino"
     )
     monto = forms.DecimalField(
-        label="Monto a transferir",
         max_digits=12,
         decimal_places=2,
-        min_value=Decimal('0.01'),
-        max_value=Decimal('500000.00'),
-        widget=forms.NumberInput(attrs={
-            "class": "form-control",
-            "step": "0.01"
-        })
+        min_value=Decimal('1000.00'),
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '50000.00'}),
+        label="Monto a enviar"
     )
 
-    def clean_monto(self):
-        monto = self.cleaned_data["monto"]
-        if monto <= 0:
-            raise forms.ValidationError("El monto debe ser mayor a cero.")
-        return monto
+    def __init__(self, billetera_origen=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.billetera_origen = billetera_origen
 
-    def clean_numero_cuenta_destino(self):
-        numero_cuenta = self.cleaned_data["numero_cuenta_destino"]
-        if not numero_cuenta.strip():
-            raise forms.ValidationError("El número de cuenta es requerido.")
-        return numero_cuenta.strip().upper()
+    def clean(self):
+        cleaned_data = super().clean()
+        entidad_destino = cleaned_data.get('entidad_destino')
+        numero_celular_destino = cleaned_data.get('numero_celular_destino')
+        monto = cleaned_data.get('monto')
+
+        if numero_celular_destino and entidad_destino:
+            try:
+                usuario_destino = UsuarioBilletera.objects.get(numero_celular=numero_celular_destino)
+                billetera_destino = Billetera.objects.get(
+                    usuario=usuario_destino,
+                    entidad=entidad_destino,
+                    activa=True
+                )
+                cleaned_data['billetera_destino'] = billetera_destino
+                
+                if self.billetera_origen and billetera_destino == self.billetera_origen:
+                    raise ValidationError("No puedes enviarte dinero a ti mismo.")
+                
+            except UsuarioBilletera.DoesNotExist:
+                raise ValidationError("No existe un usuario con ese número de celular.")
+            except Billetera.DoesNotExist:
+                raise ValidationError("El usuario no tiene billetera en la entidad seleccionada.")
+
+        if self.billetera_origen and monto and self.billetera_origen.saldo < monto:
+            raise ValidationError(f"Saldo insuficiente. Saldo disponible: ₲{self.billetera_origen.saldo}")
+        
+        return cleaned_data
