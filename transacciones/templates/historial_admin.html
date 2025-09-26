@@ -1,0 +1,483 @@
+{% extends "base.html" %}
+
+{% block title %}Panel Administrativo - Historial de Transacciones{% endblock %}
+
+{% block extra_head %}
+
+<style>
+
+.admin-header {
+    background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+}
+.stats-row .card {
+    transition: transform 0.2s ease-in-out;
+}
+.stats-row .card:hover {
+    transform: translateY(-2px);
+}
+.transaction-table {
+    font-size: 0.9rem;
+}
+.transaction-table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+}
+.transaction-row {
+    transition: background-color 0.2s ease-in-out;
+}
+.transaction-row:hover {
+    background-color: #f8f9fa;
+}
+.status-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+.filter-section {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 0.375rem;
+}
+.search-section {
+    background-color: #e3f2fd;
+    border: 1px solid #bbdefb;
+    border-radius: 0.375rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header Administrativo -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-primary admin-header text-white py-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1">
+                                <i class="bi bi-shield-lock me-2"></i>
+                                Panel Administrativo - Transacciones
+                            </h2>
+                            <p class="mb-0 text-white">Gestión completa de todas las transacciones del sistema</p>
+                        </div>
+                        <div>
+                            <a href="{% url 'inicio' %}" class="btn btn-light me-2">
+                                <i class="bi bi-house me-1"></i>Inicio
+                            </a>
+                            <button class="btn btn-outline-light" onclick="window.print()">
+                                <i class="bi bi-printer me-1"></i>Imprimir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas Generales -->
+    {% if estadisticas %}
+    <div class="row mb-4 stats-row">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="mb-1">{{ estadisticas.total }}</h3>
+                            <p class="mb-0">Total Transacciones</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-receipt" style="font-size: 2rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="mb-1">{{ estadisticas.compras }}</h3>
+                            <p class="mb-0">Compras</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-arrow-down-circle" style="font-size: 2rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="mb-1">{{ estadisticas.ventas }}</h3>
+                            <p class="mb-0">Ventas</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-arrow-up-circle" style="font-size: 2rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="mb-1">{{ estadisticas.pendientes }}</h3>
+                            <p class="mb-0">Pendientes</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-clock" style="font-size: 2rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Filtros y Búsqueda -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-funnel me-2"></i>
+                        Filtros y Búsqueda
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <!-- Búsqueda -->
+                        <div class="col-md-12">
+                            <div class="search-section p-3 mb-3">
+                                <label for="busqueda" class="form-label fw-bold">Búsqueda Rápida</label>
+                                <input type="text" name="busqueda" id="busqueda" 
+                                       class="form-control form-control-lg" 
+                                       value="{{ filtros.busqueda }}"
+                                       placeholder="Buscar por número de transacción, nombre del cliente o cédula...">
+                            </div>
+                        </div>
+
+                        <!-- Filtros -->
+                        <div class="col-12">
+                            <div class="filter-section p-3">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label for="cliente" class="form-label">Cliente</label>
+                                        <select name="cliente" id="cliente" class="form-select">
+                                            <option value="">Todos los clientes</option>
+                                            {% for cliente in clientes %}
+                                                <option value="{{ cliente.id }}" 
+                                                        {% if filtros.cliente == cliente.id|stringformat:"s" %}selected{% endif %}>
+                                                    {{ cliente.nombre_completo }} ({{ cliente.cedula }})
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="tipo" class="form-label">Tipo</label>
+                                        <select name="tipo" id="tipo" class="form-select">
+                                            <option value="">Todos</option>
+                                            <option value="compra" {% if filtros.tipo == 'compra' %}selected{% endif %}>Compra</option>
+                                            <option value="venta" {% if filtros.tipo == 'venta' %}selected{% endif %}>Venta</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="estado" class="form-label">Estado</label>
+                                        <select name="estado" id="estado" class="form-select">
+                                            <option value="">Todos</option>
+                                            {% for estado_value, estado_display in estados_disponibles %}
+                                                <option value="{{ estado_value }}" 
+                                                        {% if filtros.estado == estado_value %}selected{% endif %}>
+                                                    {{ estado_display }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="fecha_desde" class="form-label">Desde</label>
+                                        <input type="date" name="fecha_desde" id="fecha_desde" 
+                                               class="form-control" value="{{ filtros.fecha_desde }}">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="fecha_hasta" class="form-label">Hasta</label>
+                                        <input type="date" name="fecha_hasta" id="fecha_hasta" 
+                                               class="form-control" value="{{ filtros.fecha_hasta }}">
+                                    </div>
+                                    <div class="col-md-1">
+                                        <label class="form-label">&nbsp;</label>
+                                        <div class="d-grid gap-1">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+                                            <a href="{% url 'transacciones:historial_admin' %}" class="btn btn-outline-secondary btn-sm">
+                                                <i class="bi bi-x"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Transacciones -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-table me-2"></i>
+                            Lista de Transacciones
+                        </h5>
+                        <div>
+                            {% if page_obj %}
+                                <small class="text-muted">
+                                    {{ page_obj.start_index }} - {{ page_obj.end_index }} 
+                                    de {{ page_obj.paginator.count }} resultados
+                                </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if transacciones %}
+                        <div class="table-responsive">
+                            <table class="table transaction-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Transacción</th>
+                                        <th>Cliente</th>
+                                        <th>Tipo</th>
+                                        <th>Estado</th>
+                                        <th>Divisas</th>
+                                        <th>Montos</th>
+                                        <th>Fecha</th>
+                                        <th>Procesado por</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for transaccion in transacciones %}
+                                    <tr class="transaction-row">
+                                        <td>
+                                            <div class="font-monospace fw-bold">{{ transaccion.numero_transaccion }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold">{{ transaccion.cliente.nombre_completo }}</div>
+                                            <small class="text-muted">{{ transaccion.cliente.cedula }}</small>
+                                        </td>
+                                        <td>
+                                            {% if transaccion.es_compra %}
+                                                <span class="badge bg-success status-badge">
+                                                    <i class="bi bi-arrow-down me-1"></i>COMPRA
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-primary status-badge">
+                                                    <i class="bi bi-arrow-up me-1"></i>VENTA
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if transaccion.estado == 'pendiente' %}
+                                                <span class="badge bg-warning status-badge">{{ transaccion.get_estado_display }}</span>
+                                            {% elif transaccion.estado == 'pagada' %}
+                                                <span class="badge bg-success status-badge">{{ transaccion.get_estado_display }}</span>
+                                            {% elif transaccion.estado == 'cancelada' %}
+                                                <span class="badge bg-danger status-badge">{{ transaccion.get_estado_display }}</span>
+                                            {% elif transaccion.estado == 'anulada' %}
+                                                <span class="badge bg-dark status-badge">{{ transaccion.get_estado_display }}</span>
+                                            {% elif transaccion.estado == 'a_retirar' %}
+                                                <span class="badge bg-info status-badge">{{ transaccion.get_estado_display }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary status-badge">{{ transaccion.get_estado_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="small">
+                                                <span class="badge bg-light text-dark">{{ transaccion.divisa_origen.code }}</span>
+                                                <i class="bi bi-arrow-right mx-1"></i>
+                                                <span class="badge bg-light text-dark">{{ transaccion.divisa_destino.code }}</span>
+                                            </div>
+                                            <small class="text-muted d-block">Tasa: {{ transaccion.tasa_de_cambio_aplicada }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="small">
+                                                <strong>{{ transaccion.monto_origen }} {{ transaccion.divisa_origen.code }}</strong>
+                                            </div>
+                                            <div class="small text-success">
+                                                <strong>{{ transaccion.monto_destino }} {{ transaccion.divisa_destino.code }}</strong>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="small">{{ transaccion.fecha_creacion|date:"d/m/Y" }}</div>
+                                            <div class="small text-muted">{{ transaccion.fecha_creacion|date:"H:i" }}</div>
+                                        </td>
+                                        <td>
+                                            {% if transaccion.procesado_por %}
+                                                <small>{{ transaccion.procesado_por.get_full_name|default:transaccion.procesado_por.username|truncatechars:15 }}</small>
+                                            {% else %}
+                                                <small class="text-muted">Sistema</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'transacciones:detalle' numero_transaccion=transaccion.numero_transaccion %}" 
+                                                   class="btn btn-outline-primary btn-sm" title="Ver Detalle">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                {% if transaccion.estado != 'cancelada' and transaccion.estado != 'anulada' %}
+                                                    <button class="btn btn-outline-warning btn-sm" 
+                                                            title="Cambiar Estado"
+                                                            onclick="showChangeStateModal('{{ transaccion.numero_transaccion }}', '{{ transaccion.get_estado_display }}')">
+                                                        <i class="bi bi-arrow-repeat"></i>
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                            <h4 class="text-muted mt-3">No se encontraron transacciones</h4>
+                            <p class="text-muted">Ajusta los filtros para ver más resultados</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Paginación -->
+                {% if page_obj and page_obj.has_other_pages %}
+                <div class="card-footer">
+                    <nav>
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}">
+                                        &laquo; Anterior
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.next_page_number }}">
+                                        Siguiente &raquo;
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para cambiar estado -->
+<div class="modal fade" id="changeStateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cambiar Estado de Transacción</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="changeStateForm" method="post">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="transaccion_info" class="form-label">Transacción</label>
+                        <div id="transaccion_info" class="form-control-plaintext fw-bold"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nuevo_estado" class="form-label">Nuevo Estado</label>
+                        <select name="nuevo_estado" id="nuevo_estado" class="form-select" required>
+                            <option value="">Seleccionar nuevo estado...</option>
+                            {% for estado_value, estado_display in estados_disponibles %}
+                                <option value="{{ estado_value }}">{{ estado_display }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="observaciones" class="form-label">Observaciones</label>
+                        <textarea name="observaciones" id="observaciones" class="form-control" rows="3" 
+                                  placeholder="Describe el motivo del cambio de estado..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-arrow-repeat me-2"></i>Cambiar Estado
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let changeStateModal;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar modal
+    changeStateModal = new bootstrap.Modal(document.getElementById('changeStateModal'));
+    
+    // Auto-refresh para transacciones pendientes cada 60 segundos
+    const pendienteRows = document.querySelectorAll('.transaction-row .bg-warning');
+    if (pendienteRows.length > 0) {
+        setInterval(function() {
+            if (!document.hidden) {
+                window.location.reload();
+            }
+        }, 60000);
+    }
+
+    // Manejar envío del formulario de cambio de estado
+    document.getElementById('changeStateForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Procesando...';
+        
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+    });
+});
+</script>
+
+{% endblock %}

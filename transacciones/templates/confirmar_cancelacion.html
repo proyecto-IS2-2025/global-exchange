@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Confirmar Cancelación{% endblock %}
+
+{% block extra_head %}
+<style>
+.transaction-info {
+    background-color: #f8f9fa;
+    border-left: 4px solid #ffc107;
+}
+.warning-section {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 0.375rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Confirmar Cancelación
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Información de la transacción -->
+                    <div class="transaction-info p-3 rounded mb-4">
+                        <h5 class="mb-3">Información de la Transacción</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Número de Transacción:</strong><br>
+                                   <span class="font-monospace">{{ transaccion.numero_transaccion }}</span></p>
+                                <p><strong>Tipo de Operación:</strong><br>
+                                   <span class="text-capitalize">{{ transaccion.get_tipo_operacion_display }}</span></p>
+                                <p><strong>Estado Actual:</strong><br>
+                                   <span class="badge bg-secondary">{{ transaccion.get_estado_display }}</span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Fecha de Creación:</strong><br>
+                                   {{ transaccion.fecha_creacion|date:"d/m/Y H:i" }}</p>
+                                <p><strong>Divisa:</strong><br>
+                                   {{ transaccion.divisa_origen.code }} → {{ transaccion.divisa_destino.code }}</p>
+                                <p><strong>Monto:</strong><br>
+                                   {{ transaccion.monto_origen }} {{ transaccion.divisa_origen.code }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Advertencia -->
+                    <div class="warning-section p-3 mb-4">
+                        <h5 class="text-warning mb-3">
+                            <i class="bi bi-exclamation-circle me-2"></i>
+                            Advertencia
+                        </h5>
+                        <ul class="mb-0">
+                            <li>Esta acción cancelará permanentemente la transacción</li>
+                            <li>No podrás recuperar la transacción una vez cancelada</li>
+                            <li>Si ya iniciaste algún proceso de pago, deberás contactar con soporte</li>
+                            <li>Solo se pueden cancelar transacciones en estado "Pendiente"</li>
+                        </ul>
+                    </div>
+
+                    <!-- Razón de cancelación (opcional) -->
+                    <div class="mb-4">
+                        <label for="razon" class="form-label">Razón de cancelación (opcional)</label>
+                        <textarea 
+                            class="form-control" 
+                            id="razon" 
+                            name="razon" 
+                            rows="3" 
+                            placeholder="Describe brevemente por qué deseas cancelar esta transacción..."
+                        ></textarea>
+                    </div>
+
+                    <!-- Confirmación -->
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" id="confirmCancel" required>
+                        <label class="form-check-label" for="confirmCancel">
+                            <strong>Confirmo que deseo cancelar esta transacción y entiendo que esta acción no se puede deshacer.</strong>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'transacciones:detalle' numero_transaccion=transaccion.numero_transaccion %}" 
+                           class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Volver al Detalle
+                        </a>
+                        
+                        <div>
+                            <a href="{% url 'transacciones:historial_cliente' %}" 
+                               class="btn btn-secondary me-2">
+                                <i class="bi bi-list me-2"></i>Ver Historial
+                            </a>
+                            
+                            <form method="post" class="d-inline" id="cancelForm">
+                                {% csrf_token %}
+                                <input type="hidden" name="razon_cancelacion" id="hiddenRazon">
+                                <button type="submit" class="btn btn-danger" id="cancelBtn" disabled>
+                                    <i class="bi bi-x-circle me-2"></i>Cancelar Transacción
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkbox = document.getElementById('confirmCancel');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const razonTextarea = document.getElementById('razon');
+    const hiddenRazonInput = document.getElementById('hiddenRazon');
+    const cancelForm = document.getElementById('cancelForm');
+    
+    // Habilitar/deshabilitar botón según checkbox
+    checkbox.addEventListener('change', function() {
+        cancelBtn.disabled = !this.checked;
+        if (this.checked) {
+            cancelBtn.classList.remove('btn-secondary');
+            cancelBtn.classList.add('btn-danger');
+        } else {
+            cancelBtn.classList.remove('btn-danger');
+            cancelBtn.classList.add('btn-secondary');
+        }
+    });
+    
+    // Transferir razón al campo oculto antes de enviar
+    cancelForm.addEventListener('submit', function(e) {
+        if (razonTextarea.value.trim()) {
+            hiddenRazonInput.value = razonTextarea.value.trim();
+        }
+        
+        // Confirmación final
+        if (!confirm('¿Estás absolutamente seguro de que deseas cancelar esta transacción?')) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // Deshabilitar botón para evitar doble envío
+        cancelBtn.disabled = true;
+        cancelBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Cancelando...';
+    });
+});
+</script>
+{% endblock %}

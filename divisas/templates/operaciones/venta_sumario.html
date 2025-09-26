@@ -43,45 +43,93 @@
 
       <hr>
 
-<!-- Medio de acreditación -->
-<h5 class="mb-3">Medio de Acreditación</h5>
-{% if medio %}
-  <table class="table table-sm">
-    <tbody>
-      <tr>
-        <th scope="row">Nombre</th>
-        <td>{{ medio.nombre }}</td>
-      </tr>
-      <tr>
-        <th scope="row">Tipo</th>
-        <td>{{ medio.tipo }}</td>
-      </tr>
-      <tr>
-        <th scope="row">Comisión</th>
-        <td>
-          {% if medio.comision %}
-            {{ medio.comision }}
-          {% else %}
-            <span class="text-muted">No aplica</span>
-          {% endif %}
-        </td>
-      </tr>
-    </tbody>
-  </table>
-{% else %}
-  <p class="text-warning">No seleccionaste un medio de acreditación.</p>
-{% endif %}
-
+      <!-- Medio de acreditación -->
+      <h5 class="mb-3">Medio de Acreditación</h5>
+      {% if medio %}
+        <table class="table table-sm">
+          <tbody>
+            <tr>
+              <th scope="row">Nombre</th>
+              <td>{{ medio.nombre }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Tipo</th>
+              <td>{{ medio.tipo }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Comisión</th>
+              <td>
+                {% if medio.comision %}
+                  {{ medio.comision }}
+                {% else %}
+                  <span class="text-muted">No aplica</span>
+                {% endif %}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      {% else %}
+        <p class="text-warning">No seleccionaste un medio de acreditación.</p>
+      {% endif %}
 
     </div>
     <div class="card-footer text-end">
-      <a href="{% url 'clientes:seleccionar_medio_acreditacion' %}" class="btn btn-outline-secondary">
+      <a href="{% url 'clientes:seleccionar_medio_acreditacion' %}" class="btn btn-outline-secondary me-2">
         <i class="bi bi-arrow-left"></i> Volver
       </a>
-      <a href="#" class="btn btn-success">
-        <i class="bi bi-check-circle"></i> Confirmar Operación
-      </a>
+      
+      <!-- Formulario para crear transacción -->
+      <form method="post" action="{% url 'transacciones:crear_desde_venta' %}" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success">
+          <i class="bi bi-check-circle"></i> Confirmar Operación
+        </button>
+      </form>
     </div>
   </div>
 </div>
+
+<!-- Modal de confirmación (opcional, para UX extra) -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirmar Operación</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        ¿Estás seguro de que deseas confirmar esta operación de venta?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success" id="confirmSubmit">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Opcional: agregar confirmación extra con modal
+  const form = document.querySelector('form[action*="crear_desde_venta"]');
+  const confirmBtn = document.querySelector('.btn-success');
+  
+  if (form && confirmBtn) {
+    confirmBtn.addEventListener('click', function(e) {
+      // Cambiar a true para activar modal de confirmación
+      const useModal = false;
+      
+      if (useModal) {
+        e.preventDefault();
+        const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+        modal.show();
+        
+        document.getElementById('confirmSubmit').onclick = function() {
+          form.submit();
+        };
+      }
+    });
+  }
+});
+</script>
 {% endblock %}
