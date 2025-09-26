@@ -18,12 +18,12 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir gunicorn "poetry==${POETRY_VERSION}"
 
-COPY pyproject.toml poetry.lock* ./\
+COPY pyproject.toml poetry.lock* ./
 RUN poetry config virtualenvs.create false \
     && poetry install --no-interaction --no-ansi --no-root
 
 # Copia los archivos del proyecto y recolecta estáticos
-COPY . .
+COPY . ./
 RUN python manage.py collectstatic --noinput
 
 # --- Etapa 2: Final (la imagen ligera de producción) ---
@@ -38,17 +38,19 @@ COPY --from=builder /app /app
 # Instala las dependencias y el Gunicorn
 COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 COPY --from=builder /usr/local/bin/gunicorn /usr/local/bin/gunicorn
-COPY --from=builder /home/appuser/.local/bin /home/appuser/.local/bin
+
+# Elimina esta línea, ya que el directorio no se crea
+# COPY --from=builder /home/appuser/.local/bin /home/appuser/.local/bin
 
 WORKDIR /app
 
 # Otorga permisos al usuario
-RUN chmod +x scripts/entrypoint.sh \
+RUN chmod +x scripts/prod-entrypoint.sh \
     && chown -R appuser:appuser /app
 
 # Define el punto de entrada y el comando
 USER appuser
 
 EXPOSE 8000
-ENTRYPOINT ["/app/scripts/entrypoint.sh"]
+ENTRYPOINT ["/app/scripts/prod-entrypoint.sh"]
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "casa_de_cambios.wsgi:application"]

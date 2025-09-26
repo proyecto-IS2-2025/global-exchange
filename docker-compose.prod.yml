@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   web:
     container_name: glx-web-prod
@@ -11,10 +9,19 @@ services:
       - static_volume:/app/staticfiles
       # Si manejas archivos de media, descomenta la siguiente línea
       # - media_volume:/app/mediafiles
-    env_file:
-      - ./.env.prod
+    # Las variables de entorno ahora se definen aquí manualmente
+    environment:
+      - SECRET_KEY=clave_secreta_segura
+      - DEBUG=False
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      - DB_HOST=db
+      - DB_NAME=glex-prod
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_PORT=5432
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   nginx:
     container_name: glx-nginx
@@ -34,12 +41,21 @@ services:
     container_name: glx-db-prod
     image: postgres:17
     restart: always
+    # Las variables de entorno se definen aquí, en vez de usar un archivo
     environment:
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=glex-prod
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    user: postgres
     volumes:
       - postgres_data_prod:/var/lib/postgresql/data/
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $$POSTGRES_DB -U $$POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
 volumes:
   postgres_data_prod:

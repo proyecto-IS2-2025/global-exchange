@@ -76,7 +76,7 @@ docker-loaddata:
 	docker exec glx-web python manage.py loaddata users_data.json
 	docker exec glx-web python manage.py loaddata clientes_data.json
 	docker exec glx-web python manage.py loaddata divisas_initial_data.json
-#	python manage.py loaddata medios_pago_initial_data.json
+#	python manage.py loaddata medios_pago_initial_data.json omitir de momento
 	@echo "Datos iniciales cargados."
 
 docker-setup:
@@ -89,3 +89,12 @@ run:
 	@echo "Iniciando la aplicación..."
 	poetry run python manage.py runserver
 	@echo "Aplicación iniciada."
+
+prod-loaddata:
+	@echo "Cargando datos iniciales en producción..."
+	docker exec glx-web-prod python manage.py loaddata roles_data.json
+	docker exec glx-web-prod python manage.py loaddata users_data.json
+	docker exec glx-web-prod python manage.py loaddata clientes_data.json
+	docker exec glx-web-prod python manage.py loaddata divisas_initial_data.json
+#	python manage.py loaddata medios_pago_initial_data.json omitir de momento
+	@echo "Datos iniciales cargados en producción."	
