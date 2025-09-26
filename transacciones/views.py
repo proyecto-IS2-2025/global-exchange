@@ -225,6 +225,49 @@ def crear_transaccion_desde_compra(request):
             messages.error(request, "Error en los datos de la operación.")
             return redirect('divisas:compra_sumario')
 
+        ok, msg = verificar_limites(cliente, monto_destino)
+        if not ok:
+            messages.error(request, msg)
+            return redirect('divisas:compra_sumario')
+        # Preparar datos del medio de pago
+        medio_datos = {}
+        if isinstance(medio_inst, dict) and medio_inst.get("id"):
+            try:
+                from clientes.models import ClienteMedioDePago
+                medio_real = ClienteMedioDePago.objects.select_related('medio_de_pago').get(
+                    id=medio_inst.get("id")
+                )
+                
+                # Determinar el tipo del medio
+                medio_model = medio_real.medio_de_pago
+                tipo_label = "No definido"
+                
+                if medio_model.tipo_medio:
+                    from medios_pago.models import TIPO_MEDIO_CHOICES
+                    tipo_dict = dict(TIPO_MEDIO_CHOICES)
+                    tipo_label = tipo_dict.get(medio_model.tipo_medio, "No definido")
+                else:
+                    api_info = medio_model.get_api_info()
+                    tipo_label = api_info.get("nombre_usuario", "No definido")
+                
+                medio_datos = {
+                    'id': medio_inst.get("id"),
+                    'nombre': medio_model.nombre,
+                    'tipo': tipo_label,
+                    'comision': f"{medio_model.comision_porcentaje:.2f}%",
+                    'datos_campos': medio_real.datos_campos or {},
+                    'es_principal': medio_real.es_principal,
+                }
+                
+            except Exception as e:
+                logger.error(f"Error al obtener datos del medio: {e}")
+                medio_datos = {
+                    'id': medio_inst.get("id"),
+                    'nombre': medio_inst.get("nombre", "Medio desconocido"),
+                    'tipo': "No definido",
+                    'comision': "0%",
+                }
+        
         # 🔹 Aplicar redondeo según regla - MEJORA ESPECÍFICA
         decimales_origen = determinar_decimales_divisa(divisa_origen.code)
         decimales_destino = determinar_decimales_divisa(divisa_destino.code)
