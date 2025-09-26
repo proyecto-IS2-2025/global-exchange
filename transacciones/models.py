@@ -33,7 +33,7 @@ class Transaccion(models.Model):
         ('pagada', 'Pagada'),
         ('cancelada', 'Cancelada'),
         ('anulada', 'Anulada'),
-        ('a_retirar', 'A Retirar'),
+        ('completado', 'completado'),
     ]
 
     # Identificación de la transacción
