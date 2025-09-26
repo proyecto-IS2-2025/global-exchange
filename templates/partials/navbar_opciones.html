@@ -1,5 +1,4 @@
 <ul class="dropdown-menu dropdown-menu-end">
-  <li><a class="dropdown-item" href="{% url 'divisas:visualizador_tasas' %}">Visualizar Tasas</a></li>
   <li><a class="dropdown-item" href="{% url 'contacto' %}">Contacto</a></li>
 
 {% if user.is_authenticated %}
@@ -31,28 +30,8 @@
       </a>
     </li>
     <li>
-      <a class="dropdown-item fw-bold text-secondary" href="{% url 'divisas:visualizador_tasas' %}">
-        Visualizar tasas
-      </a>
-    </li>
-    <li>
-      <a class="dropdown-item fw-bold text-secondary" href="{% url 'clientes:medios_pago_cliente' %}">
-        <i class="fas fa-credit-card me-2"></i>Medios de Pago
-      </a>
-    </li>
-    <li>
       <a class="dropdown-item fw-bold text-secondary" href="{% url 'clientes:seleccionar_cliente' %}">
         Seleccionar Cliente
-      </a>
-    </li>
-    <li>
-      <a class="dropdown-item fw-bold text-secondary" href="{% url 'divisas:seleccionar_operacion' %}">
-        Realizar Operación
-      </a>
-    </li> 
-    <li>
-      <a class="dropdown-item fw-bold text-secondary" href="{% url 'transacciones:historial_cliente' %}">
-        Ver Historial de Transacciones
       </a>
     </li>    
   {% else %}
@@ -60,11 +39,6 @@
     <li>
       <a class="dropdown-item fw-bold text-secondary" href="{% url 'users:perfil_usuario' %}">
         Mi perfil
-      </a>
-    </li>
-    <li>
-      <a class="dropdown-item fw-bold text-secondary" href="{% url 'divisas:visualizador_tasas' %}">
-        Visualizar tasas
       </a>
     </li>
     <li>

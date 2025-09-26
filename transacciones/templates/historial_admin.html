@@ -309,14 +309,24 @@
                                                 <i class="bi bi-arrow-right mx-1"></i>
                                                 <span class="badge bg-light text-dark">{{ transaccion.divisa_destino.code }}</span>
                                             </div>
-                                            <small class="text-muted d-block">Tasa: {{ transaccion.tasa_de_cambio_aplicada }}</small>
+                                            <small class="text-muted d-block">Tasa: Gs. {{ transaccion.tasa_de_cambio_aplicada|floatformat:0 }}</small>
                                         </td>
                                         <td>
                                             <div class="small">
-                                                <strong>{{ transaccion.monto_origen }} {{ transaccion.divisa_origen.code }}</strong>
+                                                <strong>    {% if transaccion.divisa_origen.code == 'PYG' %}
+        {{ transaccion.monto_origen|floatformat:0 }}
+    {% else %}
+        {{ transaccion.monto_origen|floatformat:2 }}
+    {% endif %}
+    {{ transaccion.divisa_origen.code }}</strong>
                                             </div>
                                             <div class="small text-success">
-                                                <strong>{{ transaccion.monto_destino }} {{ transaccion.divisa_destino.code }}</strong>
+                                                <strong>    {% if transaccion.divisa_destino.code == 'PYG' %}
+        {{ transaccion.monto_destino|floatformat:0 }}
+    {% else %}
+        {{ transaccion.monto_destino|floatformat:2 }}
+    {% endif %}
+    {{ transaccion.divisa_destino.code }}</strong>
                                             </div>
                                         </td>
                                         <td>

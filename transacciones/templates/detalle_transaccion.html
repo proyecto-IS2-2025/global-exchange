@@ -95,7 +95,12 @@
                             </div>
                             <div class="mb-3">
                                 <label class="text-muted small">Monto Origen</label>
-                                <p class="mb-0 fw-bold fs-5">{{ transaccion.monto_origen }} {{ transaccion.divisa_origen.code }}</p>
+                                <p class="mb-0 fw-bold fs-5">    {% if transaccion.divisa_origen.code == 'PYG' %}
+        {{ transaccion.monto_origen|floatformat:0 }}
+    {% else %}
+        {{ transaccion.monto_origen|floatformat:2 }}
+    {% endif %}
+    {{ transaccion.divisa_origen.code }}</p>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -108,11 +113,16 @@
                             </div>
                             <div class="mb-3">
                                 <label class="text-muted small">Monto Destino</label>
-                                <p class="mb-0 fw-bold fs-5 text-success">{{ transaccion.monto_destino }} {{ transaccion.divisa_destino.code }}</p>
+                                <p class="mb-0 fw-bold fs-5 text-success">    {% if transaccion.divisa_destino.code == 'PYG' %}
+        {{ transaccion.monto_destino|floatformat:0 }}
+    {% else %}
+        {{ transaccion.monto_destino|floatformat:2 }}
+    {% endif %}
+    {{ transaccion.divisa_destino.code }}</p>
                             </div>
                             <div class="mb-3">
                                 <label class="text-muted small">Tasa de Cambio</label>
-                                <p class="mb-0 fw-bold">{{ transaccion.tasa_de_cambio_aplicada }}</p>
+                                <p class="mb-0 fw-bold">Gs. {{ transaccion.tasa_de_cambio_aplicada|floatformat:0 }}</p>
                             </div>
                         </div>
                     </div>

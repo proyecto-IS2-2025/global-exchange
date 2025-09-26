@@ -9,15 +9,12 @@ import logging # Para registrar la acción
 from django.db.models.signals import post_save # Para la señal
 from django.dispatch import receiver # Para la señal
 from django.db.models import Q # Para filtros complejos en la señal
-
+from decimal import Decimal, ROUND_HALF_UP
 
 # ASUMIDO: Divisa y CotizacionSegmento están disponibles en la app 'divisas'
 from divisas.models import CotizacionSegmento # Importar el modelo de tasa
 
 logger = logging.getLogger(__name__)
-
-
-
 
 class Transaccion(models.Model):
     """
@@ -143,16 +140,102 @@ class Transaccion(models.Model):
             models.Index(fields=['fecha_creacion']),
         ]
 
+    def redondear_monto(self, monto, codigo_divisa):
+        """
+        Redondea un monto según el código de divisa.
+        - PYG: 0 decimales
+        - Otras divisas: 2 decimales
+        """
+        try:
+            decimales = 0 if codigo_divisa.upper() == 'PYG' else 2
+            return Decimal(monto).quantize(
+                Decimal("1") if decimales == 0 else Decimal("0.01"),
+                rounding=ROUND_HALF_UP
+            )
+        except Exception:
+            return Decimal("0.00")
+
+    def aplicar_redondeo_montos(self):
+        """
+        Aplica el redondeo a los montos según el tipo de divisa
+        """
+        if self.divisa_origen and self.monto_origen:
+            self.monto_origen = self.redondear_monto(
+                self.monto_origen, 
+                self.divisa_origen.code
+            )
+        
+        if self.divisa_destino and self.monto_destino:
+            self.monto_destino = self.redondear_monto(
+                self.monto_destino, 
+                self.divisa_destino.code
+            )
+        
+        # La tasa siempre se redondea a 2 decimales
+        if self.tasa_de_cambio_aplicada:
+            self.tasa_de_cambio_aplicada = Decimal(self.tasa_de_cambio_aplicada).quantize(
+                Decimal("0.01"), 
+                rounding=ROUND_HALF_UP
+            )
+
+    def clean(self):
+        """
+        Validaciones a nivel de modelo para la transacción
+        """
+        from django.core.exceptions import ValidationError
+        errors = {}
+        
+        # Validar que las divisas existan
+        if not self.divisa_origen:
+            errors['divisa_origen'] = 'La divisa de origen es requerida'
+            
+        if not self.divisa_destino:
+            errors['divisa_destino'] = 'La divisa de destino es requerida'
+            
+        # Validar que los montos sean positivos
+        if self.monto_origen and self.monto_origen <= 0:
+            errors['monto_origen'] = 'El monto origen debe ser mayor a 0'
+            
+        if self.monto_destino and self.monto_destino <= 0:
+            errors['monto_destino'] = 'El monto destino debe ser mayor a 0'
+            
+        if self.tasa_de_cambio_aplicada and self.tasa_de_cambio_aplicada <= 0:
+            errors['tasa_de_cambio_aplicada'] = 'La tasa de cambio debe ser mayor a 0'
+        
+        # Validar que no sea la misma divisa (a menos que sea un caso especial)
+        if self.divisa_origen and self.divisa_destino and self.divisa_origen == self.divisa_destino:
+            errors['divisa_destino'] = 'La divisa origen y destino no pueden ser iguales'
+        
+        # Validar tipo de operación vs divisas
+        if self.tipo_operacion == 'venta':
+            # En venta: cliente vende divisa extranjera, recibe PYG
+            if self.divisa_destino and self.divisa_destino.code.upper() != 'PYG':
+                errors['divisa_destino'] = 'En operaciones de venta, la divisa destino debe ser PYG'
+                
+        elif self.tipo_operacion == 'compra':
+            # En compra: cliente paga PYG, recibe divisa extranjera  
+            if self.divisa_origen and self.divisa_origen.code.upper() != 'PYG':
+                errors['divisa_origen'] = 'En operaciones de compra, la divisa origen debe ser PYG'
+        
+        if errors:
+            raise ValidationError(errors)
 
     def save(self, *args, **kwargs):
         print(">>> Entrando en save() de Transaccion")
+        
+        # Aplicar redondeo antes de cualquier validación
+        self.aplicar_redondeo_montos()
+        
         try:
             self.full_clean()  # 👈 esto llama a clean()
         except ValidationError as e:
             raise
+        
         if not self.numero_transaccion:
             self.numero_transaccion = self._generate_transaction_number()
+        
         super().save(*args, **kwargs)
+
     def _generate_transaction_number(self):
         """Generar número único de transacción"""
         timestamp = timezone.now().strftime('%Y%m%d%H%M%S')
@@ -295,6 +378,7 @@ class Transaccion(models.Model):
 
             return True
 
+# ... (El resto del código de HistorialTransaccion, ConfiguracionTransaccion y señales permanece igual)
 
 class HistorialTransaccion(models.Model):
     """

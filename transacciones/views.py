@@ -19,7 +19,28 @@ from django.shortcuts import render, redirect
 from transacciones.models import Transaccion
 logger = logging.getLogger(__name__)
 from clientes.services import verificar_limites
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
+
+def redondear(valor, decimales=2):
+    """
+    Redondea un número Decimal a la cantidad de decimales especificada.
+    - 0 → enteros (para Guaraníes)
+    - 2 → centavos (para USD/EUR, etc.)
+    """
+    try:
+        return Decimal(valor).quantize(
+            Decimal("1") if decimales == 0 else Decimal("0.01"),
+            rounding=ROUND_HALF_UP
+        )
+    except Exception:
+        return Decimal("0.00")
+
+def determinar_decimales_divisa(codigo_divisa):
+    """
+    Determina la cantidad de decimales según el código de divisa.
+    PYG: 0 decimales, otras: 2 decimales.
+    """
+    return 0 if codigo_divisa.upper() == 'PYG' else 2
 
 
 @login_required
@@ -50,53 +71,58 @@ def crear_transaccion_desde_venta(request):
             return redirect('clientes:seleccionar_cliente')
 
         cliente = get_object_or_404(Cliente, id=cliente_id, esta_activo=True)
+        
+        # Obtener código de divisa desde operación
+        codigo_divisa = operacion.get('divisa', '').strip().upper()
+        logger.debug(f"Código de divisa desde operación: '{codigo_divisa}'")
+        
+        if not codigo_divisa:
+            messages.error(request, "No se encontró el código de divisa en la operación.")
+            return redirect('divisas:venta_sumario')
+        
+        # Buscar divisas con manejo de errores más específico
+        try:
+            divisa_origen = Divisa.objects.get(code__iexact=codigo_divisa)
+            logger.debug(f"Divisa origen encontrada: {divisa_origen}")
+        except Divisa.DoesNotExist:
+            logger.error(f"No se encontró divisa con código: {codigo_divisa}")
+            messages.error(request, f"No se encontró la divisa con código: {codigo_divisa}")
+            return redirect('divisas:venta_sumario')
+        
+        try:
+            divisa_destino = Divisa.objects.get(code__iexact='PYG')
+            logger.debug(f"Divisa destino encontrada: {divisa_destino}")
+        except Divisa.DoesNotExist:
+            logger.error("No se encontró la divisa PYG (Guaraní)")
+            messages.error(request, "Error: No se encontró la divisa Guaraní (PYG) en el sistema.")
+            return redirect('divisas:venta_sumario')
 
-        # Obtener divisas
-        divisa_origen = get_object_or_404(Divisa, code=operacion.get('divisa'))
-        divisa_destino = get_object_or_404(Divisa, code='PYG')
+        # Convertir montos a Decimal de forma segura
+        try:
+            monto_origen = Decimal(str(operacion.get('monto_divisa', '0')))  # divisa extranjera
+            monto_destino = Decimal(str(operacion.get('monto_guaranies', '0')))  # guaraníes
+            tasa_cambio = Decimal(str(operacion.get('tasa_cambio', '0')))
+        except (ValueError, TypeError) as e:
+            logger.error(f"Error al convertir montos a Decimal: {e}")
+            messages.error(request, "Error en los datos de la operación.")
+            return redirect('divisas:venta_sumario')
 
-        monto_origen = Decimal(str(operacion.get('monto_divisa', '0')))
-        monto_destino = Decimal(str(operacion.get('monto_guaranies', '0')))
-        #
-        # --- VALIDAR LÍMITES ANTES DE CREAR ---
-        ok, msg = verificar_limites(cliente, monto_destino)  # 👈 usar monto_destino en Gs.
+        # 🔹 Aplicar redondeo según regla - MEJORA ESPECÍFICA
+        decimales_origen = determinar_decimales_divisa(divisa_origen.code)
+        decimales_destino = determinar_decimales_divisa(divisa_destino.code)
+        
+        monto_origen = redondear(monto_origen, decimales_origen)  # según divisa origen
+        monto_destino = redondear(monto_destino, decimales_destino)  # según divisa destino
+        tasa_cambio = redondear(tasa_cambio, 2)  # tasa siempre con 2 decimales
+
+        # Validar límites antes de crear
+        ok, msg = verificar_limites(cliente, monto_destino)
         if not ok:
             messages.error(request, msg)
             return redirect('divisas:venta_sumario')
-        # Preparar datos del medio de pago/acreditación (igual que antes)...
-        medio_datos = {}
-        if isinstance(medio_inst, dict) and medio_inst.get("id"):
-            try:
-                from clientes.models import ClienteMedioDePago
-                medio_real = ClienteMedioDePago.objects.select_related('medio_de_pago').get(
-                    id=medio_inst.get("id")
-                )
-                medio_model = medio_real.medio_de_pago
-                tipo_label = "No definido"
-                if medio_model.tipo_medio:
-                    from medios_pago.models import TIPO_MEDIO_CHOICES
-                    tipo_dict = dict(TIPO_MEDIO_CHOICES)
-                    tipo_label = tipo_dict.get(medio_model.tipo_medio, "No definido")
-                else:
-                    api_info = medio_model.get_api_info()
-                    tipo_label = api_info.get("nombre_usuario", "No definido")
 
-                medio_datos = {
-                    'id': medio_inst.get("id"),
-                    'nombre': medio_model.nombre,
-                    'tipo': tipo_label,
-                    'comision': f"{medio_model.comision_porcentaje:.2f}%",
-                    'datos_campos': medio_real.datos_campos or {},
-                    'es_principal': medio_real.es_principal,
-                }
-            except Exception as e:
-                logger.error(f"Error al obtener datos del medio: {e}")
-                medio_datos = {
-                    'id': medio_inst.get("id"),
-                    'nombre': medio_inst.get("nombre", "Medio desconocido"),
-                    'tipo': "No definido",
-                    'comision': "0%",
-                }
+        # Preparar datos del medio
+        medio_datos = preparar_datos_medio(medio_inst)
 
         # Crear transacción
         with transaction.atomic():
@@ -106,12 +132,12 @@ def crear_transaccion_desde_venta(request):
                 divisa_origen=divisa_origen,
                 divisa_destino=divisa_destino,
                 monto_origen=monto_origen,
-                monto_destino=Decimal(str(operacion.get('monto_guaranies', '0'))),
-                tasa_de_cambio_aplicada=Decimal(str(operacion.get('tasa_cambio', '0'))),
+                monto_destino=monto_destino,
+                tasa_de_cambio_aplicada=tasa_cambio,
                 estado='pendiente',
                 medio_pago_datos=medio_datos,
                 procesado_por=request.user,
-                observaciones=f"Transacción creada desde venta de {operacion.get('divisa')} por {operacion.get('monto_divisa')} {operacion.get('divisa')}"
+                observaciones=f"Transacción creada desde venta de {divisa_origen.code} por {monto_origen} {divisa_origen.code}"
             )
 
             HistorialTransaccion.objects.create(
@@ -122,16 +148,14 @@ def crear_transaccion_desde_venta(request):
                 modificado_por=request.user
             )
 
-        # Limpiar sesión y redirigir
-        for key in ['operacion', 'venta_resultado', 'medio']:
-            request.session.pop(key, None)
-        request.session.modified = True
+        # Limpiar sesión
+        limpiar_sesion_operacion(request)
 
         messages.success(request, f'Transacción {transaccion.numero_transaccion} creada exitosamente.')
         return redirect('transacciones:confirmacion_operacion', numero_transaccion=transaccion.numero_transaccion)
 
     except Exception as e:
-        logger.error(f"Error al crear transacción: {e}")
+        logger.error(f"Error al crear transacción de venta: {e}")
         messages.error(request, f"Error al procesar la transacción: {str(e)}")
         return redirect('divisas:venta_sumario')
 
@@ -166,48 +190,51 @@ def crear_transaccion_desde_compra(request):
         
         cliente = get_object_or_404(Cliente, id=cliente_id, esta_activo=True)
         
-        # Obtener divisas - Para compra: origen=PYG, destino=divisa comprada
-        divisa_origen = get_object_or_404(Divisa, code='PYG')  # Guaraníes
-        divisa_destino = get_object_or_404(Divisa, code=operacion.get('divisa'))
+        # Obtener código de divisa desde operación
+        codigo_divisa = operacion.get('divisa', '').strip().upper()
+        logger.debug(f"Código de divisa desde operación: '{codigo_divisa}'")
         
-        # Preparar datos del medio de pago
-        medio_datos = {}
-        if isinstance(medio_inst, dict) and medio_inst.get("id"):
-            try:
-                from clientes.models import ClienteMedioDePago
-                medio_real = ClienteMedioDePago.objects.select_related('medio_de_pago').get(
-                    id=medio_inst.get("id")
-                )
+        if not codigo_divisa:
+            messages.error(request, "No se encontró el código de divisa en la operación.")
+            return redirect('divisas:compra_sumario')
                 
-                # Determinar el tipo del medio
-                medio_model = medio_real.medio_de_pago
-                tipo_label = "No definido"
-                
-                if medio_model.tipo_medio:
-                    from medios_pago.models import TIPO_MEDIO_CHOICES
-                    tipo_dict = dict(TIPO_MEDIO_CHOICES)
-                    tipo_label = tipo_dict.get(medio_model.tipo_medio, "No definido")
-                else:
-                    api_info = medio_model.get_api_info()
-                    tipo_label = api_info.get("nombre_usuario", "No definido")
-                
-                medio_datos = {
-                    'id': medio_inst.get("id"),
-                    'nombre': medio_model.nombre,
-                    'tipo': tipo_label,
-                    'comision': f"{medio_model.comision_porcentaje:.2f}%",
-                    'datos_campos': medio_real.datos_campos or {},
-                    'es_principal': medio_real.es_principal,
-                }
-                
-            except Exception as e:
-                logger.error(f"Error al obtener datos del medio: {e}")
-                medio_datos = {
-                    'id': medio_inst.get("id"),
-                    'nombre': medio_inst.get("nombre", "Medio desconocido"),
-                    'tipo': "No definido",
-                    'comision': "0%",
-                }
+        # Obtener divisas - Para compra: origen=PYG, destino=divisa comprada
+        try:
+            divisa_origen = Divisa.objects.get(code__iexact='PYG')  # Guaraníes
+            logger.debug(f"Divisa origen (PYG) encontrada: {divisa_origen}")
+        except Divisa.DoesNotExist:
+            logger.error("No se encontró la divisa PYG (Guaraní)")
+            messages.error(request, "Error: No se encontró la divisa Guaraní (PYG) en el sistema.")
+            return redirect('divisas:compra_sumario')
+            
+        try:
+            divisa_destino = Divisa.objects.get(code__iexact=codigo_divisa)
+            logger.debug(f"Divisa destino encontrada: {divisa_destino}")
+        except Divisa.DoesNotExist:
+            logger.error(f"No se encontró divisa con código: {codigo_divisa}")
+            messages.error(request, f"No se encontró la divisa con código: {codigo_divisa}")
+            return redirect('divisas:compra_sumario')
+
+        # Convertir montos a Decimal de forma segura
+        try:
+            monto_origen = Decimal(str(operacion.get('monto_guaranies', '0')))  # guaraníes
+            monto_destino = Decimal(str(operacion.get('monto_divisa', '0')))    # divisa extranjera
+            tasa_cambio = Decimal(str(operacion.get('tasa_cambio', '0')))
+        except (ValueError, TypeError) as e:
+            logger.error(f"Error al convertir montos a Decimal: {e}")
+            messages.error(request, "Error en los datos de la operación.")
+            return redirect('divisas:compra_sumario')
+
+        # 🔹 Aplicar redondeo según regla - MEJORA ESPECÍFICA
+        decimales_origen = determinar_decimales_divisa(divisa_origen.code)
+        decimales_destino = determinar_decimales_divisa(divisa_destino.code)
+        
+        monto_origen = redondear(monto_origen, decimales_origen)  # según divisa origen
+        monto_destino = redondear(monto_destino, decimales_destino)  # según divisa destino
+        tasa_cambio = redondear(tasa_cambio, 2)  # tasa siempre con 2 decimales
+
+        # Preparar datos del medio
+        medio_datos = preparar_datos_medio(medio_inst)
         
         # Crear la transacción
         with transaction.atomic():
@@ -216,13 +243,13 @@ def crear_transaccion_desde_compra(request):
                 cliente=cliente,
                 divisa_origen=divisa_origen,
                 divisa_destino=divisa_destino,
-                monto_origen=Decimal(str(operacion.get('monto_guaranies', '0'))),  # Lo que paga
-                monto_destino=Decimal(str(operacion.get('monto_divisa', '0'))),    # Lo que recibe
-                tasa_de_cambio_aplicada=Decimal(str(operacion.get('tasa_cambio', '0'))),
+                monto_origen=monto_origen,
+                monto_destino=monto_destino,
+                tasa_de_cambio_aplicada=tasa_cambio,
                 estado='pendiente',
                 medio_pago_datos=medio_datos,
                 procesado_por=request.user,
-                observaciones=f"Transacción creada desde compra de {operacion.get('divisa')} por {operacion.get('monto_guaranies')} Gs."
+                observaciones=f"Transacción creada desde compra de {divisa_destino.code} por {monto_origen} Gs."
             )
             
             # Crear historial inicial
@@ -235,11 +262,7 @@ def crear_transaccion_desde_compra(request):
             )
         
         # Limpiar datos de sesión
-        keys_to_remove = ['operacion', 'compra_resultado', 'medio_pago_seleccionado']
-        for key in keys_to_remove:
-            if key in request.session:
-                del request.session[key]
-        request.session.modified = True
+        limpiar_sesion_operacion(request, ['operacion', 'compra_resultado', 'medio_pago_seleccionado'])
         
         messages.success(request, f'Transacción {transaccion.numero_transaccion} creada exitosamente.')
         
@@ -250,7 +273,66 @@ def crear_transaccion_desde_compra(request):
         logger.error(f"Error al crear transacción de compra: {e}")
         messages.error(request, f"Error al procesar la transacción: {str(e)}")
         return redirect('divisas:compra_sumario')
+
+
+def preparar_datos_medio(medio_inst):
+    """
+    Función auxiliar para preparar los datos del medio de pago/acreditación
+    """
+    medio_datos = {}
     
+    if isinstance(medio_inst, dict) and medio_inst.get("id"):
+        try:
+            from clientes.models import ClienteMedioDePago
+            medio_real = ClienteMedioDePago.objects.select_related('medio_de_pago').get(
+                id=medio_inst.get("id")
+            )
+            medio_model = medio_real.medio_de_pago
+            
+            # Determinar el tipo
+            tipo_label = "No definido"
+            if medio_model.tipo_medio:
+                from medios_pago.models import TIPO_MEDIO_CHOICES
+                tipo_dict = dict(TIPO_MEDIO_CHOICES)
+                tipo_label = tipo_dict.get(medio_model.tipo_medio, "No definido")
+            else:
+                api_info = medio_model.get_api_info()
+                tipo_label = api_info.get("nombre_usuario", "No definido")
+
+            medio_datos = {
+                'id': medio_inst.get("id"),
+                'nombre': medio_model.nombre,
+                'tipo': tipo_label,
+                'comision': f"{medio_model.comision_porcentaje:.2f}%",
+                'datos_campos': medio_real.datos_campos or {},
+                'es_principal': medio_real.es_principal,
+            }
+            
+        except Exception as e:
+            logger.error(f"Error al obtener datos del medio: {e}")
+            medio_datos = {
+                'id': medio_inst.get("id"),
+                'nombre': medio_inst.get("nombre", "Medio desconocido"),
+                'tipo': "No definido",
+                'comision': "0%",
+            }
+    
+    return medio_datos
+
+
+def limpiar_sesion_operacion(request, keys_adicionales=None):
+    """
+    Función auxiliar para limpiar datos de operación de la sesión
+    """
+    keys_default = ['operacion', 'venta_resultado', 'medio']
+    if keys_adicionales:
+        keys_default.extend(keys_adicionales)
+    
+    for key in keys_default:
+        request.session.pop(key, None)
+    
+    request.session.modified = True
+
 
 @login_required
 def confirmacion_operacion(request, numero_transaccion):

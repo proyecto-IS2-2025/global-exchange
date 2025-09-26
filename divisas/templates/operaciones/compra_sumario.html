@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}Resumen de la Compra{% endblock %}
+{% load humanize %}
 
 {% block content %}
 <div class="container mt-5">
@@ -24,16 +25,24 @@
               <td>{{ operacion.divisa }} - {{ operacion.divisa_nombre }}</td>
             </tr>
             <tr>
-              <th scope="row">Monto a comprar</th>
-              <td>{{ operacion.monto_divisa }} {{ operacion.divisa }}</td>
+              <th scope="row">Monto a pagar (Gs.)</th>
+              <td>{{ operacion.monto_guaranies|floatformat:0|intcomma }}</td>
             </tr>
             <tr>
               <th scope="row">Tasa de cambio aplicada</th>
-              <td>{{ operacion.tasa_cambio }}</td>
+              <td>{{ operacion.tasa_cambio|floatformat:0|intcomma }}</td>
             </tr>
             <tr class="table-success">
-              <th scope="row">Monto a pagar (Gs.)</th>
-              <td><strong>{{ operacion.monto_guaranies }}</strong></td>
+              <th scope="row">Monto a recibir</th>
+              <td>
+                <strong>
+                  {% if operacion.divisa == "PYG" %}
+                    {{ operacion.monto_divisa|floatformat:0|intcomma }} {{ operacion.divisa }}
+                  {% else %}
+                    {{ operacion.monto_divisa|floatformat:2 }} {{ operacion.divisa }}
+                  {% endif %}
+                </strong>
+              </td>
             </tr>
           </tbody>
         </table>

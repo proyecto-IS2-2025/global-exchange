@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block content %}
 <div class="container my-5">
@@ -36,8 +37,14 @@
                             <div class="d-flex align-items-center p-3 border rounded-4 h-100 bg-light-subtle detail-box">
                                 <i class="bi bi-cash-coin text-primary me-3 fs-3"></i>
                                 <div>
-                                    <p class="mb-0 text-muted small">Monto ingresado</p>
-                                    <h5 class="mb-0 fw-semibold">{{ resultado.monto_original }} {{ resultado.moneda_code }}</h5>
+                                    <p class="mb-0 text-muted small">Monto a vender</p>
+                                    <h5 class="mb-0 fw-semibold">
+                                        {% if resultado.moneda_code == "PYG" %}
+                                            {{ resultado.monto_original|floatformat:0|intcomma }} {{ resultado.moneda_code }}
+                                        {% else %}
+                                            {{ resultado.monto_original|floatformat:2 }} {{ resultado.moneda_code }}
+                                        {% endif %}
+                                    </h5>
                                 </div>
                             </div>
                         </div>
@@ -45,7 +52,7 @@
 
                     <div class="text-center p-4 p-md-5 rounded-4 mb-4 highlight-result">
                         <p class="text-white mb-2 fs-5 fw-light">Recibirás</p>
-                        <h1 class="text-white mb-0 display-4 fw-bolder"> Gs. {{ resultado.monto_resultado|floatformat:0 }}</h1>
+                        <h1 class="text-white mb-0 display-4 fw-bolder">Gs. {{ resultado.monto_resultado|floatformat:0|intcomma }}</h1>
                     </div>
                     <div class="row justify-content-center">
                         <div class="col-md-8">
@@ -53,7 +60,7 @@
                                 <p class="mb-1 text-muted small fw-medium">
                                     <i class="bi bi-graph-up me-1 text-success"></i> Tasa de Venta Aplicada
                                 </p>
-                                <h5 class="mb-0 fw-bold text-dark"> 1 {{ resultado.moneda_code }} = Gs. {{ resultado.tasa_aplicada|floatformat:0 }}</h5>
+                                <h5 class="mb-0 fw-bold text-dark">1 {{ resultado.moneda_code }} = Gs. {{ resultado.tasa_aplicada|floatformat:0|intcomma }}</h5>
                             </div>
                         </div>
                     </div>

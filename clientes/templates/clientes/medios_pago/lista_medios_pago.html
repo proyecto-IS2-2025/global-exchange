@@ -3,7 +3,49 @@
 
 {% block content %}
 <div class="container mt-4">
+    <a href="{% url 'users:perfil_usuario' %}"
+   class="btn d-inline-flex align-items-center btn-premium">
+    <i class="fas fa-arrow-left me-2" aria-hidden="true"></i>
+    Volver al perfil
+</a>
+
+<style>
+/* Estilos para el botón mejorado (Premium Look) */
+
+/* Mover los estilos inline a una clase para mejor manejo */
+.btn-premium {
+    /* Estilos base */
+    color: #ffffff !important;
+    border: none;
+    padding: 0.75rem 1.5rem; /* Aumentar el padding */
+    border-radius: 50px; /* Bordes muy redondeados (Pill shape) */
+    font-weight: 600; /* Fuente seminegrita */
+    box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3); /* Sombra suave */
+    background: linear-gradient(90deg, #0d6efd, #0056b3); /* Gradiente de azul */
+    transition: all 0.3s ease; /* Transición suave */
+    text-decoration: none; /* Asegura que no haya subrayado en el link */
+}
+
+.btn-premium:hover {
+    /* Efecto al pasar el mouse */
+    background: linear-gradient(90deg, #0056b3, #003a75); /* Oscurecer el gradiente */
+    box-shadow: 0 6px 15px rgba(13, 110, 253, 0.5); /* Aumentar la sombra */
+    transform: translateY(-2px); /* Pequeño levantamiento */
+}
+
+.btn-premium:active {
+    /* Efecto al hacer clic */
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(13, 110, 253, 0.3);
+}
+
+/* Ajuste del tamaño del icono de Font Awesome */
+.btn-premium .fas {
+    font-size: 1.2rem; 
+}
+</style>
     <div class="row mb-4">
+        
         <div class="col-12">
             <div class="card border-0 bg-gradient-primary text-white">
                 <div class="card-body">
@@ -22,9 +64,6 @@
                             <div class="d-flex gap-2">
                                 <a href="{% url 'clientes:seleccionar_medio_pago_crear' %}" class="btn btn-light">
                                     <i class="fas fa-plus me-2"></i>Agregar Medio
-                                </a>
-                                <a href="{% url 'inicio' %}" class="btn btn-outline-light">
-                                    <i class="fas fa-home me-1"></i>Inicio
                                 </a>
                             </div>
                         </div>

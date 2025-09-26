@@ -104,7 +104,12 @@
                                             <i class="bi bi-arrow-up-circle me-1"></i>
                                             Vas a entregar
                                         </h6>
-                                        <p class="mb-1 fs-4 fw-bold">{{ transaccion.monto_origen }} {{ transaccion.divisa_origen.code }}</p>
+                                        <p class="mb-1 fs-4 fw-bold">    {% if transaccion.divisa_origen.code == 'PYG' %}
+        {{ transaccion.monto_origen|floatformat:0 }}
+    {% else %}
+        {{ transaccion.monto_origen|floatformat:2 }}
+    {% endif %}
+    {{ transaccion.divisa_origen.code }}</p>
                                         <p class="mb-0 text-muted small">{{ transaccion.divisa_origen.name }}</p>
                                     </div>
                                 </div>
@@ -114,7 +119,12 @@
                                             <i class="bi bi-arrow-down-circle me-1"></i>
                                             Vas a recibir
                                         </h6>
-                                        <p class="mb-1 fs-4 fw-bold text-success">{{ transaccion.monto_destino }} {{ transaccion.divisa_destino.code }}</p>
+                                        <p class="mb-1 fs-4 fw-bold text-success">    {% if transaccion.divisa_destino.code == 'PYG' %}
+        {{ transaccion.monto_destino|floatformat:0 }}
+    {% else %}
+        {{ transaccion.monto_destino|floatformat:2 }}
+    {% endif %}
+    {{ transaccion.divisa_destino.code }}</p>
                                         <p class="mb-0 text-muted small">{{ transaccion.divisa_destino.name }}</p>
                                     </div>
                                 </div>
@@ -123,7 +133,7 @@
                             <div class="mt-3 text-center">
                                 <p class="text-muted mb-0">
                                     <i class="bi bi-calculator me-2"></i>
-                                    Tasa de cambio aplicada: <strong>{{ transaccion.tasa_de_cambio_aplicada }}</strong>
+                                    Tasa de cambio aplicada: <strong>Gs. {{ transaccion.tasa_de_cambio_aplicada|floatformat:0 }}</strong>
                                 </p>
                             </div>
                         </div>

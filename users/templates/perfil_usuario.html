@@ -29,8 +29,9 @@
 }
 
 /* Escalonar animación */
-.slide-in-up.card-1 { animation-delay: 0.2s; }
-.slide-in-up.card-2 { animation-delay: 0.4s; }
+.slide-in-up.card-1 { animation-delay: 0.1s; }
+.slide-in-up.card-2 { animation-delay: 0.2s; }
+.slide-in-up.card-3 { animation-delay: 0.3s; }
 
 /* Pulso para botones */
 @keyframes pulse {
@@ -42,58 +43,153 @@
 .pulse-btn { 
     animation: pulse 2s infinite; 
 }
+
+/* Nuevos estilos para botones de acción */
+.action-card {
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.15) !important;
+}
+
+.action-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin: 0 auto 1rem;
+}
+
+.btn-action {
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.gradient-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.gradient-bg-success {
+    background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+}
+
+.gradient-bg-warning {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.gradient-bg-info {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+/* Mejoras visuales generales */
+.card {
+    border: none;
+    border-radius: 20px;
+}
+
+.card-header {
+    border-radius: 20px 20px 0 0 !important;
+    border: none;
+}
+
+.stats-badge {
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    border-radius: 10px;
+}
+
+.feature-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+}
 </style>
 
 <div class="container py-5">
-    <h1 class="mb-5 text-center text-primary fw-bold display-7 fade-in">
-        <i class="fa-solid fa-id-card-clip me-2"></i> Dashboard de Usuario
-    </h1>
+    <!-- Header Principal -->
+    <div class="text-center mb-5 fade-in">
+        <h1 class="display-5 fw-bold text-primary mb-3">
+            <i class="fa-solid fa-id-card-clip me-3"></i>Dashboard de Usuario
+        </h1>
+        <p class="lead text-muted">Gestiona tu información personal y accede a las funcionalidades del sistema</p>
+    </div>
 
-    <div class="row justify-content-center g-4">
-        <div class="col-md-6">
-            <div class="card shadow-lg rounded-4 border-0 slide-in-up card-1">
-                <div class="card-header bg-primary text-white text-center rounded-top-4 py-3">
-                    <h5 class="mb-0 fw-bold"><i class="fa-solid fa-user me-2"></i> Información de la Cuenta</h5>
+    <div class="row g-4">
+        <!-- Tarjeta de Información de Usuario -->
+        <div class="col-lg-4">
+            <div class="card shadow-lg rounded-4 border-0 slide-in-up card-1 h-100">
+                <div class="card-header gradient-bg text-white text-center py-4">
+                    <h5 class="mb-0 fw-bold"><i class="fa-solid fa-user-gear me-2"></i> Mi Cuenta</h5>
                 </div>
                 <div class="card-body p-4">
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <div class="d-flex align-items-center">
-                                <i class="fa-solid fa-user-tag text-primary me-3 fs-5"></i>
-                                <div>
-                                    <small class="text-muted d-block">Nombre de usuario</small>
-                                    <span class="fw-bold fs-5">{{ user.username }}</span>
+                    <div class="d-flex flex-column h-100">
+                        <div class="flex-grow-1">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="d-flex align-items-center p-3 bg-light rounded-3">
+                                        <div class="feature-icon bg-primary text-white">
+                                            <i class="fa-solid fa-user-tag"></i>
+                                        </div>
+                                        <div>
+                                            <small class="text-muted d-block">Usuario</small>
+                                            <span class="fw-bold fs-6">{{ user.username }}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="d-flex align-items-center">
-                                <i class="fa-solid fa-envelope text-primary me-3 fs-5"></i>
-                                <div>
-                                    <small class="text-muted d-block">Correo electrónico</small>
-                                    <span class="fw-bold fs-5">{{ user.email }}</span>
+                                <div class="col-12">
+                                    <div class="d-flex align-items-center p-3 bg-light rounded-3">
+                                        <div class="feature-icon bg-success text-white">
+                                            <i class="fa-solid fa-envelope"></i>
+                                        </div>
+                                        <div>
+                                            <small class="text-muted d-block">Email</small>
+                                            <span class="fw-bold fs-6">{{ user.email }}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="d-flex align-items-center">
-                                <i class="fa-solid fa-circle-check text-primary me-3 fs-5"></i>
-                                <div>
-                                    <small class="text-muted d-block">Estado de la cuenta</small>
-                                    {% if user.is_active %}
-                                        <span class="badge bg-success py-2 px-3 fs-6">Activo</span>
-                                    {% else %}
-                                        <span class="badge bg-danger py-2 px-3 fs-6">Inactivo</span>
-                                    {% endif %}
+                                <div class="col-12">
+                                    <div class="d-flex align-items-center p-3 bg-light rounded-3">
+                                        <div class="feature-icon bg-warning text-white">
+                                            <i class="fa-solid fa-circle-check"></i>
+                                        </div>
+                                        <div>
+                                            <small class="text-muted d-block">Estado</small>
+                                            {% if user.is_active %}
+                                                <span class="badge bg-success stats-badge">Activo</span>
+                                            {% else %}
+                                                <span class="badge bg-danger stats-badge">Inactivo</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="d-flex align-items-center">
-                                <i class="fa-solid fa-users text-primary me-3 fs-5"></i>
-                                <div>
-                                    <small class="text-muted d-block">Grupo</small>
-                                    <span class="badge bg-secondary py-2 px-3 fs-6">{{ grupo }}</span>
+                                <div class="col-12">
+                                    <div class="d-flex align-items-center p-3 bg-light rounded-3">
+                                        <div class="feature-icon bg-info text-white">
+                                            <i class="fa-solid fa-users"></i>
+                                        </div>
+                                        <div>
+                                            <small class="text-muted d-block">Grupo</small>
+                                            <span class="badge bg-secondary stats-badge">{{ grupo }}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -102,76 +198,176 @@
             </div>
         </div>
 
-        <div class="col-md-6">
-            <div class="card shadow-lg rounded-4 border-0 slide-in-up card-2">
-                <div class="card-header bg-success text-white text-center rounded-top-4 py-3">
+        <!-- Tarjeta de Cliente Activo -->
+        <div class="col-lg-4">
+            <div class="card shadow-lg rounded-4 border-0 slide-in-up card-2 h-100">
+                <div class="card-header gradient-bg-success text-white text-center py-4">
                     <h5 class="mb-0 fw-bold"><i class="fa-solid fa-address-card me-2"></i> Cliente Activo</h5>
                 </div>
                 <div class="card-body p-4">
                     {% if cliente_activo %}
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <div class="d-flex align-items-center">
-                                    <i class="fa-solid fa-user-tie text-success me-3 fs-5"></i>
-                                    <div>
-                                        <small class="text-muted d-block">Nombre completo</small>
-                                        <span class="fw-bold fs-5">{{ cliente_activo.nombre_completo }}</span>
+                        <div class="d-flex flex-column h-100">
+                            <div class="flex-grow-1">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <div class="d-flex align-items-center p-3 bg-light rounded-3">
+                                            <div class="feature-icon bg-success text-white">
+                                                <i class="fa-solid fa-user-tie"></i>
+                                            </div>
+                                            <div>
+                                                <small class="text-muted d-block">Nombre</small>
+                                                <span class="fw-bold fs-6">{{ cliente_activo.nombre_completo }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="d-flex align-items-center p-3 bg-light rounded-3">
+                                            <div class="feature-icon bg-primary text-white">
+                                                <i class="fa-solid fa-id-card"></i>
+                                            </div>
+                                            <div>
+                                                <small class="text-muted d-block">Cédula</small>
+                                                <span class="fw-bold fs-6">{{ cliente_activo.cedula }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="d-flex align-items-center p-3 bg-light rounded-3">
+                                            <div class="feature-icon bg-info text-white">
+                                                <i class="fa-solid fa-layer-group"></i>
+                                            </div>
+                                            <div>
+                                                <small class="text-muted d-block">Segmento</small>
+                                                <span class="badge bg-info text-dark stats-badge">{{ cliente_activo.segmento.name }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="d-flex align-items-center p-3 bg-light rounded-3">
+                                            <div class="feature-icon bg-dark text-white">
+                                                <i class="fa-solid fa-user-gear"></i>
+                                            </div>
+                                            <div>
+                                                <small class="text-muted d-block">Tipo</small>
+                                                <span class="badge bg-dark text-white stats-badge">{{ cliente_activo.tipo_cliente }}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-12">
-                                <div class="d-flex align-items-center">
-                                    <i class="fa-solid fa-id-card me-3 text-success fs-5"></i>
-                                    <div>
-                                        <small class="text-muted d-block">Cédula</small>
-                                        <span class="fw-bold fs-5">{{ cliente_activo.cedula }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="d-flex align-items-center">
-                                    <i class="fa-solid fa-layer-group text-success me-3 fs-5"></i>
-                                    <div>
-                                        <small class="text-muted d-block">Segmento</small>
-                                        <span class="badge bg-info text-dark py-2 px-3 fs-6">{{ cliente_activo.segmento.name }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="d-flex align-items-center">
-                                    <i class="fa-solid fa-user-gear text-success me-3 fs-5"></i>
-                                    <div>
-                                        <small class="text-muted d-block">Tipo de cliente</small>
-                                        <span class="badge bg-dark text-white py-2 px-3 fs-6">{{ cliente_activo.tipo_cliente }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 text-center mt-4">
-                                <a href="{% url 'clientes:seleccionar_cliente' %}" class="btn btn-outline-success w-75 fw-semibold transition-all">
+                            <div class="mt-auto pt-3">
+                                <a href="{% url 'clientes:seleccionar_cliente' %}" class="btn btn-outline-success w-100 btn-action fw-semibold">
                                     <i class="fa-solid fa-arrows-rotate me-2"></i> Cambiar Cliente
                                 </a>
                             </div>
                         </div>
                     {% else %}
-                        <div class="text-center p-4">
-                            <i class="fa-solid fa-user-xmark fs-1 text-danger mb-3"></i>
-                            <p class="text-muted fs-6 mb-4">No hay un cliente activo seleccionado.</p>
-                            <a href="{% url 'clientes:seleccionar_cliente' %}" class="btn btn-success fw-semibold pulse-btn">
-                                <i class="fa-solid fa-user-plus me-1"></i> Seleccionar Cliente
+                        <div class="text-center d-flex flex-column justify-content-center h-100">
+                            <div class="mb-4">
+                                <i class="fa-solid fa-user-xmark fs-1 text-danger mb-3"></i>
+                                <p class="text-muted mb-4">No hay un cliente activo seleccionado.</p>
+                            </div>
+                            <a href="{% url 'clientes:seleccionar_cliente' %}" class="btn btn-success fw-semibold pulse-btn btn-action">
+                                <i class="fa-solid fa-user-plus me-2"></i> Seleccionar Cliente
                             </a>
                         </div>
                     {% endif %}
                 </div>
             </div>
         </div>
-    </div>
-    
-    {% if puede_editar %}
-        <div class="text-center mt-5">
-            <a href="{% url 'users:customuser_update' user.id %}" class="btn btn-primary btn-lg fw-bold px-5 pulse-btn">
-                <i class="fa-solid fa-pen-to-square me-2"></i> Editar Perfil
-            </a>
+
+        <!-- Tarjeta de Acciones Rápidas -->
+        <div class="col-lg-4">
+            <div class="card shadow-lg rounded-4 border-0 slide-in-up card-3 h-100">
+                <div class="card-header gradient-bg-warning text-white text-center py-4">
+                    <h5 class="mb-0 fw-bold"><i class="fa-solid fa-bolt me-2"></i> Acciones Rápidas</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex flex-column h-100">
+                        <div class="flex-grow-1">
+                            <div class="row g-3">
+                                <!-- Botón de Medios de Pago -->
+                                <div class="col-12">
+                                    <a href="{% url 'clientes:medios_pago_cliente' %}" class="btn btn-primary w-100 btn-action text-start p-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="action-icon bg-white text-primary me-3">
+                                                <i class="fa-solid fa-credit-card"></i>
+                                            </div>
+                                            <div class="text-start">
+                                                <h6 class="mb-1 fw-bold">Medios de Pago</h6>
+                                                <small class="text-white-50">Gestionar formas de pago</small>
+                                            </div>
+                                            <i class="fa-solid fa-chevron-right ms-auto"></i>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <!-- Botón de Historial de Transacciones -->
+                                <div class="col-12">
+                                    <a href="{% url 'transacciones:historial_cliente' %}" class="btn btn-info w-100 btn-action text-start p-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="action-icon bg-white text-info me-3">
+                                                <i class="fa-solid fa-clock-rotate-left"></i>
+                                            </div>
+                                            <div class="text-start">
+                                                <h6 class="mb-1 fw-bold">Historial</h6>
+                                                <small class="text-white-50">Ver transacciones anteriores</small>
+                                            </div>
+                                            <i class="fa-solid fa-chevron-right ms-auto"></i>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <!-- Botón adicional de Operaciones -->
+                                <div class="col-12">
+                                    <a href="{% url 'divisas:seleccionar_operacion' %}" class="btn btn-success w-100 btn-action text-start p-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="action-icon bg-white text-success me-3">
+                                                <i class="fa-solid fa-exchange-alt"></i>
+                                            </div>
+                                            <div class="text-start">
+                                                <h6 class="mb-1 fw-bold">Nueva Operación</h6>
+                                                <small class="text-white-50">Realizar compra/venta</small>
+                                            </div>
+                                            <i class="fa-solid fa-chevron-right ms-auto"></i>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información adicional -->
+                        <div class="mt-4 pt-3 border-top">
+                            <div class="text-center">
+                                <small class="text-muted">
+                                    <i class="fa-solid fa-shield-alt me-1"></i>
+                                    Sesión activa desde: {{ user.last_login|date:"d/m/Y H:i" }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    {% endif %}
+    </div>
+
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Efectos de hover mejorados
+    const actionCards = document.querySelectorAll('.action-card');
+    actionCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+        });
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+
+    // Smooth scroll al cargar
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+</script>
 {% endblock %}

@@ -18,7 +18,7 @@ from django.http import JsonResponse
 import json
 from django.test import RequestFactory
 from clientes.views import get_medio_acreditacion_seleccionado, get_medio_pago_seleccionado
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 import logging
 
 
@@ -100,6 +100,15 @@ class DivisaToggleActivaView(LoginRequiredMixin, PermissionRequiredMixin, View):
         divisa.save()
         return redirect('divisas:lista')
 
+
+def redondear(valor, decimales=2):
+    try:
+        return Decimal(valor).quantize(
+            Decimal("1") if decimales == 0 else Decimal("0.01"),
+            rounding=ROUND_HALF_UP
+        )
+    except Exception:
+        return valor
 
 # ----------------------------
 # TASAS DE CAMBIO
@@ -391,20 +400,22 @@ class VentaConfirmacionView(LoginRequiredMixin, TemplateView):
             messages.error(request, "No hay simulación para confirmar.")
             return redirect("divisas:venta")
 
-        # 🔹 Guardar operación simplificada en sesión
         operacion = {
             "tipo": "venta",
-            "divisa": resultado.get("moneda_code"),
+            "divisa": (resultado.get("moneda_code") or "").strip().upper(),
             "divisa_nombre": resultado.get("moneda_nombre"),
-            "monto_divisa": resultado.get("monto_original"),
-            "monto_guaranies": resultado.get("monto_resultado"),
-            "tasa_cambio": resultado.get("tasa_aplicada"),
+            # 🔹 divisa_origen (extranjera) → 2 decimales
+            "monto_divisa": str(redondear(resultado.get("monto_original"), 2)),
+            # 🔹 divisa_destino (guaraní) → 0 decimales
+            "monto_guaranies": str(redondear(resultado.get("monto_resultado"), 0)),
+            "tasa_cambio": str(redondear(resultado.get("tasa_aplicada"), 2)),
             "comision": resultado.get("comision_aplicada"),
         }
         request.session["operacion"] = operacion
         request.session.modified = True
 
         return redirect("clientes:seleccionar_medio_acreditacion")
+
 
 class VentaMediosView(LoginRequiredMixin, TemplateView):
     template_name = "operaciones/venta_medios.html"
@@ -557,7 +568,6 @@ def post(self, request, *args, **kwargs):
     return redirect("divisas:venta_sumario")
 
 
-# divisas/views.py
 
 from .forms import CompraDivisaForm
 
@@ -596,7 +606,18 @@ class CompraDivisaView(LoginRequiredMixin, FormView):
             return self.form_invalid(form)
 
         # Convertir Decimals antes de guardar
+        # Redondear valores sensibles
+        if "monto_original" in data:
+            data["monto_original"] = str(redondear(data["monto_original"]))
+        if "monto_resultado" in data:
+            data["monto_resultado"] = str(redondear(data["monto_resultado"]))
+        if "tasa_aplicada" in data:
+            data["tasa_aplicada"] = str(redondear(data["tasa_aplicada"]))
+
+        # Guardar en sesión ya limpio
         self.request.session['compra_resultado'] = decimal_to_str(data)
+        self.request.session.modified = True
+
         self.request.session.modified = True
 
         return redirect('divisas:compra_confirmacion')
@@ -616,21 +637,22 @@ class CompraConfirmacionView(LoginRequiredMixin, TemplateView):
             messages.error(request, "No hay simulación para confirmar.")
             return redirect("divisas:compra")
 
-        # Guardar operación simplificada en sesión
         operacion = {
             "tipo": "compra",
-            "divisa": resultado.get("moneda_code"),
+            "divisa": (resultado.get("moneda_code") or "").strip().upper(),
             "divisa_nombre": resultado.get("moneda_nombre"),
-            "monto_guaranies": resultado.get("monto_original"),  # Lo que paga en Gs.
-            "monto_divisa": resultado.get("monto_resultado"),    # Lo que recibe en divisa
-            "tasa_cambio": resultado.get("tasa_aplicada"),
+            # 🔹 divisa_origen (guaraníes) → 0 decimales
+            "monto_guaranies": str(redondear(resultado.get("monto_original"), 0)),
+            # 🔹 divisa_destino (extranjera) → 2 decimales
+            "monto_divisa": str(redondear(resultado.get("monto_resultado"), 2)),
+            "tasa_cambio": str(redondear(resultado.get("tasa_aplicada"), 2)),
             "comision": resultado.get("comision_aplicada"),
         }
         request.session["operacion"] = operacion
         request.session.modified = True
 
-        # Para compra vamos a seleccionar medio de PAGO (no acreditación)
         return redirect("clientes:seleccionar_medio_pago")
+
 
 
 class SumarioCompraView(TemplateView):
