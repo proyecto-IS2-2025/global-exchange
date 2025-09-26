@@ -172,3 +172,7 @@ LOGGING = {
         'level': 'INFO',
     },
 }
+
+
+TIME_ZONE = 'America/Asuncion'
+USE_TZ = True
