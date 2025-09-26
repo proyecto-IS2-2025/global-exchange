@@ -1,0 +1,220 @@
+{% extends "banco/base.html" %}
+
+{% block title %}Dashboard Banco{% endblock %}
+
+{% block extra_head %}
+<style>
+  body {
+    background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    color: #f8f9fa;
+  }
+
+  .navbar-custom {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  }
+
+  .navbar-custom .navbar-brand {
+    color: var(--color-principal);
+    font-weight: 700;
+    font-size: 1.5rem;
+  }
+
+  .navbar-custom .nav-link {
+    color: #495057;
+    font-weight: 600;
+    transition: color 0.3s ease;
+  }
+
+  .navbar-custom .nav-link:hover {
+    color: var(--color-principal);
+  }
+
+  .badge-custom-dark {
+    background: var(--color-secundario);
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+  }
+  
+  .badge-custom-credit {
+    background: #28a745;
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+  }
+  
+  .dashboard-card {
+    background: #ffffff;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    color: #495057;
+    margin-bottom: 2rem;
+  }
+
+  .info-item {
+    padding: 1rem 0;
+    border-bottom: 1px solid #eceeef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .info-item:last-child {
+    border-bottom: none;
+  }
+
+  .cvv-hidden {
+    letter-spacing: 3px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-custom">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{% url 'banco:dashboard' %}">
+      {% if entidad.logo_url %}
+          <img src="{{ entidad.logo_url }}" alt="Logo de {{ entidad.nombre }}" height="30" class="me-2">
+      {% endif %}
+      {{ entidad.nombre }}
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link active" href="{% url 'banco:dashboard' %}">
+            <i class="bi bi-grid me-2"></i> Panel de control
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'banco:transferir' %}">
+            <i class="bi bi-send-fill me-2"></i> Transferir
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'banco:pagar' %}">
+            <i class="bi bi-send-fill me-2"></i> Pagar
+          </a>
+        </li>        
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'banco:historial' %}">
+            <i class="bi bi-clock-history me-2"></i> Historial
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'banco:logout' %}">
+            <i class="bi bi-box-arrow-right me-2"></i> Salir
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container mt-5">
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-success text-center" role="alert">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- CUENTAS -->
+  <div class="dashboard-card text-center">
+    <h3 class="card-title mb-3"><i class="bi bi-wallet2"></i> Mis Cuentas</h3>
+
+    <div class="info-item">
+        <h5><i class="bi bi-bank me-2"></i> Saldo en Cuenta Corriente</h5>
+        {% if cuenta %}
+            <span class="badge badge-custom-dark">₲ {{ cuenta.saldo|floatformat:2 }}</span>
+        {% else %}
+            <span class="badge badge-custom-dark">No disponible</span>
+        {% endif %}
+    </div>
+  </div>
+
+  <!-- TARJETA DÉBITO -->
+  <div class="dashboard-card">
+    <h3 class="card-title mb-3"><i class="bi bi-credit-card-2-front"></i> Tarjeta de Débito</h3>
+    {% if tarjeta_debito %}
+      <div class="info-item">
+        <div>
+          Nº: •••• •••• •••• {{ tarjeta_debito.numero|slice:"-4:" }}<br>
+          Vencimiento: {{ tarjeta_debito.mes_vencimiento }}/{{ tarjeta_debito.anho_vencimiento }}<br>
+          Entidad: {{ tarjeta_debito.entidad.nombre }}<br>
+          CVV: <span id="cvv-debito" class="cvv-hidden">•••</span>
+          <button type="button" class="btn btn-sm btn-outline-secondary ms-2 toggle-cvv" data-cvv="{{ tarjeta_debito.cvv }}" data-target="cvv-debito">
+            Ver CVV
+          </button>
+        </div>
+        <span class="badge badge-custom-dark">Débito</span>
+      </div>
+    {% else %}
+      <p class="text-muted">No tenés tarjeta de débito registrada.</p>
+    {% endif %}
+  </div>
+
+  <!-- TARJETA CRÉDITO -->
+  <div class="dashboard-card">
+    <h3 class="card-title mb-3"><i class="bi bi-credit-card"></i> Tarjeta de Crédito</h3>
+    {% if tarjeta_credito %}
+      <div class="info-item">
+        <div>
+          Nº: •••• •••• •••• {{ tarjeta_credito.numero|slice:"-4:" }}<br>
+          Vencimiento: {{ tarjeta_credito.mes_vencimiento }}/{{ tarjeta_credito.anho_vencimiento }}<br>
+          Entidad: {{ tarjeta_credito.entidad.nombre }}<br>
+          CVV: <span id="cvv-credito" class="cvv-hidden">•••</span>
+          <button type="button" class="btn btn-sm btn-outline-secondary ms-2 toggle-cvv" data-cvv="{{ tarjeta_credito.cvv }}" data-target="cvv-credito">
+            Ver CVV
+          </button>
+        </div>
+        <span class="badge badge-custom-credit">Crédito</span>
+      </div>
+
+      <div class="info-item">
+        <h5><i class="bi bi-cash me-2"></i> Límite disponible</h5>
+        <span class="badge badge-custom-credit">₲ {{ tarjeta_credito.disponible|floatformat:2 }}</span>
+      </div>
+    {% else %}
+      <p class="text-muted">No tenés tarjeta de crédito registrada.</p>
+    {% endif %}
+  </div>
+
+  <!-- ACCIONES -->
+  <div class="text-center mt-4">
+    <a href="{% url 'banco:transferir' %}" class="btn btn-primary me-2">
+      <i class="bi bi-arrow-left-right"></i> Hacer Transferencia
+    </a>
+    <a href="{% url 'banco:historial' %}" class="btn btn-secondary">
+      <i class="bi bi-clock-history"></i> Ver Historial
+    </a>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".toggle-cvv").forEach(button => {
+      button.addEventListener("click", function () {
+        const targetId = this.dataset.target;
+        const cvvElement = document.getElementById(targetId);
+        if (cvvElement.innerText === "•••") {
+          cvvElement.innerText = this.dataset.cvv;
+          this.innerText = "Ocultar CVV";
+        } else {
+          cvvElement.innerText = "•••";
+          this.innerText = "Ver CVV";
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

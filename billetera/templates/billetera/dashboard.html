@@ -1,0 +1,118 @@
+{% extends 'billetera/base.html' %}
+
+{% block title %}Dashboard - Billetera Digital{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <h2>¡Hola, {{ usuario.nombre }}!</h2>
+        <p class="text-muted">Bienvenido a tu billetera digital</p>
+    </div>
+</div>
+
+{% if not billetera %}
+<div class="row">
+    <div class="col-12">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-wallet fa-4x text-muted mb-3"></i>
+                <h4>No tienes una billetera</h4>
+                <p class="text-muted">Para comenzar a usar los servicios, necesitas crear tu billetera digital.</p>
+                <a href="{% url 'billetera:crear_billetera' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus me-1"></i>Crear Billetera
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <!-- Balance Card -->
+    <div class="col-md-4 mb-4">
+        <div class="card balance-card">
+            <div class="card-body text-center">
+                <i class="fas fa-coins fa-2x mb-3"></i>
+                <h5>Saldo Disponible</h5>
+                <h2>₲{{ billetera.saldo|floatformat:0 }}</h2>
+                <small>{{ billetera.entidad.nombre }}</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-bolt me-1"></i>Acciones Rápidas</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <a href="{% url 'billetera:recargar' %}" class="btn btn-success w-100">
+                            <i class="fas fa-plus-circle me-1"></i>Recargar
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <a href="{% url 'billetera:transferir' %}" class="btn btn-primary w-100">
+                            <i class="fas fa-paper-plane me-1"></i>Transferir
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <a href="{% url 'billetera:historial' %}" class="btn btn-info w-100">
+                            <i class="fas fa-history me-1"></i>Historial
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Transactions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-list me-1"></i>Movimientos Recientes</h5>
+                <a href="{% url 'billetera:historial' %}" class="btn btn-sm btn-outline-primary">Ver todos</a>
+            </div>
+            <div class="card-body">
+                {% if movimientos %}
+                    {% for movimiento in movimientos %}
+                    <div class="d-flex justify-content-between align-items-center py-2 transaction-item">
+                        <div class="d-flex align-items-center">
+                            {% if movimiento.tipo == 'RECARGA' %}
+                                <i class="fas fa-plus-circle text-success me-3"></i>
+                            {% elif movimiento.tipo == 'ENVIO' %}
+                                <i class="fas fa-arrow-up text-danger me-3"></i>
+                            {% else %}
+                                <i class="fas fa-arrow-down text-success me-3"></i>
+                            {% endif %}
+                            <div>
+                                <strong>{{ movimiento.get_tipo_display }}</strong>
+                                <br>
+                                <small class="text-muted">{{ movimiento.descripcion }}</small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <strong class="{% if movimiento.tipo == 'ENVIO' %}text-danger{% else %}text-success{% endif %}">
+                                {% if movimiento.tipo == 'ENVIO' %}-{% else %}+{% endif %}₲{{ movimiento.monto|floatformat:0 }}
+                            </strong>
+                            <br>
+                            <small class="text-muted">{{ movimiento.fecha|date:"d/m/Y H:i" }}</small>
+                        </div>
+                    </div>
+                    {% if not forloop.last %}<hr>{% endif %}
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No hay movimientos recientes</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

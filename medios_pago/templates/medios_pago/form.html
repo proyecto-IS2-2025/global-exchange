@@ -436,7 +436,7 @@
     </div>
 </div>
 
-<!-- Datos JavaScript para campos predefinidos -->
+<!-- Datos JavaScript para campos predefinidos - ACTUALIZADO -->
 <script id="predefined-fields-data" type="application/json">
 {
     "card_number": {"label": "Número de tarjeta", "type": "NUMERO", "description": "Número de 16 dígitos de la tarjeta", "required": true},
@@ -446,18 +446,21 @@
     "cardholder_name": {"label": "Nombre en la tarjeta", "type": "TEXTO", "description": "Nombre como aparece en la tarjeta", "required": true},
     "paypal_email": {"label": "Email de PayPal", "type": "EMAIL", "description": "Dirección de email asociada a PayPal", "required": true},
     "account_number": {"label": "Número de cuenta", "type": "NUMERO", "description": "Número de cuenta bancaria", "required": true},
-    "bank_name": {"label": "Nombre del banco", "type": "TEXTO", "description": "Nombre completo del banco", "required": true},
+    "bank_name": {"label": "Entidad", "type": "TEXTO", "description": "Nombre de la entidad financiera (banco, billetera, etc.)", "required": true},
     "account_holder": {"label": "Titular de la cuenta", "type": "TEXTO", "description": "Nombre del titular de la cuenta", "required": true},
     "routing_number": {"label": "Código de routing", "type": "NUMERO", "description": "Código de routing bancario (USA)", "required": false},
     "swift_code": {"label": "Código SWIFT", "type": "TEXTO", "description": "Código SWIFT para transferencias internacionales", "required": false},
     "cbu_cvu": {"label": "CBU/CVU", "type": "NUMERO", "description": "Clave Bancaria Uniforme o Clave Virtual Uniforme", "required": true},
+    "ruc": {"label": "RUC", "type": "NUMERO", "description": "Registro Único del Contribuyente", "required": false},
     "email": {"label": "Email", "type": "EMAIL", "description": "Dirección de correo electrónico", "required": true},
     "phone": {"label": "Teléfono", "type": "TELEFONO", "description": "Número de teléfono", "required": false},
-    "amount": {"label": "Monto", "type": "NUMERO", "description": "Monto de la transacción", "required": true},
-    "currency": {"label": "Moneda", "type": "TEXTO", "description": "Código de moneda (USD, EUR, etc.)", "required": true},
-    "description": {"label": "Descripción", "type": "TEXTO", "description": "Descripción de la transacción", "required": false},
+    "description": {"label": "Descripción", "type": "TEXTO", "description": "Descripción del medio de pago", "required": false},
     "wallet_address": {"label": "Dirección de billetera", "type": "TEXTO", "description": "Dirección de billetera de criptomoneda", "required": true},
-    "network": {"label": "Red", "type": "TEXTO", "description": "Red blockchain (ETH, BTC, etc.)", "required": true}
+    "network": {"label": "Red", "type": "TEXTO", "description": "Red blockchain (ETH, BTC, etc.)", "required": true},
+    "wallet_phone": {"label": "Teléfono de billetera", "type": "TELEFONO", "description": "Número de teléfono asociado a la billetera", "required": true},
+    "wallet_email": {"label": "Email de billetera", "type": "EMAIL", "description": "Email asociado a la billetera electrónica", "required": false},
+    "wallet_user_id": {"label": "ID de usuario", "type": "TEXTO", "description": "Identificador de usuario en la billetera", "required": false},
+    "document_number": {"label": "Número de documento", "type": "NUMERO", "description": "Número de cédula o documento de identidad", "required": false}
 }
 </script>
 
@@ -469,14 +472,43 @@ document.addEventListener('DOMContentLoaded', function() {
     const predefinedFields = JSON.parse(document.getElementById('predefined-fields-data').textContent);
     console.log('📋 Campos predefinidos cargados:', Object.keys(predefinedFields).length);
     
-    // Templates predefinidos (disponibles inmediatamente)
+    // Templates predefinidos ACTUALIZADOS (disponibles inmediatamente)
     let allTemplates = {
-        "stripe_card": {"name": "Tarjeta de Crédito/Débito (Stripe)", "fields": ["card_number", "exp_month", "exp_year", "cvc", "cardholder_name", "email"], "is_custom": false},
-        "paypal_standard": {"name": "PayPal Estándar", "fields": ["paypal_email", "amount", "currency", "description"], "is_custom": false},
-        "bank_local_ar": {"name": "Transferencia Bancaria Argentina", "fields": ["account_number", "bank_name", "account_holder", "cbu_cvu"], "is_custom": false},
-        "bank_international": {"name": "Transferencia Bancaria Internacional", "fields": ["account_number", "bank_name", "account_holder", "swift_code", "routing_number"], "is_custom": false},
-        "bitcoin_wallet": {"name": "Billetera Bitcoin", "fields": ["wallet_address", "network", "amount"], "is_custom": false},
-        "efectivo_simple": {"name": "Pago en Efectivo", "fields": ["amount", "description"], "is_custom": false}
+        "stripe_card": {
+            "name": "Tarjeta de Crédito/Débito (Stripe)", 
+            "fields": ["card_number", "exp_month", "exp_year", "cvc", "cardholder_name", "email"], 
+            "is_custom": false
+        },
+        "paypal_standard": {
+            "name": "PayPal Estándar", 
+            "fields": ["paypal_email", "description"], 
+            "is_custom": false
+        },
+        "bank_local_ar": {
+            "name": "Transferencia Bancaria local",
+            "fields": ["account_number", "bank_name", "account_holder", "cbu_cvu", "ruc"],
+            "is_custom": false
+        },
+        "bank_international": {
+            "name": "Transferencia Bancaria Internacional", 
+            "fields": ["account_number", "bank_name", "account_holder", "swift_code", "routing_number"], 
+            "is_custom": false
+        },
+        "bitcoin_wallet": {
+            "name": "Billetera Bitcoin", 
+            "fields": ["wallet_address", "network"], 
+            "is_custom": false
+        },
+        "billetera_electronica_py": {
+            "name": "Billetera Electrónica Paraguay", 
+            "fields": ["wallet_phone", "bank_name", "account_holder", "document_number", "wallet_email"], 
+            "is_custom": false
+        },
+        "efectivo_simple": {
+            "name": "Pago en Efectivo", 
+            "fields": ["description"], 
+            "is_custom": false
+        }
     };
     
     // Referencias DOM - buscar por múltiples métodos
@@ -900,7 +932,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         console.log('✅ Opciones actualizadas:', Object.keys(allTemplates).length, 'templates disponibles');
     }
-
+    
     // Inicializar sistema
     console.log('🚀 Inicializando sistema...');
     

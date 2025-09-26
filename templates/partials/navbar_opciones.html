@@ -46,10 +46,15 @@
       </a>
     </li>
     <li>
-      <a class="dropdown-item fw-bold text-secondary" href="{% url 'divisas:venta' %}">
-        Vender Divisa
+      <a class="dropdown-item fw-bold text-secondary" href="{% url 'divisas:seleccionar_operacion' %}">
+        Realizar Operación
       </a>
-    </li>   
+    </li> 
+    <li>
+      <a class="dropdown-item fw-bold text-secondary" href="{% url 'transacciones:historial_cliente' %}">
+        Ver Historial de Transacciones
+      </a>
+    </li>    
   {% else %}
     <li><hr class="dropdown-divider"></li>
     <li>

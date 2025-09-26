@@ -1,0 +1,116 @@
+[
+  {
+    "model": "banco.entidadbancaria",
+    "pk": 1,
+    "fields": {
+      "nombre": "Banco Py",
+      "codigo": "BPY",
+      "color_principal": "#1d3557",
+      "color_secundario": "#457b9d",
+      "logo_url": "https://example.com/logos/banco_py.png"
+    }
+  },
+  {
+    "model": "banco.entidadbancaria",
+    "pk": 2,
+    "fields": {
+      "nombre": "Banco Guaraní",
+      "codigo": "BGUA",
+      "color_principal": "#006d77",
+      "color_secundario": "#83c5be",
+      "logo_url": "https://example.com/logos/banco_guarani.png"
+    }
+  },
+  {
+    "model": "banco.bancouser",
+    "pk": 1,
+    "fields": {
+      "entidad": 1,
+      "email": "juan@bancopy.com",
+      "password": "1234"
+    }
+  },
+  {
+    "model": "banco.bancouser",
+    "pk": 2,
+    "fields": {
+      "entidad": 2,
+      "email": "maria@bancoguarani.com",
+      "password": "1234"
+    }
+  },
+  {
+    "model": "banco.cuenta",
+    "pk": 1,
+    "fields": {
+      "usuario": 1,
+      "numero_cuenta": "000111222",
+      "entidad": 1,
+      "saldo": "5000000.00"
+    }
+  },
+  {
+    "model": "banco.cuenta",
+    "pk": 2,
+    "fields": {
+      "usuario": 2,
+      "numero_cuenta": "000333444",
+      "entidad": 2,
+      "saldo": "3000000.00"
+    }
+  },
+  {
+    "model": "banco.tarjetadebito",
+    "pk": 1,
+    "fields": {
+      "usuario": 1,
+      "entidad": 1,
+      "cuenta": 1,
+      "numero": "4111111111111111",
+      "mes_vencimiento": 12,
+      "anho_vencimiento": 2027,
+      "cvv": "123"
+    }
+  },
+  {
+    "model": "banco.tarjetadebito",
+    "pk": 2,
+    "fields": {
+      "usuario": 2,
+      "entidad": 2,
+      "cuenta": 2,
+      "numero": "4222222222222222",
+      "mes_vencimiento": 6,
+      "anho_vencimiento": 2026,
+      "cvv": "456"
+    }
+  },
+  {
+    "model": "banco.tarjetacredito",
+    "pk": 1,
+    "fields": {
+      "usuario": 1,
+      "entidad": 1,
+      "numero": "4333333333333333",
+      "mes_vencimiento": 9,
+      "anho_vencimiento": 2028,
+      "cvv": "789",
+      "limite_credito": "2000000.00",
+      "saldo_usado": "0.00"
+    }
+  },
+  {
+    "model": "banco.tarjetacredito",
+    "pk": 2,
+    "fields": {
+      "usuario": 2,
+      "entidad": 2,
+      "numero": "4444444444444444",
+      "mes_vencimiento": 5,
+      "anho_vencimiento": 2029,
+      "cvv": "321",
+      "limite_credito": "2000000.00",
+      "saldo_usado": "500000.00"
+    }
+  }
+]
