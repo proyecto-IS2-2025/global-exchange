@@ -80,4 +80,9 @@ urlpatterns = [
     path('medios-pago/<int:pk>/detalle/', medio_pago_detail_ajax, name='detalle_medio_pago_ajax'),
     path('medios-pago/verificar-duplicados/', verificar_duplicados_ajax, name='verificar_duplicados_ajax'),
     path('seleccionar-medio-acreditacion/', SeleccionarMedioAcreditacionView.as_view(), name='seleccionar_medio_acreditacion'),
+
+    #Seleccionar medio de pago
+    path('seleccionar-medio-pago/', views.SeleccionarMedioPagoView.as_view(), name='seleccionar_medio_pago'),
+
+
 ]

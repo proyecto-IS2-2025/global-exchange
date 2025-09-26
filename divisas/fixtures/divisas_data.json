@@ -1,5 +1,5 @@
 [
-  {
+{
     "model": "divisas.divisa",
     "pk": 1,
     "fields": {
@@ -117,19 +117,6 @@
     }
   },
   {
-    "model": "divisas.divisa",
-    "pk": 10,
-    "fields": {
-      "code": "PYG",
-      "nombre": "Guaraní Paraguayo",
-      "simbolo": "₲",
-      "is_active": true,
-      "decimales": 0,
-      "creado": "2025-09-15T12:00:00Z",
-      "actualizado": "2025-09-15T12:00:00Z"
-    }
-  },
-  {
     "model": "divisas.tasacambio",
     "pk": 1,
     "fields": {
@@ -154,48 +141,87 @@
     }
   },
   {
-    "model": "divisas.cotizacionsegmento",
-    "pk": 1,
-    "fields": {
-      "divisa": 1,
-      "segmento": 1,
-      "fecha": "2025-09-15T12:00:00Z",
-      "precio_base": "7000.00000000",
-      "comision_compra": "300.00000000",
-      "comision_venta": "100.00000000",
-      "porcentaje_descuento": "0.00",
-      "valor_compra_unit": "6700.00000000",
-      "valor_venta_unit": "7100.00000000"
-    }
-  },
-  {
-    "model": "divisas.cotizacionsegmento",
-    "pk": 2,
-    "fields": {
-      "divisa": 1,
-      "segmento": 2,
-      "fecha": "2025-09-15T12:00:00Z",
-      "precio_base": "7000.00000000",
-      "comision_compra": "300.00000000",
-      "comision_venta": "100.00000000",
-      "porcentaje_descuento": "10.00",
-      "valor_compra_unit": "6730.00000000",
-      "valor_venta_unit": "7090.00000000"
-    }
-  },
-  {
-    "model": "divisas.cotizacionsegmento",
+    "model": "divisas.tasacambio",
     "pk": 3,
     "fields": {
-      "divisa": 2,
-      "segmento": 1,
+      "divisa": 3,
       "fecha": "2025-09-15T12:00:00Z",
-      "precio_base": "7500.00000000",
+      "precio_base": "8800.00000000",
+      "comision_compra": "280.00000000",
+      "comision_venta": "120.00000000",
+      "creado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.tasacambio",
+    "pk": 4,
+    "fields": {
+      "divisa": 4,
+      "fecha": "2025-09-15T12:00:00Z",
+      "precio_base": "50.00000000",
+      "comision_compra": "2.00000000",
+      "comision_venta": "1.00000000",
+      "creado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.tasacambio",
+    "pk": 5,
+    "fields": {
+      "divisa": 5,
+      "fecha": "2025-09-15T12:00:00Z",
+      "precio_base": "6900.00000000",
       "comision_compra": "250.00000000",
-      "comision_venta": "150.00000000",
-      "porcentaje_descuento": "0.00",
-      "valor_compra_unit": "7250.00000000",
-      "valor_venta_unit": "7650.00000000"
+      "comision_venta": "100.00000000",
+      "creado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.tasacambio",
+    "pk": 6,
+    "fields": {
+      "divisa": 6,
+      "fecha": "2025-09-15T12:00:00Z",
+      "precio_base": "6700.00000000",
+      "comision_compra": "240.00000000",
+      "comision_venta": "90.00000000",
+      "creado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.tasacambio",
+    "pk": 7,
+    "fields": {
+      "divisa": 7,
+      "fecha": "2025-09-15T12:00:00Z",
+      "precio_base": "7200.00000000",
+      "comision_compra": "260.00000000",
+      "comision_venta": "110.00000000",
+      "creado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.tasacambio",
+    "pk": 8,
+    "fields": {
+      "divisa": 8,
+      "fecha": "2025-09-15T12:00:00Z",
+      "precio_base": "1050.00000000",
+      "comision_compra": "40.00000000",
+      "comision_venta": "20.00000000",
+      "creado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.tasacambio",
+    "pk": 9,
+    "fields": {
+      "divisa": 9,
+      "fecha": "2025-09-15T12:00:00Z",
+      "precio_base": "400.00000000",
+      "comision_compra": "15.00000000",
+      "comision_venta": "10.00000000",
+      "creado": "2025-09-15T12:00:00Z"
     }
   }
 ]

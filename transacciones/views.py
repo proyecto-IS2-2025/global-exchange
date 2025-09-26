@@ -11,7 +11,8 @@ from datetime import datetime, timedelta
 from .models import HistorialTransaccion
 from clientes.models import Cliente
 from divisas.models import Divisa
-from clientes.views import get_medio_acreditacion_seleccionado
+from clientes.views import get_medio_acreditacion_seleccionado, get_medio_pago_seleccionado
+from decimal import Decimal
 import logging
 from django.contrib import messages
 from django.shortcuts import render, redirect
@@ -133,6 +134,123 @@ def crear_transaccion_desde_venta(request):
         logger.error(f"Error al crear transacción: {e}")
         messages.error(request, f"Error al procesar la transacción: {str(e)}")
         return redirect('divisas:venta_sumario')
+
+
+@login_required
+def crear_transaccion_desde_compra(request):
+    """
+    Vista para crear una transacción desde el sumario de compra
+    """
+    if request.method != 'POST':
+        messages.error(request, "Método no permitido.")
+        return redirect('divisas:compra_sumario')
+    
+    try:
+        # Obtener datos de la sesión
+        operacion = request.session.get("operacion")
+        medio_inst = get_medio_pago_seleccionado(request)
+        
+        if not operacion:
+            messages.error(request, "No se encontró información de la operación.")
+            return redirect("divisas:compra")
+        
+        if not medio_inst:
+            messages.error(request, "No se encontró el medio de pago seleccionado.")
+            return redirect("clientes:seleccionar_medio_pago")
+
+        # Obtener cliente desde la sesión
+        cliente_id = request.session.get('cliente_id')
+        if not cliente_id:
+            messages.error(request, "No se encontró cliente activo.")
+            return redirect('clientes:seleccionar_cliente')
+        
+        cliente = get_object_or_404(Cliente, id=cliente_id, esta_activo=True)
+        
+        # Obtener divisas - Para compra: origen=PYG, destino=divisa comprada
+        divisa_origen = get_object_or_404(Divisa, code='PYG')  # Guaraníes
+        divisa_destino = get_object_or_404(Divisa, code=operacion.get('divisa'))
+        
+        # Preparar datos del medio de pago
+        medio_datos = {}
+        if isinstance(medio_inst, dict) and medio_inst.get("id"):
+            try:
+                from clientes.models import ClienteMedioDePago
+                medio_real = ClienteMedioDePago.objects.select_related('medio_de_pago').get(
+                    id=medio_inst.get("id")
+                )
+                
+                # Determinar el tipo del medio
+                medio_model = medio_real.medio_de_pago
+                tipo_label = "No definido"
+                
+                if medio_model.tipo_medio:
+                    from medios_pago.models import TIPO_MEDIO_CHOICES
+                    tipo_dict = dict(TIPO_MEDIO_CHOICES)
+                    tipo_label = tipo_dict.get(medio_model.tipo_medio, "No definido")
+                else:
+                    api_info = medio_model.get_api_info()
+                    tipo_label = api_info.get("nombre_usuario", "No definido")
+                
+                medio_datos = {
+                    'id': medio_inst.get("id"),
+                    'nombre': medio_model.nombre,
+                    'tipo': tipo_label,
+                    'comision': f"{medio_model.comision_porcentaje:.2f}%",
+                    'datos_campos': medio_real.datos_campos or {},
+                    'es_principal': medio_real.es_principal,
+                }
+                
+            except Exception as e:
+                logger.error(f"Error al obtener datos del medio: {e}")
+                medio_datos = {
+                    'id': medio_inst.get("id"),
+                    'nombre': medio_inst.get("nombre", "Medio desconocido"),
+                    'tipo': "No definido",
+                    'comision': "0%",
+                }
+        
+        # Crear la transacción
+        with transaction.atomic():
+            transaccion = Transaccion.objects.create(
+                tipo_operacion='compra',
+                cliente=cliente,
+                divisa_origen=divisa_origen,
+                divisa_destino=divisa_destino,
+                monto_origen=Decimal(str(operacion.get('monto_guaranies', '0'))),  # Lo que paga
+                monto_destino=Decimal(str(operacion.get('monto_divisa', '0'))),    # Lo que recibe
+                tasa_de_cambio_aplicada=Decimal(str(operacion.get('tasa_cambio', '0'))),
+                estado='pendiente',
+                medio_pago_datos=medio_datos,
+                procesado_por=request.user,
+                observaciones=f"Transacción creada desde compra de {operacion.get('divisa')} por {operacion.get('monto_guaranies')} Gs."
+            )
+            
+            # Crear historial inicial
+            HistorialTransaccion.objects.create(
+                transaccion=transaccion,
+                estado_anterior='',
+                estado_nuevo='pendiente',
+                observaciones='Transacción creada',
+                modificado_por=request.user
+            )
+        
+        # Limpiar datos de sesión
+        keys_to_remove = ['operacion', 'compra_resultado', 'medio_pago_seleccionado']
+        for key in keys_to_remove:
+            if key in request.session:
+                del request.session[key]
+        request.session.modified = True
+        
+        messages.success(request, f'Transacción {transaccion.numero_transaccion} creada exitosamente.')
+        
+        # Redirigir a la página de confirmación
+        return redirect('transacciones:confirmacion_operacion', numero_transaccion=transaccion.numero_transaccion)
+        
+    except Exception as e:
+        logger.error(f"Error al crear transacción de compra: {e}")
+        messages.error(request, f"Error al procesar la transacción: {str(e)}")
+        return redirect('divisas:compra_sumario')
+    
 
 @login_required
 def confirmacion_operacion(request, numero_transaccion):
