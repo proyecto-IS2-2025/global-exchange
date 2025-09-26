@@ -67,7 +67,7 @@ urlpatterns = [
     path('medios-pago/dashboard/', dashboard_medios_pago, name='dashboard_medios_pago'),
 
     # Proceso de agregar medio de pago
-    path('medios-pago/seleccionar/', select_medio_pago_view, name='seleccionar_medio_pago'),
+    path('medios-pago/seleccionar/', select_medio_pago_view, name='seleccionar_medio_pago_crear'),
     path('medios-pago/agregar/<int:medio_id>/', ClienteMedioDePagoCreateView.as_view(), name='agregar_medio_pago'),
 
     # Gestión individual de medios de pago
