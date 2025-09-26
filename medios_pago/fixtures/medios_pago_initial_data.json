@@ -4,6 +4,7 @@
     "pk": 1,
     "fields": {
       "nombre": "Transferencia bancaria",
+      "tipo_medio": "bank_local",
       "comision_porcentaje": "0.500",
       "is_active": true,
       "creado": "2025-09-15T12:00:00Z",
@@ -14,8 +15,9 @@
     "model": "medios_pago.mediodepago",
     "pk": 2,
     "fields": {
-      "nombre": "Billetera digital",
-      "comision_porcentaje": "1.000",
+      "nombre": "Tarjeta de crédito",
+      "tipo_medio": "stripe",
+      "comision_porcentaje": "3.500",
       "is_active": true,
       "creado": "2025-09-15T12:00:00Z",
       "actualizado": "2025-09-15T12:00:00Z"
@@ -25,11 +27,12 @@
     "model": "medios_pago.mediodepago",
     "pk": 3,
     "fields": {
-      "nombre": "Tarjeta de crédito",
-      "comision_porcentaje": "3.500",
+      "nombre": "credito",
+      "tipo_medio": "stripe",
+      "comision_porcentaje": "5.000",
       "is_active": true,
-      "creado": "2025-09-15T12:00:00Z",
-      "actualizado": "2025-09-15T12:00:00Z"
+      "creado": "2025-09-26T14:00:00Z",
+      "actualizado": "2025-09-26T14:00:00Z"
     }
   },
   {
@@ -37,8 +40,10 @@
     "pk": 1,
     "fields": {
       "medio_de_pago": 1,
-      "nombre_campo": "Número de Cuenta",
-      "tipo_dato": "NUMERO",
+      "nombre_campo": "Entidad",
+      "campo_api": "bank_entity",
+      "tipo_dato": "TEXTO",
+      "descripcion": "Nombre de la entidad bancaria (ej. Banco Atlas S.A.).",
       "is_required": true,
       "orden": 1,
       "creado": "2025-09-15T12:00:00Z",
@@ -50,8 +55,10 @@
     "pk": 2,
     "fields": {
       "medio_de_pago": 1,
-      "nombre_campo": "Entidad Bancaria",
-      "tipo_dato": "TEXTO",
+      "nombre_campo": "Número de Cuenta Bancaria",
+      "campo_api": "bank_account",
+      "tipo_dato": "NUMERO",
+      "descripcion": "Número de cuenta bancaria del cliente.",
       "is_required": true,
       "orden": 2,
       "creado": "2025-09-15T12:00:00Z",
@@ -62,11 +69,13 @@
     "model": "medios_pago.campomediodepago",
     "pk": 3,
     "fields": {
-      "medio_de_pago": 2,
-      "nombre_campo": "Número de Teléfono",
-      "tipo_dato": "TELEFONO",
+      "medio_de_pago": 1,
+      "nombre_campo": "Nombre y Apellido",
+      "campo_api": "account_holder_name",
+      "tipo_dato": "TEXTO",
+      "descripcion": "Nombre del titular de la cuenta bancaria.",
       "is_required": true,
-      "orden": 1,
+      "orden": 3,
       "creado": "2025-09-15T12:00:00Z",
       "actualizado": "2025-09-15T12:00:00Z"
     }
@@ -75,11 +84,13 @@
     "model": "medios_pago.campomediodepago",
     "pk": 4,
     "fields": {
-      "medio_de_pago": 2,
-      "nombre_campo": "Email",
-      "tipo_dato": "EMAIL",
-      "is_required": false,
-      "orden": 2,
+      "medio_de_pago": 1,
+      "nombre_campo": "Tipo de Documento",
+      "campo_api": "document_type",
+      "tipo_dato": "TEXTO",
+      "descripcion": "Tipo de documento del titular (ej. Cédula de Identidad, RUC).",
+      "is_required": true,
+      "orden": 4,
       "creado": "2025-09-15T12:00:00Z",
       "actualizado": "2025-09-15T12:00:00Z"
     }
@@ -88,11 +99,13 @@
     "model": "medios_pago.campomediodepago",
     "pk": 5,
     "fields": {
-      "medio_de_pago": 3,
-      "nombre_campo": "Número de Tarjeta",
+      "medio_de_pago": 1,
+      "nombre_campo": "Número de Documento",
+      "campo_api": "document_number",
       "tipo_dato": "NUMERO",
+      "descripcion": "Número del documento de identidad del titular.",
       "is_required": true,
-      "orden": 1,
+      "orden": 5,
       "creado": "2025-09-15T12:00:00Z",
       "actualizado": "2025-09-15T12:00:00Z"
     }
@@ -101,11 +114,13 @@
     "model": "medios_pago.campomediodepago",
     "pk": 6,
     "fields": {
-      "medio_de_pago": 3,
-      "nombre_campo": "Fecha de Vencimiento",
-      "tipo_dato": "FECHA",
+      "medio_de_pago": 2,
+      "nombre_campo": "Número de Tarjeta",
+      "campo_api": "card_number",
+      "tipo_dato": "NUMERO",
+      "descripcion": "Número de la tarjeta de crédito o débito.",
       "is_required": true,
-      "orden": 2,
+      "orden": 1,
       "creado": "2025-09-15T12:00:00Z",
       "actualizado": "2025-09-15T12:00:00Z"
     }
@@ -114,13 +129,150 @@
     "model": "medios_pago.campomediodepago",
     "pk": 7,
     "fields": {
-      "medio_de_pago": 3,
-      "nombre_campo": "Código de Seguridad",
+      "medio_de_pago": 2,
+      "nombre_campo": "Nombre en la tarjeta",
+      "campo_api": "card_holder_name",
+      "tipo_dato": "TEXTO",
+      "descripcion": "Nombre del titular de la tarjeta tal como aparece impresa.",
+      "is_required": true,
+      "orden": 2,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 8,
+    "fields": {
+      "medio_de_pago": 2,
+      "nombre_campo": "Mes de Vencimiento",
+      "campo_api": "card_exp_month",
       "tipo_dato": "NUMERO",
+      "descripcion": "Mes de vencimiento de la tarjeta.",
       "is_required": true,
       "orden": 3,
       "creado": "2025-09-15T12:00:00Z",
       "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 9,
+    "fields": {
+      "medio_de_pago": 2,
+      "nombre_campo": "Año de Vencimiento",
+      "campo_api": "card_exp_year",
+      "tipo_dato": "NUMERO",
+      "descripcion": "Año de vencimiento de la tarjeta.",
+      "is_required": true,
+      "orden": 4,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 10,
+    "fields": {
+      "medio_de_pago": 2,
+      "nombre_campo": "Código de seguridad",
+      "campo_api": "card_cvc",
+      "tipo_dato": "NUMERO",
+      "descripcion": "Código de seguridad de 3 o 4 dígitos de la tarjeta.",
+      "is_required": true,
+      "orden": 5,
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 11,
+    "fields": {
+      "medio_de_pago": 3,
+      "nombre_campo": "Número de Tarjeta",
+      "campo_api": "card_number",
+      "tipo_dato": "NUMERO",
+      "descripcion": "Número de la tarjeta de crédito o débito.",
+      "is_required": true,
+      "orden": 1,
+      "creado": "2025-09-26T14:00:00Z",
+      "actualizado": "2025-09-26T14:00:00Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 12,
+    "fields": {
+      "medio_de_pago": 3,
+      "nombre_campo": "Nombre en la tarjeta",
+      "campo_api": "card_holder_name",
+      "tipo_dato": "TEXTO",
+      "descripcion": "Nombre del titular de la tarjeta tal como aparece impresa.",
+      "is_required": true,
+      "orden": 2,
+      "creado": "2025-09-26T14:00:00Z",
+      "actualizado": "2025-09-26T14:00:00Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 13,
+    "fields": {
+      "medio_de_pago": 3,
+      "nombre_campo": "Mes de Vencimiento",
+      "campo_api": "card_exp_month",
+      "tipo_dato": "NUMERO",
+      "descripcion": "Mes de vencimiento de la tarjeta.",
+      "is_required": true,
+      "orden": 3,
+      "creado": "2025-09-26T14:00:00Z",
+      "actualizado": "2025-09-26T14:00:00Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 14,
+    "fields": {
+      "medio_de_pago": 3,
+      "nombre_campo": "Año de Vencimiento",
+      "campo_api": "card_exp_year",
+      "tipo_dato": "NUMERO",
+      "descripcion": "Año de vencimiento de la tarjeta.",
+      "is_required": true,
+      "orden": 4,
+      "creado": "2025-09-26T14:00:00Z",
+      "actualizado": "2025-09-26T14:00:00Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 15,
+    "fields": {
+      "medio_de_pago": 3,
+      "nombre_campo": "Código de seguridad",
+      "campo_api": "card_cvc",
+      "tipo_dato": "NUMERO",
+      "descripcion": "Código de seguridad de 3 o 4 dígitos de la tarjeta.",
+      "is_required": true,
+      "orden": 5,
+      "creado": "2025-09-26T14:00:00Z",
+      "actualizado": "2025-09-26T14:00:00Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 16,
+    "fields": {
+      "medio_de_pago": 3,
+      "nombre_campo": "Código Postal",
+      "campo_api": "card_zip_code",
+      "tipo_dato": "NUMERO",
+      "descripcion": "Código postal del titular de la tarjeta.",
+      "is_required": false,
+      "orden": 6,
+      "creado": "2025-09-26T14:00:00Z",
+      "actualizado": "2025-09-26T14:00:00Z"
     }
   }
 ]
