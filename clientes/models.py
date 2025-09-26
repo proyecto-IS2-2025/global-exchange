@@ -11,6 +11,15 @@ categorización por segmentos.
 from django.db import models
 from users.models import CustomUser
 from django.core.validators import MinValueValidator, MaxValueValidator
+
+from django.db import models
+from users.models import CustomUser
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
+from medios_pago.models import MedioDePago, CampoMedioDePago  # ← Agregar esta línea
+import json
+
+
 class Segmento(models.Model):
     """
     Modelo que representa un segmento de clientes.
@@ -177,6 +186,107 @@ class HistorialDescuentos(models.Model):
 
     def __str__(self):
         return f"Cambio en descuento de {self.descuento.segmento.name} el {self.fecha_cambio.strftime('%Y-%m-%d')}"
+
+# Agregar al final de clientes/models.py si no están
+
+# clientes/models.py - Método clean corregido para ClienteMedioDePago
+
+class ClienteMedioDePago(models.Model):
+    """
+    Instancia específica de un medio de pago asociado a un cliente.
+    Almacena los datos dinámicos según los campos definidos en MedioDePago.
+    """
+    cliente = models.ForeignKey(
+        'Cliente',
+        on_delete=models.CASCADE,
+        related_name='medios_pago'
+    )
+    medio_de_pago = models.ForeignKey(
+        'medios_pago.MedioDePago',
+        on_delete=models.CASCADE,
+        limit_choices_to={'is_active': True}
+    )
+    datos_campos = models.JSONField(
+        default=dict,
+        help_text='Datos dinámicos según los campos del medio de pago'
+    )
+    es_activo = models.BooleanField(default=True)
+    es_principal = models.BooleanField(
+        default=False,
+        help_text='Indica si es el medio de pago principal del cliente'
+    )
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+    creado_por = models.ForeignKey(
+        'users.CustomUser',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='medios_pago_creados'
+    )
+
+    class Meta:
+        verbose_name = 'Medio de Pago del Cliente'
+        verbose_name_plural = 'Medios de Pago de Clientes'
+        # ELIMINAR: unique_together = ['cliente', 'medio_de_pago']
+        ordering = ['-es_principal', '-fecha_actualizacion']
+
+
+    def __str__(self):
+        estado = "Principal" if self.es_principal else "Secundario"
+        return f'{self.cliente.nombre_completo} - {self.medio_de_pago.nombre} ({estado})'
+
+    def get_dato_campo(self, nombre_campo):
+        """Obtener valor de un campo específico"""
+        return self.datos_campos.get(nombre_campo, '')
+
+    def set_dato_campo(self, nombre_campo, valor):
+        """Establecer valor de un campo específico"""
+        self.datos_campos[nombre_campo] = valor
+
+    @property
+    def campos_completos(self):
+        """Verificar si todos los campos requeridos están completos"""
+        try:
+            self.clean()
+            return True
+        except ValidationError:
+            return False
+
+class HistorialClienteMedioDePago(models.Model):
+    """
+    Historial de cambios en los medios de pago de clientes
+    """
+    cliente_medio_pago = models.ForeignKey(
+        ClienteMedioDePago,
+        on_delete=models.CASCADE,
+        related_name='historial'
+    )
+    accion = models.CharField(
+        max_length=20,
+        choices=[
+            ('CREADO', 'Creado'),
+            ('ACTUALIZADO', 'Actualizado'),
+            ('DESACTIVADO', 'Desactivado'),
+            ('ACTIVADO', 'Activado'),
+        ]
+    )
+    datos_anteriores = models.JSONField(null=True, blank=True)
+    datos_nuevos = models.JSONField(null=True, blank=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+    modificado_por = models.ForeignKey(
+        'users.CustomUser',
+        on_delete=models.SET_NULL,
+        null=True
+    )
+    observaciones = models.TextField(blank=True)
+
+    class Meta:
+        verbose_name = 'Historial de Medio de Pago'
+        verbose_name_plural = 'Historial de Medios de Pago'
+        ordering = ['-fecha']
+
+    def __str__(self):
+        return f'{self.cliente_medio_pago} - {self.accion} ({self.fecha.strftime("%Y-%m-%d %H:%M")})'
 
 
 

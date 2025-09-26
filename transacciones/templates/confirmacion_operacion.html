@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}Operación Exitosa - {{ transaccion.numero_transaccion }}{% endblock %}
+
+{% block extra_head %}
+<style>
+.success-header {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+.success-icon {
+    width: 4rem;
+    height: 4rem;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin: 0 auto 1rem;
+}
+.transaction-summary {
+    background-color: #f8f9fa;
+    border-left: 4px solid #28a745;
+}
+.info-highlight {
+    background-color: #e3f2fd;
+    border: 1px solid #bbdefb;
+}
+.next-steps {
+    background-color: #fff3e0;
+    border: 1px solid #ffcc02;
+}
+.action-buttons .btn {
+    min-width: 150px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Encabezado de Éxito -->
+            <div class="card border-0 shadow mb-4">
+                <div class="card-header success-header text-white py-4">
+                    <div class="text-center">
+                        <div class="success-icon">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <h2 class="mb-2">¡Operación Realizada con Éxito!</h2>
+                        <p class="mb-0 fs-5">Tu transacción ha sido registrada correctamente</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Información Principal -->
+                <div class="col-lg-8">
+                    <!-- Resumen de la Transacción -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="bi bi-receipt me-2"></i>
+                                Resumen de la Transacción
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="transaction-summary p-3 rounded mb-3">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="text-muted small fw-bold">Número de Transacción</label>
+                                            <p class="mb-0 font-monospace fs-5 fw-bold text-success">{{ transaccion.numero_transaccion }}</p>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="text-muted small fw-bold">Tipo de Operación</label>
+                                            <p class="mb-0 text-capitalize">{{ transaccion.get_tipo_operacion_display }}</p>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="text-muted small fw-bold">Estado</label>
+                                            <p class="mb-0">
+                                                <span class="badge bg-warning fs-6">{{ transaccion.get_estado_display }}</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="text-muted small fw-bold">Fecha y Hora</label>
+                                            <p class="mb-0">{{ transaccion.fecha_creacion|date:"d/m/Y H:i:s" }}</p>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="text-muted small fw-bold">Cliente</label>
+                                            <p class="mb-0">{{ transaccion.cliente.nombre_completo }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Detalles de la Operación -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="info-highlight p-3 rounded">
+                                        <h6 class="text-primary mb-2">
+                                            <i class="bi bi-arrow-up-circle me-1"></i>
+                                            Vas a entregar
+                                        </h6>
+                                        <p class="mb-1 fs-4 fw-bold">{{ transaccion.monto_origen }} {{ transaccion.divisa_origen.code }}</p>
+                                        <p class="mb-0 text-muted small">{{ transaccion.divisa_origen.name }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-highlight p-3 rounded">
+                                        <h6 class="text-success mb-2">
+                                            <i class="bi bi-arrow-down-circle me-1"></i>
+                                            Vas a recibir
+                                        </h6>
+                                        <p class="mb-1 fs-4 fw-bold text-success">{{ transaccion.monto_destino }} {{ transaccion.divisa_destino.code }}</p>
+                                        <p class="mb-0 text-muted small">{{ transaccion.divisa_destino.name }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-3 text-center">
+                                <p class="text-muted mb-0">
+                                    <i class="bi bi-calculator me-2"></i>
+                                    Tasa de cambio aplicada: <strong>{{ transaccion.tasa_de_cambio_aplicada }}</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información del Medio de Acreditación -->
+                    {% if transaccion.medio_pago_datos %}
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="bi bi-credit-card me-2"></i>
+                                Medio de Acreditación
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <label class="text-muted small">Medio seleccionado</label>
+                                        <p class="mb-0 fw-bold">{{ transaccion.medio_pago_datos.nombre|default:"No especificado" }}</p>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="text-muted small">Tipo</label>
+                                        <p class="mb-0">{{ transaccion.medio_pago_datos.tipo|default:"No especificado" }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <label class="text-muted small">Comisión aplicada</label>
+                                        <p class="mb-0">{{ transaccion.medio_pago_datos.comision|default:"No aplica" }}</p>
+                                    </div>
+                                    {% if transaccion.medio_pago_datos.es_principal %}
+                                    <div class="mb-2">
+                                        <span class="badge bg-primary">
+                                            <i class="bi bi-star-fill me-1"></i>Medio Principal
+                                        </span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Panel Lateral -->
+                <div class="col-lg-4">
+                    <!-- Próximos Pasos -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="bi bi-list-check me-2"></i>
+                                Próximos Pasos
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="next-steps p-3 rounded">
+                                <div class="mb-3">
+                                    <div class="d-flex align-items-start">
+                                        <span class="badge bg-primary rounded-pill me-2">1</span>
+                                        <div>
+                                            <p class="mb-1 fw-bold">Transacción Registrada</p>
+                                            <p class="mb-0 small text-muted">Tu operación está en estado "Pendiente"</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="d-flex align-items-start">
+                                        <span class="badge bg-warning rounded-pill me-2">2</span>
+                                        <div>
+                                            <p class="mb-1 fw-bold">Esperando Procesamiento</p>
+                                            <p class="mb-0 small text-muted">Nuestro equipo revisará tu solicitud</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="d-flex align-items-start">
+                                        <span class="badge bg-info rounded-pill me-2">3</span>
+                                        <div>
+                                            <p class="mb-1 fw-bold">Confirmación</p>
+                                            <p class="mb-0 small text-muted">Te notificaremos cuando esté lista</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {% if transaccion.es_venta %}
+                                <div class="mb-0">
+                                    <div class="d-flex align-items-start">
+                                        <span class="badge bg-success rounded-pill me-2">4</span>
+                                        <div>
+                                            <p class="mb-1 fw-bold">Acreditación</p>
+                                            <p class="mb-0 small text-muted">Recibirás el dinero en tu medio seleccionado</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="mb-0">
+                                    <div class="d-flex align-items-start">
+                                        <span class="badge bg-success rounded-pill me-2">4</span>
+                                        <div>
+                                            <p class="mb-1 fw-bold">Retiro</p>
+                                            <p class="mb-0 small text-muted">Podrás retirar la divisa en nuestras terminales</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información Importante -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Información Importante
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">
+                                    <i class="bi bi-clock text-warning me-2"></i>
+                                    <small>El procesamiento puede tomar hasta 24 horas</small>
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-envelope text-primary me-2"></i>
+                                    <small>Recibirás notificaciones por email</small>
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-x-circle text-danger me-2"></i>
+                                    <small>Puedes cancelar mientras esté "Pendiente"</small>
+                                </li>
+                                <li class="mb-0">
+                                    <i class="bi bi-headset text-info me-2"></i>
+                                    <small>Contacta soporte si tienes dudas</small>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div class="action-buttons">
+                        <a href="{% url 'transacciones:detalle' numero_transaccion=transaccion.numero_transaccion %}" 
+                           class="btn btn-outline-primary me-2 mb-2">
+                            <i class="bi bi-eye me-2"></i>Ver Detalle Completo
+                        </a>
+                        
+                        <a href="{% url 'transacciones:historial_cliente' %}" 
+                           class="btn btn-outline-secondary me-2 mb-2">
+                            <i class="bi bi-list me-2"></i>Ver Mi Historial
+                        </a>
+                        
+                        <a href="{% url 'inicio' %}" 
+                           class="btn btn-primary mb-2">
+                            <i class="bi bi-house me-2"></i>Volver al Inicio
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-scroll suave al cargar la página
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Efecto de confetti (opcional, si quieres añadir más celebración)
+    // Se puede implementar con una librería como canvas-confetti
+});
+</script>
+{% endblock %}

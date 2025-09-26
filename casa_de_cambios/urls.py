@@ -10,4 +10,5 @@ urlpatterns = [
     path('', include('roles.urls')),
     path('medios_pago/', include('medios_pago.urls')),
     path('simulador/', include('simulador.urls', namespace='simulador')),
+    path('transacciones/', include('transacciones.urls', namespace='transacciones')),
 ]

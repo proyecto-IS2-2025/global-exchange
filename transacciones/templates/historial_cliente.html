@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Historial de Transacciones{% endblock %}
+
+{% block extra_head %}
+<style>
+.stats-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+.transaction-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border-left: 4px solid transparent;
+}
+.transaction-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.transaction-card.compra {
+    border-left-color: #28a745;
+}
+.transaction-card.venta {
+    border-left-color: #007bff;
+}
+.filter-card {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+}
+.amount-highlight {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+.status-pendiente { background-color: #ffc107; }
+.status-pagada { background-color: #28a745; }
+.status-cancelada { background-color: #dc3545; }
+.status-anulada { background-color: #6c757d; }
+.status-a_retirar { background-color: #17a2b8; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Encabezado -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">Mi Historial de Transacciones</h2>
+                    {% if cliente_activo %}
+                        <p class="text-muted mb-0">{{ cliente_activo.nombre_completo }} - {{ cliente_activo.cedula }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <a href="{% url 'inicio' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-house me-2"></i>Inicio
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    {% if estadisticas %}
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-1">{{ estadisticas.total_transacciones }}</h3>
+                    <p class="mb-0 small">Total Transacciones</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-1">{{ estadisticas.total_compras }}</h3>
+                    <p class="mb-0 small">Compras</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-1">{{ estadisticas.total_ventas }}</h3>
+                    <p class="mb-0 small">Ventas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h3 class="mb-1">{{ estadisticas.pendientes }}</h3>
+                    <p class="mb-0 small">Pendientes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card filter-card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="tipo" class="form-label">Tipo de Operación</label>
+                            <select name="tipo" id="tipo" class="form-select">
+                                <option value="todos" {% if filtros.tipo == 'todos' %}selected{% endif %}>Todas</option>
+                                <option value="compra" {% if filtros.tipo == 'compra' %}selected{% endif %}>Compras</option>
+                                <option value="venta" {% if filtros.tipo == 'venta' %}selected{% endif %}>Ventas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="estado" class="form-label">Estado</label>
+                            <select name="estado" id="estado" class="form-select">
+                                <option value="">Todos los estados</option>
+                                {% for estado_value, estado_display in estados_disponibles %}
+                                    <option value="{{ estado_value }}" {% if filtros.estado == estado_value %}selected{% endif %}>
+                                        {{ estado_display }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="fecha_desde" class="form-label">Desde</label>
+                            <input type="date" name="fecha_desde" id="fecha_desde" 
+                                   class="form-control" value="{{ filtros.fecha_desde }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="fecha_hasta" class="form-label">Hasta</label>
+                            <input type="date" name="fecha_hasta" id="fecha_hasta" 
+                                   class="form-control" value="{{ filtros.fecha_hasta }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-search me-1"></i>Filtrar
+                                </button>
+                                <a href="{% url 'transacciones:historial_cliente' %}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="bi bi-x-circle me-1"></i>Limpiar
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Transacciones -->
+    <div class="row">
+        <div class="col-12">
+            {% if transacciones %}
+                <div class="row">
+                    {% for transaccion in transacciones %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card transaction-card {{ transaccion.tipo_operacion }} h-100">
+                            <div class="card-body">
+                                <!-- Header de la transacción -->
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h6 class="card-title mb-1 font-monospace">{{ transaccion.numero_transaccion }}</h6>
+                                        <small class="text-muted">{{ transaccion.fecha_creacion|date:"d/m/Y H:i" }}</small>
+                                    </div>
+                                    <span class="badge status-{{ transaccion.estado }} text-white">
+                                        {{ transaccion.get_estado_display }}
+                                    </span>
+                                </div>
+
+                                <!-- Tipo de operación -->
+                                <div class="mb-3">
+                                    <div class="d-flex align-items-center">
+                                        {% if transaccion.es_compra %}
+                                            <i class="bi bi-arrow-down-circle text-success me-2"></i>
+                                            <span class="fw-bold text-success">COMPRA</span>
+                                        {% else %}
+                                            <i class="bi bi-arrow-up-circle text-primary me-2"></i>
+                                            <span class="fw-bold text-primary">VENTA</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Información de divisas -->
+                                <div class="mb-3">
+                                    <div class="row text-center">
+                                        <div class="col-5">
+                                            <div class="border rounded p-2">
+                                                <div class="amount-highlight text-truncate">{{ transaccion.monto_origen }}</div>
+                                                <small class="text-muted">{{ transaccion.divisa_origen.code }}</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-2 d-flex align-items-center justify-content-center">
+                                            <i class="bi bi-arrow-right"></i>
+                                        </div>
+                                        <div class="col-5">
+                                            <div class="border rounded p-2">
+                                                <div class="amount-highlight text-truncate">{{ transaccion.monto_destino }}</div>
+                                                <small class="text-muted">{{ transaccion.divisa_destino.code }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tasa de cambio -->
+                                <div class="text-center mb-3">
+                                    <small class="text-muted">
+                                        <i class="bi bi-calculator me-1"></i>
+                                        Tasa: {{ transaccion.tasa_de_cambio_aplicada }}
+                                    </small>
+                                </div>
+
+                                <!-- Medio de pago/acreditación -->
+                                {% if transaccion.medio_pago_datos.nombre %}
+                                <div class="mb-3">
+                                    <small class="text-muted d-block">
+                                        {% if transaccion.es_compra %}Medio de pago:{% else %}Medio de acreditación:{% endif %}
+                                    </small>
+                                    <small class="fw-bold">{{ transaccion.medio_pago_datos.nombre|truncatechars:25 }}</small>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Footer con acciones -->
+                            <div class="card-footer bg-transparent">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% url 'transacciones:detalle' numero_transaccion=transaccion.numero_transaccion %}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-eye me-1"></i>Ver Detalle
+                                    </a>
+                                    
+                                    {% if transaccion.puede_cancelarse %}
+                                        <a href="{% url 'transacciones:cancelar' numero_transaccion=transaccion.numero_transaccion %}" 
+                                           class="btn btn-outline-danger btn-sm">
+                                            <i class="bi bi-x-circle me-1"></i>Cancelar
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Paginación -->
+                {% if is_paginated %}
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <nav>
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}" aria-label="Anterior">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ num }}">{{ num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.next_page_number }}" aria-label="Siguiente">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+
+                        <!-- Info de paginación -->
+                        <div class="text-center text-muted mt-2">
+                            <small>
+                                Mostrando {{ page_obj.start_index }} - {{ page_obj.end_index }} 
+                                de {{ page_obj.paginator.count }} transacciones
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+            {% else %}
+                <!-- Estado vacío -->
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="bi bi-inbox" style="font-size: 4rem; color: #dee2e6;"></i>
+                    </div>
+                    <h4 class="text-muted mb-3">No hay transacciones</h4>
+                    {% if filtros.tipo != 'todos' or filtros.estado or filtros.fecha_desde or filtros.fecha_hasta %}
+                        <p class="text-muted mb-3">No se encontraron transacciones con los filtros aplicados.</p>
+                        <a href="{% url 'transacciones:historial_cliente' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Ver Todas las Transacciones
+                        </a>
+                    {% else %}
+                        <p class="text-muted mb-3">Aún no has realizado ninguna transacción.</p>
+                        <a href="{% url 'inicio' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-2"></i>Realizar Primera Transacción
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Información adicional -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card bg-light border-0">
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <i class="bi bi-shield-check text-success mb-2" style="font-size: 2rem;"></i>
+                            <h6>Transacciones Seguras</h6>
+                            <small class="text-muted">Todas las operaciones están protegidas</small>
+                        </div>
+                        <div class="col-md-3">
+                            <i class="bi bi-clock text-primary mb-2" style="font-size: 2rem;"></i>
+                            <h6>Historial Completo</h6>
+                            <small class="text-muted">Acceso a todas tus transacciones</small>
+                        </div>
+                        <div class="col-md-3">
+                            <i class="bi bi-graph-up text-info mb-2" style="font-size: 2rem;"></i>
+                            <h6>Seguimiento en Tiempo Real</h6>
+                            <small class="text-muted">Monitorea el estado de tus operaciones</small>
+                        </div>
+                        <div class="col-md-3">
+                            <i class="bi bi-headset text-warning mb-2" style="font-size: 2rem;"></i>
+                            <h6>Soporte 24/7</h6>
+                            <small class="text-muted">Estamos aquí para ayudarte</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh cada 30 segundos si hay transacciones pendientes
+    const pendienteCards = document.querySelectorAll('.transaction-card .status-pendiente');
+    if (pendienteCards.length > 0) {
+        let refreshInterval = setInterval(function() {
+            // Solo refrescar si la página está visible
+            if (!document.hidden) {
+                window.location.reload();
+            }
+        }, 30000); // 30 segundos
+        
+        // Limpiar interval cuando la página se oculta
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                clearInterval(refreshInterval);
+            } else {
+                // Reiniciar interval cuando vuelve a ser visible
+                refreshInterval = setInterval(function() {
+                    if (!document.hidden) {
+                        window.location.reload();
+                    }
+                }, 30000);
+            }
+        });
+    }
+    
+    // Mejorar UX de las tarjetas de transacciones
+    const cards = document.querySelectorAll('.transaction-card');
+    cards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            // Solo si no se hizo clic en un botón
+            if (!e.target.closest('.btn')) {
+                const detailLink = this.querySelector('a[href*="detalle"]');
+                if (detailLink) {
+                    window.location.href = detailLink.href;
+                }
+            }
+        });
+        
+        // Cambiar cursor
+        card.style.cursor = 'pointer';
+    });
+    
+    // Validación de fechas en el formulario de filtros
+    const fechaDesde = document.getElementById('fecha_desde');
+    const fechaHasta = document.getElementById('fecha_hasta');
+    
+    if (fechaDesde && fechaHasta) {
+        fechaDesde.addEventListener('change', function() {
+            if (this.value && fechaHasta.value && this.value > fechaHasta.value) {
+                fechaHasta.value = this.value;
+            }
+        });
+        
+        fechaHasta.addEventListener('change', function() {
+            if (this.value && fechaDesde.value && this.value < fechaDesde.value) {
+                fechaDesde.value = this.value;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,3 +1,4 @@
+#divisas
 from django.apps import AppConfig
 
 
