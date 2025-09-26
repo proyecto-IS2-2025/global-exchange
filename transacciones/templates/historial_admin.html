@@ -5,6 +5,7 @@
 {% block extra_head %}
 
 <style>
+
 .admin-header {
     background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
 }
@@ -51,14 +52,14 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="card border-0 shadow">
-                <div class="card-header admin-header text-white py-4">
+                <div class="card-header bg-primary admin-header text-white py-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h2 class="mb-1">
                                 <i class="bi bi-shield-lock me-2"></i>
                                 Panel Administrativo - Transacciones
                             </h2>
-                            <p class="mb-0 opacity-75">Gestión completa de todas las transacciones del sistema</p>
+                            <p class="mb-0 text-white">Gestión completa de todas las transacciones del sistema</p>
                         </div>
                         <div>
                             <a href="{% url 'inicio' %}" class="btn btn-light me-2">

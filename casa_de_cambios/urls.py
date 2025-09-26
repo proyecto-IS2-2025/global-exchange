@@ -11,4 +11,7 @@ urlpatterns = [
     path('medios_pago/', include('medios_pago.urls')),
     path('simulador/', include('simulador.urls', namespace='simulador')),
     path('transacciones/', include('transacciones.urls', namespace='transacciones')),
+    path("banco/", include("banco.urls")),
+    path("billetera/", include("billetera.urls", namespace="billetera")),
+
 ]
