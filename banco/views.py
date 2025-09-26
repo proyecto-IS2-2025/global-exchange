@@ -16,6 +16,14 @@ logger = logging.getLogger(__name__)
 
 # --------- FUNCIÓN DE USUARIO AUTENTICADO ---------
 def get_logged_user(request):
+    """
+    Función auxiliar para obtener el objeto :class:`~banco.models.BancoUser` a partir del ID de sesión.
+
+    :param request: El objeto de solicitud HTTP.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: El objeto BancoUser si está logueado, o None.
+    :rtype: :class:`~banco.models.BancoUser` or None
+    """
     user_id = request.session.get("user_id")
     if user_id:
         try:
@@ -26,6 +34,16 @@ def get_logged_user(request):
 
 # --------- LOGIN ---------
 def login_view(request):
+    """
+    Vista para manejar el inicio de sesión del usuario bancario.
+
+    Si es POST, valida las credenciales, establece la sesión y redirige al dashboard.
+
+    :param request: El objeto de solicitud HTTP.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: Una respuesta HTTP de renderizado o una redirección.
+    :rtype: :class:`django.http.HttpResponse`
+    """
     if request.method == "POST":
         email = request.POST.get("email")
         password = request.POST.get("password")
@@ -45,11 +63,29 @@ def login_view(request):
 
 # --------- LOGOUT ---------
 def logout_view(request):
+    """
+    Cierra la sesión del usuario logueado y lo redirige a la página de login.
+
+    :param request: El objeto de solicitud HTTP.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: Una redirección a la vista de login.
+    :rtype: :class:`django.http.HttpResponseRedirect`
+    """
     request.session.flush()
     return redirect("banco:login")
 
 # --------- DASHBOARD ---------
 def dashboard(request):
+    """
+    Vista principal del usuario logueado. Muestra el resumen de sus productos bancarios.
+
+    Requiere que el usuario esté autenticado. Muestra la cuenta, tarjeta de débito y crédito.
+
+    :param request: El objeto de solicitud HTTP.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: Una respuesta HTTP de renderizado para el dashboard o redirección a login.
+    :rtype: :class:`django.http.HttpResponse`
+    """
     user = get_logged_user(request)
     if not user:
         return redirect("banco:login")
@@ -71,6 +107,17 @@ def dashboard(request):
 # views.py
 
 def transferir(request):
+    """
+    Vista para manejar la creación y procesamiento de transferencias bancarias.
+
+    Utiliza el formulario :class:`~banco.forms.TransferenciaForm` y, si es válido, 
+    realiza el débito/crédito de fondos de forma atómica, creando un registro de :class:`~banco.models.Transferencia`.
+
+    :param request: El objeto de solicitud HTTP.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: Una respuesta HTTP de renderizado o redirección al dashboard.
+    :rtype: :class:`django.http.HttpResponse`
+    """
     user = get_logged_user(request)
     if not user:
         return redirect("banco:login")
@@ -134,6 +181,17 @@ def transferir(request):
 # --------- HISTORIAL ---------
 # views.py
 def historial(request):
+    """
+    Muestra el historial unificado de movimientos bancarios del usuario.
+
+    Recupera todas las :class:`~banco.models.Transferencia` y :class:`~banco.models.PagoTarjeta` 
+    relacionadas con el usuario autenticado, las unifica y ordena por fecha.
+
+    :param request: El objeto de solicitud HTTP.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: Una respuesta HTTP de renderizado con la lista de movimientos.
+    :rtype: :class:`django.http.HttpResponse`
+    """
     user = get_logged_user(request)
     if not user:
         return redirect("banco:login")
@@ -169,6 +227,17 @@ def historial(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def api_recargar(request):
+    """
+    Endpoint de API para recargar una billetera virtual desde una cuenta bancaria.
+
+    El endpoint requiere ser llamado con método POST y acepta JSON. 
+    Realiza la transferencia de fondos (débito de cuenta y crédito de billetera) de forma atómica.
+
+    :param request: El objeto de solicitud HTTP (espera JSON en el cuerpo).
+    :type request: :class:`django.http.HttpRequest`
+    :returns: Una respuesta JSON con el estado de la operación.
+    :rtype: :class:`django.http.JsonResponse`
+    """
     from billetera.models import BilleteraUser, Billetera
 
     try:
@@ -214,6 +283,17 @@ def api_recargar(request):
 
 # views.py
 def pagar(request):
+    """
+    Vista para realizar un pago utilizando la tarjeta de débito o crédito del usuario.
+
+    Si es POST, procesa el pago utilizando la lógica de :meth:`~banco.models.PagoTarjeta.save` 
+    para validar y actualizar saldos/límites.
+
+    :param request: El objeto de solicitud HTTP.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: Una respuesta HTTP de renderizado para el formulario de pago o redirección al dashboard.
+    :rtype: :class:`django.http.HttpResponse`
+    """
     user = get_logged_user(request)
     if not user:
         return redirect("banco:login")
