@@ -169,7 +169,13 @@ def crear_transaccion_desde_compra(request):
         # Obtener divisas - Para compra: origen=PYG, destino=divisa comprada
         divisa_origen = get_object_or_404(Divisa, code='PYG')  # Guaraníes
         divisa_destino = get_object_or_404(Divisa, code=operacion.get('divisa'))
-        
+        monto_origen = Decimal(str(operacion.get('monto_guaranies', '0')))
+        monto_destino = monto_origen  # 👈 este es el que se verifica en límites
+
+        ok, msg = verificar_limites(cliente, monto_destino)
+        if not ok:
+            messages.error(request, msg)
+            return redirect('divisas:compra_sumario')
         # Preparar datos del medio de pago
         medio_datos = {}
         if isinstance(medio_inst, dict) and medio_inst.get("id"):
