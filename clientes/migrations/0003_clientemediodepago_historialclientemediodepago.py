@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clientes', '0002_initial'),
+        ('clientes', '0001_initial'),
         ('medios_pago', '0005_alter_campomediodepago_unique_together_and_more'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
