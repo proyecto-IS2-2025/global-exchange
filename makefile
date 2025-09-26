@@ -71,11 +71,11 @@ test-simulador:
 
 docker-loaddata:
 	@echo "Cargando datos iniciales..."
-	docker exec web python manage.py loaddata roles_data.json
-	docker exec web python manage.py loaddata roles_data.json
-	docker exec web python manage.py loaddata users_data.json
-	docker exec web python manage.py loaddata clientes_data.json
-	docker exec web python manage.py loaddata divisas_initial_data.json
+	docker exec glx-web python manage.py loaddata roles_data.json
+	docker exec glx-web python manage.py loaddata roles_data.json
+	docker exec glx-web python manage.py loaddata users_data.json
+	docker exec glx-web python manage.py loaddata clientes_data.json
+	docker exec glx-web python manage.py loaddata divisas_initial_data.json
 #	python manage.py loaddata medios_pago_initial_data.json
 	@echo "Datos iniciales cargados."
 

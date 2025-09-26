@@ -1,8 +1,8 @@
 #!/bin/sh
 # Espera a que la base de datos esté lista
 # El host es el nombre del servicio de la base de datos en docker-compose.yml
-# En este caso, 'glx-db'
-./wait-for-it.sh glx-db:5432 --timeout=30
+# En este caso, 'db'
+/app/scripts/wait-for-it.sh db:5432 --timeout=30
 
 # Aplica las migraciones de Django
 python manage.py migrate --noinput
