@@ -1,0 +1,139 @@
+{% extends "banco/base.html" %}
+
+{% block title %}Historial de Movimientos{% endblock %}
+
+{% block extra_head %}
+<style>
+  body {
+    background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    color: #333;
+  }
+
+  .navbar-custom {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  }
+
+  .navbar-custom .navbar-brand {
+    color: var(--color-principal);
+    font-weight: 700;
+    font-size: 1.5rem;
+  }
+
+  .card-header {
+    background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
+    color: #fff;
+    border-bottom: none;
+  }
+
+  .table th, .table td {
+    border-top: none;
+  }
+
+  .table-responsive {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
+  .table thead th {
+    background-color: #f8f9fa;
+    color: #495057;
+  }
+
+  .text-danger {
+    color: #dc3545 !important;
+  }
+
+  .text-success {
+    color: #28a745 !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="card border-0 shadow-lg">
+    <div class="card-header text-center">
+      <h4 class="mb-0 text-white">
+        <i class="bi bi-clock-history me-2"></i>
+        Historial de Movimientos
+      </h4>
+    </div>
+    <div class="card-body p-0">
+      {% if movimientos %}
+        <div class="table-responsive">
+          <table class="table table-striped table-hover mb-0">
+            <thead>
+              <tr>
+                <th scope="col">Fecha</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Monto</th>
+                <th scope="col">Descripción</th>
+                <th scope="col">Comprobante</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for m in movimientos %}
+                <tr>
+                  <td>{{ m.fecha|date:"d M, Y H:i" }}</td>
+                  <td>
+                    {% if m.cuenta_origen %}
+                      <span class="badge bg-primary">Transferencia</span>
+                    {% else %}
+                      <span class="badge {% if m.tarjeta_debito %}bg-success{% else %}bg-warning{% endif %}">
+                        Pago {{ m.tarjeta_debito|yesno:"Débito,Crédito" }}
+                      </span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if m.cuenta_origen %}
+                      {% if m.cuenta_origen.usuario.id == user.id %}
+                        <span class="text-danger">- ₲ {{ m.monto|floatformat:2 }}</span>
+                      {% else %}
+                        <span class="text-success">+ ₲ {{ m.monto|floatformat:2 }}</span>
+                      {% endif %}
+                    {% else %}
+                      <span class="text-danger">- ₲ {{ m.monto|floatformat:2 }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if m.cuenta_origen %}
+                      {% if m.cuenta_origen.usuario.id == user.id %}
+                        A cuenta {{ m.cuenta_destino.numero_cuenta }}
+                      {% else %}
+                        De cuenta {{ m.cuenta_origen.numero_cuenta }}
+                      {% endif %}
+                    {% else %}
+                      {% if m.tarjeta_debito %}
+                        Pago con Débito (****{{ m.tarjeta_debito.numero|slice:"-4:" }})
+                      {% elif m.tarjeta_credito %}
+                        Pago con Crédito (****{{ m.tarjeta_credito.numero|slice:"-4:" }})
+                      {% endif %}
+                    {% endif %}
+                  </td>
+                  <td><code class="text-muted">{{ m.comprobante|truncatechars:8 }}</code></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-muted text-center p-5">
+          <i class="bi bi-inbox display-4 d-block mb-3"></i>
+          No hay movimientos registrados.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="text-center mt-4">
+    <a href="{% url 'banco:dashboard' %}" class="btn btn-light btn-lg">
+      <i class="bi bi-arrow-left-circle-fill me-2"></i> Volver al Panel
+    </a>
+  </div>
+</div>
+{% endblock %}

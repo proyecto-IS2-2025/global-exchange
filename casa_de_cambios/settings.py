@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'widget_tweaks',
     'simulador',
     'transacciones',
+    'banco',
+    'billetera',
 ]
 
 MIDDLEWARE = [
@@ -150,6 +152,9 @@ EMAIL_HOST_PASSWORD = 'tpsh yedw lthc oprs'
 #LOGIN_REDIRECT_URL = 'inicio'
 LOGOUT_REDIRECT_URL = 'inicio'
 LOGIN_REDIRECT_URL = '/redirect-dashboard/'
+
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'   # a dónde redirige tras login exitoso (puedes poner 'inicio')
 
 
 

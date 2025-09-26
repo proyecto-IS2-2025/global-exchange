@@ -1,0 +1,38 @@
+{% extends "banco/base.html" %}
+
+{% block title %}Login Banco{% endblock %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center vh-100">
+  <div class="card shadow p-4" style="max-width: 400px; width: 100%;">
+    <h2 class="text-center mb-4">Acceso al Banco</h2>
+
+    {% if error %}
+      <div class="alert alert-danger text-center" role="alert">
+        {{ error }}
+      </div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="email" class="form-label">Correo electrónico</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+          <input type="email" name="email" id="email" class="form-control" placeholder="ejemplo@correo.com" required>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label">Contraseña</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-lock"></i></span>
+          <input type="password" name="password" id="password" class="form-control" placeholder="••••••••" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100">Entrar</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

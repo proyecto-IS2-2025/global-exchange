@@ -1,0 +1,187 @@
+{% extends 'billetera/base.html' %}
+
+{% block title %}Historial - Billetera Digital{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4><i class="fas fa-history me-2"></i>Historial de Movimientos</h4>
+                {% if billetera %}
+                <span class="badge bg-primary">{{ movimientos|length }} movimientos</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if movimientos %}
+                    {% for movimiento in movimientos %}
+                    <div class="d-flex justify-content-between align-items-center py-3 transaction-item border-bottom" 
+                         data-comprobante="{{ movimiento.comprobante }}">
+                        <div class="d-flex align-items-center">
+                            {% if movimiento.tipo == 'RECARGA' %}
+                                <div class="me-3">
+                                    <i class="fas fa-plus-circle fa-2x text-success"></i>
+                                </div>
+                            {% elif movimiento.tipo == 'ENVIO' %}
+                                <div class="me-3">
+                                    <i class="fas fa-arrow-up fa-2x text-danger"></i>
+                                </div>
+                            {% else %}
+                                <div class="me-3">
+                                    <i class="fas fa-arrow-down fa-2x text-success"></i>
+                                </div>
+                            {% endif %}
+                            <div>
+                                <h6 class="mb-1">{{ movimiento.get_tipo_display }}</h6>
+                                <p class="text-muted mb-1">{{ movimiento.descripcion }}</p>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>{{ movimiento.fecha|date:"d/m/Y H:i" }}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <h5 class="mb-1 {% if movimiento.tipo == 'ENVIO' %}text-danger{% else %}text-success{% endif %}">
+                                {% if movimiento.tipo == 'ENVIO' %}-{% else %}+{% endif %}₲{{ movimiento.monto|floatformat:0 }}
+                            </h5>
+                            <small class="text-muted">
+                                <i class="fas fa-receipt me-1"></i>{{ movimiento.comprobante|truncatechars:8 }}...
+                            </small>
+                            <br>
+                            <button class="btn btn-sm btn-outline-info mt-1" onclick="verComprobante('{{ movimiento.comprobante }}')">
+                                <i class="fas fa-eye"></i> Ver
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                        <h5 class="text-muted">No hay movimientos</h5>
+                        <p class="text-muted">Cuando realices transacciones, aparecerán aquí.</p>
+                        <a href="{% url 'billetera:recargar' %}" class="btn btn-primary">
+                            <i class="fas fa-plus-circle me-1"></i>Hacer primera recarga
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        {% if billetera %}
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-wallet me-1"></i>Resumen</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <h6>{{ billetera.entidad.nombre }}</h6>
+                    <h4>₲{{ billetera.saldo|floatformat:0 }}</h4>
+                    <small class="text-muted">Saldo actual</small>
+                </div>
+                <hr>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <strong class="text-success">{{ movimientos|length }}</strong>
+                        <br><small>Total</small>
+                    </div>
+                    <div class="col-4">
+                        <strong class="text-info">
+                            {% for mov in movimientos %}
+                                {% if mov.tipo == 'RECARGA' %}{{ forloop.counter0|add:1 }}{% endif %}
+                            {% empty %}0{% endfor %}
+                        </strong>
+                        <br><small>Recargas</small>
+                    </div>
+                    <div class="col-4">
+                        <strong class="text-primary">
+                            {% for mov in movimientos %}
+                                {% if mov.tipo == 'ENVIO' %}{{ forloop.counter0|add:1 }}{% endif %}
+                            {% empty %}0{% endfor %}
+                        </strong>
+                        <br><small>Envíos</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line me-1"></i>Acciones Rápidas</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'billetera:recargar' %}" class="btn btn-success">
+                        <i class="fas fa-plus-circle me-1"></i>Recargar
+                    </a>
+                    <a href="{% url 'billetera:transferir' %}" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-1"></i>Transferir
+                    </a>
+                    <a href="{% url 'billetera:dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-home me-1"></i>Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal para mostrar detalles del comprobante -->
+<div class="modal fade" id="comprobanteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-receipt me-2"></i>Comprobante de Transacción
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="comprobanteContent">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function verComprobante(comprobante) {
+    const modal = new bootstrap.Modal(document.getElementById('comprobanteModal'));
+    const content = document.getElementById('comprobanteContent');
+    
+    // Mostrar spinner
+    content.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    `;
+    
+    modal.show();
+    
+    // Simular carga de datos (en una aplicación real, harías una petición AJAX)
+    setTimeout(() => {
+        content.innerHTML = `
+            <div class="text-center">
+                <div class="border p-4 bg-light rounded">
+                    <h6 class="text-primary mb-3">COMPROBANTE DIGITAL</h6>
+                    <p><strong>Número:</strong> ${comprobante}</p>
+                    <p><strong>Estado:</strong> <span class="badge bg-success">Procesado</span></p>
+                    <hr>
+                    <small class="text-muted">
+                        Este comprobante certifica que la transacción fue procesada exitosamente.
+                    </small>
+                </div>
+            </div>
+        `;
+    }, 500);
+}
+</script>
+{% endblock %}
