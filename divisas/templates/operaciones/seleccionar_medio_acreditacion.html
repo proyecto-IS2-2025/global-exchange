@@ -189,22 +189,16 @@ $('.btn-seleccionar-medio').on('click', function() {
             'csrfmiddlewaretoken': '{{ csrf_token }}'
         },
         success: function(response) {
-            if (response.success) {
-                mostrarMensajeExito(response.message || 'Medio seleccionado correctamente');
-
-                if (response.redirect_url) {
-                    setTimeout(() => {
-                        window.location.href = response.redirect_url;
-                    }, 1000);
-                } else {
-                    window.location.reload();
-                }
-            } else {
-                mostrarMensajeError(response.error || 'Error al seleccionar el medio');
-                $btn.html(originalHtml);
-                $btn.prop('disabled', false);
-            }
+            if (response.success && response.redirect_url) {
+                // Redirige inmediatamente al sumario
+                window.location.href = response.redirect_url;
+                return;
+            } 
+            
+            mostrarMensajeError(response.error || 'Error al seleccionar el medio');
+            $btn.html(originalHtml).prop('disabled', false);
         },
+
         error: function() {
             mostrarMensajeError('Error de conexión');
             $btn.html(originalHtml);
