@@ -5,7 +5,6 @@
 <div class="container mt-4">
   <h2>Historial de Límites Diarios</h2>
 
-  <!-- Botones Volver y Nuevo -->
   <div class="d-flex gap-2 mb-3">
     <a href="{% url 'clientes:lista_clientes' %}" class="btn btn-secondary">
        Volver
@@ -15,16 +14,13 @@
     </a>
   </div>
 
-
-  </div>
-  <!-- Tabla -->
   <table class="table table-bordered">
     <thead class="table-dark">
       <tr>
         <th>Fecha</th>
         <th>Monto (Gs.)</th>
         <th>Inicio Vigencia</th>
-      </tr>
+        <th>Acciones</th> </tr>
     </thead>
     <tbody>
       {% for l in limites %}
@@ -32,9 +28,14 @@
         <td>{{ l.fecha }}</td>
         <td>{{ l.monto|intcomma }}</td>
         <td>{{ l.inicio_vigencia|date:"d/m/Y H:i" }}</td>
+        <td>
+            <a href="{% url 'clientes:editar_limite_diario' l.pk %}" class="btn btn-sm btn-warning">
+                <i class="fas fa-edit"></i> Editar
+            </a>
+        </td>
       </tr>
       {% empty %}
-      <tr><td colspan="3">No hay límites definidos.</td></tr>
+      <tr><td colspan="4">No hay límites definidos.</td></tr>
       {% endfor %}
     </tbody>
   </table>

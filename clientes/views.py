@@ -1335,3 +1335,23 @@ def get_medio_acreditacion_seleccionado(request):
     Obtener el medio de acreditación seleccionado para la operación actual
     """
     return request.session.get("medio_seleccionado")
+
+class LimiteDiarioUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = LimiteDiario
+    form_class = LimiteDiarioForm 
+    template_name = 'clientes/editar_limite_diario.html' # Crear esta plantilla
+    success_url = reverse_lazy('clientes:lista_limites_diarios')
+
+    def test_func(self):
+        # Asegura que solo el personal autorizado pueda editar
+        return self.request.user.is_staff
+    
+
+class LimiteMensualUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = LimiteMensual
+    form_class = LimiteMensualForm
+    template_name = 'clientes/editar_limite_mensual.html' # Crear esta plantilla
+    success_url = reverse_lazy('clientes:lista_limites_mensuales')
+
+    def test_func(self):
+        return self.request.user.is_staff
