@@ -635,10 +635,22 @@ class LimiteDiarioForm(forms.ModelForm):
 
     def clean_fecha(self):
         fecha = self.cleaned_data["fecha"]
-        hoy = timezone.localdate()
 
+        # [Opcional] No permitir fechas pasadas
+        hoy = timezone.localdate()
         if fecha < hoy:
-            raise forms.ValidationError("No se pueden definir límites para fechas pasadas.")
+            raise forms.ValidationError("No se pueden registrar límites en fechas pasadas.")
+            
+        # --- LÓGICA: Excluir el objeto que se está editando de la búsqueda de duplicados ---
+        qs = LimiteDiario.objects.filter(fecha=fecha)
+
+        if self.instance.pk:
+            # Si self.instance.pk existe, estamos editando. Excluimos ese registro.
+            qs = qs.exclude(pk=self.instance.pk)
+        
+        if qs.exists():
+            raise forms.ValidationError("Ya existe un límite configurado para esta fecha.")
+
         return fecha
 
     def save(self, commit=True):
@@ -673,17 +685,22 @@ class LimiteMensualForm(forms.ModelForm):
 
     def clean_mes(self):
         fecha = self.cleaned_data["mes"]
-        print(">>> CLEAN_MES recibido:", fecha, type(fecha))
-        # Normalizar siempre al día 1
+        # Normalizar siempre al día 1 (esta parte está correcta)
         fecha = date(fecha.year, fecha.month, 1)
 
-        # No permitir meses pasados
+        # No permitir meses pasados (esta parte está correcta)
         hoy = timezone.localdate()
         if fecha < date(hoy.year, hoy.month, 1):
             raise forms.ValidationError("No se pueden registrar límites en meses pasados.")
 
-        # Evitar duplicados
-        if LimiteMensual.objects.filter(mes=fecha).exists():
+        # --- NUEVA LÓGICA: Excluir el objeto que se está editando de la búsqueda de duplicados ---
+        qs = LimiteMensual.objects.filter(mes=fecha)
+
+        if self.instance.pk:
+            # Si self.instance.pk existe, estamos editando. Excluimos ese registro.
+            qs = qs.exclude(pk=self.instance.pk)
+        
+        if qs.exists():
             raise forms.ValidationError("Ya existe un límite configurado para este mes.")
 
         return fecha
