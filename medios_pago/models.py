@@ -132,7 +132,6 @@ PREDEFINED_FIELDS = {
         'required': False,
         'description': 'Descripción del medio de pago'
     },
-    
     # Campos para criptomonedas
     'wallet_address': {
         'label': 'Dirección de billetera',
@@ -146,7 +145,6 @@ PREDEFINED_FIELDS = {
         'required': True,
         'description': 'Red blockchain (ETH, BTC, etc.)'
     },
-    
     # Campos específicos para billeteras electrónicas
     'wallet_phone': {
         'label': 'Teléfono de billetera',
