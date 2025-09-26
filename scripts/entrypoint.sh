@@ -4,6 +4,7 @@
 # En este caso, 'db'
 /app/scripts/wait-for-it.sh db:5432 --timeout=30
 
+python manage.py makemigrations --noinput
 # Aplica las migraciones de Django
 python manage.py migrate --noinput
 
