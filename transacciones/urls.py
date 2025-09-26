@@ -25,4 +25,6 @@ urlpatterns = [
     
     # Cancelar transacción (cliente)
     path('cancelar/<str:numero_transaccion>/', views.cancelar_transaccion, name='cancelar'),
+
+    
 ]

@@ -4,6 +4,19 @@ from django.core.exceptions import ValidationError
 from decimal import Decimal
 from django.utils import timezone
 import json
+from django.db import transaction # Necesario para transacciones atómicas
+import logging # Para registrar la acción
+from django.db.models.signals import post_save # Para la señal
+from django.dispatch import receiver # Para la señal
+from django.db.models import Q # Para filtros complejos en la señal
+
+
+# ASUMIDO: Divisa y CotizacionSegmento están disponibles en la app 'divisas'
+from divisas.models import CotizacionSegmento # Importar el modelo de tasa
+
+logger = logging.getLogger(__name__)
+
+
 
 
 class Transaccion(models.Model):
@@ -93,6 +106,8 @@ class Transaccion(models.Model):
         'Última Actualización',
         auto_now=True
     )
+
+    observacion = models.TextField('Observación/Motivo de estado', blank=True, default='')
     
     # Información del medio de pago/acreditación
     medio_pago_datos = models.JSONField(
@@ -209,6 +224,71 @@ class Transaccion(models.Model):
         """Obtener la comisión aplicada desde los datos del medio de pago"""
         medio_info = self.get_medio_pago_info()
         return medio_info.get('comision', '0%')
+    
+    def _enviar_notificacion_cancelacion(self, razon):
+        """
+        Función placeholder para simular el envío de una notificación (Email).
+        En un sistema real, aquí se implementaría el código real de envío de email/push.
+        """
+        cliente_email = None
+        try:
+            # Asumo que puedes acceder al email del usuario a través del cliente
+            cliente_email = self.cliente.usuario.email 
+        except Exception:
+            pass
+        
+        if cliente_email:
+            email_subject = f"Cancelación de Transacción #{self.numero_transaccion} - Actualización de Tasa"
+            email_body = (
+                f"Estimado(a) cliente {self.cliente.nombre_completo or self.cliente.id},\n\n"
+                f"Te informamos que tu transacción de cambio **#{self.numero_transaccion}** ha sido **CANCELADA automáticamente**.\n\n"
+                f"**Razón:** {razon}.\n"
+                f"La cotización de la divisa involucrada ha sido actualizada en nuestro sistema, invalidando la tasa anterior.\n\n"
+                "Para continuar con la operación, por favor, inicia una nueva transacción con la cotización actualizada.\n\n"
+                "Gracias por tu comprensión.\n"
+                "Equipo de Soporte."
+            )
+            
+            # NOTA: En un sistema real, se usaría send_mail(email_subject, email_body, ...)
+            logger.info(f"EMAIL_SIMULADO enviado a {cliente_email} por trans. {self.numero_transaccion}. Asunto: {email_subject}")
+        else:
+            logger.warning(f"No se pudo enviar notificación de cancelación a cliente de trans. {self.numero_transaccion}. Email no encontrado.")
+    
+    def cancelar_automaticamente(self, razon):
+        """
+        Cancela la transacción automáticamente si está pendiente y envía una notificación.
+        """
+        # Se usa 'pendiente' como string si no definiste la constante en este snippet
+        if self.estado != 'pendiente': 
+            return False
+        
+        estado_anterior = self.estado 
+        observacion_completa = f"CANCELACIÓN AUTOMÁTICA POR TASA: {razon}"
+
+        with transaction.atomic():
+            self.estado = 'cancelada' # Usar 'cancelada'
+            self.observacion = f"CANCELACIÓN AUTOMÁTICA POR TASA: {razon}"
+            
+            # Solo actualizar los campos modificados
+            self.save(update_fields=['estado', 'observacion'])
+
+             # 💡 PASO CLAVE: Crear el registro de historial con el motivo
+            HistorialTransaccion.objects.create(
+                transaccion=self,
+                fecha_cambio=timezone.now(),
+                estado_anterior=estado_anterior,
+                estado_nuevo=self.estado,
+                observaciones=observacion_completa,
+                # El campo 'usuario' puede ser nulo o apuntar a un usuario de sistema
+                modificado_por=None, 
+            )
+            
+            # Enviar notificación (ver helper abajo)
+            self._enviar_notificacion_cancelacion(razon)
+            
+            logger.info(f"Transacción {self.numero_transaccion} cancelada automáticamente por: {razon}")
+
+            return True
 
 
 class HistorialTransaccion(models.Model):
@@ -336,3 +416,36 @@ class ConfiguracionTransaccion(models.Model):
             config.save()
 
         return config
+
+# ----------------------------------------------------------------------
+# --- SEÑAL PARA CANCELACIÓN AUTOMÁTICA DE TRANSACCIONES ---
+# ----------------------------------------------------------------------
+
+@receiver(post_save, sender=CotizacionSegmento)
+def cancelar_transacciones_pendientes_por_tasa(sender, instance, created, **kwargs):
+    """
+    Se ejecuta CADA VEZ que se guarda una CotizacionSegmento.
+    Busca transacciones pendientes con la misma divisa y las cancela.
+    """
+    
+    # 1. Validación de la divisa base
+    # Si la cotización actualizada es del Guaraní (PYG o código '116'), no hacemos nada.
+    if instance.divisa.code in ['PYG', '116']:
+         return 
+
+    divisa_actualizada = instance.divisa
+    
+    # 2. Encontrar transacciones PENDIENTES afectadas
+    transacciones_a_cancelar = Transaccion.objects.filter(
+        Q(divisa_origen=divisa_actualizada) | Q(divisa_destino=divisa_actualizada),
+        estado='pendiente'
+    ).select_related('cliente', 'divisa_origen', 'divisa_destino')
+    
+    razon_cancelacion = (
+        f"Cotización de {divisa_actualizada.code} ha sido actualizada en el sistema. "
+        f"(Segmento: {instance.segmento.name})"
+    )
+    
+    # 3. Cancelar cada transacción
+    for transaccion in transacciones_a_cancelar:
+        transaccion.cancelar_automaticamente(razon=razon_cancelacion)
