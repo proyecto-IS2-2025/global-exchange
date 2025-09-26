@@ -224,6 +224,21 @@ object the first time, the query is executed.</p>
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.Cliente.medios_pago">
+<span class="sig-name descname"><span class="pre">medios_pago</span></span><a class="headerlink" href="#clientes.models.Cliente.medios_pago" title="Link to this definition">¶</a></dt>
+<dd><p>Accessor to the related objects manager on the reverse side of a
+many-to-one relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Child</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Parent</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;children&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Parent.children</span></code> is a <code class="docutils literal notranslate"><span class="pre">ReverseManyToOneDescriptor</span></code> instance.</p>
+<p>Most of the implementation is delegated to a dynamically defined manager
+class built by <code class="docutils literal notranslate"><span class="pre">create_forward_many_to_many_manager()</span></code> defined below.</p>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="clientes.models.Cliente.nombre_completo">
 <span class="sig-name descname"><span class="pre">nombre_completo</span></span><a class="headerlink" href="#clientes.models.Cliente.nombre_completo" title="Link to this definition">¶</a></dt>
 <dd><p>A wrapper for a deferred-loading field. When the value is read from this
@@ -268,6 +283,21 @@ object the first time, the query is executed.</p>
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.Cliente.transacciones">
+<span class="sig-name descname"><span class="pre">transacciones</span></span><a class="headerlink" href="#clientes.models.Cliente.transacciones" title="Link to this definition">¶</a></dt>
+<dd><p>Accessor to the related objects manager on the reverse side of a
+many-to-one relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Child</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Parent</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;children&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Parent.children</span></code> is a <code class="docutils literal notranslate"><span class="pre">ReverseManyToOneDescriptor</span></code> instance.</p>
+<p>Most of the implementation is delegated to a dynamically defined manager
+class built by <code class="docutils literal notranslate"><span class="pre">create_forward_many_to_many_manager()</span></code> defined below.</p>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="clientes.models.Cliente.usuarios">
 <span class="sig-name descname"><span class="pre">usuarios</span></span><a class="headerlink" href="#clientes.models.Cliente.usuarios" title="Link to this definition">¶</a></dt>
 <dd><p>Accessor to the related objects manager on the forward and reverse sides of
@@ -281,6 +311,180 @@ a many-to-many relation.</p>
 instances.</p>
 <p>Most of the implementation is delegated to a dynamically defined manager
 class built by <code class="docutils literal notranslate"><span class="pre">create_forward_many_to_many_manager()</span></code> defined below.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">clientes.models.</span></span><span class="sig-name descname"><span class="pre">ClienteMedioDePago</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.ClienteMedioDePago" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></p>
+<p>Instancia específica de un medio de pago asociado a un cliente.
+Almacena los datos dinámicos según los campos definidos en MedioDePago.</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.DoesNotExist">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.DoesNotExist" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectDoesNotExist</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.MultipleObjectsReturned">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.MultipleObjectsReturned" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MultipleObjectsReturned</span></code></p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.campos_completos">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">campos_completos</span></span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.campos_completos" title="Link to this definition">¶</a></dt>
+<dd><p>Verificar si todos los campos requeridos están completos</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.cliente">
+<span class="sig-name descname"><span class="pre">cliente</span></span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.cliente" title="Link to this definition">¶</a></dt>
+<dd><p>Accessor to the related object on the forward side of a many-to-one or
+one-to-one (via ForwardOneToOneDescriptor subclass) relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Child</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Parent</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;children&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Child.parent</span></code> is a <code class="docutils literal notranslate"><span class="pre">ForwardManyToOneDescriptor</span></code> instance.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.cliente_id">
+<span class="sig-name descname"><span class="pre">cliente_id</span></span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.cliente_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.creado_por">
+<span class="sig-name descname"><span class="pre">creado_por</span></span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.creado_por" title="Link to this definition">¶</a></dt>
+<dd><p>Accessor to the related object on the forward side of a many-to-one or
+one-to-one (via ForwardOneToOneDescriptor subclass) relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Child</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Parent</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;children&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Child.parent</span></code> is a <code class="docutils literal notranslate"><span class="pre">ForwardManyToOneDescriptor</span></code> instance.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.creado_por_id">
+<span class="sig-name descname"><span class="pre">creado_por_id</span></span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.creado_por_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.datos_campos">
+<span class="sig-name descname"><span class="pre">datos_campos</span></span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.datos_campos" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.es_activo">
+<span class="sig-name descname"><span class="pre">es_activo</span></span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.es_activo" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.es_principal">
+<span class="sig-name descname"><span class="pre">es_principal</span></span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.es_principal" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.fecha_actualizacion">
+<span class="sig-name descname"><span class="pre">fecha_actualizacion</span></span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.fecha_actualizacion" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.fecha_creacion">
+<span class="sig-name descname"><span class="pre">fecha_creacion</span></span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.fecha_creacion" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.get_dato_campo">
+<span class="sig-name descname"><span class="pre">get_dato_campo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nombre_campo</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.get_dato_campo" title="Link to this definition">¶</a></dt>
+<dd><p>Obtener valor de un campo específico</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.get_next_by_fecha_actualizacion">
+<span class="sig-name descname"><span class="pre">get_next_by_fecha_actualizacion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">fecha_actualizacion&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.get_next_by_fecha_actualizacion" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.get_next_by_fecha_creacion">
+<span class="sig-name descname"><span class="pre">get_next_by_fecha_creacion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">fecha_creacion&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.get_next_by_fecha_creacion" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.get_previous_by_fecha_actualizacion">
+<span class="sig-name descname"><span class="pre">get_previous_by_fecha_actualizacion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">fecha_actualizacion&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.get_previous_by_fecha_actualizacion" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.get_previous_by_fecha_creacion">
+<span class="sig-name descname"><span class="pre">get_previous_by_fecha_creacion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">fecha_creacion&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.get_previous_by_fecha_creacion" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.historial">
+<span class="sig-name descname"><span class="pre">historial</span></span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.historial" title="Link to this definition">¶</a></dt>
+<dd><p>Accessor to the related objects manager on the reverse side of a
+many-to-one relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Child</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Parent</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;children&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Parent.children</span></code> is a <code class="docutils literal notranslate"><span class="pre">ReverseManyToOneDescriptor</span></code> instance.</p>
+<p>Most of the implementation is delegated to a dynamically defined manager
+class built by <code class="docutils literal notranslate"><span class="pre">create_forward_many_to_many_manager()</span></code> defined below.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.id" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.medio_de_pago">
+<span class="sig-name descname"><span class="pre">medio_de_pago</span></span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.medio_de_pago" title="Link to this definition">¶</a></dt>
+<dd><p>Accessor to the related object on the forward side of a many-to-one or
+one-to-one (via ForwardOneToOneDescriptor subclass) relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Child</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Parent</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;children&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Child.parent</span></code> is a <code class="docutils literal notranslate"><span class="pre">ForwardManyToOneDescriptor</span></code> instance.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.medio_de_pago_id">
+<span class="sig-name descname"><span class="pre">medio_de_pago_id</span></span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.medio_de_pago_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.objects">
+<span class="sig-name descname"><span class="pre">objects</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;django.db.models.manager.Manager</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#clientes.models.ClienteMedioDePago.objects" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.ClienteMedioDePago.set_dato_campo">
+<span class="sig-name descname"><span class="pre">set_dato_campo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nombre_campo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.ClienteMedioDePago.set_dato_campo" title="Link to this definition">¶</a></dt>
+<dd><p>Establecer valor de un campo específico</p>
 </dd></dl>
 
 </dd></dl>
@@ -383,6 +587,123 @@ object the first time, the query is executed.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="clientes.models.HistorialClienteMedioDePago">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">clientes.models.</span></span><span class="sig-name descname"><span class="pre">HistorialClienteMedioDePago</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.HistorialClienteMedioDePago" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></p>
+<p>Historial de cambios en los medios de pago de clientes</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="clientes.models.HistorialClienteMedioDePago.DoesNotExist">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#clientes.models.HistorialClienteMedioDePago.DoesNotExist" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectDoesNotExist</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="clientes.models.HistorialClienteMedioDePago.MultipleObjectsReturned">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#clientes.models.HistorialClienteMedioDePago.MultipleObjectsReturned" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MultipleObjectsReturned</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.HistorialClienteMedioDePago.accion">
+<span class="sig-name descname"><span class="pre">accion</span></span><a class="headerlink" href="#clientes.models.HistorialClienteMedioDePago.accion" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.HistorialClienteMedioDePago.cliente_medio_pago">
+<span class="sig-name descname"><span class="pre">cliente_medio_pago</span></span><a class="headerlink" href="#clientes.models.HistorialClienteMedioDePago.cliente_medio_pago" title="Link to this definition">¶</a></dt>
+<dd><p>Accessor to the related object on the forward side of a many-to-one or
+one-to-one (via ForwardOneToOneDescriptor subclass) relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Child</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Parent</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;children&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Child.parent</span></code> is a <code class="docutils literal notranslate"><span class="pre">ForwardManyToOneDescriptor</span></code> instance.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.HistorialClienteMedioDePago.cliente_medio_pago_id">
+<span class="sig-name descname"><span class="pre">cliente_medio_pago_id</span></span><a class="headerlink" href="#clientes.models.HistorialClienteMedioDePago.cliente_medio_pago_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.HistorialClienteMedioDePago.datos_anteriores">
+<span class="sig-name descname"><span class="pre">datos_anteriores</span></span><a class="headerlink" href="#clientes.models.HistorialClienteMedioDePago.datos_anteriores" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.HistorialClienteMedioDePago.datos_nuevos">
+<span class="sig-name descname"><span class="pre">datos_nuevos</span></span><a class="headerlink" href="#clientes.models.HistorialClienteMedioDePago.datos_nuevos" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.HistorialClienteMedioDePago.fecha">
+<span class="sig-name descname"><span class="pre">fecha</span></span><a class="headerlink" href="#clientes.models.HistorialClienteMedioDePago.fecha" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.HistorialClienteMedioDePago.get_accion_display">
+<span class="sig-name descname"><span class="pre">get_accion_display</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.CharField:</span> <span class="pre">accion&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.HistorialClienteMedioDePago.get_accion_display" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.HistorialClienteMedioDePago.get_next_by_fecha">
+<span class="sig-name descname"><span class="pre">get_next_by_fecha</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">fecha&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.HistorialClienteMedioDePago.get_next_by_fecha" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.HistorialClienteMedioDePago.get_previous_by_fecha">
+<span class="sig-name descname"><span class="pre">get_previous_by_fecha</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">fecha&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.HistorialClienteMedioDePago.get_previous_by_fecha" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.HistorialClienteMedioDePago.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#clientes.models.HistorialClienteMedioDePago.id" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.HistorialClienteMedioDePago.modificado_por">
+<span class="sig-name descname"><span class="pre">modificado_por</span></span><a class="headerlink" href="#clientes.models.HistorialClienteMedioDePago.modificado_por" title="Link to this definition">¶</a></dt>
+<dd><p>Accessor to the related object on the forward side of a many-to-one or
+one-to-one (via ForwardOneToOneDescriptor subclass) relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Child</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Parent</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;children&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Child.parent</span></code> is a <code class="docutils literal notranslate"><span class="pre">ForwardManyToOneDescriptor</span></code> instance.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.HistorialClienteMedioDePago.modificado_por_id">
+<span class="sig-name descname"><span class="pre">modificado_por_id</span></span><a class="headerlink" href="#clientes.models.HistorialClienteMedioDePago.modificado_por_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.HistorialClienteMedioDePago.objects">
+<span class="sig-name descname"><span class="pre">objects</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;django.db.models.manager.Manager</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#clientes.models.HistorialClienteMedioDePago.objects" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.HistorialClienteMedioDePago.observaciones">
+<span class="sig-name descname"><span class="pre">observaciones</span></span><a class="headerlink" href="#clientes.models.HistorialClienteMedioDePago.observaciones" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="clientes.models.HistorialDescuentos">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">clientes.models.</span></span><span class="sig-name descname"><span class="pre">HistorialDescuentos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descuento</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">porcentaje_descuento_anterior</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">porcentaje_descuento_nuevo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fecha_cambio</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modificado_por</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.HistorialDescuentos" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></p>
@@ -476,6 +797,216 @@ object the first time, the query is executed.</p>
 <dd><p>A wrapper for a deferred-loading field. When the value is read from this
 object the first time, the query is executed.</p>
 </dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="clientes.models.LimiteDiario">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">clientes.models.</span></span><span class="sig-name descname"><span class="pre">LimiteDiario</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fecha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monto</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inicio_vigencia</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">creado</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">actualizado</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.LimiteDiario" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="clientes.models.LimiteDiario.DoesNotExist">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#clientes.models.LimiteDiario.DoesNotExist" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectDoesNotExist</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="clientes.models.LimiteDiario.MultipleObjectsReturned">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#clientes.models.LimiteDiario.MultipleObjectsReturned" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MultipleObjectsReturned</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.LimiteDiario.actualizado">
+<span class="sig-name descname"><span class="pre">actualizado</span></span><a class="headerlink" href="#clientes.models.LimiteDiario.actualizado" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.LimiteDiario.creado">
+<span class="sig-name descname"><span class="pre">creado</span></span><a class="headerlink" href="#clientes.models.LimiteDiario.creado" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.LimiteDiario.fecha">
+<span class="sig-name descname"><span class="pre">fecha</span></span><a class="headerlink" href="#clientes.models.LimiteDiario.fecha" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.LimiteDiario.get_next_by_actualizado">
+<span class="sig-name descname"><span class="pre">get_next_by_actualizado</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">actualizado&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.LimiteDiario.get_next_by_actualizado" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.LimiteDiario.get_next_by_creado">
+<span class="sig-name descname"><span class="pre">get_next_by_creado</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">creado&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.LimiteDiario.get_next_by_creado" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.LimiteDiario.get_next_by_fecha">
+<span class="sig-name descname"><span class="pre">get_next_by_fecha</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateField:</span> <span class="pre">fecha&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.LimiteDiario.get_next_by_fecha" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.LimiteDiario.get_next_by_inicio_vigencia">
+<span class="sig-name descname"><span class="pre">get_next_by_inicio_vigencia</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">inicio_vigencia&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.LimiteDiario.get_next_by_inicio_vigencia" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.LimiteDiario.get_previous_by_actualizado">
+<span class="sig-name descname"><span class="pre">get_previous_by_actualizado</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">actualizado&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.LimiteDiario.get_previous_by_actualizado" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.LimiteDiario.get_previous_by_creado">
+<span class="sig-name descname"><span class="pre">get_previous_by_creado</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">creado&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.LimiteDiario.get_previous_by_creado" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.LimiteDiario.get_previous_by_fecha">
+<span class="sig-name descname"><span class="pre">get_previous_by_fecha</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateField:</span> <span class="pre">fecha&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.LimiteDiario.get_previous_by_fecha" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.LimiteDiario.get_previous_by_inicio_vigencia">
+<span class="sig-name descname"><span class="pre">get_previous_by_inicio_vigencia</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">inicio_vigencia&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.LimiteDiario.get_previous_by_inicio_vigencia" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.LimiteDiario.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#clientes.models.LimiteDiario.id" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.LimiteDiario.inicio_vigencia">
+<span class="sig-name descname"><span class="pre">inicio_vigencia</span></span><a class="headerlink" href="#clientes.models.LimiteDiario.inicio_vigencia" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.LimiteDiario.monto">
+<span class="sig-name descname"><span class="pre">monto</span></span><a class="headerlink" href="#clientes.models.LimiteDiario.monto" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.LimiteDiario.objects">
+<span class="sig-name descname"><span class="pre">objects</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;django.db.models.manager.Manager</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#clientes.models.LimiteDiario.objects" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="clientes.models.LimiteMensual">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">clientes.models.</span></span><span class="sig-name descname"><span class="pre">LimiteMensual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monto</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inicio_vigencia</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">creado</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">actualizado</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.LimiteMensual" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="clientes.models.LimiteMensual.DoesNotExist">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#clientes.models.LimiteMensual.DoesNotExist" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectDoesNotExist</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="clientes.models.LimiteMensual.MultipleObjectsReturned">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#clientes.models.LimiteMensual.MultipleObjectsReturned" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MultipleObjectsReturned</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.LimiteMensual.actualizado">
+<span class="sig-name descname"><span class="pre">actualizado</span></span><a class="headerlink" href="#clientes.models.LimiteMensual.actualizado" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.LimiteMensual.creado">
+<span class="sig-name descname"><span class="pre">creado</span></span><a class="headerlink" href="#clientes.models.LimiteMensual.creado" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.LimiteMensual.get_next_by_actualizado">
+<span class="sig-name descname"><span class="pre">get_next_by_actualizado</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">actualizado&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.LimiteMensual.get_next_by_actualizado" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.LimiteMensual.get_next_by_creado">
+<span class="sig-name descname"><span class="pre">get_next_by_creado</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">creado&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.LimiteMensual.get_next_by_creado" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.LimiteMensual.get_next_by_inicio_vigencia">
+<span class="sig-name descname"><span class="pre">get_next_by_inicio_vigencia</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">inicio_vigencia&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.LimiteMensual.get_next_by_inicio_vigencia" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.LimiteMensual.get_next_by_mes">
+<span class="sig-name descname"><span class="pre">get_next_by_mes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateField:</span> <span class="pre">mes&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.LimiteMensual.get_next_by_mes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.LimiteMensual.get_previous_by_actualizado">
+<span class="sig-name descname"><span class="pre">get_previous_by_actualizado</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">actualizado&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.LimiteMensual.get_previous_by_actualizado" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.LimiteMensual.get_previous_by_creado">
+<span class="sig-name descname"><span class="pre">get_previous_by_creado</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">creado&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.LimiteMensual.get_previous_by_creado" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.LimiteMensual.get_previous_by_inicio_vigencia">
+<span class="sig-name descname"><span class="pre">get_previous_by_inicio_vigencia</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">inicio_vigencia&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.LimiteMensual.get_previous_by_inicio_vigencia" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.models.LimiteMensual.get_previous_by_mes">
+<span class="sig-name descname"><span class="pre">get_previous_by_mes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field=&lt;django.db.models.fields.DateField:</span> <span class="pre">mes&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.models.LimiteMensual.get_previous_by_mes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.LimiteMensual.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#clientes.models.LimiteMensual.id" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.LimiteMensual.inicio_vigencia">
+<span class="sig-name descname"><span class="pre">inicio_vigencia</span></span><a class="headerlink" href="#clientes.models.LimiteMensual.inicio_vigencia" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.LimiteMensual.mes">
+<span class="sig-name descname"><span class="pre">mes</span></span><a class="headerlink" href="#clientes.models.LimiteMensual.mes" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.LimiteMensual.monto">
+<span class="sig-name descname"><span class="pre">monto</span></span><a class="headerlink" href="#clientes.models.LimiteMensual.monto" title="Link to this definition">¶</a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.models.LimiteMensual.objects">
+<span class="sig-name descname"><span class="pre">objects</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;django.db.models.manager.Manager</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#clientes.models.LimiteMensual.objects" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -601,8 +1132,12 @@ object the first time, the query is executed.</p>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Módulos de Clientes</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#clientes.models.AsignacionCliente"><code class="docutils literal notranslate"><span class="pre">AsignacionCliente</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#clientes.models.Cliente"><code class="docutils literal notranslate"><span class="pre">Cliente</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.models.ClienteMedioDePago"><code class="docutils literal notranslate"><span class="pre">ClienteMedioDePago</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#clientes.models.Descuento"><code class="docutils literal notranslate"><span class="pre">Descuento</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.models.HistorialClienteMedioDePago"><code class="docutils literal notranslate"><span class="pre">HistorialClienteMedioDePago</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#clientes.models.HistorialDescuentos"><code class="docutils literal notranslate"><span class="pre">HistorialDescuentos</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.models.LimiteDiario"><code class="docutils literal notranslate"><span class="pre">LimiteDiario</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.models.LimiteMensual"><code class="docutils literal notranslate"><span class="pre">LimiteMensual</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#clientes.models.Segmento"><code class="docutils literal notranslate"><span class="pre">Segmento</span></code></a></li>
 </ul>
 </li>
@@ -613,6 +1148,7 @@ object the first time, the query is executed.</p>
 <li class="toctree-l1"><a class="reference internal" href="medios_pago.html">Modulo de Medios de Pago</a></li>
 <li class="toctree-l1"><a class="reference internal" href="users.html">Gestión de Usuarios</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulador.html">Simulador de Divisas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transacciones.html">Modulo de Transacciones</a></li>
 </ul>
 
 <div class="relations">
