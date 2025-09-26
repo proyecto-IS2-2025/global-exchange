@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-lg p-4">
+        <h2 class="mb-4 text-primary">Nuevo Límite Mensual</h2>
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label for="id_mes" class="form-label">Mes de aplicación</label>
+            {{ form.mes }}
+            {% if form.mes.errors %}
+              <div class="text-danger small">{{ form.mes.errors }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label for="id_monto" class="form-label">Monto mensual (Gs.)</label>
+            {{ form.monto }}
+            {% if form.monto.errors %}
+              <div class="text-danger small">{{ form.monto.errors }}</div>
+            {% endif %}
+          </div>
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+          {% endif %}
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">Guardar</button>
+            <a href="{% url 'clientes:lista_limites_mensuales' %}" class="btn btn-secondary">Cancelar</a>
+          </div>
+        </form>
+
+        {# Bloque extra para mostrar TODOS los errores #}
+        {% if form.errors %}
+          <div class="alert alert-danger mt-3">
+            <strong>Errores en el formulario:</strong>
+            <ul>
+              {% for field, errors in form.errors.items %}
+                <li>
+                  {{ field }}:
+                  {% for error in errors %}
+                    <span>{{ error }}</span>
+                  {% endfor %}
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

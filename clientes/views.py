@@ -5,14 +5,19 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.db.models import Q
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
+from django.contrib.auth.decorators import user_passes_test
 from django.utils.decorators import method_decorator
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib import messages
 from django.contrib.auth.models import Group
-
-from .models import Cliente, AsignacionCliente, Descuento, Segmento, HistorialDescuentos
+from .models import Cliente, AsignacionCliente, Descuento, HistorialDescuentos
 from .forms import ClienteForm, DescuentoForm
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from datetime import datetime, time
+from .models import LimiteDiario, LimiteMensual
+from .forms import LimiteDiarioForm, LimiteMensualForm
 from decimal import Decimal, InvalidOperation
 
 # Asociar clientes-usuarios
@@ -297,6 +302,70 @@ def seleccionar_cliente_view(request):
 
 
 
+# === LISTAS ===
+@login_required
+def lista_limites_diarios(request):
+    limites = LimiteDiario.objects.all()
+    return render(request, "clientes/limites_diarios.html", {"limites": limites})
+
+
+@login_required
+def lista_limites_mensuales(request):
+    limites = LimiteMensual.objects.all()
+    return render(request, "clientes/limites_mensuales.html", {"limites": limites})
+# === CREAR ===
+@login_required
+def crear_limite_diario(request):
+    if request.method == "POST":
+        form = LimiteDiarioForm(request.POST)
+        if form.is_valid():
+            limite = form.save(commit=False)
+            hoy = timezone.localdate()
+
+            # si es hoy → vigencia inmediata
+            if limite.fecha == hoy:
+                limite.inicio_vigencia = timezone.now()
+            else:
+                # si es futuro → medianoche de esa fecha
+                limite.inicio_vigencia = datetime.combine(
+                    limite.fecha,
+                    time.min,
+                    tzinfo=timezone.get_current_timezone()
+                )
+
+            limite.save()
+            return redirect("clientes:lista_limites_diarios")
+    else:
+        form = LimiteDiarioForm()
+    return render(request, "clientes/crear_limite_diario.html", {"form": form})
+
+
+@login_required
+def crear_limite_mensual(request):
+    if request.method == "POST":
+        print(">>> REQUEST METHOD:", request.method)
+        print(">>> REQUEST.POST:", request.POST)
+
+        form = LimiteMensualForm(request.POST)
+
+        if form.is_valid():
+            print(">>> FORMULARIO VÁLIDO")
+            limite = form.save()
+            print(">>> GUARDADO OK, ID:", limite.id)
+
+            messages.success(request, "Límite mensual guardado correctamente.")
+            return redirect("clientes:lista_limites_mensuales")
+        else:
+            print(">>> FORMULARIO INVÁLIDO")
+            print(">>> ERRORES:", form.errors)
+
+    else:
+        form = LimiteMensualForm()
+
+    return render(request, "clientes/nuevo_limite_mensual.html", {"form": form})
+
+
+
 
 
 # clientes/views.py - Mejoras para medios de pago
@@ -314,7 +383,7 @@ from django.db.models import Count, Q
 from medios_pago.models import MedioDePago
 from .models import Cliente, ClienteMedioDePago, HistorialClienteMedioDePago, AsignacionCliente
 from .forms import ClienteMedioDePagoCompleteForm, SelectMedioDePagoForm
-import re 
+import re
 
 import logging
 logger = logging.getLogger(__name__)
@@ -327,7 +396,7 @@ def get_cliente_activo(request):
     cliente_id = request.session.get('cliente_activo_id') or request.session.get('cliente_id')
     if not cliente_id:
         return None
-    
+
     try:
         return Cliente.objects.get(
             id=cliente_id,
@@ -355,7 +424,7 @@ class ClienteMedioDePagoListView(LoginRequiredMixin, ListView):
         self.cliente = get_cliente_activo(request)
         if not self.cliente:
             messages.warning(
-                request, 
+                request,
                 'Debe seleccionar un cliente para gestionar medios de pago.'
             )
             return redirect('clientes:seleccionar_cliente')
@@ -368,46 +437,46 @@ class ClienteMedioDePagoListView(LoginRequiredMixin, ListView):
         ).select_related('medio_de_pago', 'creado_por').prefetch_related(
             'medio_de_pago__campos'
         )
-        
+
         # Filtros opcionales
         estado = self.request.GET.get('estado')
         if estado == 'activos':
             queryset = queryset.filter(es_activo=True)
         elif estado == 'inactivos':
             queryset = queryset.filter(es_activo=False)
-        
+
         tipo_medio = self.request.GET.get('tipo_medio')
         if tipo_medio:
             queryset = queryset.filter(medio_de_pago_id=tipo_medio)
-            
+
         return queryset.order_by('-es_principal', '-fecha_actualizacion')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['cliente'] = self.cliente
-        
+
         # Estadísticas
         total_medios = self.get_queryset().count()
         medios_activos = self.get_queryset().filter(es_activo=True).count()
         medio_principal = self.get_queryset().filter(es_principal=True).first()
-        
+
         context['stats'] = {
             'total': total_medios,
             'activos': medios_activos,
             'inactivos': total_medios - medios_activos,
             'principal': medio_principal
         }
-        
+
         # Información adicional para filtros
         context['medios_disponibles'] = MedioDePago.objects.filter(
             is_active=True
         ).values('id', 'nombre')
-        
+
         context['filtro_actual'] = {
             'estado': self.request.GET.get('estado', 'todos'),
             'tipo_medio': self.request.GET.get('tipo_medio', '')
         }
-        
+
         return context
 
 
@@ -418,7 +487,7 @@ def select_medio_pago_view(request):
     FILTRO APLICADO: Solo muestra medios con campos configurados
     """
     from django.db.models import Count
-    
+
     cliente = get_cliente_activo(request)
     if not cliente:
         messages.warning(request, 'Debe seleccionar un cliente primero.')
@@ -440,14 +509,14 @@ def select_medio_pago_view(request):
     ).filter(
         total_campos__gt=0  # Solo medios con al menos 1 campo
     ).order_by('nombre')
-    
+
     # Actualizar el queryset del formulario
     form.fields['medio_de_pago'].queryset = medios_con_campos
-    
+
     # Verificar si quedan medios disponibles después del filtro
     if not medios_con_campos.exists():
         messages.warning(
-            request, 
+            request,
             'No hay medios de pago con campos configurados disponibles. '
             'Contacte al administrador para configurar los campos necesarios.'
         )
@@ -479,7 +548,7 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
         if not self.cliente:
             messages.warning(request, 'Debe seleccionar un cliente primero.')
             return redirect('clientes:seleccionar_cliente')
-            
+
         # Obtener y validar medio de pago
         medio_id = self.kwargs.get('medio_id')
         try:
@@ -487,20 +556,20 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
         except MedioDePago.DoesNotExist:
             messages.error(request, 'Medio de pago no encontrado o inactivo.')
             return redirect('clientes:seleccionar_medio_pago')
-            
+
         # ELIMINAR: Verificación de duplicados
         # Ya no verificamos si está asociado porque pueden tener múltiples del mismo tipo
-            
+
         return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['cliente'] = self.cliente
         kwargs['medio_de_pago'] = self.medio_de_pago
-        
+
         # DEBUG: Verificar que se están pasando correctamente
         print(f"DEBUG get_form_kwargs: cliente={self.cliente}, medio_de_pago={self.medio_de_pago}")
-        
+
         return kwargs
 
     def form_valid(self, form):
@@ -510,27 +579,27 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
         print(f"Form cleaned_data: {form.cleaned_data}")
         print(f"Form errors: {form.errors}")
         print(f"Form non_field_errors: {form.non_field_errors()}")
-        
+
         # Debug de campos dinámicos
         for field_name, field_value in form.cleaned_data.items():
             if field_name.startswith('campo_'):
                 print(f"Campo dinámico {field_name}: '{field_value}' (tipo: {type(field_value)})")
-        
+
         try:
             with transaction.atomic():
                 form.instance.creado_por = self.request.user
-                
+
                 # Si es el primer medio de pago, marcarlo como principal automáticamente
                 if not ClienteMedioDePago.objects.filter(cliente=self.cliente).exists():
                     form.instance.es_principal = True
                     print("DEBUG: Marcado como principal (primer medio)")
-                
+
                 print(f"DEBUG: Antes de guardar - datos_campos: {getattr(form.instance, 'datos_campos', 'No definido')}")
-                
+
                 response = super().form_valid(form)
-                
+
                 print(f"DEBUG: Después de guardar - datos_campos: {self.object.datos_campos}")
-                
+
                 # Crear registro de historial
                 HistorialClienteMedioDePago.objects.create(
                     cliente_medio_pago=self.object,
@@ -539,32 +608,32 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
                     modificado_por=self.request.user,
                     observaciones=f'Medio de pago {self.medio_de_pago.nombre} agregado al cliente {self.cliente.nombre_completo}'
                 )
-                
+
                 messages.success(
-                    self.request, 
+                    self.request,
                     f'¡Perfecto! El medio de pago "{self.medio_de_pago.nombre}" fue agregado exitosamente.'
                 )
-                
+
                 logger.info(
                     f'Usuario {self.request.user.username} agregó medio de pago '
                     f'{self.medio_de_pago.nombre} al cliente {self.cliente.nombre_completo}'
                 )
-                
+
                 return response
-                
+
         except ValidationError as e:
             print(f"DEBUG ValidationError: {e}")
             print(f"DEBUG ValidationError message_dict: {getattr(e, 'message_dict', 'No message_dict')}")
-            
+
             if hasattr(e, 'message_dict'):
                 for field, errors in e.message_dict.items():
                     for error in errors:
                         messages.error(self.request, f"{field}: {error}")
             else:
                 messages.error(self.request, f'Error de validación: {str(e)}')
-            
+
             return self.form_invalid(form)
-            
+
         except Exception as e:
             print(f"DEBUG Exception: {str(e)}")
             print(f"DEBUG Exception type: {type(e)}")
@@ -579,7 +648,7 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
         print(f"Form data: {form.data}")
         print(f"Form errors: {form.errors}")
         print(f"Form non_field_errors: {form.non_field_errors()}")
-        
+
         # Debug específico de campos dinámicos
         print("=== DEBUG CAMPOS DINÁMICOS ===")
         for field_name in form.fields:
@@ -591,7 +660,7 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
                 print(f"  - POST: '{post_value}'")
                 print(f"  - Form data: '{form_value}'")
                 print(f"  - Cleaned: '{cleaned_value}'")
-        
+
         # Debug detallado de cada campo con error - CORREGIDO
         for field_name, errors in form.errors.items():
             # Verificar si el campo existe y tiene label
@@ -600,22 +669,22 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
                 field_label = field.label or field_name
             else:
                 field_label = field_name
-            
+
             print(f"Campo '{field_label}' ({field_name}): {errors}")
             for error in errors:
                 messages.error(self.request, f"{field_label}: {error}")
-        
+
         # Errores generales del formulario
         for error in form.non_field_errors():
             print(f"Error general: {error}")
             messages.error(self.request, f"Error: {error}")
-        
+
         if not form.errors:
             messages.error(
-                self.request, 
+                self.request,
                 'Por favor, revise los campos marcados en rojo y corrija los errores.'
             )
-        
+
         return super().form_invalid(form)
 
     def get_context_data(self, **kwargs):
@@ -631,13 +700,13 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
                 {'name': f'Agregar {self.medio_de_pago.nombre}', 'active': True}
             ]
         })
-        
+
         # DEBUG: Información del formulario
         print("=== DEBUG CONTEXT ===")
         print(f"Form fields disponibles: {list(context['form'].fields.keys())}")
         print(f"Medio de pago ID: {self.medio_de_pago.id}")
         print(f"Campos del medio: {[c.nombre_campo for c in self.medio_de_pago.campos.all()]}")
-        
+
         return context
 
     def get_success_url(self):
@@ -658,13 +727,13 @@ class ClienteMedioDePagoUpdateView(LoginRequiredMixin, UpdateView):
         if not self.cliente:
             messages.warning(request, 'Debe seleccionar un cliente primero.')
             return redirect('clientes:seleccionar_cliente')
-            
+
         # Obtener el objeto y verificar permisos
         self.object = self.get_object()
         if self.object.cliente != self.cliente:
             messages.error(request, 'No tiene permisos para editar este medio de pago.')
             return redirect('clientes:medios_pago_cliente')
-            
+
         return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
@@ -692,9 +761,9 @@ class ClienteMedioDePagoUpdateView(LoginRequiredMixin, UpdateView):
             with transaction.atomic():
                 # Guardar datos anteriores para historial
                 datos_anteriores = self.object.datos_campos.copy()
-                
+
                 response = super().form_valid(form)
-                
+
                 # Crear registro de historial solo si hubo cambios
                 if datos_anteriores != self.object.datos_campos or form.has_changed():
                     HistorialClienteMedioDePago.objects.create(
@@ -705,19 +774,19 @@ class ClienteMedioDePagoUpdateView(LoginRequiredMixin, UpdateView):
                         modificado_por=self.request.user,
                         observaciones=f'Datos del medio de pago actualizados. Campos modificados: {", ".join(form.changed_data)}'
                     )
-                
+
                 messages.success(
                     self.request,
                     f'El medio de pago "{self.object.medio_de_pago.nombre}" fue actualizado exitosamente.'
                 )
-                
+
                 logger.info(
                     f'Usuario {self.request.user.username} actualizó medio de pago '
                     f'{self.object.medio_de_pago.nombre} del cliente {self.cliente.nombre_completo}'
                 )
-                
+
                 return response
-                
+
         except Exception as e:
             messages.error(self.request, f'Error al actualizar: {str(e)}')
             logger.error(f'Error al actualizar medio de pago: {str(e)}', exc_info=True)
@@ -738,14 +807,14 @@ class ClienteMedioDePagoToggleView(LoginRequiredMixin, View):
             return redirect('clientes:seleccionar_cliente')
 
         medio_pago = get_object_or_404(ClienteMedioDePago, pk=pk, cliente=cliente)
-        
+
         # Verificar que no sea el único medio activo si se va a desactivar
         if medio_pago.es_activo:
             medios_activos = ClienteMedioDePago.objects.filter(
-                cliente=cliente, 
+                cliente=cliente,
                 es_activo=True
             ).count()
-            
+
             if medios_activos <= 1:
                 messages.warning(
                     request,
@@ -753,25 +822,25 @@ class ClienteMedioDePagoToggleView(LoginRequiredMixin, View):
                     'Active otro medio primero.'
                 )
                 return redirect('clientes:medios_pago_cliente')
-        
+
         # Cambiar estado
         estado_anterior = medio_pago.es_activo
         medio_pago.es_activo = not medio_pago.es_activo
-        
+
         # Si se desactiva un medio principal, asignar otro como principal
         if not medio_pago.es_activo and medio_pago.es_principal:
             otro_medio_activo = ClienteMedioDePago.objects.filter(
                 cliente=cliente,
                 es_activo=True
             ).exclude(pk=medio_pago.pk).first()
-            
+
             if otro_medio_activo:
                 otro_medio_activo.es_principal = True
                 otro_medio_activo.save()
                 medio_pago.es_principal = False
-        
+
         medio_pago.save()
-        
+
         # Registrar en historial
         accion = 'ACTIVADO' if medio_pago.es_activo else 'DESACTIVADO'
         HistorialClienteMedioDePago.objects.create(
@@ -780,13 +849,13 @@ class ClienteMedioDePagoToggleView(LoginRequiredMixin, View):
             modificado_por=request.user,
             observaciones=f'Medio de pago {accion.lower()} por el usuario'
         )
-        
+
         estado_actual = 'activado' if medio_pago.es_activo else 'desactivado'
         messages.success(
             request,
             f'Medio de pago "{medio_pago.medio_de_pago.nombre}" {estado_actual} exitosamente.'
         )
-        
+
         return redirect('clientes:medios_pago_cliente')
 
 
@@ -798,14 +867,14 @@ def medio_pago_detail_ajax(request, pk):
     cliente = get_cliente_activo(request)
     if not cliente:
         return JsonResponse({'error': 'No hay cliente seleccionado'}, status=400)
-    
+
     try:
         medio_pago = ClienteMedioDePago.objects.select_related(
             'medio_de_pago'
         ).prefetch_related(
             'medio_de_pago__campos'
         ).get(pk=pk, cliente=cliente)
-        
+
         # Preparar datos de los campos
         campos_data = []
         for campo in medio_pago.medio_de_pago.campos.all().order_by('orden', 'id'):
@@ -819,7 +888,7 @@ def medio_pago_detail_ajax(request, pk):
                 'valor': valor,
                 'tiene_valor': bool(valor and str(valor).strip())
             })
-        
+
         # Historial reciente (últimos 5 cambios)
         historial_reciente = list(
             medio_pago.historial.select_related('modificado_por')
@@ -827,7 +896,7 @@ def medio_pago_detail_ajax(request, pk):
                 'accion', 'fecha', 'modificado_por__username', 'observaciones'
             )[:5]
         )
-        
+
         data = {
             'id': medio_pago.id,
             'medio_pago_id': medio_pago.medio_de_pago.id,
@@ -844,9 +913,9 @@ def medio_pago_detail_ajax(request, pk):
             'campos_con_datos': len([c for c in campos_data if c['tiene_valor']]),
             'historial_reciente': historial_reciente
         }
-        
+
         return JsonResponse(data)
-        
+
     except ClienteMedioDePago.DoesNotExist:
         return JsonResponse({'error': 'Medio de pago no encontrado'}, status=404)
     except Exception as e:
@@ -865,18 +934,18 @@ class ClienteMedioDePagoDeleteView(LoginRequiredMixin, View):
             return redirect('clientes:seleccionar_cliente')
 
         medio_pago = get_object_or_404(ClienteMedioDePago, pk=pk, cliente=cliente)
-        
+
         # Verificaciones de seguridad antes de eliminar
         total_medios = ClienteMedioDePago.objects.filter(cliente=cliente).count()
-        
+
         if total_medios <= 1:
             messages.error(
-                request, 
+                request,
                 'No puede eliminar el único medio de pago del cliente. '
                 'Debe tener al menos un medio de pago configurado.'
             )
             return redirect('clientes:medios_pago_cliente')
-        
+
         # Verificar si hay transacciones asociadas (si aplica)
         # if medio_pago.transacciones.exists():
         #     messages.error(
@@ -884,11 +953,11 @@ class ClienteMedioDePagoDeleteView(LoginRequiredMixin, View):
         #         'No se puede eliminar este medio de pago porque tiene transacciones asociadas.'
         #     )
         #     return redirect('clientes:medios_pago_cliente')
-        
+
         # Guardar información antes de eliminar
         nombre_medio = medio_pago.medio_de_pago.nombre
         era_principal = medio_pago.es_principal
-        
+
         try:
             with transaction.atomic():
                 # Si era el medio principal, asignar otro como principal
@@ -897,11 +966,11 @@ class ClienteMedioDePagoDeleteView(LoginRequiredMixin, View):
                         cliente=cliente,
                         es_activo=True
                     ).exclude(pk=medio_pago.pk).first()
-                    
+
                     if nuevo_principal:
                         nuevo_principal.es_principal = True
                         nuevo_principal.save()
-                
+
                 # Crear registro final en el historial antes de eliminar
                 HistorialClienteMedioDePago.objects.create(
                     cliente_medio_pago=medio_pago,
@@ -910,24 +979,24 @@ class ClienteMedioDePagoDeleteView(LoginRequiredMixin, View):
                     modificado_por=request.user,
                     observaciones=f'Medio de pago eliminado por el usuario'
                 )
-                
+
                 # Eliminar el medio de pago
                 medio_pago.delete()
-                
+
                 messages.success(
-                    request, 
+                    request,
                     f'Medio de pago "{nombre_medio}" eliminado exitosamente.'
                 )
-                
+
                 logger.info(
                     f'Usuario {request.user.username} eliminó medio de pago '
                     f'{nombre_medio} del cliente {cliente.nombre_completo}'
                 )
-                
+
         except Exception as e:
             messages.error(request, f'Error al eliminar el medio de pago: {str(e)}')
             logger.error(f'Error al eliminar medio de pago: {str(e)}', exc_info=True)
-        
+
         return redirect('clientes:medios_pago_cliente')
 
 
@@ -939,20 +1008,20 @@ def dashboard_medios_pago(request):
     cliente = get_cliente_activo(request)
     if not cliente:
         return redirect('clientes:seleccionar_cliente')
-    
+
     # Estadísticas generales
     medios = ClienteMedioDePago.objects.filter(cliente=cliente)
     total_medios = medios.count()
     medios_activos = medios.filter(es_activo=True).count()
     medio_principal = medios.filter(es_principal=True).first()
-    
+
     # Medios por tipo
     medios_por_tipo = medios.values(
         'medio_de_pago__nombre'
     ).annotate(
         cantidad=Count('id')
     ).order_by('-cantidad')
-    
+
     # Actividad reciente
     historial_reciente = HistorialClienteMedioDePago.objects.filter(
         cliente_medio_pago__cliente=cliente
@@ -960,7 +1029,7 @@ def dashboard_medios_pago(request):
         'cliente_medio_pago__medio_de_pago',
         'modificado_por'
     ).order_by('-fecha')[:10]
-    
+
     context = {
         'cliente': cliente,
         'stats': {
@@ -977,11 +1046,11 @@ def dashboard_medios_pago(request):
             id__in=medios.values_list('medio_de_pago_id', flat=True)
         ).exists()
     }
-    
+
     return render(request, 'clientes/medios_pago/dashboard.html', context)
 
 
-@login_required 
+@login_required
 def exportar_medios_pago(request):
     """
     Vista para exportar medios de pago del cliente (CSV)
@@ -989,17 +1058,17 @@ def exportar_medios_pago(request):
     cliente = get_cliente_activo(request)
     if not cliente:
         return redirect('clientes:seleccionar_cliente')
-    
+
     import csv
     from django.http import HttpResponse
     from datetime import datetime
-    
+
     # Crear respuesta CSV
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="medios_pago_{cliente.cedula}_{datetime.now().strftime("%Y%m%d")}.csv"'
-    
+
     writer = csv.writer(response)
-    
+
     # Encabezados
     headers = [
         'Tipo de Medio',
@@ -1008,18 +1077,18 @@ def exportar_medios_pago(request):
         'Fecha Creación',
         'Creado Por'
     ]
-    
+
     # Agregar campos dinámicos como columnas
     campos_unicos = set()
     medios = ClienteMedioDePago.objects.filter(cliente=cliente).prefetch_related('medio_de_pago__campos')
-    
+
     for medio in medios:
         for campo in medio.medio_de_pago.campos.all():
             campos_unicos.add(campo.nombre_campo)
-    
+
     headers.extend(sorted(campos_unicos))
     writer.writerow(headers)
-    
+
     # Datos
     for medio in medios:
         row = [
@@ -1029,49 +1098,49 @@ def exportar_medios_pago(request):
             medio.fecha_creacion.strftime('%d/%m/%Y %H:%M'),
             medio.creado_por.username if medio.creado_por else 'Sistema'
         ]
-        
+
         # Agregar valores de campos dinámicos
         for campo_nombre in sorted(campos_unicos):
             valor = medio.get_dato_campo(campo_nombre)
             row.append(valor or '')
-        
+
         writer.writerow(row)
-    
+
     return response
 @login_required
 def verificar_duplicados_ajax(request):
     """Vista AJAX para verificar posibles duplicados de medios de pago"""
     if request.method != 'POST':
         return JsonResponse({'error': 'Método no permitido'}, status=405)
-    
+
     cliente = get_cliente_activo(request)
     if not cliente:
         return JsonResponse({'error': 'Cliente no seleccionado'}, status=400)
-    
+
     try:
         medio_id = request.POST.get('medio_id')
         campos_data = {}
-        
+
         # Recopilar datos de campos
         for key, value in request.POST.items():
             if key.startswith('campo_') and value.strip():
                 campos_data[key] = value.strip()
-        
+
         if not medio_id or not campos_data:
             return JsonResponse({'duplicados': []})
-        
+
         medio_de_pago = get_object_or_404(MedioDePago, id=medio_id, is_active=True)
-        
+
         # Buscar posibles duplicados
         duplicados = []
         existing_medios = ClienteMedioDePago.objects.filter(
             cliente=cliente,
             medio_de_pago=medio_de_pago
         ).prefetch_related('medio_de_pago__campos')
-        
+
         for existing in existing_medios:
             similitud = calcular_similitud_medio(campos_data, existing, medio_de_pago)
-            
+
             if similitud['score'] > 0.7:  # 70% de similitud
                 duplicados.append({
                     'id': existing.id,
@@ -1082,12 +1151,12 @@ def verificar_duplicados_ajax(request):
                     'es_activo': existing.es_activo,
                     'es_principal': existing.es_principal
                 })
-        
+
         return JsonResponse({
             'duplicados': duplicados,
             'total': len(duplicados)
         })
-        
+
     except Exception as e:
         logger.error(f'Error en verificación de duplicados: {str(e)}', exc_info=True)
         return JsonResponse({'error': 'Error interno'}, status=500)
@@ -1098,7 +1167,7 @@ def calcular_similitud_medio(campos_form, existing_medio, medio_de_pago):
     campos_similares = []
     total_peso = 0
     peso_similitud = 0
-    
+
     # Pesos para diferentes tipos de campos
     pesos_campos = {
         'numero': 1.0,
@@ -1109,18 +1178,18 @@ def calcular_similitud_medio(campos_form, existing_medio, medio_de_pago):
         'telefono': 0.7,
         'nombre': 0.3
     }
-    
+
     # Mapear campos del formulario con campos del medio de pago
     campos_medio = {f'campo_{campo.id}': campo for campo in medio_de_pago.campos.all()}
-    
+
     for campo_form, valor_form in campos_form.items():
         if campo_form in campos_medio:
             campo_obj = campos_medio[campo_form]
             nombre_campo = campo_obj.nombre_campo.lower()
-            
+
             # Obtener valor existente
             valor_existente = existing_medio.get_dato_campo(campo_obj.nombre_campo)
-            
+
             if valor_existente:
                 # Determinar peso del campo
                 peso = 0
@@ -1128,14 +1197,14 @@ def calcular_similitud_medio(campos_form, existing_medio, medio_de_pago):
                     if indicador in nombre_campo:
                         peso = peso_indicador
                         break
-                
+
                 if peso > 0:
                     total_peso += peso
-                    
+
                     # Normalizar valores para comparación
                     valor_form_norm = normalizar_valor(valor_form, campo_obj.tipo_dato)
                     valor_exist_norm = normalizar_valor(str(valor_existente), campo_obj.tipo_dato)
-                    
+
                     # Calcular similitud
                     if valor_form_norm == valor_exist_norm:
                         peso_similitud += peso
@@ -1156,9 +1225,9 @@ def calcular_similitud_medio(campos_form, existing_medio, medio_de_pago):
                                 'valor_existente': f"****{str(valor_existente)[-4:]}",
                                 'similitud': 60
                             })
-    
+
     score = peso_similitud / total_peso if total_peso > 0 else 0
-    
+
     return {
         'score': round(score, 2),
         'campos': campos_similares
@@ -1169,9 +1238,9 @@ def normalizar_valor(valor, tipo_dato):
     """Normalizar valor para comparación"""
     if not valor:
         return ''
-    
+
     valor_str = str(valor).strip().lower()
-    
+
     if tipo_dato in ['NUMERO', 'TELEFONO']:
         # Remover espacios, guiones, paréntesis
         return re.sub(r'[\s\-\(\)]', '', valor_str)
@@ -1179,7 +1248,7 @@ def normalizar_valor(valor, tipo_dato):
         return valor_str
     else:
         return valor_str
-    
+
 
 def to_serializable(value):
     """
@@ -1267,7 +1336,6 @@ def get_medio_acreditacion_seleccionado(request):
     """
     return request.session.get("medio_seleccionado")
 
-
 # clientes/views.py
 
 class SeleccionarMedioPagoView(LoginRequiredMixin, View):
@@ -1341,3 +1409,23 @@ def get_medio_pago_seleccionado(request):
     Obtener el medio de pago seleccionado para la operación de compra actual
     """
     return request.session.get("medio_pago_seleccionado")
+
+class LimiteDiarioUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = LimiteDiario
+    form_class = LimiteDiarioForm 
+    template_name = 'clientes/editar_limite_diario.html' # Crear esta plantilla
+    success_url = reverse_lazy('clientes:lista_limites_diarios')
+
+    def test_func(self):
+        # Asegura que solo el personal autorizado pueda editar
+        return self.request.user.is_staff
+    
+
+class LimiteMensualUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = LimiteMensual
+    form_class = LimiteMensualForm
+    template_name = 'clientes/editar_limite_mensual.html' # Crear esta plantilla
+    success_url = reverse_lazy('clientes:lista_limites_mensuales')
+
+    def test_func(self):
+        return self.request.user.is_staff
