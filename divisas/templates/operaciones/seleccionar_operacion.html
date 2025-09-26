@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Seleccionar Tipo de Operación{% endblock %}
+
+{% block content %}
+<div class="container mt-5 text-center">
+  <h2 class="mb-4">¿Qué operación deseas realizar?</h2>
+  <div class="row justify-content-center">
+    <div class="col-md-4">
+      <a href="{% url 'divisas:compra' %}" class="btn btn-success btn-lg w-100 mb-3">
+        Comprar Divisas
+      </a>
+    </div>
+    <div class="col-md-4">
+      <a href="{% url 'divisas:venta' %}" class="btn btn-danger btn-lg w-100 mb-3">
+        Vender Divisas
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

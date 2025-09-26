@@ -33,5 +33,11 @@ urlpatterns = [
 
     # urls.py (app operaciones)
     path("venta/sumario/", views.SumarioOperacionView.as_view(), name="venta_sumario"),
+    #Venta de divisas
+    path('compra/', views.CompraDivisaView.as_view(), name='compra'),
+    path('compra/confirmacion/', views.CompraConfirmacionView.as_view(), name='compra_confirmacion'),
+    path('compra/sumario/', views.SumarioCompraView.as_view(), name='compra_sumario'),
 
+    #Seleccionar operación
+    path("operacion/", views.seleccionar_operacion_view, name="seleccionar_operacion"),    
 ]

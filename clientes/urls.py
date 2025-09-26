@@ -57,5 +57,7 @@ urlpatterns = [
 
     # Agrega esta URL a tu urlpatterns
     path('seleccionar-medio-acreditacion/', SeleccionarMedioAcreditacionView.as_view(), name='seleccionar_medio_acreditacion'),
+    #Seleccionar medio de pago
+    path('seleccionar-medio-pago/', views.SeleccionarMedioPagoView.as_view(), name='seleccionar_medio_pago'),
 
 ]
