@@ -186,7 +186,7 @@ class HistorialDescuentos(models.Model):
 
     def __str__(self):
         return f"Cambio en descuento de {self.descuento.segmento.name} el {self.fecha_cambio.strftime('%Y-%m-%d')}"
-    
+
 # Agregar al final de clientes/models.py si no están
 
 # clientes/models.py - Método clean corregido para ClienteMedioDePago
@@ -227,7 +227,7 @@ class ClienteMedioDePago(models.Model):
     class Meta:
         verbose_name = 'Medio de Pago del Cliente'
         verbose_name_plural = 'Medios de Pago de Clientes'
-        # ELIMINAR: unique_together = ['cliente', 'medio_de_pago']  
+        # ELIMINAR: unique_together = ['cliente', 'medio_de_pago']
         ordering = ['-es_principal', '-fecha_actualizacion']
 
 
@@ -287,3 +287,33 @@ class HistorialClienteMedioDePago(models.Model):
 
     def __str__(self):
         return f'{self.cliente_medio_pago} - {self.accion} ({self.fecha.strftime("%Y-%m-%d %H:%M")})'
+
+
+
+class LimiteDiario(models.Model):
+    fecha = models.DateField(unique=True,help_text="Fecha a la que aplica el límite")
+    monto = models.DecimalField(max_digits=20, decimal_places=2)
+    inicio_vigencia = models.DateTimeField(help_text="Fecha y hora en que entra en vigencia el límite")
+
+    creado = models.DateTimeField(auto_now_add=True)
+    actualizado = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-fecha"]
+
+    def __str__(self):
+        return f"Límite Diario {self.fecha}: {self.monto}"
+
+
+class LimiteMensual(models.Model):
+    mes = models.DateField( unique=True,help_text="Se guarda como el primer día del mes")
+    monto = models.DecimalField(max_digits=15, decimal_places=2)
+    inicio_vigencia = models.DateTimeField()
+    creado = models.DateTimeField(auto_now_add=True)
+    actualizado = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-mes"]
+
+    def __str__(self):
+        return f"Límite Mensual {self.mes.strftime('%B %Y')}: {self.monto}"

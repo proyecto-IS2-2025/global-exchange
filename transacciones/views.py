@@ -1,24 +1,24 @@
 # transacciones/views.py
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, DetailView
-from django.contrib import messages
 from django.db.models import Q
 from django.core.paginator import Paginator
-from django.utils import timezone
 from django.http import JsonResponse
 from django.db import transaction
 from datetime import datetime, timedelta
-
-from .models import Transaccion, HistorialTransaccion
+from .models import HistorialTransaccion
 from clientes.models import Cliente
 from divisas.models import Divisa
 from clientes.views import get_medio_acreditacion_seleccionado
-from decimal import Decimal
 import logging
-
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from transacciones.models import Transaccion
 logger = logging.getLogger(__name__)
+from clientes.services import verificar_limites
+from decimal import Decimal
 
 
 @login_required
@@ -29,33 +29,40 @@ def crear_transaccion_desde_venta(request):
     if request.method != 'POST':
         messages.error(request, "Método no permitido.")
         return redirect('divisas:venta_sumario')
-    
+
     try:
-        # Obtener datos de la sesión
         operacion = request.session.get("operacion")
         medio_inst = get_medio_acreditacion_seleccionado(request)
-        
+
         if not operacion:
             messages.error(request, "No se encontró información de la operación.")
             return redirect("divisas:venta")
-        
+
         if not medio_inst:
             messages.error(request, "No se encontró el medio de acreditación seleccionado.")
             return redirect("clientes:seleccionar_medio_acreditacion")
 
-        # Obtener cliente desde la sesión
+        # Obtener cliente activo
         cliente_id = request.session.get('cliente_id')
         if not cliente_id:
             messages.error(request, "No se encontró cliente activo.")
             return redirect('clientes:seleccionar_cliente')
-        
+
         cliente = get_object_or_404(Cliente, id=cliente_id, esta_activo=True)
-        
+
         # Obtener divisas
         divisa_origen = get_object_or_404(Divisa, code=operacion.get('divisa'))
-        divisa_destino = get_object_or_404(Divisa, code='PYG')  # GuaranÃ­es
-        
-        # Preparar datos del medio de pago/acreditación
+        divisa_destino = get_object_or_404(Divisa, code='PYG')
+
+        monto_origen = Decimal(str(operacion.get('monto_divisa', '0')))
+        monto_destino = Decimal(str(operacion.get('monto_guaranies', '0')))
+        #
+        # --- VALIDAR LÍMITES ANTES DE CREAR ---
+        ok, msg = verificar_limites(cliente, monto_destino)  # 👈 usar monto_destino en Gs.
+        if not ok:
+            messages.error(request, msg)
+            return redirect('divisas:venta_sumario')
+        # Preparar datos del medio de pago/acreditación (igual que antes)...
         medio_datos = {}
         if isinstance(medio_inst, dict) and medio_inst.get("id"):
             try:
@@ -63,11 +70,8 @@ def crear_transaccion_desde_venta(request):
                 medio_real = ClienteMedioDePago.objects.select_related('medio_de_pago').get(
                     id=medio_inst.get("id")
                 )
-                
-                # Determinar el tipo del medio
                 medio_model = medio_real.medio_de_pago
                 tipo_label = "No definido"
-                
                 if medio_model.tipo_medio:
                     from medios_pago.models import TIPO_MEDIO_CHOICES
                     tipo_dict = dict(TIPO_MEDIO_CHOICES)
@@ -75,7 +79,7 @@ def crear_transaccion_desde_venta(request):
                 else:
                     api_info = medio_model.get_api_info()
                     tipo_label = api_info.get("nombre_usuario", "No definido")
-                
+
                 medio_datos = {
                     'id': medio_inst.get("id"),
                     'nombre': medio_model.nombre,
@@ -84,7 +88,6 @@ def crear_transaccion_desde_venta(request):
                     'datos_campos': medio_real.datos_campos or {},
                     'es_principal': medio_real.es_principal,
                 }
-                
             except Exception as e:
                 logger.error(f"Error al obtener datos del medio: {e}")
                 medio_datos = {
@@ -93,15 +96,15 @@ def crear_transaccion_desde_venta(request):
                     'tipo': "No definido",
                     'comision': "0%",
                 }
-        
-        # Crear la transacción
+
+        # Crear transacción
         with transaction.atomic():
             transaccion = Transaccion.objects.create(
                 tipo_operacion='venta',
                 cliente=cliente,
                 divisa_origen=divisa_origen,
                 divisa_destino=divisa_destino,
-                monto_origen=Decimal(str(operacion.get('monto_divisa', '0'))),
+                monto_origen=monto_origen,
                 monto_destino=Decimal(str(operacion.get('monto_guaranies', '0'))),
                 tasa_de_cambio_aplicada=Decimal(str(operacion.get('tasa_cambio', '0'))),
                 estado='pendiente',
@@ -109,8 +112,7 @@ def crear_transaccion_desde_venta(request):
                 procesado_por=request.user,
                 observaciones=f"Transacción creada desde venta de {operacion.get('divisa')} por {operacion.get('monto_divisa')} {operacion.get('divisa')}"
             )
-            
-            # Crear historial inicial
+
             HistorialTransaccion.objects.create(
                 transaccion=transaccion,
                 estado_anterior='',
@@ -118,24 +120,19 @@ def crear_transaccion_desde_venta(request):
                 observaciones='Transacción creada',
                 modificado_por=request.user
             )
-        
-        # Limpiar datos de sesión
-        keys_to_remove = ['operacion', 'venta_resultado', 'medio']
-        for key in keys_to_remove:
-            if key in request.session:
-                del request.session[key]
+
+        # Limpiar sesión y redirigir
+        for key in ['operacion', 'venta_resultado', 'medio']:
+            request.session.pop(key, None)
         request.session.modified = True
-        
+
         messages.success(request, f'Transacción {transaccion.numero_transaccion} creada exitosamente.')
-        
-        # Redirigir a la página de confirmación
         return redirect('transacciones:confirmacion_operacion', numero_transaccion=transaccion.numero_transaccion)
-        
+
     except Exception as e:
         logger.error(f"Error al crear transacción: {e}")
         messages.error(request, f"Error al procesar la transacción: {str(e)}")
         return redirect('divisas:venta_sumario')
-
 
 @login_required
 def confirmacion_operacion(request, numero_transaccion):

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4 text-primary">Límites Mensuales</h2>
+
+  <div class="d-flex gap-2 mb-3">
+    <a href="{% url 'clientes:lista_clientes' %}" class="btn btn-secondary">
+      Volver
+    </a>
+    <a href="{% url 'clientes:crear_limite_mensual' %}" class="btn btn-primary">
+      Nuevo Límite Mensual
+    </a>
+
+  </div>
+
+  <table class="table table-bordered table-striped">
+    <thead>
+      <tr>
+        <th>Mes</th>
+        <th>Monto</th>
+        <th>Inicio de Vigencia</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for limite in limites %}
+      <tr>
+        <td>{{ limite.mes|date:"F Y" }}</td>
+        <td>{{ limite.monto }}</td>
+        <td>{{ limite.inicio_vigencia|date:"d/m/Y H:i" }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="3" class="text-center">No hay límites configurados.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
