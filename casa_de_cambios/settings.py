@@ -36,6 +36,9 @@ INSTALLED_APPS = [
     'medios_pago',
     'widget_tweaks',
     'simulador',
+    'transacciones',
+    'banco',
+    'billetera',
 ]
 
 MIDDLEWARE = [
@@ -147,8 +150,12 @@ EMAIL_HOST_PASSWORD = 'tpsh yedw lthc oprs'
 
 #login y logout redirect
 #LOGIN_REDIRECT_URL = 'inicio'
+LOGIN_URL = '/login/'
 LOGOUT_REDIRECT_URL = 'inicio'
 LOGIN_REDIRECT_URL = '/redirect-dashboard/'
+
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'   # a dónde redirige tras login exitoso (puedes poner 'inicio')
 
 
 
@@ -171,3 +178,7 @@ LOGGING = {
         'level': 'INFO',
     },
 }
+
+
+TIME_ZONE = 'America/Asuncion'
+USE_TZ = True
