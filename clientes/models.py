@@ -11,6 +11,7 @@ categorización por segmentos.
 from django.db import models
 from users.models import CustomUser
 from django.core.validators import MinValueValidator, MaxValueValidator
+from decimal import Decimal
 
 from django.db import models
 from users.models import CustomUser
@@ -309,9 +310,15 @@ class HistorialClienteMedioDePago(models.Model):
 
 
 
+# --- Límite Diario: Monto con validación de valor mínimo ---
 class LimiteDiario(models.Model):
     fecha = models.DateField(unique=True,help_text="Fecha a la que aplica el límite")
-    monto = models.DecimalField(max_digits=20, decimal_places=2)
+    monto = models.DecimalField(
+        max_digits=20, 
+        decimal_places=2,
+        # ✅ Validación para montos mayores o iguales a cero.
+        validators=[MinValueValidator(Decimal('0.00'))]
+    )
     inicio_vigencia = models.DateTimeField(help_text="Fecha y hora en que entra en vigencia el límite")
 
     creado = models.DateTimeField(auto_now_add=True)
@@ -324,9 +331,15 @@ class LimiteDiario(models.Model):
         return f"Límite Diario {self.fecha}: {self.monto}"
 
 
+# --- Límite Mensual: Monto con validación de valor mínimo ---
 class LimiteMensual(models.Model):
     mes = models.DateField( unique=True,help_text="Se guarda como el primer día del mes")
-    monto = models.DecimalField(max_digits=15, decimal_places=2)
+    monto = models.DecimalField(
+        max_digits=15, 
+        decimal_places=2,
+        # ✅ Validación para montos mayores o iguales a cero.
+        validators=[MinValueValidator(Decimal('0.00'))]
+    )
     inicio_vigencia = models.DateTimeField()
     creado = models.DateTimeField(auto_now_add=True)
     actualizado = models.DateTimeField(auto_now=True)

@@ -1,8 +1,9 @@
 from .models import Cliente, AsignacionCliente, Descuento, LimiteDiario, LimiteMensual
 from django import forms
-from datetime import datetime, date
+from datetime import datetime, date, time
 from django.utils import timezone
 from .models import Cliente, AsignacionCliente, Descuento
+
 
 
 class ClienteForm(forms.ModelForm):
@@ -633,19 +634,19 @@ class LimiteDiarioForm(forms.ModelForm):
             "monto": forms.NumberInput(attrs={"class": "form-control", "step": "1"}),
         }
 
-    def clean_fecha(self):
-        fecha = self.cleaned_data["fecha"]
+    class Meta:
+        model = LimiteDiario
+        fields = ['fecha', 'monto']
 
-        # [Opcional] No permitir fechas pasadas
+    def clean_fecha(self):
+        fecha = self.cleaned_data.get('fecha')
         hoy = timezone.localdate()
         if fecha < hoy:
             raise forms.ValidationError("No se pueden registrar límites en fechas pasadas.")
-            
-        # --- LÓGICA: Excluir el objeto que se está editando de la búsqueda de duplicados ---
-        qs = LimiteDiario.objects.filter(fecha=fecha)
 
+        # --- Lógica de exclusión de duplicados (está correcta) ---
+        qs = LimiteDiario.objects.filter(fecha=fecha)
         if self.instance.pk:
-            # Si self.instance.pk existe, estamos editando. Excluimos ese registro.
             qs = qs.exclude(pk=self.instance.pk)
         
         if qs.exists():
@@ -655,13 +656,51 @@ class LimiteDiarioForm(forms.ModelForm):
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-        hoy = datetime.today().date()
+        
+        # -------------------------------------------------------------------
+        # CAMBIO CRUCIAL: Solo establecer inicio_vigencia si es una creación.
+        # En la edición, usamos la fecha del modelo para calcular el inicio del día/mes.
+        # -------------------------------------------------------------------
+        if not instance.pk: # Si es un objeto nuevo
+            fecha = instance.fecha
+            hoy = timezone.localdate()
+            
+            # Si la fecha es hoy, aplica de inmediato. Si es futuro, aplica a las 00:00.
+            if fecha == hoy:
+                instance.inicio_vigencia = timezone.now()
+            else:
+                naive = datetime.combine(fecha, time.min)
+                instance.inicio_vigencia = timezone.make_aware(naive)
 
-        if instance.fecha == hoy:
-            instance.inicio_vigencia = timezone.now()
-        else:
-            naive = datetime(instance.fecha.year, instance.fecha.month, instance.fecha.day, 0, 0)
-            instance.inicio_vigencia = timezone.make_aware(naive)  # ✅ convierte a aware según tu settings
+        if commit:
+            instance.save()
+        return instance
+
+class LimiteMensualForm(forms.ModelForm):
+    # ... (clase Meta, widgets, clean_mes) ...
+    class Meta:
+        model = LimiteMensual
+        fields = ['mes', 'monto']
+        widgets = {
+            'mes': forms.DateInput(attrs={'type': 'month'}, format='%Y-%m'),
+        }
+
+    # ... (clean_mes está correcto) ...
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        # -------------------------------------------------------------------
+        # CAMBIO CRUCIAL: Solo establecer inicio_vigencia si es una creación.
+        # -------------------------------------------------------------------
+        if not instance.pk: # Si es un objeto nuevo
+            fecha = instance.mes
+            hoy = timezone.localdate()
+
+            if fecha.year == hoy.year and fecha.month == hoy.month:
+                instance.inicio_vigencia = timezone.now()
+            else:
+                naive = datetime(fecha.year, fecha.month, 1, 0, 0)
+                instance.inicio_vigencia = timezone.make_aware(naive)
 
         if commit:
             instance.save()
