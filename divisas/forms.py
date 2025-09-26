@@ -1,3 +1,4 @@
+#divisas
 from django import forms
 from .models import Divisa, TasaCambio
 """
@@ -86,3 +87,17 @@ class TasaCambioForm(forms.ModelForm):
         if v is not None and v <= 0:
             raise forms.ValidationError('La comisión de venta debe ser mayor a 0.')
         return v
+    
+from decimal import Decimal
+
+class VentaDivisaForm(forms.Form):
+    divisa = forms.ModelChoiceField(
+        queryset=Divisa.objects.filter(is_active=True).exclude(code='PYG'),
+        label="Divisa a vender",
+        empty_label="-- Seleccione divisa --"
+    )
+    monto = forms.DecimalField(
+        min_value=Decimal('0.00000001'),
+        decimal_places=8,
+        label="Monto (en la divisa seleccionada)"
+    )

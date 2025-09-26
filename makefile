@@ -79,6 +79,15 @@ docker-loaddata:
 #	python manage.py loaddata medios_pago_initial_data.json omitir de momento
 	@echo "Datos iniciales cargados."
 
+loaddata:
+	@echo "Cargando datos iniciales..."
+	poetry run python manage.py loaddata roles_data.json
+	poetry run python manage.py loaddata users_data.json
+	poetry run python manage.py loaddata clientes_data.json
+	poetry run python manage.py loaddata divisas_initial_data.json
+#poetry run python manage.py loaddata medios_pago_initial_data.json
+	@echo "Datos iniciales cargados."
+
 docker-setup:
 	@echo "Configurando la aplicación..."
 	docker compose up -d --build
@@ -98,3 +107,13 @@ prod-loaddata:
 	docker exec glx-web-prod python manage.py loaddata divisas_initial_data.json
 #	python manage.py loaddata medios_pago_initial_data.json omitir de momento
 	@echo "Datos iniciales cargados en producción."	
+
+db-init:
+	@echo "Inicializando la base de datos..."
+	poetry run python manage.py makemigrations
+	poetry run python manage.py migrate
+	poetry run python manage.py loaddata roles_data.json
+	poetry run python manage.py loaddata users_data.json
+	poetry run python manage.py loaddata clientes_data.json
+	poetry run python manage.py loaddata divisas_initial_data.json
+	@echo "Datos cargados."

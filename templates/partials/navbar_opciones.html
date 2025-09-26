@@ -36,10 +36,20 @@
       </a>
     </li>
     <li>
+      <a class="dropdown-item fw-bold text-secondary" href="{% url 'clientes:medios_pago_cliente' %}">
+        <i class="fas fa-credit-card me-2"></i>Medios de Pago
+      </a>
+    </li>
+    <li>
       <a class="dropdown-item fw-bold text-secondary" href="{% url 'clientes:seleccionar_cliente' %}">
         Seleccionar Cliente
       </a>
-    </li>  
+    </li>
+    <li>
+      <a class="dropdown-item fw-bold text-secondary" href="{% url 'divisas:venta' %}">
+        Vender Divisa
+      </a>
+    </li>   
   {% else %}
     <li><hr class="dropdown-divider"></li>
     <li>
@@ -50,6 +60,11 @@
     <li>
       <a class="dropdown-item fw-bold text-secondary" href="{% url 'divisas:visualizador_tasas' %}">
         Visualizar tasas
+      </a>
+    </li>
+    <li>
+      <a class="dropdown-item fw-bold text-secondary" href="{% url 'clientes:medios_pago_cliente' %}">
+        <i class="fas fa-credit-card me-2"></i>Medios de Pago
       </a>
     </li>
     <li>

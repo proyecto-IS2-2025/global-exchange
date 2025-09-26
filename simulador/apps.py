@@ -1,3 +1,4 @@
+#simulador
 from django.apps import AppConfig
 
 

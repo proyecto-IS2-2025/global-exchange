@@ -15,7 +15,7 @@
     </div>
     
     <div class="d-flex align-items-center gap-3">
-        <!-- Menú desplegable de filtros -->
+        <!-- MenÃº desplegable de filtros -->
         <div class="dropdown">
             <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filtroDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="fas fa-filter me-2"></i>
@@ -45,7 +45,7 @@
                 
                 <li><hr class="dropdown-divider"></li>
                 
-                <!-- Estadísticas rápidas -->
+                <!-- EstadÃ­sticas rÃ¡pidas -->
                 <li class="dropdown-item-text">
                     <div class="d-flex justify-content-between small text-muted">
                         <span>Total:</span>
@@ -113,7 +113,10 @@
                         <i class="fas fa-credit-card me-2"></i>Nombre
                     </th>
                     <th scope="col">
-                        <i class="fas fa-percentage me-2"></i>Comisión (%)
+                        <i class="fas fa-tag me-2"></i>Tipo
+                    </th>
+                    <th scope="col">
+                        <i class="fas fa-percentage me-2"></i>ComisiÃ³n (%)
                     </th>
                     <th scope="col">
                         <i class="fas fa-toggle-on me-2"></i>Estado
@@ -137,6 +140,11 @@
                                 <i class="fas fa-circle text-secondary me-2" title="Inactivo"></i>
                             {% endif %}
                             <strong>{{ medio.nombre }}</strong>
+                            <td>
+                                <span class="badge bg-info">
+                                    {{ medio.get_tipo_medio_display|default:"Sin tipo" }}
+                                </span>
+                            </td>
                         </div>
                     </td>
                     <td>
@@ -163,14 +171,14 @@
                     </td>
                     <td class="text-center">
                         <div class="btn-group" role="group">
-                            <!-- Botón editar -->
+                            <!-- BotÃ³n editar -->
                             <a href="{% url 'medios_pago:editar' medio.pk %}" 
                                class="btn btn-sm btn-outline-primary" 
                                title="Editar medio de pago">
                                 <i class="fas fa-edit"></i>
                             </a>
                             
-                            <!-- Botón toggle activo/inactivo -->
+                            <!-- BotÃ³n toggle activo/inactivo -->
                             <form action="{% url 'medios_pago:toggle' medio.pk %}?estado={{ estado_filtro }}" 
                                   method="post" class="d-inline">
                                 {% csrf_token %}
@@ -188,9 +196,9 @@
         </table>
     </div>
     
-    <!-- Paginación -->
+    <!-- PaginaciÃ³n -->
     {% if is_paginated %}
-        <nav aria-label="Navegación de páginas" class="mt-4">
+        <nav aria-label="NavegaciÃ³n de pÃ¡ginas" class="mt-4">
             <ul class="pagination justify-content-center">
                 {% if page_obj.has_previous %}
                     <li class="page-item">
@@ -207,7 +215,7 @@
 
                 <li class="page-item active">
                     <span class="page-link">
-                        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                        PÃ¡gina {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
                     </span>
                 </li>
 
@@ -228,7 +236,7 @@
     {% endif %}
     
 {% else %}
-    <!-- Estado vacío -->
+    <!-- Estado vacÃ­o -->
     <div class="text-center mt-5">
         <div class="card border-0">
             <div class="card-body">
@@ -241,7 +249,7 @@
                     </a>
                 {% elif estado_filtro == 'activos' %}
                     <h5>No hay medios de cobro activos</h5>
-                    <p class="text-muted">Todos los medios están desactivados o no hay medios registrados.</p>
+                    <p class="text-muted">Todos los medios estÃ¡n desactivados o no hay medios registrados.</p>
                     <div class="btn-group" role="group">
                         <a href="?estado=todos" class="btn btn-outline-primary">
                             <i class="fas fa-list me-2"></i>Ver Todos
@@ -252,7 +260,7 @@
                     </div>
                 {% else %}
                     <h5>No hay medios de cobro inactivos</h5>
-                    <p class="text-muted">Todos los medios están activados.</p>
+                    <p class="text-muted">Todos los medios estÃ¡n activados.</p>
                     <a href="?estado=todos" class="btn btn-outline-primary">
                         <i class="fas fa-list me-2"></i>Ver Todos los Medios
                     </a>
@@ -262,25 +270,25 @@
     </div>
 {% endif %}
 
-<!-- Modal de confirmación para eliminar -->
+<!-- Modal de confirmaciÃ³n para eliminar -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
                     <i class="fas fa-exclamation-triangle text-warning me-2"></i>
-                    Confirmar Eliminación
+                    Confirmar EliminaciÃ³n
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="alert alert-warning">
-                    <strong>¡Atención!</strong> Esta acción eliminará permanentemente el medio de pago.
+                    <strong>Â¡AtenciÃ³n!</strong> Esta acciÃ³n eliminarÃ¡ permanentemente el medio de pago.
                 </div>
-                <p>¿Estás seguro de que deseas eliminar el medio de pago <strong id="medio-name"></strong>?</p>
+                <p>Â¿EstÃ¡s seguro de que deseas eliminar el medio de pago <strong id="medio-name"></strong>?</p>
                 <p class="text-muted small">
                     <i class="fas fa-info-circle me-1"></i>
-                    Esta acción no se puede deshacer. Todos los datos asociados se perderán.
+                    Esta acciÃ³n no se puede deshacer. Todos los datos asociados se perderÃ¡n.
                 </p>
             </div>
             <div class="modal-footer">
