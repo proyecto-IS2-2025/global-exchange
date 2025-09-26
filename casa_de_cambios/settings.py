@@ -147,6 +147,7 @@ EMAIL_HOST_PASSWORD = 'tpsh yedw lthc oprs'
 
 #login y logout redirect
 #LOGIN_REDIRECT_URL = 'inicio'
+LOGIN_URL = '/login/'
 LOGOUT_REDIRECT_URL = 'inicio'
 LOGIN_REDIRECT_URL = '/redirect-dashboard/'
 

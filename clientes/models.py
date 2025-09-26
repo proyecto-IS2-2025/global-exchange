@@ -181,7 +181,7 @@ class HistorialDescuentos(models.Model):
 
 
 class LimiteDiario(models.Model):
-    fecha = models.DateField(unique=True, help_text="Fecha a la que aplica el límite")
+    fecha = models.DateField(unique=True,help_text="Fecha a la que aplica el límite")
     monto = models.DecimalField(max_digits=20, decimal_places=2)
     inicio_vigencia = models.DateTimeField(help_text="Fecha y hora en que entra en vigencia el límite")
 
@@ -196,7 +196,7 @@ class LimiteDiario(models.Model):
 
 
 class LimiteMensual(models.Model):
-    mes = models.DateField(unique=True, help_text="Se guarda como el primer día del mes")
+    mes = models.DateField( unique=True,help_text="Se guarda como el primer día del mes")
     monto = models.DecimalField(max_digits=15, decimal_places=2)
     inicio_vigencia = models.DateTimeField()
     creado = models.DateTimeField(auto_now_add=True)
