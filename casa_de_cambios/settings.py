@@ -1,25 +1,22 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
-import django_postgres_extensions
 
-# Ya tenés BASE_DIR definido más abajo; si lo preferís aquí, usa:
-# BASE_DIR = Path(__file__).resolve().parent.parent
+# Carga las variables de entorno desde el archivo .env
+# La ruta se resuelve para encontrar el .env en el directorio raíz del proyecto
 load_dotenv(os.path.join(Path(__file__).resolve().parent.parent, '.env'))
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-# BASE_DIR = Path(__file__).resolve().parent.parent  # Duplicate definition removed
-
-# Configuración adicional
-#DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes', 'on')
-DEBUG = True
-SECRET_KEY = os.environ.get('SECRET_KEY', 'tu-clave-por-defecto-para-desarrollo')
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Application definition
+
+# Configuración principal del proyecto, leyendo de las variables de entorno
+SECRET_KEY = os.environ.get('SECRET_KEY', 'tu-clave-por-defecto-para-desarrollo')
+DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes', 'on')
+# El .split(',') convierte el string de ALLOWED_HOSTS en una lista
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -149,10 +146,4 @@ LOGOUT_REDIRECT_URL = 'inicio'
 LOGIN_REDIRECT_URL = '/redirect-dashboard/'
 
 
-
-
-
-
 AUTH_USER_MODEL = 'users.CustomUser'
-
-DEBUG = True

@@ -1,0 +1,54 @@
+# syntax=docker/dockerfile:1.7
+
+# --- Etapa 1: Builder (para instalar dependencias y recolectar estáticos) ---
+FROM python:3.13-slim AS builder
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    POETRY_VERSION=2.0.1 \
+    PATH="/home/appuser/.local/bin:${PATH}"
+
+WORKDIR /app
+
+# Instala Gunicorn y las dependencias de Poetry
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir gunicorn "poetry==${POETRY_VERSION}"
+
+COPY pyproject.toml poetry.lock* ./\
+RUN poetry config virtualenvs.create false \
+    && poetry install --no-interaction --no-ansi --no-root
+
+# Copia los archivos del proyecto y recolecta estáticos
+COPY . .
+RUN python manage.py collectstatic --noinput
+
+# --- Etapa 2: Final (la imagen ligera de producción) ---
+FROM python:3.13-slim
+
+# Crea el usuario de la aplicación
+RUN useradd --create-home --shell /bin/bash appuser
+
+# Copia los archivos necesarios desde la etapa de construcción
+COPY --from=builder /app /app
+
+# Instala las dependencias y el Gunicorn
+COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
+COPY --from=builder /usr/local/bin/gunicorn /usr/local/bin/gunicorn
+COPY --from=builder /home/appuser/.local/bin /home/appuser/.local/bin
+
+WORKDIR /app
+
+# Otorga permisos al usuario
+RUN chmod +x scripts/entrypoint.sh \
+    && chown -R appuser:appuser /app
+
+# Define el punto de entrada y el comando
+USER appuser
+
+EXPOSE 8000
+ENTRYPOINT ["/app/scripts/entrypoint.sh"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "casa_de_cambios.wsgi:application"]

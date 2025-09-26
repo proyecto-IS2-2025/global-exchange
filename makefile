@@ -84,3 +84,8 @@ docker-setup:
 	docker compose up -d --build
 	docker compose -f docker-compose.yml run --rm --no-deps web poetry run python manage.py makemigrations
 	docker compose -f docker-compose.yml run --rm --no-deps web poetry run python manage.py migrate
+
+run: 
+	@echo "Iniciando la aplicación..."
+	poetry run python manage.py runserver
+	@echo "Aplicación iniciada."
