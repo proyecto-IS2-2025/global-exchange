@@ -141,3 +141,4 @@ help:
 	@echo "docs                     Genera la documentación con Sphinx."
 	@echo "tests                    Ejecuta los tests de la app."
 	@echo ""
+#Fin del archivo make
