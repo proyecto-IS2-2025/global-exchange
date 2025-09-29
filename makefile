@@ -31,7 +31,8 @@ loaddata-dev:
 	docker compose -p $(DEV_PROJECT_NAME) exec web python manage.py loaddata roles_data.json
 	docker compose -p $(DEV_PROJECT_NAME) exec web python manage.py loaddata users_data.json
 	docker compose -p $(DEV_PROJECT_NAME) exec web python manage.py loaddata clientes_data.json
-	docker compose -p $(DEV_PROJECT_NAME) exec web python manage.py loaddata divisas_initial_data.json
+	docker compose -p $(DEV_PROJECT_NAME) exec web python manage.py loaddata bancos_data.json
+	docker compose -p $(DEV_PROJECT_NAME) exec web python manage.py loaddata billetera_data.json
 	@echo "Datos iniciales cargados en desarrollo."
 
 init-db: docker-migrate-dev docker-loaddata-dev
@@ -63,7 +64,9 @@ loaddata-prod:
 	docker compose -p $(PROD_PROJECT_NAME) -f docker-compose.prod.yml exec web python manage.py loaddata roles_data.json
 	docker compose -p $(PROD_PROJECT_NAME) -f docker-compose.prod.yml exec web python manage.py loaddata users_data.json
 	docker compose -p $(PROD_PROJECT_NAME) -f docker-compose.prod.yml exec web python manage.py loaddata clientes_data.json
-	docker compose -p $(PROD_PROJECT_NAME) -f docker-compose.prod.yml exec web python manage.py loaddata divisas_initial_data.json
+	docker compose -p $(PROD_PROJECT_NAME) -f docker-compose.prod.yml exec web python manage.py loaddata divisas_data.json
+	docker compose -p $(PROD_PROJECT_NAME) -f docker-compose.prod.yml exec web python manage.py loaddata bancos_data.json
+	docker compose -p $(PROD_PROJECT_NAME) -f docker-compose.prod.yml exec web python manage.py loaddata billetera_data.json
 	@echo "Datos iniciales cargados en producción."
 
 #------------------ Comandos DJANGO (Sin Docker) ------------------#
@@ -85,7 +88,9 @@ loaddata:
 	poetry run python manage.py loaddata roles_data.json
 	poetry run python manage.py loaddata users_data.json
 	poetry run python manage.py loaddata clientes_data.json
-	poetry run python manage.py loaddata divisas_initial_data.json
+	poetry run python manage.py loaddata divisas_data.json
+	poetry run python manage.py loaddata bancos_data.json
+	poetry run python manage.py loaddata billetera_data.json
 	@echo "Datos iniciales cargados (local)."
 
 docs:
