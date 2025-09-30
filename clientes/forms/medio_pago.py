@@ -70,36 +70,7 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
         }
 
     def __init__(self, cliente=None, medio_de_pago=None, *args, **kwargs):
-        print("\n" + "="*80)
-        print("🔍 INICIO __init__ de ClienteMedioDePagoCompleteForm")
-        print("="*80)
-        
-        # 🐛 DEBUG: Verificar argumentos recibidos
-        print(f"📥 Args recibidos:")
-        print(f"   - cliente: {cliente}")
-        print(f"   - medio_de_pago: {medio_de_pago}")
-        print(f"   - instance en kwargs: {kwargs.get('instance')}")
-        
-        if 'instance' in kwargs and kwargs['instance']:
-            instance = kwargs['instance']
-            print(f"\n📦 MODO EDICIÓN detectado")
-            print(f"   - instance.pk: {instance.pk}")
-            print(f"   - instance.es_activo: {instance.es_activo}")
-            print(f"   - instance.es_principal: {instance.es_principal}")
-            print(f"   - type(instance.es_activo): {type(instance.es_activo)}")
-        else:
-            print(f"\n✨ MODO CREACIÓN detectado (instance es None o sin PK)")
-        
         super().__init__(*args, **kwargs)
-        
-        print(f"\n✅ Después de super().__init__()")
-        print(f"   - self.instance.pk: {self.instance.pk}")
-        
-        if self.instance.pk:
-            print(f"   - self.instance.es_activo: {self.instance.es_activo}")
-            print(f"   - self.instance.es_principal: {self.instance.es_principal}")
-            print(f"   - self.fields['es_activo'].initial: {self.fields['es_activo'].initial}")
-            print(f"   - self.fields['es_principal'].initial: {self.fields['es_principal'].initial}")
         
         self.cliente = cliente
         self.medio_de_pago = medio_de_pago
@@ -109,60 +80,23 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
         if not medio_de_pago:
             if self.instance and self.instance.pk:
                 self.medio_de_pago = self.instance.medio_de_pago
-                print(f"   - medio_de_pago obtenido de instance: {self.medio_de_pago}")
             else:
                 raise ValueError("Se debe proporcionar medio_de_pago")
 
-        # 🔥 DEBUG: Verificar estado de fields ANTES de manipularlos
-        print(f"\n🔎 Estado de fields ANTES de modificación:")
-        print(f"   - es_activo.initial: {self.fields['es_activo'].initial}")
-        print(f"   - es_principal.initial: {self.fields['es_principal'].initial}")
-        print(f"   - es_activo.widget: {self.fields['es_activo'].widget}")
-        print(f"   - es_activo.widget.attrs: {self.fields['es_activo'].widget.attrs}")
-        
-        # Solo establecer valores por defecto en CREACIÓN
-        if not self.instance.pk:
-            self.fields['es_activo'].initial = True
-            self.fields['es_principal'].initial = False
-            print(f"\n✨ Modo CREACIÓN - Estableciendo valores por defecto")
-            print(f"   - es_activo.initial = True")
-            print(f"   - es_principal.initial = False")
-        else:
-            print(f"\n📝 Modo EDICIÓN - Django maneja initial automáticamente")
-            print(f"   - NO modificando initial, confiando en Django")
-            
-            # 🐛 DEBUG ADICIONAL: Forzar verificación
-            print(f"\n🔬 Verificación adicional en EDICIÓN:")
-            print(f"   - instance.es_activo == True: {self.instance.es_activo == True}")
-            print(f"   - instance.es_activo is True: {self.instance.es_activo is True}")
-            print(f"   - bool(instance.es_activo): {bool(self.instance.es_activo)}")
-
-        # 🔥 DEBUG: Estado DESPUÉS de modificación
-        print(f"\n🔎 Estado de fields DESPUÉS de modificación:")
-        print(f"   - es_activo.initial: {self.fields['es_activo'].initial}")
-        print(f"   - es_principal.initial: {self.fields['es_principal'].initial}")
-
         # Generar campos dinámicos
-        print(f"\n🔧 Generando campos dinámicos...")
         self._generar_campos_dinamicos()
 
         # Si estamos editando, pre-llenar los campos
         if self.instance and self.instance.pk:
-            print(f"\n📋 Pre-llenando campos dinámicos...")
             self._prellenar_campos_dinamicos()
-
-        print("\n" + "="*80)
-        print("✅ FIN __init__ de ClienteMedioDePagoCompleteForm")
-        print("="*80 + "\n")
 
     def _generar_campos_dinamicos(self):
         """Genera campos del formulario basados en CampoMedioDePago."""
         if not self.medio_de_pago:
-            print("⚠️ No hay medio_de_pago, saltando generación de campos")
             return
 
         campos = self.medio_de_pago.campos.all().order_by('orden', 'id')
-        print(f"   Generando {campos.count()} campos para {self.medio_de_pago.nombre}")
+        logger.debug(f"Generando {campos.count()} campos para {self.medio_de_pago.nombre}")
 
         for campo in campos:
             field_name = f'campo_{campo.id}'
@@ -218,15 +152,13 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
                 )
 
             self.fields[field_name] = field
-            print(f"   ✓ Campo generado: {field_name}")
 
     def _prellenar_campos_dinamicos(self):
         """Pre-llena los campos dinámicos con datos existentes."""
         if not self.instance.datos_campos:
-            print("   ℹ️ No hay datos_campos, saltando pre-llenado")
             return
 
-        print(f"   Pre-llenando con datos: {self.instance.datos_campos}")
+        logger.debug(f"Pre-llenando campos con: {self.instance.datos_campos}")
 
         for campo in self.medio_de_pago.campos.all():
             field_name = f'campo_{campo.id}'
@@ -234,20 +166,11 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
             
             if valor and field_name in self.fields:
                 self.fields[field_name].initial = valor
-                print(f"   ✓ Campo {field_name} = {valor}")
+                logger.debug(f"Campo {field_name} pre-llenado con: {valor}")
 
     def clean(self):
         """Validación general del formulario."""
-        print("\n" + "="*80)
-        print("🔍 INICIO clean() de ClienteMedioDePagoCompleteForm")
-        print("="*80)
-        
         cleaned_data = super().clean()
-        
-        print(f"\n📥 cleaned_data recibido:")
-        print(f"   - es_activo: {cleaned_data.get('es_activo')}")
-        print(f"   - es_principal: {cleaned_data.get('es_principal')}")
-        print(f"   - type(es_activo): {type(cleaned_data.get('es_activo'))}")
         
         # Construir datos_campos desde los campos dinámicos
         datos_campos = {}
@@ -268,44 +191,27 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
                     f'El campo {campo.nombre_campo} es obligatorio.'
                 )
 
-        print(f"\n📦 datos_campos construidos: {datos_campos}")
+        logger.debug(f"clean() - datos_campos construidos: {datos_campos}")
         
         # Guardar temporalmente para usarlo en save()
         self._datos_campos_temp = datos_campos
-        
-        print("\n" + "="*80)
-        print("✅ FIN clean()")
-        print("="*80 + "\n")
         
         return cleaned_data
 
     def save(self, commit=True):
         """Guardar el medio de pago con los datos de campos dinámicos."""
-        print("\n" + "="*80)
-        print("🔍 INICIO save() de ClienteMedioDePagoCompleteForm")
-        print("="*80)
-        
         instance = super().save(commit=False)
-        
-        print(f"\n📦 Instance después de super().save(commit=False):")
-        print(f"   - instance.pk: {instance.pk}")
-        print(f"   - instance.es_activo: {instance.es_activo}")
-        print(f"   - instance.es_principal: {instance.es_principal}")
-        print(f"   - type(instance.es_activo): {type(instance.es_activo)}")
         
         # Asignar cliente y medio de pago
         if self.cliente:
             instance.cliente = self.cliente
-            print(f"   ✓ Cliente asignado: {self.cliente}")
-            
         if self.medio_de_pago:
             instance.medio_de_pago = self.medio_de_pago
-            print(f"   ✓ Medio de pago asignado: {self.medio_de_pago}")
 
         # Asignar datos de campos dinámicos
         if hasattr(self, '_datos_campos_temp'):
             instance.datos_campos = self._datos_campos_temp
-            print(f"   ✓ datos_campos asignados: {instance.datos_campos}")
+            logger.debug(f"save() - Asignando datos_campos: {instance.datos_campos}")
 
         # Verificar si debe ser principal automáticamente
         if not instance.pk and not instance.es_principal:
@@ -315,27 +221,13 @@ class ClienteMedioDePagoCompleteForm(forms.ModelForm):
             
             if not otros_medios:
                 instance.es_principal = True
-                print(f"   ✓ Marcado como principal (primer medio)")
-
-        print(f"\n💾 Antes de guardar en BD:")
-        print(f"   - es_activo: {instance.es_activo}")
-        print(f"   - es_principal: {instance.es_principal}")
 
         if commit:
             instance.save()
-            print(f"\n✅ Guardado en BD con ID: {instance.pk}")
-            
-            # 🐛 VERIFICACIÓN POST-GUARDADO
-            instance.refresh_from_db()
-            print(f"\n🔬 Verificación POST-guardado (refresh_from_db):")
-            print(f"   - es_activo en BD: {instance.es_activo}")
-            print(f"   - es_principal en BD: {instance.es_principal}")
-
-        print("\n" + "="*80)
-        print("✅ FIN save()")
-        print("="*80 + "\n")
+            logger.debug(f"save() - Guardado con ID: {instance.pk}")
 
         return instance
+
 
 
 class ClienteMedioDePagoBulkForm(forms.Form):

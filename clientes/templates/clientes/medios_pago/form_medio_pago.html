@@ -106,22 +106,8 @@
                                 </label>
                                 
                                 <div class="p-3 bg-light border rounded-3">
-                                    <!-- Switch: Activo/Inactivo -->
-                                    <div class="form-check form-switch mb-3 pb-3 border-bottom">
-                                        {{ form.es_activo }}
-                                        <label class="form-check-label fw-semibold" for="{{ form.es_activo.id_for_label }}">
-                                            <i class="fas fa-power-off me-2 text-success"></i>
-                                            Medio de pago activo
-                                        </label>
-                                        <small class="d-block text-muted mt-1">
-                                            Desmarque para desactivar temporalmente este medio de pago
-                                        </small>
-                                        {% if form.es_activo.errors %}
-                                            <div class="text-danger small mt-2">
-                                                {{ form.es_activo.errors }}
-                                            </div>
-                                        {% endif %}
-                                    </div>
+                                    <!-- Hidden: es_activo (no visible, pero enviado en el form) -->
+                                    {{ form.es_activo.as_hidden }}                   
 
                                     <!-- Switch: Principal -->
                                     <div class="form-check form-switch">
