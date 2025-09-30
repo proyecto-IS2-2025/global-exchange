@@ -1,18 +1,83 @@
-"""
-Formularios para la gestión de medios de pago de clientes.
-"""
-import logging
-import re
+from ..models import Cliente, AsignacionCliente, Descuento, LimiteDiario, LimiteMensual
+from django import forms
+from datetime import datetime, date, time
+from django.utils import timezone
+from ..models import Cliente, AsignacionCliente, Descuento
 
+
+
+class ClienteForm(forms.ModelForm):
+    """
+    Formulario para crear/editar clientes.
+    """
+    class Meta:
+        model = Cliente
+        fields = ['cedula', 'nombre_completo', 'direccion', 'telefono', 'segmento', 'tipo_cliente', 'esta_activo']
+        widgets = {
+            'cedula': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ingrese cédula'
+            }),
+            'nombre_completo': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ingrese nombre completo'
+            }),
+            'direccion': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ingrese dirección'
+            }),
+            'telefono': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ingrese teléfono'
+            }),
+            'segmento': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'tipo_cliente': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ejemplo: minorista / mayorista'
+            }),
+            'esta_activo': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+        }
+
+
+class SeleccionClienteForm(forms.Form):
+    """
+    Formulario para que un usuario seleccione entre sus clientes asignados.
+    """
+    cliente = forms.ModelChoiceField(
+        queryset=None,
+        empty_label="Seleccione un cliente",
+        label="Cliente asignado"
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['cliente'].queryset = (
+            AsignacionCliente.objects.filter(usuario=user)
+                                     .select_related('cliente')
+        )
+        self.fields['cliente'].label_from_instance = lambda obj: obj.cliente.nombre_completo
+
+
+# Nuevo formulario para la gestión de descuentos
+class DescuentoForm(forms.ModelForm):
+    class Meta:
+        model = Descuento
+        fields = ['porcentaje_descuento']
+        widgets = {
+            'porcentaje_descuento': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        }
+
+# clientes/forms.py - Formularios mejorados para medios de pago
 from django import forms
 from django.core.exceptions import ValidationError
-from django.db.models import Count
 from django.forms.widgets import HiddenInput
-
-from ..models import ClienteMedioDePago
 from medios_pago.models import MedioDePago, CampoMedioDePago
-
-logger = logging.getLogger(__name__)
+from ..models import ClienteMedioDePago, Cliente
+import re
 
 
 class SelectMedioDePagoForm(forms.Form):
@@ -558,3 +623,144 @@ class ClienteMedioDePagoBulkForm(forms.Form):
             self.fields['medios_seleccionados'].queryset = ClienteMedioDePago.objects.filter(
                 cliente=cliente
             ).select_related('medio_de_pago')
+
+
+class LimiteDiarioForm(forms.ModelForm):
+    class Meta:
+        model = LimiteDiario
+        fields = ["fecha", "monto"]
+        widgets = {
+            "fecha": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+            "monto": forms.NumberInput(attrs={"class": "form-control", "step": "1"}),
+        }
+
+    class Meta:
+        model = LimiteDiario
+        fields = ['fecha', 'monto']
+
+    def clean_fecha(self):
+        fecha = self.cleaned_data.get('fecha')
+        hoy = timezone.localdate()
+        if fecha < hoy:
+            raise forms.ValidationError("No se pueden registrar límites en fechas pasadas.")
+
+        # --- Lógica de exclusión de duplicados (está correcta) ---
+        qs = LimiteDiario.objects.filter(fecha=fecha)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        
+        if qs.exists():
+            raise forms.ValidationError("Ya existe un límite configurado para esta fecha.")
+
+        return fecha
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        # -------------------------------------------------------------------
+        # CAMBIO CRUCIAL: Solo establecer inicio_vigencia si es una creación.
+        # En la edición, usamos la fecha del modelo para calcular el inicio del día/mes.
+        # -------------------------------------------------------------------
+        if not instance.pk: # Si es un objeto nuevo
+            fecha = instance.fecha
+            hoy = timezone.localdate()
+            
+            # Si la fecha es hoy, aplica de inmediato. Si es futuro, aplica a las 00:00.
+            if fecha == hoy:
+                instance.inicio_vigencia = timezone.now()
+            else:
+                naive = datetime.combine(fecha, time.min)
+                instance.inicio_vigencia = timezone.make_aware(naive)
+
+        if commit:
+            instance.save()
+        return instance
+
+class LimiteMensualForm(forms.ModelForm):
+    # ... (clase Meta, widgets, clean_mes) ...
+    class Meta:
+        model = LimiteMensual
+        fields = ['mes', 'monto']
+        widgets = {
+            'mes': forms.DateInput(attrs={'type': 'month'}, format='%Y-%m'),
+        }
+
+    # ... (clean_mes está correcto) ...
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        # -------------------------------------------------------------------
+        # CAMBIO CRUCIAL: Solo establecer inicio_vigencia si es una creación.
+        # -------------------------------------------------------------------
+        if not instance.pk: # Si es un objeto nuevo
+            fecha = instance.mes
+            hoy = timezone.localdate()
+
+            if fecha.year == hoy.year and fecha.month == hoy.month:
+                instance.inicio_vigencia = timezone.now()
+            else:
+                naive = datetime(fecha.year, fecha.month, 1, 0, 0)
+                instance.inicio_vigencia = timezone.make_aware(naive)
+
+        if commit:
+            instance.save()
+        return instance
+
+
+
+class LimiteMensualForm(forms.ModelForm):
+    mes = forms.DateField(
+        input_formats=["%Y-%m"],
+        widget=forms.DateInput(attrs={"type": "month", "class": "form-control"}),
+        help_text="Selecciona el mes (se guardará como el primer día del mes)"
+    )
+
+    class Meta:
+        model = LimiteMensual
+        fields = ["mes", "monto"]
+        widgets = {
+            "monto": forms.NumberInput(attrs={"class": "form-control", "step": "1"}),
+        }
+
+    def clean_mes(self):
+        fecha = self.cleaned_data["mes"]
+        # Normalizar siempre al día 1 (esta parte está correcta)
+        fecha = date(fecha.year, fecha.month, 1)
+
+        # No permitir meses pasados (esta parte está correcta)
+        hoy = timezone.localdate()
+        if fecha < date(hoy.year, hoy.month, 1):
+            raise forms.ValidationError("No se pueden registrar límites en meses pasados.")
+
+        # --- NUEVA LÓGICA: Excluir el objeto que se está editando de la búsqueda de duplicados ---
+        qs = LimiteMensual.objects.filter(mes=fecha)
+
+        if self.instance.pk:
+            # Si self.instance.pk existe, estamos editando. Excluimos ese registro.
+            qs = qs.exclude(pk=self.instance.pk)
+        
+        if qs.exists():
+            raise forms.ValidationError("Ya existe un límite configurado para este mes.")
+
+        return fecha
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        hoy = timezone.localdate()
+        self.fields["mes"].initial = hoy.strftime("%Y-%m")
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        print(">>> SAVE.instance.mes antes:", instance.mes, type(instance.mes))
+        fecha = instance.mes
+        hoy = timezone.localdate()
+
+        if fecha.year == hoy.year and fecha.month == hoy.month:
+            instance.inicio_vigencia = timezone.now()
+        else:
+            naive = datetime(fecha.year, fecha.month, 1, 0, 0)
+            instance.inicio_vigencia = timezone.make_aware(naive)
+
+        if commit:
+            instance.save()
+            print(">>> GUARDADO OK con ID:", instance.id)
+        return instance
