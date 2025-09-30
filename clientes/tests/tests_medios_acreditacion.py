@@ -1,3 +1,11 @@
+"""
+Pruebas para medios de acreditación.
+"""
+from django.test import TestCase
+
+# ⚠️ ACTUALIZAR IMPORTS
+from clientes.models import Cliente, ClienteMedioDePago
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.urls import reverse

@@ -1,7 +1,11 @@
-# clientes/tests/tests_clientes.py (CORREGIDO)
+"""
+Pruebas unitarias para modelos y vistas de clientes.
+"""
 from django.test import TestCase
-from django.contrib.auth import get_user_model
-from clientes.models import Cliente, Segmento
+
+# ⚠️ ACTUALIZAR IMPORTS
+from clientes.models import Cliente, Segmento, AsignacionCliente
+
 # Importaciones necesarias
 from django.db.utils import IntegrityError 
 from django.db import transaction 

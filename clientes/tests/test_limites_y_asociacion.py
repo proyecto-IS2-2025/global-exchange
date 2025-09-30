@@ -1,6 +1,11 @@
-# clientes/tests/test_limites_y_asociacion.py (VERSIÓN FINAL CON IMPRESIÓN DE ERRORES CLAROS)
-
+"""
+Pruebas para límites y asociaciones.
+"""
 from django.test import TestCase
+
+# ⚠️ ACTUALIZAR IMPORTS
+from clientes.models import LimiteDiario, LimiteMensual, Cliente, AsignacionCliente
+
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.utils import timezone
