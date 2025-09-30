@@ -13,5 +13,5 @@ urlpatterns = [
     path('transacciones/', include('transacciones.urls', namespace='transacciones')),
     path("banco/", include("banco.urls")),
     path("billetera/", include("billetera.urls", namespace="billetera")),
-
+    path('mfa/', include('mfa.urls')),
 ]
