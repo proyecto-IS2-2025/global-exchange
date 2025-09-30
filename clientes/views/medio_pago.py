@@ -12,9 +12,9 @@ from django.http import JsonResponse, HttpResponse
 from django.core.exceptions import ValidationError
 from django.db.models import Count, Q
 from decimal import Decimal
+import logging
 import csv
 import re
-import logging
 
 from medios_pago.models import MedioDePago
 from clientes.models import Cliente, ClienteMedioDePago, HistorialClienteMedioDePago, AsignacionCliente
@@ -172,7 +172,6 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
         kwargs['cliente'] = self.cliente
         kwargs['medio_de_pago'] = self.medio_de_pago
 
-        # DEBUG: Verificar que se están pasando correctamente
         logger.debug(f"get_form_kwargs: cliente={self.cliente}, medio_de_pago={self.medio_de_pago}")
 
         return kwargs
@@ -190,7 +189,15 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
                 # Si es el primer medio de pago, marcarlo como principal automáticamente
                 if not ClienteMedioDePago.objects.filter(cliente=self.cliente).exists():
                     form.instance.es_principal = True
-                    logger.debug("Marcado como principal (primer medio)")
+
+                # 🔥 LÓGICA CRÍTICA RESTAURADA: Si se marca como principal, desmarcar los demás
+                if form.instance.es_principal:
+                    ClienteMedioDePago.objects.filter(
+                        cliente=self.cliente,
+                        es_principal=True
+                    ).update(es_principal=False)
+                    
+                    logger.debug(f"Desmarcados medios principales previos para cliente {self.cliente.id}")
 
                 logger.debug(f"Antes de guardar - datos_campos: {getattr(form.instance, 'datos_campos', 'No definido')}")
 
@@ -202,9 +209,8 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
                 HistorialClienteMedioDePago.objects.create(
                     cliente_medio_pago=self.object,
                     accion='CREADO',
-                    datos_nuevos=self.object.datos_campos,
                     modificado_por=self.request.user,
-                    observaciones=f'Medio de pago {self.medio_de_pago.nombre} agregado al cliente {self.cliente.nombre_completo}'
+                    observaciones=f'Medio de pago "{self.medio_de_pago.nombre}" creado exitosamente'
                 )
 
                 messages.success(
@@ -226,7 +232,7 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
                     for error in errors:
                         messages.error(self.request, f"{field}: {error}")
             else:
-                messages.error(self.request, f'Error de validación: {str(e)}')
+                messages.error(self.request, str(e))
             return self.form_invalid(form)
 
         except Exception as e:
@@ -330,19 +336,36 @@ class ClienteMedioDePagoUpdateView(LoginRequiredMixin, UpdateView):
         try:
             with transaction.atomic():
                 # Guardar datos anteriores para historial
-                datos_anteriores = self.object.datos_campos.copy()
+                datos_anteriores = {
+                    campo.nombre_campo: self.object.get_dato_campo(campo.nombre_campo)
+                    for campo in self.object.medio_de_pago.campos.all()
+                }
+
+                # 🔥 LÓGICA CRÍTICA RESTAURADA: Si se marca como principal, desmarcar los demás
+                if form.cleaned_data.get('es_principal'):
+                    ClienteMedioDePago.objects.filter(
+                        cliente=self.cliente,
+                        es_principal=True
+                    ).exclude(pk=self.object.pk).update(es_principal=False)
+                    
+                    logger.debug(f"Desmarcados medios principales previos para cliente {self.cliente.id}")
 
                 response = super().form_valid(form)
 
-                # Crear registro de historial solo si hubo cambios
-                if datos_anteriores != self.object.datos_campos or form.has_changed():
+                # Registrar en historial
+                cambios = []
+                for campo in self.object.medio_de_pago.campos.all():
+                    valor_nuevo = self.object.get_dato_campo(campo.nombre_campo)
+                    valor_anterior = datos_anteriores.get(campo.nombre_campo)
+                    if valor_nuevo != valor_anterior:
+                        cambios.append(f"{campo.nombre_campo}: '{valor_anterior}' → '{valor_nuevo}'")
+
+                if cambios:
                     HistorialClienteMedioDePago.objects.create(
                         cliente_medio_pago=self.object,
-                        accion='ACTUALIZADO',
-                        datos_anteriores=datos_anteriores,
-                        datos_nuevos=self.object.datos_campos,
+                        accion='MODIFICADO',
                         modificado_por=self.request.user,
-                        observaciones=f'Datos del medio de pago actualizados. Campos modificados: {", ".join(form.changed_data)}'
+                        observaciones=f'Cambios: {"; ".join(cambios)}'
                     )
 
                 messages.success(
@@ -386,10 +409,10 @@ class ClienteMedioDePagoToggleView(LoginRequiredMixin, View):
             ).count()
 
             if medios_activos <= 1:
-                messages.warning(
+                messages.error(
                     request,
                     'No puede desactivar el único medio de pago activo. '
-                    'Active otro medio primero.'
+                    'Debe tener al menos un medio activo.'
                 )
                 return redirect('clientes:medios_pago_cliente')
 
@@ -449,12 +472,11 @@ def medio_pago_detail_ajax(request, pk):
         for campo in medio_pago.medio_de_pago.campos.all().order_by('orden', 'id'):
             valor = medio_pago.get_dato_campo(campo.nombre_campo)
             campos_data.append({
-                'id': campo.id,
                 'nombre': campo.nombre_campo,
-                'tipo': campo.get_tipo_dato_display(),
-                'tipo_codigo': campo.tipo_dato,
-                'requerido': campo.is_required,
+                'etiqueta': campo.etiqueta or campo.nombre_campo.title(),
+                'tipo': campo.tipo_dato,
                 'valor': valor,
+                'valor_enmascarado': campo.enmascarar_valor(valor) if valor else '',
                 'tiene_valor': bool(valor and str(valor).strip())
             })
 
@@ -521,34 +543,32 @@ class ClienteMedioDePagoDeleteView(LoginRequiredMixin, View):
 
         try:
             with transaction.atomic():
-                # Si era el medio principal, asignar otro como principal
+                # Registrar eliminación en historial antes de borrar
+                HistorialClienteMedioDePago.objects.create(
+                    cliente_medio_pago=medio_pago,
+                    accion='ELIMINADO',
+                    modificado_por=request.user,
+                    observaciones=f'Medio de pago "{nombre_medio}" eliminado'
+                )
+
+                # Si era principal, asignar otro como principal
                 if era_principal:
                     nuevo_principal = ClienteMedioDePago.objects.filter(
                         cliente=cliente,
                         es_activo=True
-                    ).exclude(pk=medio_pago.pk).first()
+                    ).exclude(pk=pk).first()
 
                     if nuevo_principal:
                         nuevo_principal.es_principal = True
                         nuevo_principal.save()
-
-                # Crear registro final en el historial antes de eliminar
-                HistorialClienteMedioDePago.objects.create(
-                    cliente_medio_pago=medio_pago,
-                    accion='ELIMINADO',
-                    datos_anteriores=medio_pago.datos_campos,
-                    modificado_por=request.user,
-                    observaciones=f'Medio de pago eliminado por el usuario'
-                )
 
                 # Eliminar el medio de pago
                 medio_pago.delete()
 
                 messages.success(
                     request,
-                    f'Medio de pago "{nombre_medio}" eliminado exitosamente.'
+                    f'El medio de pago "{nombre_medio}" fue eliminado exitosamente.'
                 )
-
                 logger.info(
                     f'Usuario {request.user.username} eliminó medio de pago '
                     f'{nombre_medio} del cliente {cliente.nombre_completo}'
@@ -753,39 +773,33 @@ def calcular_similitud_medio(campos_form, existing_medio, medio_de_pago):
 
             if valor_existente:
                 # Determinar peso del campo
-                peso = 0
-                for indicador, peso_indicador in pesos_campos.items():
-                    if indicador in nombre_campo:
-                        peso = peso_indicador
-                        break
+                peso = next((v for k, v in pesos_campos.items() if k in nombre_campo), 0.5)
+                total_peso += peso
 
-                if peso > 0:
-                    total_peso += peso
+                # Normalizar valores para comparación
+                valor_form_norm = normalizar_valor(valor_form, campo_obj.tipo_dato)
+                valor_exist_norm = normalizar_valor(valor_existente, campo_obj.tipo_dato)
 
-                    # Normalizar valores para comparación
-                    valor_form_norm = normalizar_valor(valor_form, campo_obj.tipo_dato)
-                    valor_exist_norm = normalizar_valor(str(valor_existente), campo_obj.tipo_dato)
-
-                    # Calcular similitud
-                    if valor_form_norm == valor_exist_norm:
-                        peso_similitud += peso
+                # Comparación exacta
+                if valor_form_norm == valor_exist_norm:
+                    peso_similitud += peso
+                    campos_similares.append({
+                        'campo': campo_obj.nombre_campo,
+                        'valor_actual': valor_form,
+                        'valor_existente': str(valor_existente),
+                        'similitud': 100
+                    })
+                elif campo_obj.tipo_dato == 'NUMERO' and len(valor_form_norm) > 4 and len(valor_exist_norm) > 4:
+                    # Para números largos, verificar últimos dígitos
+                    if valor_form_norm[-4:] == valor_exist_norm[-4:]:
+                        peso_parcial = peso * 0.6
+                        peso_similitud += peso_parcial
                         campos_similares.append({
                             'campo': campo_obj.nombre_campo,
-                            'valor_actual': valor_form,
-                            'valor_existente': str(valor_existente),
-                            'similitud': 100
+                            'valor_actual': f"****{valor_form[-4:]}",
+                            'valor_existente': f"****{str(valor_existente)[-4:]}",
+                            'similitud': 60
                         })
-                    elif campo_obj.tipo_dato == 'NUMERO' and len(valor_form_norm) > 4 and len(valor_exist_norm) > 4:
-                        # Para números largos, verificar últimos dígitos
-                        if valor_form_norm[-4:] == valor_exist_norm[-4:]:
-                            peso_parcial = peso * 0.6
-                            peso_similitud += peso_parcial
-                            campos_similares.append({
-                                'campo': campo_obj.nombre_campo,
-                                'valor_actual': f"****{valor_form[-4:]}",
-                                'valor_existente': f"****{str(valor_existente)[-4:]}",
-                                'similitud': 60
-                            })
 
     score = peso_similitud / total_peso if total_peso > 0 else 0
 
@@ -877,10 +891,9 @@ class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
                 })
 
             except ClienteMedioDePago.DoesNotExist:
-                return JsonResponse({'error': 'Medio de pago no válido'}, status=400)
+                return JsonResponse({'error': 'Medio de pago no encontrado'}, status=404)
 
         elif accion == 'cancelar':
-            # limpiar medio seleccionado
             request.session.pop('medio_seleccionado', None)
             return JsonResponse({
                 'success': True,
@@ -943,7 +956,7 @@ class SeleccionarMedioPagoView(LoginRequiredMixin, View):
                 })
 
             except ClienteMedioDePago.DoesNotExist:
-                return JsonResponse({'error': 'Medio de pago no válido'}, status=400)
+                return JsonResponse({'error': 'Medio no encontrado'}, status=404)
 
         elif accion == 'limpiar':
             request.session.pop('medio_pago_seleccionado', None)
