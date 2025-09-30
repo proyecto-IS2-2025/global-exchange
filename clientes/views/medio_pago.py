@@ -319,6 +319,13 @@ class ClienteMedioDePagoUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+    
+        # 🐛 DEBUG: Verificar valores actuales
+        logger.debug(f"=== CONTEXTO UPDATE VIEW ===")
+        logger.debug(f"Instance es_activo: {self.object.es_activo}")
+        logger.debug(f"Instance es_principal: {self.object.es_principal}")
+        logger.debug(f"Form es_activo initial: {self.get_form().fields['es_activo'].initial}")
+    
         context.update({
             'cliente': self.cliente,
             'medio_de_pago': self.object.medio_de_pago,
