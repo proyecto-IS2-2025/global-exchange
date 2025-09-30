@@ -98,3 +98,9 @@ delete-migrations:
 	find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
 	find . -path "*/migrations/*.pyc" -delete
 	@echo "Archivos de migraciones eliminados."
+
+check-imports:
+	@echo "Verificando imports en archivos de tests..."
+	# Aquí puedes agregar comandos para verificar y actualizar imports si es necesario
+	poetry run python manage.py check
+	@echo "Verificación de imports completada."
