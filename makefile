@@ -60,8 +60,8 @@ cargar-datos:
 	python manage.py loaddata roles_data.json
 	python manage.py loaddata users_data.json
 	python manage.py loaddata clientes_data.json
-	python manage.py loaddata divisas_initial_data.json
-	python manage.py loaddata medios_pago_initial_data.json
+	python manage.py loaddata divisas_data.json
+	python manage.py loaddata medios_data.json
 	@echo "Datos iniciales cargados."
 
 loaddata:
@@ -69,8 +69,8 @@ loaddata:
 	poetry run python manage.py loaddata roles_data.json
 	poetry run python manage.py loaddata users_data.json
 	poetry run python manage.py loaddata clientes_data.json
-	poetry run python manage.py loaddata divisas_initial_data.json
-#poetry run python manage.py loaddata medios_pago_initial_data.json
+	poetry run python manage.py loaddata divisas_data.json
+	poetry run python manage.py loaddata medios_data.json
 	@echo "Datos iniciales cargados."
 
 run:
@@ -85,7 +85,7 @@ db-init:
 	poetry run python manage.py loaddata roles_data.json
 	poetry run python manage.py loaddata users_data.json
 	poetry run python manage.py loaddata clientes_data.json
-	poetry run python manage.py loaddata divisas_initial_data.json
+	poetry run python manage.py loaddata divisas_data.json
 	@echo "Datos cargados."
 
 test-medios-acreditacion:
