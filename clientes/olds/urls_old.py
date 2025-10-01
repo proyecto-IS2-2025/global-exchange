@@ -3,7 +3,7 @@
 app_name = 'clientes'
 from django.urls import path, include
 from . import views
-from .views import (
+from .views_old import (
     # Vistas Basadas en Clase Genericas
     DescuentoListView, DescuentoUpdateView, HistorialDescuentoListView,
     ClienteListView, ClienteUpdateView,
