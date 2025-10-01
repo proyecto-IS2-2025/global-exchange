@@ -1,6 +1,7 @@
 # clientes/urls.py
 from django.urls import path, include
 from . import views_old
+"""
 from .views_old import (
     # Vistas Basadas en Clase Genericas
     DescuentoListView, DescuentoUpdateView, HistorialDescuentoListView,
@@ -85,3 +86,4 @@ urlpatterns = [
 
 
 ]
+"""
