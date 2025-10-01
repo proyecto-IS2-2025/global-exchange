@@ -4,9 +4,6 @@ from django.dispatch import receiver
 from clientes.models import Segmento, Descuento
 from divisas.models import Divisa, TasaCambio
 from divisas.services import generar_cotizaciones_por_segmento
-from .models import Cliente, AsignacionCliente, Descuento, ClienteMedioDePago
-from .models import Cliente, AsignacionCliente, Descuento, ClienteMedioDePago
-from users.models import CustomUser
 
 
 @receiver(post_save, sender=Segmento)

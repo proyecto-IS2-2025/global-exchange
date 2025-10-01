@@ -209,6 +209,7 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
                 HistorialClienteMedioDePago.objects.create(
                     cliente_medio_pago=self.object,
                     accion='CREADO',
+                    datos_nuevos=self.object.datos_campos,  # ✅ AGREGAR
                     modificado_por=self.request.user,
                     observaciones=f'Medio de pago "{self.medio_de_pago.nombre}" creado exitosamente'
                 )
@@ -474,9 +475,12 @@ def medio_pago_detail_ajax(request, pk):
         for campo in medio_pago.medio_de_pago.campos.all().order_by('orden', 'id'):
             valor = medio_pago.get_dato_campo(campo.nombre_campo)
             campos_data.append({
+                'id': campo.id,  # ✅ RESTAURAR: Necesario para el frontend
                 'nombre': campo.nombre_campo,
                 'etiqueta': campo.etiqueta or campo.nombre_campo.title(),
-                'tipo': campo.tipo_dato,
+                'tipo': campo.get_tipo_dato_display(),  # ✅ RESTAURAR: Formato legible
+                'tipo_codigo': campo.tipo_dato,  # ✅ AGREGAR: Para lógica JS
+                'requerido': campo.is_required,  # ✅ RESTAURAR
                 'valor': valor,
                 'valor_enmascarado': campo.enmascarar_valor(valor) if valor else '',
                 'tiene_valor': bool(valor and str(valor).strip())
@@ -549,6 +553,7 @@ class ClienteMedioDePagoDeleteView(LoginRequiredMixin, View):
                 HistorialClienteMedioDePago.objects.create(
                     cliente_medio_pago=medio_pago,
                     accion='ELIMINADO',
+                    datos_anteriores=medio_pago.datos_campos,  # ✅ AGREGAR
                     modificado_por=request.user,
                     observaciones=f'Medio de pago "{nombre_medio}" eliminado'
                 )

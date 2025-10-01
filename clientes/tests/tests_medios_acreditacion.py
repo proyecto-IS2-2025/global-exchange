@@ -1,29 +1,29 @@
 """
 Pruebas para medios de acreditación.
 """
-from django.test import TestCase
-
-# ⚠️ ACTUALIZAR IMPORTS
-from clientes.models import Cliente, ClienteMedioDePago
-
+from django.test import TestCase, Client as DjangoTestClient  # ✅ CORRECCIÓN
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.urls import reverse
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from decimal import Decimal
 from datetime import datetime, date
 import json
 
-from django.test import TestCase, Client
-
+# Imports modularizados
 from clientes.models import (
-    Cliente, Segmento, AsignacionCliente, ClienteMedioDePago,
+    Cliente, 
+    Segmento, 
+    AsignacionCliente, 
+    ClienteMedioDePago,
     HistorialClienteMedioDePago
 )
 from medios_pago.models import MedioDePago, CampoMedioDePago, PaymentTemplate
-from clientes.forms import ClienteMedioDePagoCompleteForm, SelectMedioDePagoForm
+from clientes.forms.medio_pago import ClienteMedioDePagoCompleteForm, SelectMedioDePagoForm
 
 User = get_user_model()
+
 
 class TestMediosAcreditacionBase(TestCase):
     """Clase base con configuración común para todos los tests de medios de acreditación"""
@@ -90,7 +90,7 @@ class TestMediosAcreditacionBase(TestCase):
         self._crear_campos_medios_pago()
         
         # Cliente web para simulación de requests
-        self.client = Client()
+        self.client = DjangoTestClient()  # ✅ CORRECCIÓN
 
     def _crear_campos_medios_pago(self):
         """Crear campos necesarios para los medios de pago"""

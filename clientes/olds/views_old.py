@@ -604,9 +604,9 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
                 HistorialClienteMedioDePago.objects.create(
                     cliente_medio_pago=self.object,
                     accion='CREADO',
-                    datos_nuevos=self.object.datos_campos,
+                    datos_nuevos=self.object.datos_campos,  # ✅ AGREGAR
                     modificado_por=self.request.user,
-                    observaciones=f'Medio de pago {self.medio_de_pago.nombre} agregado al cliente {self.cliente.nombre_completo}'
+                    observaciones=f'Medio de pago "{self.medio_de_pago.nombre}" creado exitosamente'
                 )
 
                 messages.success(

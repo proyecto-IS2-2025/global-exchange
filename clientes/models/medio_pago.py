@@ -83,9 +83,10 @@ class HistorialClienteMedioDePago(models.Model):
         max_length=20,
         choices=[
             ('CREADO', 'Creado'),
-            ('ACTUALIZADO', 'Actualizado'),
-            ('DESACTIVADO', 'Desactivado'),
+            ('MODIFICADO', 'Modificado'),
             ('ACTIVADO', 'Activado'),
+            ('DESACTIVADO', 'Desactivado'),
+            ('ELIMINADO', 'Eliminado'),
         ]
     )
     datos_anteriores = models.JSONField(null=True, blank=True)

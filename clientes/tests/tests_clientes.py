@@ -2,13 +2,12 @@
 Pruebas unitarias para modelos y vistas de clientes.
 """
 from django.test import TestCase
-
-# ⚠️ ACTUALIZAR IMPORTS
-from clientes.models import Cliente, Segmento, AsignacionCliente
-
-# Importaciones necesarias
+from django.contrib.auth import get_user_model  # ✅ AGREGAR
 from django.db.utils import IntegrityError 
 from django.db import transaction 
+
+# ✅ Imports modularizados (ya están correctos)
+from clientes.models import Cliente, Segmento, AsignacionCliente
 
 CustomUser = get_user_model()
 
