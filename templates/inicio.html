@@ -20,6 +20,7 @@
           Bienvenido, <strong>{{ user.get_full_name|default:user.username }}</strong>
           <i class="fas fa-hand-paper"></i>
         </p>
+        {% include "partials/visualizador.html" %}
         <!-- Botón Realizar operación -->
         <div class="text-center mt-4 mb-5">
           <a href="{% url 'divisas:seleccionar_operacion' %}" class="btn-operacion">
@@ -32,7 +33,6 @@
           </a>
           <p class="text-muted mt-2 small">Compra y venta de divisas al mejor precio</p>
         </div>
-        {% include "partials/visualizador.html" %}
         {% include "simulador/simulador_conversion.html" %}
       {% elif grupo_operador %}
         <h2 class="h4 mb-4 text-center">Bienvenido Operador</h2>
