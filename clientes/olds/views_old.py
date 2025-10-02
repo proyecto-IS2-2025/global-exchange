@@ -10,14 +10,14 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib import messages
 from django.contrib.auth.models import Group
-from ..models import Cliente, AsignacionCliente, Descuento, HistorialDescuentos
-from ..forms import ClienteForm, DescuentoForm
+from .models import Cliente, AsignacionCliente, Descuento, HistorialDescuentos
+from .forms import ClienteForm, DescuentoForm
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from datetime import datetime, time
-from ..models import LimiteDiario, LimiteMensual
-from ..forms import LimiteDiarioForm, LimiteMensualForm
+from .models import LimiteDiario, LimiteMensual
+from .forms import LimiteDiarioForm, LimiteMensualForm
 from decimal import Decimal, InvalidOperation
 
 # Asociar clientes-usuarios
@@ -119,8 +119,50 @@ def listar_asociaciones(request):
             messages.error(request, f'Error al eliminar la asociación: {e}')
         return redirect('clientes:listar_asociaciones')
 
-    asignaciones = AsignacionCliente.objects.all().order_by('usuario__email')
-    context = {'asignaciones': asignaciones}
+    # --- LÓGICA DE FILTRADO ACTUALIZADA ---
+    # Inicialmente, obtiene todas las asignaciones
+    asignaciones = AsignacionCliente.objects.all().select_related('usuario', 'cliente')
+
+    # Obtener los parámetros de filtro de la URL
+    selected_user_id = request.GET.get('user_id')
+    selected_cliente_id = request.GET.get('cliente_id')
+
+    # Aplicar el filtro por usuario (por ID)
+    if selected_user_id:
+        try:
+            user_id = int(selected_user_id)
+            asignaciones = asignaciones.filter(usuario__id=user_id)
+        except ValueError:
+            pass # Ignorar si no es un ID válido
+
+    # Aplicar el filtro por cliente (por ID)
+    if selected_cliente_id:
+        try:
+            cliente_id = int(selected_cliente_id)
+            asignaciones = asignaciones.filter(cliente__id=cliente_id)
+        except ValueError:
+            pass # Ignorar si no es un ID válido
+
+    # Ordenar los resultados filtrados
+    asignaciones = asignaciones.order_by('usuario__email', 'cliente__nombre_completo')
+    # --- FIN DE LÓGICA DE FILTRADO ---
+    
+    # --- OBTENER DATOS PARA LOS FILTROS (SELECTS) ---
+    # 1. Obtener la lista completa de usuarios (excluyendo superusuarios)
+    all_users = User.objects.filter(is_superuser=False).order_by('email')
+    # 2. Obtener la lista completa de clientes
+    all_clientes = Cliente.objects.all().order_by('nombre_completo')
+    
+    # Se añade la información de los filtros y las listas al contexto
+    context = {
+        'asignaciones': asignaciones,
+        # Variables de selección actual para mantener el valor seleccionado en el HTML
+        'selected_user_id': selected_user_id,
+        'selected_cliente_id': selected_cliente_id,
+        # Listas para rellenar los selects
+        'all_users': all_users,
+        'all_clientes': all_clientes,
+    }
     return render(request, 'asociar_a_usuario/lista_asociaciones.html', context)
 
 @login_required
@@ -165,7 +207,7 @@ def lista_clientes(request):
     return render(request, 'clientes/lista_clientes.html')
 
 
-from ..models import Segmento
+from .models import Segmento
 
 class ClienteListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Cliente
@@ -381,8 +423,8 @@ from django.core.exceptions import ValidationError
 from django.db.models import Count, Q
 
 from medios_pago.models import MedioDePago
-from ..models import Cliente, ClienteMedioDePago, HistorialClienteMedioDePago, AsignacionCliente
-from ..forms import ClienteMedioDePagoCompleteForm, SelectMedioDePagoForm
+from .models import Cliente, ClienteMedioDePago, HistorialClienteMedioDePago, AsignacionCliente
+from .forms import ClienteMedioDePagoCompleteForm, SelectMedioDePagoForm
 import re
 
 import logging
@@ -604,9 +646,9 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
                 HistorialClienteMedioDePago.objects.create(
                     cliente_medio_pago=self.object,
                     accion='CREADO',
-                    datos_nuevos=self.object.datos_campos,  # ✅ AGREGAR
+                    datos_nuevos=self.object.datos_campos,
                     modificado_por=self.request.user,
-                    observaciones=f'Medio de pago "{self.medio_de_pago.nombre}" creado exitosamente'
+                    observaciones=f'Medio de pago {self.medio_de_pago.nombre} agregado al cliente {self.cliente.nombre_completo}'
                 )
 
                 messages.success(
