@@ -1,8 +1,8 @@
-from ..models import Cliente, AsignacionCliente, Descuento, LimiteDiario, LimiteMensual
+from .models import Cliente, AsignacionCliente, Descuento, LimiteDiario, LimiteMensual
 from django import forms
 from datetime import datetime, date, time
 from django.utils import timezone
-from ..models import Cliente, AsignacionCliente, Descuento
+from .models import Cliente, AsignacionCliente, Descuento
 
 
 
@@ -76,7 +76,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.forms.widgets import HiddenInput
 from medios_pago.models import MedioDePago, CampoMedioDePago
-from ..models import ClienteMedioDePago, Cliente
+from .models import ClienteMedioDePago, Cliente
 import re
 
 

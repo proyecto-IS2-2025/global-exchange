@@ -40,6 +40,21 @@ docs:
 	poetry run sphinx-build -b html docs/source docs/build
 	@echo "Documentación generada en docs/build"
 
+test-medios-pago:
+	@echo "Probando migraciones..."
+	python manage.py test medios_pago.tests.MedioDePagoModelTest medios_pago.tests.CampoMedioDePagoModelTest medios_pago.tests.EdgeCasesTest -v 2
+	@echo "Pruebas de migraciones completadas."
+
+test-divisas:
+	@echo "Probando migraciones..."
+	python manage.py test divisas
+	@echo "Pruebas de migraciones completadas."
+
+test-simulador:
+	@echo "Probando simulador de pagos..."
+	python manage.py test simulador
+	@echo "Pruebas de simulador completadas."
+
 cargar-datos:
 	@echo "Cargando datos iniciales..."
 	python manage.py loaddata roles_data.json
@@ -75,7 +90,7 @@ db-init:
 
 test-medios-acreditacion:
 	@echo "Ejecutando pruebas de medios de acreditación..."
-	poetry run python manage.py test clientes.tests.tests_medios_acreditacion
+	poetry run python manage.py test clientes.tests_medios_acreditacion
 	@echo "Pruebas completadas."
 
 delete-migrations:
@@ -83,34 +98,3 @@ delete-migrations:
 	find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
 	find . -path "*/migrations/*.pyc" -delete
 	@echo "Archivos de migraciones eliminados."
-
-check-imports:
-	@echo "Verificando imports en archivos de tests..."
-	# Aquí puedes agregar comandos para verificar y actualizar imports si es necesario
-	poetry run python manage.py check
-	@echo "Verificación de imports completada."
-
-test-medios-pago:
-	@echo "Probando migraciones..."
-	python manage.py test medios_pago.tests.MedioDePagoModelTest medios_pago.tests.CampoMedioDePagoModelTest medios_pago.tests.EdgeCasesTest -v 2
-	@echo "Pruebas de migraciones completadas."
-
-test-divisas:
-	@echo "Probando migraciones..."
-	poetry run python manage.py test divisas
-	@echo "Pruebas de migraciones completadas."
-
-test-simulador:
-	@echo "Probando simulador de pagos..."
-	poetry run python manage.py test simulador
-	@echo "Pruebas de simulador completadas."
-
-test-clientes:
-	@echo "Probando módulo de clientes..."
-	poetry run python manage.py test clientes.tests.tests_clientes
-	@echo "Pruebas de clientes completadas."
-
-test-limites-credito:
-	@echo "Probando límites de crédito..."
-	poetry run python manage.py test clientes.tests.tests_limites_creditos
-	@echo "Pruebas de límites de crédito completadas."
