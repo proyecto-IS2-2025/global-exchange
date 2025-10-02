@@ -92,17 +92,15 @@ def cliente_dashboard(request):
 #Redirect
 @login_required
 def redireccion_por_grupo(request):
-    """
-    Redirige al usuario según su grupo.
-    Como no hay dashboards específicos todavía, todos van a inicio.
-    """
     grupos = list(request.user.groups.values_list('name', flat=True))
     print("Grupos del usuario:", grupos)
 
-    # Por ahora, todos los grupos redirigen a inicio
-    # La página inicio ya maneja la lógica de mostrar contenido según el rol
-    if grupos:
-        return redirect('inicio')
+    if 'admin' in grupos:
+        return redirect('admin_dashboard')
+    elif 'operador' in grupos:
+        return redirect('cambista_dashboard')
+    elif 'cliente' in grupos:
+        return redirect('cliente_dashboard')
     else:
         messages.warning(request, "Tu cuenta no tiene un grupo asignado.")
         return redirect('inicio')

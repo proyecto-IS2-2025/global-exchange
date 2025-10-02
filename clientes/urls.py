@@ -1,4 +1,5 @@
 # clientes/urls.py
+app_name = 'clientes'
 from django.urls import path, include
 from . import views
 from .views import (
@@ -6,7 +7,7 @@ from .views import (
     DescuentoListView, DescuentoUpdateView, HistorialDescuentoListView,
     ClienteListView, ClienteUpdateView,
 
-    # CLASES DE EDICIÓN DE LÍMITES
+    # CLASES DE EDICIÓN DE LÍMITES (Nombres corregidos para coincidir con views.py)
     LimiteDiarioUpdateView,    
     LimiteMensualUpdateView,   
     
@@ -20,7 +21,7 @@ from .views import (
     exportar_medios_pago, verificar_duplicados_ajax,
 )
 
-app_name = 'clientes' 
+app_name = 'clientes'
 
 urlpatterns = [
     # -----------------------------------------------------
