@@ -106,8 +106,6 @@ def redireccion_por_grupo(request):
     else:
         messages.warning(request, "Tu cuenta no tiene un grupo asignado.")
         return redirect('inicio')
-
-
 @login_required
 def asociar_clientes_usuarios(request):
     return render(request, "admin/asociar_clientes_usuarios.html")
