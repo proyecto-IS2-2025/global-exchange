@@ -79,18 +79,6 @@
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
-.gradient-bg {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.gradient-bg-success {
-    background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
-}
-
-.gradient-bg-warning {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
 .gradient-bg-info {
     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
 }
@@ -136,7 +124,7 @@
         <!-- Tarjeta de Información de Usuario -->
         <div class="col-lg-4">
             <div class="card shadow-lg rounded-4 border-0 slide-in-up card-1 h-100">
-                <div class="card-header gradient-bg text-white text-center py-4">
+                <div class="card-header bg-primary text-white text-center py-4">
                     <h5 class="mb-0 fw-bold"><i class="fa-solid fa-user-gear me-2"></i> Mi Cuenta</h5>
                 </div>
                 <div class="card-body p-4">
@@ -156,7 +144,7 @@
                                 </div>
                                 <div class="col-12">
                                     <div class="d-flex align-items-center p-3 bg-light rounded-3">
-                                        <div class="feature-icon bg-success text-white">
+                                        <div class="feature-icon bg-primary text-white">
                                             <i class="fa-solid fa-envelope"></i>
                                         </div>
                                         <div>
@@ -167,7 +155,7 @@
                                 </div>
                                 <div class="col-12">
                                     <div class="d-flex align-items-center p-3 bg-light rounded-3">
-                                        <div class="feature-icon bg-warning text-white">
+                                        <div class="feature-icon bg-primary text-white">
                                             <i class="fa-solid fa-circle-check"></i>
                                         </div>
                                         <div>
@@ -182,7 +170,7 @@
                                 </div>
                                 <div class="col-12">
                                     <div class="d-flex align-items-center p-3 bg-light rounded-3">
-                                        <div class="feature-icon bg-info text-white">
+                                        <div class="feature-icon bg-primary text-white">
                                             <i class="fa-solid fa-users"></i>
                                         </div>
                                         <div>
@@ -201,7 +189,7 @@
         <!-- Tarjeta de Cliente Activo -->
         <div class="col-lg-4">
             <div class="card shadow-lg rounded-4 border-0 slide-in-up card-2 h-100">
-                <div class="card-header gradient-bg-success text-white text-center py-4">
+                <div class="card-header bg-success text-white text-center py-4">
                     <h5 class="mb-0 fw-bold"><i class="fa-solid fa-address-card me-2"></i> Cliente Activo</h5>
                 </div>
                 <div class="card-body p-4">
@@ -222,7 +210,7 @@
                                     </div>
                                     <div class="col-12">
                                         <div class="d-flex align-items-center p-3 bg-light rounded-3">
-                                            <div class="feature-icon bg-primary text-white">
+                                            <div class="feature-icon bg-success text-white">
                                                 <i class="fa-solid fa-id-card"></i>
                                             </div>
                                             <div>
@@ -233,23 +221,23 @@
                                     </div>
                                     <div class="col-12">
                                         <div class="d-flex align-items-center p-3 bg-light rounded-3">
-                                            <div class="feature-icon bg-info text-white">
+                                            <div class="feature-icon bg-success text-white">
                                                 <i class="fa-solid fa-layer-group"></i>
                                             </div>
                                             <div>
                                                 <small class="text-muted d-block">Segmento</small>
-                                                <span class="badge bg-info text-dark stats-badge">{{ cliente_activo.segmento.name }}</span>
+                                                <span class="badge bg-secondary text-white stats-badge">{{ cliente_activo.segmento.name }}</span>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="col-12">
                                         <div class="d-flex align-items-center p-3 bg-light rounded-3">
-                                            <div class="feature-icon bg-dark text-white">
+                                            <div class="feature-icon bg-success text-white">
                                                 <i class="fa-solid fa-user-gear"></i>
                                             </div>
                                             <div>
                                                 <small class="text-muted d-block">Tipo</small>
-                                                <span class="badge bg-dark text-white stats-badge">{{ cliente_activo.tipo_cliente }}</span>
+                                                <span class="badge bg-secondary text-white stats-badge">{{ cliente_activo.tipo_cliente }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -279,7 +267,7 @@
         <!-- Tarjeta de Acciones Rápidas -->
         <div class="col-lg-4">
             <div class="card shadow-lg rounded-4 border-0 slide-in-up card-3 h-100">
-                <div class="card-header gradient-bg-warning text-white text-center py-4">
+                <div class="card-header bg-warning text-white text-center py-4">
                     <h5 class="mb-0 fw-bold"><i class="fa-solid fa-bolt me-2"></i> Acciones Rápidas</h5>
                 </div>
                 <div class="card-body p-4">
