@@ -2,69 +2,96 @@
 
 {% block content %}
 <div class="container mt-5">
+    <div class="row mb-3">
+        <div class="col-12">
+            <button onclick="window.history.back()" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i> Volver
+            </button>
+        </div>
+    </div>
     <div class="row">
         <div class="col-12 text-center">
             <h1 class="mb-4">Listado de Asociaciones</h1>
         </div>
     </div>
-
-    {% if messages %}
-        <div class="row">
-            <!--
-            <div class="col-12">
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} text-center">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            </div>
-            -->
-        </div>
-    {% endif %}
-
-    <div class="row">
+    
+    <div class="row mb-4">
         <div class="col-12">
-            <div class="card">
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Usuario</th>
-                                    <th>Cliente</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for asignacion in asignaciones %}
-                                <tr>
-                                    <td>{{ asignacion.usuario.email|default:"(sin usuario)" }}</td>
-                                    <td>{{ asignacion.cliente.nombre_completo|default:"(sin cliente)" }}</td>
-                                    <td>
-                                        <form method="post" action="{% url 'clientes:listar_asociaciones' %}" onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta asociación?');">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="delete_id" value="{{ asignacion.id }}">
-                                            <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="3" class="text-center">No se encontraron asociaciones.</td>
-                                </tr>
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="get" action="{% url 'clientes:listar_asociaciones' %}" class="row g-3 align-items-end">
+                        
+                        <div class="col-md-5">
+                            <label for="user_filter" class="form-label fw-bold">Filtrar por Usuario:</label>
+                            <select class="form-select" id="user_filter" name="user_id">
+                                <option value="">--- Todos los Usuarios ---</option>
+                                {% for user in all_users %}
+                                    <option value="{{ user.id }}" {% if user.id|stringformat:"s" == selected_user_id %}selected{% endif %}>
+                                        {{ user.email }} ({{ user.get_full_name|default:user.username }})
+                                    </option>
                                 {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                            </select>
+                        </div>
+
+                        <div class="col-md-5">
+                            <label for="client_filter" class="form-label fw-bold">Filtrar por Cliente:</label>
+                            <select class="form-select" id="client_filter" name="cliente_id">
+                                <option value="">--- Todos los Clientes ---</option>
+                                {% for cliente in all_clientes %}
+                                    <option value="{{ cliente.id }}" {% if cliente.id|stringformat:"s" == selected_cliente_id %}selected{% endif %}>
+                                        {{ cliente.nombre_completo }} (C.I.: {{ cliente.cedula }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-2 d-grid gap-2 d-md-block">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter me-2"></i> Filtrar
+                            </button>
+                            <a href="{% url 'clientes:listar_asociaciones' %}" class="btn btn-outline-secondary w-100 mt-2">
+                                <i class="fas fa-undo me-2"></i> Limpiar
+                            </a>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Botón Volver abajo -->
-    <div class="row mt-4">
-        <div class="col-12 text-center">
-            <a href="{% url 'clientes:asociar_clientes_usuarios' %}" class="btn btn-primary">Volver a Asociar Clientes</a>
+    <div class="row">
+        <div class="col-12">
+            {% if asignaciones %}
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Usuario (Email)</th>
+                            <th>Cliente (Nombre)</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for asignacion in asignaciones %}
+                            <tr>
+                                <td>{{ asignacion.usuario.email }}</td>
+                                <td>{{ asignacion.cliente.nombre_completo }} ({{ asignacion.cliente.cedula }})</td>
+                                <td>
+                                    <form method="POST" style="display:inline;" onsubmit="return confirm('¿Está seguro de que desea eliminar esta asociación?');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="delete_id" value="{{ asignacion.id }}">
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-trash-alt"></i> Eliminar
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="alert alert-info" role="alert">
+                    No se encontraron asociaciones con los filtros aplicados.
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
