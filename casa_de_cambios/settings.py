@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'transacciones',
     'banco',
     'billetera',
+    'mfa', 
+    'autenticacion',
 ]
 
 MIDDLEWARE = [
