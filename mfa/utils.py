@@ -10,11 +10,13 @@ from django.conf import settings
 
 # Constantes de tiempo
 MASTER_CODE = '000000'
-RESEND_WAIT_TIME = 60 # 1 minuto en segundos
-OTP_EXPIRATION_TIME = 5 # 5 minutos
+# RESEND_WAIT_TIME = 60 # Eliminamos el tiempo de espera
+OTP_EXPIRATION_TIME = 5 # El código es válido por 5 minutos
 
 def generate_and_send_otp(user, request=None):
-    # 1. Verificar tiempo de espera (1 minuto)
+    # 1. Verificar tiempo de espera (eliminado)
+    """
+    # Código eliminado para permitir el reenvío inmediato:
     try:
         latest_code = OTPCode.objects.filter(user=user).latest()
         time_since_last_code = timezone.now() - latest_code.created_at
@@ -27,7 +29,8 @@ def generate_and_send_otp(user, request=None):
 
     except OTPCode.DoesNotExist:
         pass
-
+    """
+    
     # 2. Invalida códigos anteriores
     OTPCode.objects.filter(user=user, is_active=True).update(is_active=False)
 
