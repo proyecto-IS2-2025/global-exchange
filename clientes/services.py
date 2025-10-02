@@ -1,11 +1,8 @@
-"""
-Servicios de lógica de negocio para clientes.
-Funciones reutilizables que no pertenecen a vistas o modelos.
-"""
+# clientes/services.py
 
 from django.utils import timezone
 from django.db.models import Sum
-from clientes.models import LimiteDiario, LimiteMensual, Cliente, ClienteMedioDePago, AsignacionCliente
+from clientes.models import LimiteDiario, LimiteMensual
 from datetime import datetime, time # <<-- IMPORTAR datetime y time
 
 def verificar_limites(cliente, monto, transaccion_a_excluir=None):

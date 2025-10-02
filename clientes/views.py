@@ -10,14 +10,14 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib import messages
 from django.contrib.auth.models import Group
-from ..models import Cliente, AsignacionCliente, Descuento, HistorialDescuentos
-from ..forms import ClienteForm, DescuentoForm
+from .models import Cliente, AsignacionCliente, Descuento, HistorialDescuentos
+from .forms import ClienteForm, DescuentoForm
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from datetime import datetime, time
-from ..models import LimiteDiario, LimiteMensual
-from ..forms import LimiteDiarioForm, LimiteMensualForm
+from .models import LimiteDiario, LimiteMensual
+from .forms import LimiteDiarioForm, LimiteMensualForm
 from decimal import Decimal, InvalidOperation
 
 # Asociar clientes-usuarios
@@ -165,7 +165,7 @@ def lista_clientes(request):
     return render(request, 'clientes/lista_clientes.html')
 
 
-from ..models import Segmento
+from .models import Segmento
 
 class ClienteListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Cliente
@@ -381,8 +381,8 @@ from django.core.exceptions import ValidationError
 from django.db.models import Count, Q
 
 from medios_pago.models import MedioDePago
-from ..models import Cliente, ClienteMedioDePago, HistorialClienteMedioDePago, AsignacionCliente
-from ..forms import ClienteMedioDePagoCompleteForm, SelectMedioDePagoForm
+from .models import Cliente, ClienteMedioDePago, HistorialClienteMedioDePago, AsignacionCliente
+from .forms import ClienteMedioDePagoCompleteForm, SelectMedioDePagoForm
 import re
 
 import logging
@@ -604,9 +604,9 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
                 HistorialClienteMedioDePago.objects.create(
                     cliente_medio_pago=self.object,
                     accion='CREADO',
-                    datos_nuevos=self.object.datos_campos,  # ✅ AGREGAR
+                    datos_nuevos=self.object.datos_campos,
                     modificado_por=self.request.user,
-                    observaciones=f'Medio de pago "{self.medio_de_pago.nombre}" creado exitosamente'
+                    observaciones=f'Medio de pago {self.medio_de_pago.nombre} agregado al cliente {self.cliente.nombre_completo}'
                 )
 
                 messages.success(
