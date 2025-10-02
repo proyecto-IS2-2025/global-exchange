@@ -3,7 +3,7 @@ from django.shortcuts import redirect
 from django.urls import reverse, NoReverseMatch
 from django.conf import settings
 
-from .models import AsignacionCliente, Cliente
+from .models import Cliente, AsignacionCliente
 
 class ClienteActivoMiddleware:
     """
