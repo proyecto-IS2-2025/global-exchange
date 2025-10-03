@@ -223,5 +223,21 @@
       "comision_venta": "10.00000000",
       "creado": "2025-09-15T12:00:00Z"
     }
+  },
+  
+  {
+    "model": "divisas.divisa",
+    "pk": 100,
+    "fields": {
+      "code": "PYG",
+      "nombre": "Guaraní",
+      "simbolo": "₲",
+      "is_active": true,
+      "decimales": 0,
+      "es_moneda_base": true,
+      "creado": "2025-01-01T00:00:00Z",
+      "actualizado": "2025-01-01T00:00:00Z"
+    }
   }
+
 ]
