@@ -2,234 +2,106 @@
 {% load static %}
 
 {% block content %}
-  <div class="container mt-5">
-    {% if not grupo_operador %}
-        {% if not grupo_admin %}
-    <div class="text-center">
-      <img src="{% static 'images/Global_Exchange_Logo.png' %}" alt="Global Exchange" class="img-fluid mt-4" style="max-width: 500px;">
-    </div>        
-    <h1 class="h3 text-center">Bienvenido a Global Exchange</h1>
-    <p class="text-center">Usa el menú superior para navegar.</p>
-    <hr class="my-5">
-      {% endif %}
-    {% endif %}
+<div class="container mt-5">
 
-    {% if user.is_authenticated %}
-      {% if grupo_cliente %}
-        <p class="text-muted">
-          Bienvenido, <strong>{{ user.get_full_name|default:user.username }}</strong>
-          <i class="fas fa-hand-paper"></i>
-        </p>
-        {% include "partials/visualizador.html" %}
-        <!-- Botón Realizar operación -->
-        <div class="text-center mt-4 mb-5">
-          <a href="{% url 'divisas:seleccionar_operacion' %}" class="btn-operacion">
-            <span class="btn-operacion-content">
-              <i class="fas fa-rocket me-2"></i>
-              <span class="btn-text">Realizar Operación</span>
-              <i class="fas fa-arrow-right ms-2"></i>
-            </span>
-            <span class="btn-operacion-glow"></span>
-          </a>
-          <p class="text-muted mt-2 small">Compra y venta de divisas al mejor precio</p>
-        </div>
-        {% include "simulador/simulador_conversion.html" %}
-      {% elif grupo_operador %}
-        <h2 class="h4 mb-4 text-center">Bienvenido Operador</h2>
-        <p class="text-muted text-center">Accede al panel de operaciones desde el menú superior.</p>
-      {% elif grupo_admin %}
-        <h2 class="h4 mb-4 text-center">Bienvenido Administrador</h2>
-        <p class="text-muted text-center">Accede al panel de administración desde las opciones de abajo.</p>
+  {# Logo inicial para usuarios no admin/operador #}
+  {% if not grupo_operador and not grupo_admin %}
+    <div class="text-center">
+      <img src="{% static 'images/Global_Exchange_Logo.png' %}" 
+           alt="Global Exchange" class="img-fluid mt-4" style="max-width: 500px;">
+    </div>
+    <h1 class="h3 text-center">Bienvenido a Global Exchange</h1>
+    <p class="text-center">Usa el menú superior para navegar.</p>
+    <hr class="my-5">
+  {% endif %}
 
-        <div class="row row-cols-2 row-cols-md-4 g-4 mt-4 justify-content-center">
-
-          <!-- Opción: Ver Clientes -->
-          <div class="col">
-            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
-              <div class="display-3 mb-3"><i class="fas fa-users"></i></div>
-              <h6 class="fw-bold">Ver Clientes</h6>
-              <a href="{% url 'clientes:lista_clientes' %}" class="stretched-link"></a>
-            </div>
-          </div>
-
-          <!-- Opción: Asignar Cliente a Usuario -->
-          <div class="col">
-            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
-              <div class="display-3 mb-3"><i class="fas fa-user-friends"></i></div>
-              <h6 class="fw-bold">Asignar Cliente a Usuario</h6>
-              <a href="{% url 'clientes:asociar_clientes_usuarios' %}" class="stretched-link"></a>
-            </div>
-          </div>
-
-          <!-- Opción: Roles -->
-          <div class="col">
-            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
-              <div class="display-3 mb-3"><i class="fas fa-shield-alt"></i></div>
-              <h6 class="fw-bold">Roles</h6>
-              <a href="{% url 'group_list' %}" class="stretched-link"></a>
-            </div>
-          </div>
-
-          <!-- Opción: Permisos -->
-          <div class="col">
-            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
-              <div class="display-3 mb-3"><i class="fas fa-key"></i></div>
-              <h6 class="fw-bold">Permisos</h6>
-              <a href="{% url 'permission_create' %}" class="stretched-link"></a>
-            </div>
-          </div>
-
-          <!-- Opción: Descuentos -->
-          <div class="col">
-            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
-              <div class="display-3 mb-3"><i class="fas fa-percent"></i></div>
-              <h6 class="fw-bold">Descuentos</h6>
-              <a href="{% url 'clientes:lista_descuentos' %}" class="stretched-link"></a>
-            </div>
-          </div>
-
-          <!-- Opción: Medios de Pago -->
-          <div class="col">
-            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
-              <div class="display-3 mb-3"><i class="fas fa-credit-card"></i></div>
-              <h6 class="fw-bold">Medios de Cobro</h6>
-              <a href="{% url 'medios_pago:lista' %}" class="stretched-link"></a>
-            </div>
-          </div>
-
-          <!-- Opción: Divisas -->
-          <div class="col">
-            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
-              <div class="display-3 mb-3"><i class="fas fa-coins"></i></div>
-              <h6 class="fw-bold">Divisas</h6>
-              <a href="{% url 'divisas:lista' %}" class="stretched-link"></a>
-            </div>
-          </div>
-
-          <!-- Opción: Tasas -->
-          <div class="col">
-            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
-              <div class="display-3 mb-3"><i class="fas fa-rocket"></i></div>
-              <h6 class="fw-bold">Visualizador Tasas</h6>
-              <a href="{% url 'divisas:visualizador_tasas_admin' %}" class="stretched-link"></a>
-            </div>
-          </div>
-
-          <!-- Opción: Divisas -->
-          <div class="col">
-            <div class="card opcion_admin text-center border-0 rounded-4 h-100 d-flex align-items-center justify-content-center p-4">
-              <div class="display-3 mb-3"><i class="fas fa-arrows-rotate"></i></div>
-              <h6 class="fw-bold">Historial Transacciones</h6>
-              <a href="{% url 'transacciones:historial_admin' %}" class="stretched-link"></a>
-            </div>
-          </div>
-        </div>
-      {% else %}
-        <!-- Usuario autenticado pero sin grupo -->
-        <p class="text-muted">
-          Bienvenido, <strong>{{ user.get_full_name|default:user.username }}</strong>
-          <i class="fas fa-hand-paper"></i>
-        </p>
-        {% include "partials/visualizador.html" %}
-        {% include "simulador/simulador_conversion.html" %}
-        {{ block.super }}
-      {% endif %}
+  {# Usuario autenticado #}
+  {% if user.is_authenticated %}
+    {% if grupo_cliente %}
+      {% include "menus/menu_cliente.html" %}
+    {% elif grupo_operador or grupo_admin %}
+      {% include "menus/menu_staff.html" %}
     {% else %}
-      <!-- Usuarios sin iniciar sesión -->
-       {% include "partials/visualizador.html" %}
-       {% include "simulador/simulador_conversion.html" %}
+      <!-- Usuario autenticado sin grupo -->
+      <p class="text-muted">
+        Bienvenido, <strong>{{ user.get_full_name|default:user.username }}</strong>
+        <i class="fas fa-hand-paper"></i>
+      </p>
+      {% include "partials/visualizador.html" %}
+      {% include "simulador/simulador_conversion.html" %}
+      {{ block.super }}
     {% endif %}
-  </div>
-  
+  {% else %}
+    <!-- Usuarios sin iniciar sesión -->
+    {% include "partials/visualizador.html" %}
+    {% include "simulador/simulador_conversion.html" %}
+  {% endif %}
+
+</div>
+
+{# Mantengo los estilos de botones aquí para centralizar #}
 <style>
-    .btn-operacion {
-      position: relative;
-      display: inline-block;
-      padding: 0;
-      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-      border: none;
-      border-radius: 50px;
-      text-decoration: none;
-      overflow: hidden;
-      transition: all 0.4s ease;
-      box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
-    }
-
-    .btn-operacion:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 35px rgba(0, 123, 255, 0.4);
-      background: linear-gradient(135deg, #0056b3 0%, #007bff 100%);
-    }
-
-    .btn-operacion:active {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
-    }
-
-    .btn-operacion-content {
-      display: inline-flex;
-      align-items: center;
-      padding: 18px 40px;
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 50px;
-      color: white;
-      font-weight: 600;
-      font-size: 1.2rem;
-      letter-spacing: 0.5px;
-      position: relative;
-      z-index: 2;
-      transition: all 0.3s ease;
-    }
-
-    .btn-operacion:hover .btn-operacion-content {
-      background: rgba(255, 255, 255, 0.15);
-    }
-
-    .btn-operacion-glow {
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, 
-        transparent, 
-        rgba(255, 255, 255, 0.4), 
-        transparent);
-      transition: left 0.6s ease;
-      border-radius: 50px;
-    }
-
-    .btn-operacion:hover .btn-operacion-glow {
-      left: 100%;
-    }
-
-    .btn-text {
-      position: relative;
-      transition: transform 0.3s ease;
-    }
-
-    .btn-operacion:hover .btn-text {
-      transform: translateX(5px);
-    }
-
-    .btn-operacion .fa-arrow-right {
-      transition: transform 0.3s ease;
-    }
-
-    .btn-operacion:hover .fa-arrow-right {
-      transform: translateX(5px);
-    }
-
-    /* Efecto de pulso en azul */
-    @keyframes pulse-glow {
-      0% { box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3); }
-      50% { box-shadow: 0 8px 30px rgba(0, 123, 255, 0.5); }
-      100% { box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3); }
-    }
-
-    .btn-operacion {
-      animation: pulse-glow 3s ease-in-out infinite;
-    }
-  </style>
+  .btn-operacion {
+    position: relative;
+    display: inline-block;
+    padding: 0;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+    border-radius: 50px;
+    text-decoration: none;
+    overflow: hidden;
+    transition: all 0.4s ease;
+    box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+  .btn-operacion:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(0, 123, 255, 0.4);
+    background: linear-gradient(135deg, #0056b3 0%, #007bff 100%);
+  }
+  .btn-operacion:active {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
+  }
+  .btn-operacion-content {
+    display: inline-flex;
+    align-items: center;
+    padding: 18px 40px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 50px;
+    color: white;
+    font-weight: 600;
+    font-size: 1.2rem;
+    letter-spacing: 0.5px;
+    position: relative;
+    z-index: 2;
+    transition: all 0.3s ease;
+  }
+  .btn-operacion:hover .btn-operacion-content {
+    background: rgba(255, 255, 255, 0.15);
+  }
+  .btn-operacion-glow {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    transition: left 0.6s ease;
+    border-radius: 50px;
+  }
+  .btn-operacion:hover .btn-operacion-glow {
+    left: 100%;
+  }
+  .btn-text { transition: transform 0.3s ease; }
+  .btn-operacion:hover .btn-text { transform: translateX(5px); }
+  .btn-operacion .fa-arrow-right { transition: transform 0.3s ease; }
+  .btn-operacion:hover .fa-arrow-right { transform: translateX(5px); }
+  @keyframes pulse-glow {
+    0% { box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3); }
+    50% { box-shadow: 0 8px 30px rgba(0, 123, 255, 0.5); }
+    100% { box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3); }
+  }
+</style>
 {% endblock %}
