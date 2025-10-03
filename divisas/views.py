@@ -31,17 +31,15 @@ y sus tasas de cambio, incluyendo un visualizador para clientes
 y otro para administradores.
 """
 class DivisaListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
-    """
-    Vista de lista para mostrar todas las divisas.
-
-    Requiere que el usuario esté autenticado y tenga el permiso `divisas.view_divisa`.
-    Muestra las divisas en una tabla paginada.
-    """
     permission_required = 'divisas.view_divisa'
     model = Divisa
     template_name = 'divisas/lista.html'
     context_object_name = 'divisas'
     paginate_by = 20
+    
+    def get_queryset(self):
+        # PYG siempre primero
+        return Divisa.objects.all().order_by('-es_moneda_base', 'code')
 
 
 class DivisaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
@@ -75,29 +73,37 @@ class DivisaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
 
 
 class DivisaUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
-    """
-    Vista para editar una divisa existente.
-    Requiere que el usuario esté autenticado y tenga el permiso 'divisas.change_divisa'
-    """
     permission_required = 'divisas.change_divisa'
     model = Divisa
     form_class = DivisaForm
     template_name = 'divisas/form.html'
     success_url = reverse_lazy('divisas:lista')
+    
+    def dispatch(self, request, *args, **kwargs):
+        divisa = self.get_object()
+        if divisa.es_moneda_base:
+            messages.error(request, "No se puede editar la moneda base del sistema.")
+            return redirect('divisas:lista')
+        return super().dispatch(request, *args, **kwargs)
 
 
+# Agregar protección a DivisaToggleActivaView
 class DivisaToggleActivaView(LoginRequiredMixin, PermissionRequiredMixin, View):
-    """
-    Alterna el estado de activación de una divisa.
-
-    Requiere autenticación y el permiso `divisas.change_divisa`.
-    """
     permission_required = 'divisas.change_divisa'
 
     def post(self, request, pk):
         divisa = get_object_or_404(Divisa, pk=pk)
+        
+        if divisa.es_moneda_base:
+            messages.error(request, "No se puede deshabilitar la moneda base del sistema.")
+            return redirect('divisas:lista')
+        
         divisa.is_active = not divisa.is_active
         divisa.save()
+        
+        estado = "habilitada" if divisa.is_active else "deshabilitada"
+        messages.success(request, f"Divisa {divisa.code} {estado} correctamente.")
+        
         return redirect('divisas:lista')
 
 
@@ -167,6 +173,13 @@ class TasaCambioCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateVi
     form_class = TasaCambioForm
     template_name = 'divisas/tasa_form.html'
 
+    def dispatch(self, request, *args, **kwargs):
+        """Bloquea la creación de tasas para la moneda base (PYG)"""
+        divisa = get_object_or_404(Divisa, pk=self.kwargs['divisa_id'])
+        if divisa.es_moneda_base:
+            messages.error(request, "No se pueden registrar tasas de cambio para la moneda base del sistema.")
+            return redirect('divisas:lista')
+        return super().dispatch(request, *args, **kwargs)
 
     def get_initial(self):
         initial = super().get_initial()
@@ -255,6 +268,7 @@ def visualizador_tasas(request):
     """
     Muestra las tasas de cambio actuales filtradas por el cliente activo en la sesión.
     Si no hay cliente activo, usa el segmento 'general'.
+    Solo muestra divisas que tienen cotizaciones para el segmento activo.
     """
     from clientes.models import Cliente, Segmento
     from .services import ultimas_por_segmento
@@ -289,10 +303,12 @@ def visualizador_tasas(request):
             if cot.segmento == segmento_activo
         ]
 
-        divisas_data.append({
-            "divisa": divisa,
-            "cotizaciones": cotizaciones_segmento
-        })
+        # 🔹 SOLO agregar si hay cotizaciones para este segmento
+        if cotizaciones_segmento:
+            divisas_data.append({
+                "divisa": divisa,
+                "cotizaciones": cotizaciones_segmento
+            })
 
     return render(request, "visualizador.html", {
         "divisas_data": divisas_data,

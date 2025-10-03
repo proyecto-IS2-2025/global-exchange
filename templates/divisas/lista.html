@@ -19,7 +19,7 @@
             <div class="card-body">
                 <div class="card-header bg-primary text-white text-center rounded mb-4">
                     <h2 class="card-title mb-0">
-                        <i class="fas fa-coins me-2"></i>Gestion de Divisas
+                        <i class="fas fa-coins me-2"></i>Gestión de Divisas
                     </h2>
                 </div>
                 <div class="table-responsive">
@@ -38,34 +38,45 @@
                             {% for d in divisas %}
                             <tr>
                                 <th scope="row">{{ d.id }}</th>
-                                <td>{{ d.code }}</td>
+                                <td>
+                                    <strong>{{ d.code }}</strong>
+                                </td>
                                 <td>{{ d.nombre }}</td>
                                 <td>{{ d.simbolo }}</td>
                                 <td>
-                                    {% if d.is_active %}
+                                    {% if d.es_moneda_base %}
+                                        <span class="badge bg-primary">Moneda base</span>
+                                    {% elif d.is_active %}
                                         <span class="badge bg-success">Habilitada</span>
                                     {% else %}
                                         <span class="badge bg-danger">Deshabilitada</span>
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <a href="{% url 'divisas:editar' d.id %}" class="btn btn-warning btn-sm me-1" title="Editar">
-                                        <i class="fas fa-pencil-alt"></i>
-                                    </a>
-                                    <form method="post" action="{% url 'divisas:toggle' d.id %}" class="d-inline">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-secondary btn-sm me-1" title="{% if d.is_active %}Deshabilitar{% else %}Habilitar{% endif %}">
-                                            {% if d.is_active %}
-                                                <i class="fas fa-times-circle"></i>
-                                            {% else %}
-                                                <i class="fas fa-check-circle"></i>
-                                            {% endif %}
-                                        </button>
-                                    </form>
-                                    {% if not d.is_base and d.code != 'PYG' %}
-                                    <a href="{% url 'divisas:tasas' d.id %}" class="btn btn-info btn-sm" title="Ver Tasas">
-                                        <i class="fas fa-chart-line"></i>
-                                    </a>
+                                    {% if not d.es_moneda_base %}
+                                        <!-- Botones solo para divisas que NO son moneda base -->
+                                        <a href="{% url 'divisas:editar' d.id %}" class="btn btn-warning btn-sm me-1" title="Editar">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </a>
+                                        <form method="post" action="{% url 'divisas:toggle' d.id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-secondary btn-sm me-1" title="{% if d.is_active %}Deshabilitar{% else %}Habilitar{% endif %}">
+                                                {% if d.is_active %}
+                                                    <i class="fas fa-times-circle"></i>
+                                                {% else %}
+                                                    <i class="fas fa-check-circle"></i>
+                                                {% endif %}
+                                            </button>
+                                        </form>
+                                        <!-- Botón Ver Tasas solo para divisas normales -->
+                                        <a href="{% url 'divisas:tasas' d.id %}" class="btn btn-info btn-sm" title="Ver Tasas">
+                                            <i class="fas fa-chart-line"></i>
+                                        </a>
+                                    {% else %}
+                                        <!-- Indicador de protección para moneda base -->
+                                        <span class="text-muted small">
+                                            <i class="fas fa-lock me-1"></i>Protegida
+                                        </span>
                                     {% endif %}
                                 </td>
                             </tr>

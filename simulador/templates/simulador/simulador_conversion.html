@@ -24,7 +24,7 @@
                                 <div class="form-floating mb-3">
                                     <select class="form-select" id="moneda" required>
                                         {% for d in divisas_list %}
-                                            {% if d.code != 'PYG' %}  <!-- Excluir Guaraní por código -->
+                                            {% if d.code != 'PYG' %}
                                             <option value="{{ d.code }}">{{ d.nombre }} ({{ d.simbolo }})</option>
                                             {% endif %}
                                         {% endfor %}
@@ -82,7 +82,6 @@
             }
         }
         
-        // Inicializar
         actualizarPlaceholder();
         tipoOperacionSelect.addEventListener('change', actualizarPlaceholder);
         monedaSelect.addEventListener('change', actualizarPlaceholder);
@@ -103,7 +102,6 @@
             const monto = parseFloat(montoInput.value);
             const moneda = monedaSelect.value;
 
-            // Validación adicional para Guaraní (código PYG)
             if (moneda === 'PYG') {
                 resultadoBox.classList.add('alert-danger');
                 resultadoBox.innerHTML = 'No se permiten operaciones con Guaraní (PYG) en el simulador.';
@@ -141,17 +139,12 @@
                 if (data.success) {
                     const resultado = parseFloat(data.monto_resultado).toLocaleString('es-PY', { 
                         minimumFractionDigits: 2, 
-                        maximumFractionDigits: data.moneda_code === 'PYG' ? 2 : 8 
+                        maximumFractionDigits: 2
                     });
                     
                     const tasa_aplicada = parseFloat(data.tasa_aplicada).toLocaleString('es-PY', { 
                         minimumFractionDigits: 2, 
-                        maximumFractionDigits: 8 
-                    });
-                    
-                    const comision_aplicada = parseFloat(data.comision_aplicada).toLocaleString('es-PY', { 
-                        minimumFractionDigits: 2, 
-                        maximumFractionDigits: 8 
+                        maximumFractionDigits: 2
                     });
                     
                     const porcentaje_descuento = parseFloat(data.porcentaje_descuento).toLocaleString('es-PY', {
@@ -168,7 +161,6 @@
                             <div class="text-start">
                                 <div><strong>Segmento:</strong> ${segmento}</div>
                                 <div><strong>Descuento aplicado:</strong> ${porcentaje_descuento}%</div>
-                                <div><strong>Comisión aplicada:</strong> ${comision_aplicada} ${data.moneda_simbolo}</div>
                                 <div><strong>Tasa aplicada:</strong> ${tasa_aplicada} PYG/${data.moneda_simbolo}</div>
                                 <hr>
                                 <div class="fw-bold fs-5">Recibirás: ${resultado} ${data.moneda_simbolo}</div>
@@ -181,7 +173,6 @@
                             <div class="text-start">
                                 <div><strong>Segmento:</strong> ${segmento}</div>
                                 <div><strong>Descuento aplicado:</strong> ${porcentaje_descuento}%</div>
-                                <div><strong>Comisión aplicada:</strong> ${comision_aplicada} ${data.moneda_simbolo}</div>
                                 <div><strong>Tasa aplicada:</strong> ${tasa_aplicada} PYG/${data.moneda_simbolo}</div>
                                 <hr>
                                 <div class="fw-bold fs-5">Recibirás: ${resultado} PYG</div>
