@@ -1353,7 +1353,7 @@ class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
 
                 return JsonResponse({
                     'success': True,
-                    'redirect_url': reverse('divisas:venta_sumario'),
+                    'redirect_url': reverse('operacion_divisas:venta_sumario'),
                 })
 
             except ClienteMedioDePago.DoesNotExist:
@@ -1364,7 +1364,7 @@ class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
             request.session.pop('medio_seleccionado', None)
             return JsonResponse({
                 'success': True,
-                'redirect_url': reverse('divisas:venta_medios'),
+                'redirect_url': reverse('operacion_divisas:venta_medios'),
             })
 
         return JsonResponse({'error': 'Acción no válida'}, status=400)
@@ -1429,7 +1429,7 @@ class SeleccionarMedioPagoView(LoginRequiredMixin, View):
 
                 return JsonResponse({
                     'success': True,
-                    'redirect_url': reverse('divisas:compra_sumario'),
+                    'redirect_url': reverse('operacion_divisas:compra_sumario'),
                 })
 
             except ClienteMedioDePago.DoesNotExist:

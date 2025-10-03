@@ -227,7 +227,7 @@
   
   {
     "model": "divisas.divisa",
-    "pk": 100,
+    "pk": 0,
     "fields": {
       "code": "PYG",
       "nombre": "Guaraní",
