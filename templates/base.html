@@ -17,21 +17,40 @@
   <!-- CSS -->
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* Sticky footer layout */
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    main {
+      flex: 1;
+    }
+    footer {
+      margin-top: auto;
+    }
+  </style>
 </head>
 <body class="bg-light">
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-      <a class="fas fa-house" href="{% url 'inicio' %}"></a>
-      <a class="navbar-brand fw-bold" href="{% url 'inicio' %}">
-        Global Exchange
+      <!-- Brand con icono -->
+      <a class="navbar-brand fw-bold d-flex align-items-center" href="{% url 'inicio' %}">
+        <i class="fas fa-house me-2"></i> Global Exchange
         {% if user.is_authenticated %}
           {% if grupo_admin %}
-            <small class="text-white">(Admin)</small>
+            <small class="text-white ms-1">(Admin)</small>
           {% elif grupo_operador %}
-            <small class="text-white">(Operador)</small>
+            <small class="text-white ms-1">(Operador)</small>
           {% elif grupo_cliente %}
-            <small class="text-white">(Cliente)</small>
+            <small class="text-white ms-1">(Cliente)</small>
           {% endif %}
         {% endif %}
       </a>
@@ -54,23 +73,32 @@
               <form method="post" action="{% url 'logout' %}" class="m-0 p-0">
                 {% csrf_token %}
                 <button type="submit" class="nav-link btn btn-link text-white px-0" style="text-decoration: none;">
-                  Cerrar sesión
+                  <i class="fas fa-sign-out-alt me-1"></i> Cerrar sesión
                 </button>
               </form>
             </li>
           {% else %}
-            <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Iniciar sesión</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'registro' %}">Registrarse</a></li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'login' %}">
+                <i class="fas fa-sign-in-alt me-1"></i> Iniciar sesión
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'registro' %}">
+                <i class="fas fa-user-plus me-1"></i> Registrarse
+              </a>
+            </li>
           {% endif %}
+
           {% if not grupo_admin %}
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button"
-                data-bs-toggle="dropdown" aria-expanded="false">
-                Opciones
+                 data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-bars me-1"></i> Opciones
               </a>
               {% include "partials/navbar_opciones.html" %}
-            {% endif %}
-          </li>
+            </li>
+          {% endif %}
         </ul>
       </div>
     </div>
@@ -88,15 +116,13 @@
     </div>
   {% endif %}
 
-
-
   <!-- Contenido -->
   <main class="container py-4">
     {% block content %}{% endblock %}
   </main>
 
-  <!-- Footer simple (opcional) -->
-  <footer class="border-top py-3">
+  <!-- Footer fijo abajo -->
+  <footer class="border-top py-3 bg-white">
     <div class="container text-center text-muted small">
       © {{ now|default:""|date:"Y" }} Global Exchange
     </div>
@@ -109,10 +135,9 @@
     crossorigin="anonymous">
   </script>
 
-  <!-- jQuery solo si lo necesitas para AJAX -->
+  <!-- jQuery solo si lo necesitas -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-  <!-- Bloque extra_js para vistas -->
   {% block extra_js %}{% endblock %}
 </body>
 </html>
