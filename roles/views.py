@@ -5,11 +5,14 @@ from django.contrib.auth.models import Group
 from django.http import JsonResponse
 from .forms import GroupForm, PermissionForm
 from django.contrib import messages
-from .models import RoleStatus # Importa el nuevo modelo
+from .models import RoleStatus, PermissionMetadata # Importa el nuevo modelo
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
+from django.db.models import Q, Value
+from django.db.models.functions import Lower
+from collections import defaultdict
 
 # Get the custom user model
 CustomUser = get_user_model()
@@ -127,41 +130,69 @@ def group_delete(request, pk):
     return render(request, 'groups/group_confirm_delete.html', {'group': group})
 
 @user_passes_test(is_admin)
+# roles/views.py - MODIFICAR
+
+@user_passes_test(is_admin)
 def group_detail_permissions(request, pk):
     """
-    Vista que muestra los detalles de un grupo (rol) y sus permisos asociados.
-
-    Permite a un administrador ver y gestionar los permisos de un grupo.
-
-    :param request: Objeto de solicitud HTTP.
-    :type request: :class:`~django.http.HttpRequest`
-    :param pk: Clave primaria del grupo.
-    :type pk: int
-    :return: Un objeto de respuesta HTTP que renderiza la página de detalles del grupo.
-    :rtype: :class:`~django.http.HttpResponse`
+    Vista mejorada con permisos categorizados por módulo
     """
     group = get_object_or_404(Group, pk=pk)
     
     if request.method == 'POST':
-        # El formulario ahora solo maneja el nombre del grupo
+        # Mantener lógica existente
         form = GroupForm(request.POST, instance=group)
         if form.is_valid():
             form.save()
-            
-        # Procesa los permisos enviados por la interfaz con la barra de búsqueda
+        
         selected_permission_ids = request.POST.getlist('permissions')
         group.permissions.set(selected_permission_ids)
         
+        messages.success(request, f'Permisos del rol "{group.name}" actualizados correctamente.')
         return redirect('group_detail_permissions', pk=group.pk)
     
-    else:
-        form = GroupForm(instance=group)
+    # NUEVO: Obtener permisos agrupados por módulo
+    permisos_por_modulo = {}
+    
+    # Obtener permisos con metadata
+    permisos_con_metadata = Permission.objects.select_related('metadata').filter(
+        metadata__isnull=False
+    ).order_by('metadata__modulo', 'metadata__orden')
+    
+    for permiso in permisos_con_metadata:
+        modulo = permiso.metadata.modulo
+        modulo_display = permiso.metadata.get_modulo_display()
         
-    return render(request, 'groups/group_detail_permissions.html', {
+        if modulo not in permisos_por_modulo:
+            permisos_por_modulo[modulo] = {
+                'nombre': modulo_display,
+                'permisos': []
+            }
+        
+        permisos_por_modulo[modulo]['permisos'].append({
+            'id': permiso.id,
+            'nombre': permiso.name,
+            'codename': permiso.codename,
+            'descripcion': permiso.metadata.descripcion_detallada,
+            'ejemplo': permiso.metadata.ejemplo_uso,
+            'nivel_riesgo': permiso.metadata.nivel_riesgo,
+            'nivel_riesgo_display': permiso.metadata.get_nivel_riesgo_display(),
+            'seleccionado': permiso in group.permissions.all()
+        })
+    
+    # Permisos actuales
+    permisos_actuales = group.permissions.all()
+    
+    context = {
         'group': group,
-        'form': form,
-        'current_permissions': group.permissions.all(),
-    })
+        'form': GroupForm(instance=group),
+        'current_permissions': permisos_actuales,
+        'permisos_por_modulo': permisos_por_modulo,
+        'total_permisos': permisos_con_metadata.count(),
+        'total_asignados': permisos_actuales.count(),
+    }
+    
+    return render(request, 'groups/group_detail_permissions.html', context)
 
 @user_passes_test(is_admin)
 def group_detail_users(request, pk):
@@ -182,23 +213,34 @@ def group_detail_users(request, pk):
 
 @user_passes_test(is_admin)
 def search_permissions(request):
-    """
-    Vista para buscar permisos por nombre o codename.
+    query = request.GET.get('q', '').strip()
+    if not query:
+        return JsonResponse([], safe=False)
 
-    Devuelve una lista de permisos en formato JSON.
-    Esta vista es utilizada por las llamadas AJAX en las plantillas.
+    permisos = (
+        Permission.objects.select_related('metadata')
+        .filter(metadata__isnull=False)
+        .filter(
+            Q(name__icontains=query)
+            | Q(codename__icontains=query)
+            | Q(metadata__descripcion_detallada__icontains=query)
+            | Q(metadata__ejemplo_uso__icontains=query)
+        )
+        .order_by('metadata__modulo', 'metadata__orden', 'name')[:20]
+    )
 
-    :param request: Objeto de solicitud HTTP con el parámetro GET 'q'.
-    :type request: :class:`~django.http.HttpRequest`
-    :return: Un objeto de respuesta JSON con una lista de permisos.
-    :rtype: :class:`~django.http.JsonResponse`
-    """
-    query = request.GET.get('q', '')
-    if query:
-        permissions = Permission.objects.filter(codename__icontains=query)[:10]  # Limita los resultados
-        data = [{'id': p.id, 'name': p.name, 'codename': p.codename} for p in permissions]
-        return JsonResponse(data, safe=False)
-    return JsonResponse([], safe=False)
+    data = [
+        {
+            'id': p.id,
+            'name': p.name,
+            'codename': p.codename,
+            'modulo': p.metadata.get_modulo_display() if p.metadata else '',
+            'descripcion': p.metadata.descripcion_detallada if p.metadata else '',
+            'ejemplo': p.metadata.ejemplo_uso if p.metadata else '',
+        }
+        for p in permisos
+    ]
+    return JsonResponse(data, safe=False)
 
 @user_passes_test(is_admin)
 def search_users(request):
@@ -254,3 +296,87 @@ def permission_create(request):
         form = PermissionForm()
     
     return render(request, 'permissions/permission_create.html', {'form': form})
+
+@user_passes_test(is_admin)
+def permission_matrix(request):
+    module_filter = request.GET.get("module", "").strip()
+    app_filter = request.GET.get("app", "").strip()
+    search = request.GET.get("search", "").strip()
+
+    permisos = (
+        Permission.objects.select_related("metadata", "content_type")
+        .filter(metadata__isnull=False)
+        .order_by("metadata__modulo", "metadata__orden", "codename")
+    )
+
+    if module_filter:
+        permisos = permisos.filter(metadata__modulo=module_filter)
+
+    if app_filter:
+        permisos = permisos.filter(content_type__app_label=app_filter)
+
+    if search:
+        permisos = permisos.filter(
+            Q(name__icontains=search)
+            | Q(codename__icontains=search)
+            | Q(metadata__descripcion_detallada__icontains=search)
+        )
+
+    modules_qs = (
+        PermissionMetadata.objects.order_by("modulo")
+        .values_list("modulo", flat=True)
+        .distinct()
+    )
+    modulo_choices_map = dict(PermissionMetadata._meta.get_field("modulo").choices)
+    module_choices = [
+        (value, modulo_choices_map.get(value, value.title()))
+        for value in modules_qs
+    ]
+
+    apps = (
+        permisos.values_list("content_type__app_label", flat=True)
+        .distinct()
+        .order_by("content_type__app_label")
+    )
+
+    matrix = []
+    for perm in permisos:
+        metadata = perm.metadata
+        matrix.append(
+            {
+                "id": perm.id,
+                "modulo": metadata.get_modulo_display(),
+                "modulo_value": metadata.modulo,
+                "app": perm.content_type.app_label,
+                "modelo": perm.content_type.model,
+                "codename": perm.codename,
+                "nombre": perm.name,
+                "riesgo": metadata.get_nivel_riesgo_display()
+                if metadata.nivel_riesgo
+                else "",
+                "orden": metadata.orden,
+                "descripcion": metadata.descripcion_detallada,
+            }
+        )
+
+    grouped = defaultdict(list)
+    for row in matrix:
+        grouped[row["modulo"]].append(row)
+
+    matrix_grouped = [
+        {"modulo": modulo, "rows": rows, "count": len(rows)}
+        for modulo, rows in sorted(grouped.items(), key=lambda item: item[0])
+    ]
+
+    context = {
+        "group": None,
+        "matrix": matrix,
+        "matrix_grouped": matrix_grouped,
+        "module_filter": module_filter,
+        "modules": module_choices,
+        "app_filter": app_filter,
+        "apps": apps,
+        "search": search,
+        "total": len(matrix),
+    }
+    return render(request, "permissions/permission_matrix.html", context)

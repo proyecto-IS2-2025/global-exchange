@@ -1,0 +1,38 @@
+PERMISOS_DIVISAS = [
+    {
+        "codename": "view_cotizaciones_segmento",
+        "name": "Puede ver cotizaciones del segmento",
+        "description": "Permite consultar las cotizaciones disponibles para los segmentos asignados.",
+        "example": "Revisar la tasa preferencial del segmento corporativo antes de una operación.",
+        "app_label": "divisas",
+        "model": "cotizacionsegmento",
+        "orden": 10,
+    },
+    {
+        "codename": "manage_cotizaciones_segmento",
+        "name": "Puede configurar cotizaciones por segmento",
+        "description": "Autoriza la creación y actualización de cotizaciones para los distintos segmentos.",
+        "example": "Actualizar el spread para operaciones de clientes premium.",
+        "app_label": "divisas",
+        "model": "cotizacionsegmento",
+        "orden": 20,
+    },
+    {
+        "codename": "approve_operaciones_divisas",
+        "name": "Puede aprobar operaciones de divisas",
+        "description": "Habilita la aprobación de operaciones superiores al límite estándar.",
+        "example": "Aprobar la compra de USD 50.000 para el cliente ACME.",
+        "app_label": "divisas",
+        "model": "divisa",
+        "orden": 30,
+    },
+    {
+        "codename": "view_reportes_divisas",
+        "name": "Puede ver reportes consolidados de divisas",
+        "description": "Permite acceder a tableros y reportes de operaciones y posiciones.",
+        "example": "Descargar el reporte semanal de operaciones de divisas.",
+        "app_label": "divisas",
+        "model": "divisa",
+        "orden": 40,
+    },
+]

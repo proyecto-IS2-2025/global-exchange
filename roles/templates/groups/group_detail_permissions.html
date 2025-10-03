@@ -1,124 +1,256 @@
 {% extends "base.html" %}
 {% load static %}
+
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card shadow-lg p-4">
-                <div class="card-header bg-primary text-white text-center rounded mb-4">
-                    <h2 class="card-title mb-0">
-                        <i class="fas fa-shield-alt me-2"></i>Permisos del Rol: {{ group.name }}
-                    </h2>
-                </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="id_name" class="form-label">Nombre del Rol:</label>
-                            <input type="text" name="name" id="id_name" class="form-control" value="{{ group.name }}" required>
-                        </div>
-                        
-                        <hr>
-
-                        <h5 class="mb-3">Permisos Asignados</h5>
-                        <ul id="selected-permissions-list" class="list-group mb-3">
-                            {% for perm in current_permissions %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center" data-id="{{ perm.id }}">
-                                    {{ perm.codename }}
-                                    <button type="button" class="btn btn-danger btn-sm remove-permission">
-                                        &times;
-                                    </button>
-                                    <input type="hidden" name="permissions" value="{{ perm.id }}">
-                                </li>
-                            {% endfor %}
-                        </ul>
-
-                        <hr>
-
-                        <h5 class="mb-3">Añadir Permisos</h5>
-                        <div class="input-group mb-3">
-                            <input type="text" class="form-control" id="permission-search" placeholder="Buscar permiso por codename...">
-                        </div>
-
-                        <ul id="search-results" class="list-group mb-3" style="max-height: 250px; overflow-y: auto;">
-                        </ul>
-
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                            <a href="{% url 'group_list' %}" class="btn btn-secondary me-md-2">
-                                <i class="fas fa-arrow-left me-2"></i>Volver
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>Guardar Cambios
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <form method="post" class="card shadow-sm border-0">
+        {% csrf_token %}
+        <div class="card-header bg-primary text-white text-center py-3">
+          <h4 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Permisos del Rol: {{ group.name }}</h4>
         </div>
+
+        <div class="card-body">
+          <h5 class="mb-3">Permisos asignados</h5>
+          {% if current_permissions %}
+            <ul class="list-group mb-4" id="selected-permissions-list">
+              {% for perm in current_permissions %}
+                <li class="list-group-item d-flex justify-content-between align-items-start gap-3" data-id="{{ perm.id }}">
+                  <div>
+                    <strong>{{ perm.name }}</strong>
+                    {% if perm.metadata and perm.metadata.descripcion_detallada %}
+                      <div class="text-muted small">{{ perm.metadata.descripcion_detallada }}</div>
+                    {% endif %}
+                    {% if perm.metadata and perm.metadata.ejemplo_uso %}
+                      <div class="small fst-italic text-secondary">Ejemplo: {{ perm.metadata.ejemplo_uso }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="text-end">
+                    {% if perm.metadata and perm.metadata.nivel_riesgo %}
+                      <span class="badge bg-outline-secondary mb-2">Riesgo: {{ perm.metadata.get_nivel_riesgo_display }}</span>
+                    {% endif %}
+                    <button type="button" class="btn btn-danger btn-sm remove-permission">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                  <input type="hidden" name="permissions" value="{{ perm.id }}">
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="alert alert-light border mb-4" id="selected-permissions-empty">
+              No hay permisos asignados.
+            </div>
+            <ul class="list-group mb-4 d-none" id="selected-permissions-list"></ul>
+          {% endif %}
+
+          <h5 class="mb-3">Buscar permisos disponibles</h5>
+          <div class="mb-4 position-relative">
+            <input id="permission-search" type="text" class="form-control" placeholder="Escribe para filtrar…" autocomplete="off">
+            <ul id="search-results" class="list-group position-absolute w-100 shadow d-none"
+                style="z-index: 1050; max-height: 260px; overflow-y: auto;"></ul>
+          </div>
+
+          <h5 class="mb-3">Permisos por módulo</h5>
+          <ul class="nav nav-pills mb-3" id="module-tabs" role="tablist">
+            {% for modulo, info in permisos_por_modulo.items %}
+              <li class="nav-item" role="presentation">
+                <button class="nav-link {% if forloop.first %}active{% endif %}"
+                        id="tab-{{ modulo }}"
+                        data-bs-toggle="tab"
+                        data-bs-target="#panel-{{ modulo }}"
+                        type="button"
+                        role="tab">
+                  {{ info.nombre }}
+                  <span class="badge rounded-pill bg-secondary ms-1">{{ info.permisos|length }}</span>
+                </button>
+              </li>
+            {% endfor %}
+          </ul>
+
+          <div class="tab-content border rounded p-3">
+            {% for modulo, info in permisos_por_modulo.items %}
+              <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="panel-{{ modulo }}" role="tabpanel">
+                {% if info.permisos %}
+                  <ul class="list-group">
+                    {% for perm in info.permisos %}
+                      <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                          <div>
+                            <strong>{{ perm.nombre }}</strong>
+                            <div class="text-muted small">{{ perm.descripcion }}</div>
+                            {% if perm.ejemplo %}
+                              <div class="small fst-italic text-secondary">Ejemplo: {{ perm.ejemplo }}</div>
+                            {% endif %}
+                            {% if perm.nivel_riesgo_display %}
+                              <span class="badge bg-outline-secondary mt-1">Riesgo: {{ perm.nivel_riesgo_display }}</span>
+                            {% endif %}
+                          </div>
+                          <button type="button"
+                                  class="btn btn-outline-primary btn-sm add-permission"
+                                  data-id="{{ perm.id }}"
+                                  data-name="{{ perm.nombre }}">
+                            <i class="fas fa-plus"></i>
+                          </button>
+                        </div>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                {% else %}
+                  <div class="text-muted">Sin permisos registrados en este módulo.</div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="card-footer text-end">
+          <button type="submit" class="btn btn-success">
+            <i class="fas fa-save me-1"></i>Guardar cambios
+          </button>
+        </div>
+      </form>
     </div>
+  </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('permission-search');
-        const searchResults = document.getElementById('search-results');
-        const selectedList = document.getElementById('selected-permissions-list');
+document.addEventListener('DOMContentLoaded', () => {
+  const searchInput = document.getElementById('permission-search');
+  const searchResults = document.getElementById('search-results');
+  const selectedList = document.getElementById('selected-permissions-list');
+  const selectedEmpty = document.getElementById('selected-permissions-empty');
 
-        function addPermission(id, codename) {
-            if (!document.querySelector(`#selected-permissions-list [data-id='${id}']`)) {
-                const li = document.createElement('li');
-                li.className = 'list-group-item d-flex justify-content-between align-items-center';
-                li.dataset.id = id;
-                li.innerHTML = `
-                    ${codename}
-                    <button type="button" class="btn btn-danger btn-sm remove-permission">
-                        &times;
-                    </button>
-                    <input type="hidden" name="permissions" value="${id}">
-                `;
-                selectedList.appendChild(li);
+  function showSelectedList() {
+    if (selectedEmpty) {
+      selectedEmpty.classList.add('d-none');
+    }
+    selectedList.classList.remove('d-none');
+  }
 
-                // Re-attach event listener for the new button
-                li.querySelector('.remove-permission').addEventListener('click', function() {
-                    li.remove();
-                });
-            }
-        }
+  function showEmptyState() {
+    if (selectedEmpty) {
+      selectedEmpty.classList.remove('d-none');
+    }
+    selectedList.classList.add('d-none');
+  }
 
-        searchInput.addEventListener('input', function() {
-            const query = this.value;
-            if (query.length > 2) {
-                fetch(`{% url 'search_permissions' %}?q=${query}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        searchResults.innerHTML = '';
-                        data.forEach(perm => {
-                            const li = document.createElement('li');
-                            li.className = 'list-group-item list-group-item-action';
-                            li.style.cursor = 'pointer';
-                            li.innerHTML = `
-                                <strong>${perm.codename}</strong>
-                                <small class="text-muted d-block">${perm.name}</small>
-                            `;
-                            li.addEventListener('click', () => {
-                                addPermission(perm.id, perm.codename);
-                                searchInput.value = ''; // Limpia el input
-                                searchResults.innerHTML = ''; // Limpia los resultados de búsqueda
-                            });
-                            searchResults.appendChild(li);
-                        });
-                    });
-            } else {
-                searchResults.innerHTML = '';
-            }
-        });
+  function updateEmptyState() {
+    if (selectedList.children.length === 0) {
+      showEmptyState();
+    } else {
+      showSelectedList();
+    }
+  }
 
-        // Event listener para los botones de eliminar ya existentes
-        document.querySelectorAll('.remove-permission').forEach(button => {
-            button.addEventListener('click', function() {
-                this.closest('li').remove();
-            });
-        });
+  function hideResults() {
+    searchResults.classList.add('d-none');
+    searchResults.innerHTML = '';
+  }
+
+  function addPermission(id, name, extra = {}) {
+    if (selectedList.querySelector(`[data-id="${id}"]`)) {
+      return;
+    }
+    const li = document.createElement('li');
+    li.className = 'list-group-item d-flex justify-content-between align-items-start gap-3';
+    li.dataset.id = id;
+
+    const metaHtml = `
+      ${extra.descripcion ? `<div class="text-muted small">${extra.descripcion}</div>` : ''}
+      ${extra.ejemplo ? `<div class="small fst-italic text-secondary">Ejemplo: ${extra.ejemplo}</div>` : ''}
+      ${extra.riesgo ? `<span class="badge bg-outline-secondary mt-1">Riesgo: ${extra.riesgo}</span>` : ''}
+    `;
+
+    li.innerHTML = `
+      <div><strong>${name}</strong>${metaHtml}</div>
+      <div class="text-end">
+        <button type="button" class="btn btn-danger btn-sm remove-permission">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <input type="hidden" name="permissions" value="${id}">
+    `;
+    selectedList.appendChild(li);
+    bindRemoveButton(li.querySelector('.remove-permission'));
+    updateEmptyState();
+  }
+
+  function bindRemoveButton(btn) {
+    btn.addEventListener('click', () => {
+      btn.closest('li').remove();
+      updateEmptyState();
     });
+  }
+
+  selectedList.querySelectorAll('.remove-permission').forEach(bindRemoveButton);
+  if (selectedList.children.length) {
+    showSelectedList();
+  }
+
+  document.querySelectorAll('.add-permission').forEach(btn => {
+    btn.addEventListener('click', () => {
+      addPermission(btn.dataset.id, btn.dataset.name, {
+        descripcion: btn.dataset.descripcion,
+        ejemplo: btn.dataset.ejemplo,
+        riesgo: btn.dataset.riesgo,
+      });
+    });
+  });
+
+  searchInput?.addEventListener('input', function () {
+    const query = this.value.trim();
+    if (query.length < 2) {
+      hideResults();
+      return;
+    }
+
+    fetch(`{% url 'search_permissions' %}?q=${encodeURIComponent(query)}`)
+      .then(response => response.json())
+      .then(results => {
+        searchResults.innerHTML = '';
+        if (!results.length) {
+          const empty = document.createElement('li');
+          empty.className = 'list-group-item text-muted';
+          empty.textContent = 'Sin resultados.';
+          searchResults.appendChild(empty);
+        } else {
+          results.forEach(perm => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item d-flex justify-content-between align-items-center';
+            li.innerHTML = `
+              <div>
+                <strong>${perm.name}</strong>
+                ${perm.descripcion ? `<div class="text-muted small">${perm.descripcion}</div>` : ''}
+                ${perm.ejemplo ? `<div class="small fst-italic text-secondary">Ejemplo: ${perm.ejemplo}</div>` : ''}
+              </div>
+              <button type="button" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-plus"></i>
+              </button>
+            `;
+            li.querySelector('button').addEventListener('click', () => {
+              addPermission(perm.id, perm.name, {
+                descripcion: perm.descripcion,
+                ejemplo: perm.ejemplo,
+                riesgo: perm.modulo ? `Módulo: ${perm.modulo}` : '',
+              });
+              hideResults();
+              searchInput.value = '';
+            });
+            searchResults.appendChild(li);
+          });
+        }
+        searchResults.classList.remove('d-none');
+      })
+      .catch(() => hideResults());
+  });
+
+  document.addEventListener('click', event => {
+    if (!searchResults.contains(event.target) && event.target !== searchInput) {
+      hideResults();
+    }
+  });
+});
 </script>
 {% endblock %}

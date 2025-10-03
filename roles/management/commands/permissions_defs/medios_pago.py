@@ -1,0 +1,38 @@
+PERMISOS_MEDIOS_PAGO = [
+    {
+        "codename": "view_catalogo_medios_pago",
+        "name": "Puede ver el catálogo de medios de pago",
+        "description": "Permite navegar el catálogo general de medios de pago configurados.",
+        "example": "Consultar los medios de pago habilitados para transferencias bancarias.",
+        "app_label": "medios_pago",
+        "model": "mediodepago",
+        "orden": 10,
+    },
+    {
+        "codename": "manage_catalogo_medios_pago",
+        "name": "Puede administrar el catálogo de medios de pago",
+        "description": "Autoriza la creación, edición y baja de medios de pago disponibles.",
+        "example": "Dar de alta un nuevo medio de pago para billeteras virtuales.",
+        "app_label": "medios_pago",
+        "model": "mediodepago",
+        "orden": 20,
+    },
+    {
+        "codename": "configure_campos_medios_pago",
+        "name": "Puede configurar campos dinámicos de medios de pago",
+        "description": "Habilita la definición de los campos requeridos para cada tipo de medio de pago.",
+        "example": "Configurar el campo CBU obligatorio para transferencias bancarias.",
+        "app_label": "medios_pago",
+        "model": "campomediodepago",
+        "orden": 30,
+    },
+    {
+        "codename": "view_auditoria_medios_pago",
+        "name": "Puede ver la auditoría de medios de pago",
+        "description": "Permite consultar cambios históricos y responsables sobre los medios de pago.",
+        "example": "Revisar quién modificó los requisitos del medio de pago 'Transferencia bancaria'.",
+        "app_label": "medios_pago",
+        "model": "paymenttemplate",
+        "orden": 40,
+    },
+]

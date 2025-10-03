@@ -1,0 +1,38 @@
+PERMISOS_USUARIOS = [
+    {
+        "codename": "view_usuarios",
+        "name": "Puede ver usuarios",
+        "description": "Permite acceder al listado y detalle de usuarios registrados.",
+        "example": "Consultar los datos del usuario operador01.",
+        "app_label": "users",
+        "model": "customuser",
+        "orden": 10,
+    },
+    {
+        "codename": "manage_usuarios",
+        "name": "Puede administrar usuarios",
+        "description": "Autoriza la creación y edición de usuarios internos y clientes.",
+        "example": "Registrar un nuevo operador y definir sus datos de contacto.",
+        "app_label": "users",
+        "model": "customuser",
+        "orden": 20,
+    },
+    {
+        "codename": "assign_roles_usuarios",
+        "name": "Puede asignar roles a usuarios",
+        "description": "Habilita la asignación y revocación de roles y grupos de permisos.",
+        "example": "Agregar el rol Supervisor al usuario maria.gomez.",
+        "app_label": "users",
+        "model": "role",
+        "orden": 30,
+    },
+    {
+        "codename": "reset_password_usuarios",
+        "name": "Puede resetear contraseñas de usuarios",
+        "description": "Permite iniciar el proceso de restablecimiento de contraseñas para otros usuarios.",
+        "example": "Forzar el reseteo de contraseña del usuario operador03.",
+        "app_label": "users",
+        "model": "customuser",
+        "orden": 40,
+    },
+]

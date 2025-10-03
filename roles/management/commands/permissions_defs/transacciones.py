@@ -1,0 +1,38 @@
+PERMISOS_TRANSACCIONES = [
+    {
+        "codename": "view_transacciones_asignadas",
+        "name": "Puede ver transacciones asignadas",
+        "description": "Permite consultar solo las transacciones asociadas a los clientes asignados al usuario.",
+        "example": "Ver las operaciones realizadas por el cliente Metalúrgica SA.",
+        "app_label": "transacciones",
+        "model": "transaccion",
+        "orden": 10,
+    },
+    {
+        "codename": "view_transacciones_globales",
+        "name": "Puede ver todas las transacciones",
+        "description": "Autoriza el acceso al listado completo de transacciones registradas en el sistema.",
+        "example": "Auditar las transacciones del mes sin restricción por operador.",
+        "app_label": "transacciones",
+        "model": "transaccion",
+        "orden": 20,
+    },
+    {
+        "codename": "manage_reversiones_transacciones",
+        "name": "Puede gestionar reversiones de transacciones",
+        "description": "Habilita la solicitud y aprobación de reversiones sobre transacciones existentes.",
+        "example": "Iniciar la reversión de una compra de divisas cargada por error.",
+        "app_label": "transacciones",
+        "model": "transaccion",
+        "orden": 30,
+    },
+    {
+        "codename": "export_transacciones",
+        "name": "Puede exportar transacciones",
+        "description": "Permite generar archivos de exportación con el historial de transacciones.",
+        "example": "Descargar un CSV con las transacciones del último trimestre.",
+        "app_label": "transacciones",
+        "model": "transaccion",
+        "orden": 40,
+    },
+]
