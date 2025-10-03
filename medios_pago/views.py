@@ -14,8 +14,10 @@ import json
 
 from .models import MedioDePago, CampoMedioDePago, PaymentTemplate
 from .forms import MedioDePagoForm, create_campo_formset
+from clientes.decorators import require_permission
 
 
+@method_decorator(require_permission("medios_pago.view_catalogo_medios_pago", check_client_assignment=False), name="dispatch")
 class MedioDePagoListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     """
     Vista de listado para los Medios de Pago con filtros por estado.
@@ -62,6 +64,7 @@ class MedioDePagoListView(LoginRequiredMixin, PermissionRequiredMixin, ListView)
         return context
 
 
+@method_decorator(require_permission("medios_pago.manage_catalogo_medios_pago", check_client_assignment=False), name="dispatch")
 class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     """
     Vista para la creación de un nuevo Medio de Pago con templates dinámicos.
@@ -169,6 +172,7 @@ class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, Cr
         )
 
 
+@method_decorator(require_permission("medios_pago.manage_catalogo_medios_pago", check_client_assignment=False), name="dispatch")
 class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     """
     Vista para la edición de un Medio de Pago existente.
@@ -238,6 +242,7 @@ class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateV
         )
 
 
+@method_decorator(require_permission("medios_pago.manage_catalogo_medios_pago", check_client_assignment=False), name="dispatch")
 class MedioDePagoToggleActivoView(LoginRequiredMixin, PermissionRequiredMixin, View):
     """
     Vista para activar o desactivar un medio de pago.
@@ -256,6 +261,7 @@ class MedioDePagoToggleActivoView(LoginRequiredMixin, PermissionRequiredMixin, V
         return redirect(f"{reverse_lazy('medios_pago:lista')}?estado={estado_filtro}")
 
 
+@method_decorator(require_permission("medios_pago.manage_catalogo_medios_pago", check_client_assignment=False), name="dispatch")
 class MedioDePagoDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
     """
     Vista para eliminación real (no soft delete) de un medio de pago.
@@ -280,6 +286,7 @@ class MedioDePagoDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
         return redirect('medios_pago:lista')
 
 
+@method_decorator(require_permission("medios_pago.view_catalogo_medios_pago", check_client_assignment=False), name="dispatch")
 class TemplateDataView(LoginRequiredMixin, PermissionRequiredMixin, View):
     """
     Vista AJAX para obtener datos de un template específico.
@@ -306,6 +313,7 @@ class TemplateDataView(LoginRequiredMixin, PermissionRequiredMixin, View):
             return JsonResponse({'error': str(e)}, status=500)
 
 
+@method_decorator(require_permission("medios_pago.manage_catalogo_medios_pago", check_client_assignment=False), name="dispatch")
 class DeleteTemplateView(LoginRequiredMixin, PermissionRequiredMixin, View):
     """
     Vista AJAX para eliminar un template personalizado.
@@ -363,6 +371,7 @@ class DeleteTemplateView(LoginRequiredMixin, PermissionRequiredMixin, View):
             }, status=500)
 
 
+@method_decorator(require_permission("medios_pago.view_catalogo_medios_pago", check_client_assignment=False), name="dispatch")
 class TemplateListView(LoginRequiredMixin, PermissionRequiredMixin, View):
     """
     Vista AJAX para obtener la lista actualizada de templates.

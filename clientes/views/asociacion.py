@@ -3,17 +3,18 @@ Vistas para asociación cliente-usuario.
 """
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.contrib import messages
 
 from clientes.models import Cliente, AsignacionCliente
+from clientes.decorators import require_permission
 
 User = get_user_model()
 
 
 @login_required
-@user_passes_test(lambda u: u.is_staff)
+@require_permission("clientes.assign_clientes_operadores", check_client_assignment=False)
 def asociar_clientes_usuarios_view(request):
     """Vista para asociar clientes a usuarios del sistema."""
     if request.method == 'POST':
@@ -59,7 +60,7 @@ def asociar_clientes_usuarios_view(request):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_staff)
+@require_permission("clientes.assign_clientes_operadores", check_client_assignment=False)
 def listar_asociaciones(request):
     """
     Vista para listar y eliminar asociaciones de clientes con usuarios.

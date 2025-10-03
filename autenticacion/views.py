@@ -107,43 +107,29 @@ def verificar_correo(request, token):
 
 def login_view(request):
     """
-    Vista modificada para el inicio de sesión. 
-    Tras credenciales válidas, inicia el flujo de verificación MFA.
+    Vista de login SIN lógica de roles hardcodeada.
     """
-    # 1. Si el usuario ya está autenticado, redirigir
+    # 1. Si ya está autenticado, redirigir
     if request.user.is_authenticated:
-        # Usa tu vista de redirección por grupo
-        return redirect('redirect_dashboard')
+        return redirect('inicio')  # ← CAMBIADO: simplemente a inicio
         
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
 
-        # Autentica usando el EmailBackend
         user = authenticate(request, username=email, password=password)
 
         if user is not None:
             if user.is_active:
-                # ==========================================================
-                # === IMPLEMENTACIÓN MFA: REEMPLAZA EL LOGIN DIRECTO ===
-                # ==========================================================
-                
-                # 1. Almacenar el ID del usuario en la sesión para el proceso MFA
-                #    (No logueamos al usuario con login() todavía)
+                # Proceso MFA (mantener como está)
                 request.session['mfa_user_id'] = user.id
                 
-                # 2. Generar y enviar el primer código OTP
-                #    La función devuelve False si hay que esperar 1 min
                 if generate_and_send_otp(user, request):
-                     # 3. Redirigir a la página de verificación MFA
                     return redirect(reverse('mfa:mfa_verify'))
                 else:
-                    # Si falla por tiempo de espera (genera_and_send_otp devuelve False)
-                    # El mensaje de advertencia ya fue añadido. Limpiamos sesión temporal
                     if 'mfa_user_id' in request.session:
                         del request.session['mfa_user_id']
                     return render(request, 'login.html') 
-
             else:
                 messages.error(request, 'Tu cuenta no ha sido activada. Revisa tu correo.')
         else:

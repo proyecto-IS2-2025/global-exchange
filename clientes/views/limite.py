@@ -3,7 +3,8 @@ Vistas para gestión de límites diarios y mensuales.
 """
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils.decorators import method_decorator
 from django.views.generic import UpdateView
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -12,21 +13,25 @@ from datetime import datetime, time
 
 from clientes.models import LimiteDiario, LimiteMensual
 from clientes.forms import LimiteDiarioForm, LimiteMensualForm
+from clientes.decorators import require_permission
 
 
 @login_required
+@require_permission("clientes.view_limites_operacion", check_client_assignment=False)
 def lista_limites_diarios(request):
     limites = LimiteDiario.objects.all()
     return render(request, "clientes/limites_diarios.html", {"limites": limites})
 
 
 @login_required
+@require_permission("clientes.view_limites_operacion", check_client_assignment=False)
 def lista_limites_mensuales(request):
     limites = LimiteMensual.objects.all()
     return render(request, "clientes/limites_mensuales.html", {"limites": limites})
 
 
 @login_required
+@require_permission("clientes.manage_limites_operacion", check_client_assignment=False)
 def crear_limite_diario(request):
     if request.method == "POST":
         form = LimiteDiarioForm(request.POST)
@@ -51,6 +56,7 @@ def crear_limite_diario(request):
 
 
 @login_required
+@require_permission("clientes.manage_limites_operacion", check_client_assignment=False)
 def crear_limite_mensual(request):
     if request.method == "POST":
         form = LimiteMensualForm(request.POST)
@@ -64,7 +70,8 @@ def crear_limite_mensual(request):
     return render(request, "clientes/nuevo_limite_mensual.html", {"form": form})
 
 
-class LimiteDiarioUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+@method_decorator(require_permission("clientes.manage_limites_operacion", check_client_assignment=False), name="dispatch")
+class LimiteDiarioUpdateView(LoginRequiredMixin, UpdateView):
     model = LimiteDiario
     form_class = LimiteDiarioForm 
     template_name = 'clientes/editar_limite_diario.html'
@@ -74,7 +81,8 @@ class LimiteDiarioUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         return self.request.user.is_staff
 
 
-class LimiteMensualUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+@method_decorator(require_permission("clientes.manage_limites_operacion", check_client_assignment=False), name="dispatch")
+class LimiteMensualUpdateView(LoginRequiredMixin, UpdateView):
     model = LimiteMensual
     form_class = LimiteMensualForm
     template_name = 'clientes/editar_limite_mensual.html'

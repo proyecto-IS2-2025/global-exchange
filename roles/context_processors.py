@@ -1,57 +1,44 @@
-# users/context_processors.py
+# roles/context_processors.py
+from .utils import es_staff, obtener_tipo_usuario
+
 def grupo_usuario(request):
-    grupo = None
-    grupo_admin = grupo_operador = grupo_cliente = False
-
-    if request.user.is_authenticated:
-        grupos = list(request.user.groups.values_list('name', flat=True))
-        if 'admin' in grupos:
-            grupo = 'admin'
-            grupo_admin = True
-        elif 'operador' in grupos:
-            grupo = 'operador'
-            grupo_operador = True
-        elif 'cliente' in grupos:
-            grupo = 'cliente'
-            grupo_cliente = True
-
+    """
+    Context processor que inyecta información dinámica del usuario.
+    """
+    if not request.user.is_authenticated:
+        return {
+            'usuario_es_staff': False,
+            'usuario_es_cliente': False,
+            'tipo_usuario': 'anonimo',
+            'grupos_usuario': [],
+            
+            # Mantener por compatibilidad temporal
+            'grupo_admin': False,
+            'grupo_operador': False,
+            'grupo_cliente': False,
+        }
+    
+    usuario_es_staff = es_staff(request.user)
+    grupos = list(request.user.groups.values_list('name', flat=True))
+    
     return {
-        'grupo_usuario': grupo,
-        'grupo_admin': grupo_admin,
-        'grupo_operador': grupo_operador,
-        'grupo_cliente': grupo_cliente,
+        # NUEVAS variables dinámicas
+        'usuario_es_staff': usuario_es_staff,
+        'usuario_es_cliente': not usuario_es_staff,
+        'tipo_usuario': obtener_tipo_usuario(request.user),
+        'grupos_usuario': grupos,
+        
+        # MANTENER temporalmente para no romper templates existentes
+        # TODO: Eliminar una vez migrados todos los templates
+        'grupo_admin': 'admin' in grupos,
+        'grupo_operador': 'operador' in grupos,
+        'grupo_cliente': 'cliente' in grupos,
     }
 
-"""
-def grupo_usuario(request):
-
-    Procesador de contexto que expone el nombre del primer grupo del usuario autenticado
-    en el contexto de la plantilla.
-
-    Esto permite acceder al nombre del grupo directamente en las plantillas HTML
-    como ``{{ grupo_usuario }}``.
-
-    :param request: Objeto de solicitud HTTP.
-    :type request: :class:`~django.http.HttpRequest`
-    :return: Un diccionario de contexto que contiene el nombre del grupo del usuario.
-    :rtype: dict
-
-    if request.user.is_authenticated:
-        grupos = request.user.groups.all()
-        return {'grupo_usuario': grupos[0].name if grupos else None}
-    return {'grupo_usuario': None}
-# users/context_processors.py
-"""
 
 def grupos_context(request):
-    grupo_admin = grupo_operador = grupo_cliente = False
-    if request.user.is_authenticated:
-        grupos = list(request.user.groups.values_list('name', flat=True))
-        grupo_admin = 'admin' in grupos
-        grupo_operador = 'operador' in grupos
-        grupo_cliente = 'cliente' in grupos
-    return {
-        'grupo_admin': grupo_admin,
-        'grupo_operador': grupo_operador,
-        'grupo_cliente': grupo_cliente,
-    }
+    """
+    Deprecated - Mantener vacío por compatibilidad.
+    Usar grupo_usuario() en su lugar.
+    """
+    return {}

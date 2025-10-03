@@ -2,23 +2,22 @@
 Vistas para gestión de descuentos.
 """
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView, UpdateView
 from django.urls import reverse_lazy
 
 from clientes.models import Descuento, HistorialDescuentos, Segmento
 from clientes.forms import DescuentoForm
+from clientes.decorators import require_permission
 
 
 @method_decorator(login_required, name='dispatch')
-class DescuentoListView(UserPassesTestMixin, ListView):
+@method_decorator(require_permission("clientes.view_descuentos_segmento", check_client_assignment=False), name='dispatch')
+class DescuentoListView(LoginRequiredMixin, ListView):
     model = Descuento
     template_name = 'descuentos/lista_descuentos.html'
     context_object_name = 'descuentos'
-
-    def test_func(self):
-        return self.request.user.is_staff or self.request.user.is_superuser
 
     def get_queryset(self):
         for segmento in Segmento.objects.all():
@@ -30,14 +29,12 @@ class DescuentoListView(UserPassesTestMixin, ListView):
 
 
 @method_decorator(login_required, name='dispatch')
-class DescuentoUpdateView(UserPassesTestMixin, UpdateView):
+@method_decorator(require_permission("clientes.manage_descuentos_segmento", check_client_assignment=False), name='dispatch')
+class DescuentoUpdateView(LoginRequiredMixin, UpdateView):
     model = Descuento
     form_class = DescuentoForm
     template_name = 'descuentos/editar_descuento.html'
     success_url = reverse_lazy('clientes:lista_descuentos')
-
-    def test_func(self):
-        return self.request.user.is_staff or self.request.user.is_superuser
 
     def form_valid(self, form):
         anterior_descuento = self.get_object().porcentaje_descuento
@@ -55,10 +52,8 @@ class DescuentoUpdateView(UserPassesTestMixin, UpdateView):
 
 
 @method_decorator(login_required, name='dispatch')
-class HistorialDescuentoListView(UserPassesTestMixin, ListView):
+@method_decorator(require_permission("clientes.view_historial_descuentos", check_client_assignment=False), name='dispatch')
+class HistorialDescuentoListView(LoginRequiredMixin, ListView):
     model = HistorialDescuentos
     template_name = 'descuentos/historial_descuentos.html'
     context_object_name = 'historial_descuentos'
-
-    def test_func(self):
-        return self.request.user.is_staff or self.request.user.is_superuser

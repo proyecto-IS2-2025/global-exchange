@@ -56,10 +56,8 @@ def mfa_verify_view(request):
             # Éxito: Iniciar sesión, limpiar sesión MFA y redirigir
             login(request, user)
             del request.session['mfa_user_id']
-            messages.success(request, f"¡Inicio de sesión exitoso!")
-            
-            # Usar tu redirección existente por grupo
-            return redirect('redirect_dashboard')
+            messages.success(request, "¡Inicio de sesión exitoso!")
+            return redirect('inicio')
         else:
             messages.error(request, "El código es incorrecto o ha expirado.")
 

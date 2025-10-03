@@ -2,8 +2,9 @@
 Vistas para la gestión de clientes.
 """
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.utils.decorators import method_decorator
 from django.views.generic import ListView, UpdateView
 from django.urls import reverse_lazy
 from django.contrib import messages
@@ -12,16 +13,18 @@ from django.db.models import Q
 from clientes.models import Cliente, AsignacionCliente, Segmento
 from clientes.forms import ClienteForm
 import logging
+from clientes.decorators import require_permission
 
 logger = logging.getLogger(__name__)
 
 
+@method_decorator(require_permission("clientes.view_all_clientes", check_client_assignment=False), name="dispatch")
 class ClienteListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Cliente
     template_name = "clientes/lista_clientes.html"
     context_object_name = "clientes"
     paginate_by = 20
-    permission_required = "clientes.view_cliente"
+    permission_required = "clientes.view_all_clientes"
 
     def get_queryset(self):
         qs = Cliente.objects.all().select_related("segmento")
@@ -41,6 +44,7 @@ class ClienteListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         return context
 
 
+@method_decorator(require_permission("clientes.view_all_clientes", check_client_assignment=False), name="dispatch")
 class ClienteUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = Cliente
     form_class = ClienteForm
@@ -50,7 +54,7 @@ class ClienteUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView)
 
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+@require_permission("clientes.view_all_clientes", check_client_assignment=False)
 def crear_cliente_view(request):
     """Vista para crear un nuevo cliente."""
     if request.method == 'POST':

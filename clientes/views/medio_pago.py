@@ -15,15 +15,17 @@ from decimal import Decimal
 import logging
 import csv
 import re
-
+from django.utils.decorators import method_decorator
 from medios_pago.models import MedioDePago
 from clientes.models import Cliente, ClienteMedioDePago, HistorialClienteMedioDePago, AsignacionCliente
 from clientes.forms import ClienteMedioDePagoCompleteForm, SelectMedioDePagoForm
 from .helpers import get_cliente_activo
+from clientes.decorators import require_permission
 
 logger = logging.getLogger(__name__)
 
 
+@method_decorator(require_permission("clientes.view_medios_pago"), name="dispatch")
 class ClienteMedioDePagoListView(LoginRequiredMixin, ListView):
     """
     Vista mejorada para listar los medios de pago asociados al cliente activo
@@ -95,6 +97,7 @@ class ClienteMedioDePagoListView(LoginRequiredMixin, ListView):
 
 
 @login_required
+@require_permission("clientes.manage_medios_pago")
 def select_medio_pago_view(request):
     """
     Vista mejorada para seleccionar el tipo de medio de pago antes de agregar
@@ -392,6 +395,7 @@ class ClienteMedioDePagoUpdateView(LoginRequiredMixin, UpdateView):
         return reverse('clientes:medios_pago_cliente')
 
 
+@method_decorator(require_permission("clientes.manage_medios_pago"), name="dispatch")
 class ClienteMedioDePagoToggleView(LoginRequiredMixin, View):
     """
     Vista mejorada para activar/desactivar un medio de pago del cliente
@@ -455,6 +459,7 @@ class ClienteMedioDePagoToggleView(LoginRequiredMixin, View):
 
 
 @login_required
+@require_permission("clientes.view_medios_pago")
 def medio_pago_detail_ajax(request, pk):
     """
     Vista AJAX mejorada para obtener detalles de un medio de pago
@@ -520,6 +525,7 @@ def medio_pago_detail_ajax(request, pk):
         return JsonResponse({'error': 'Error interno del servidor'}, status=500)
 
 
+@method_decorator(require_permission("clientes.manage_medios_pago"), name="dispatch")
 class ClienteMedioDePagoDeleteView(LoginRequiredMixin, View):
     """
     Vista mejorada para eliminar un medio de pago del cliente
@@ -589,6 +595,7 @@ class ClienteMedioDePagoDeleteView(LoginRequiredMixin, View):
 
 
 @login_required
+@require_permission("clientes.view_medios_pago")
 def dashboard_medios_pago(request):
     """
     Vista dashboard con estadísticas generales de medios de pago
@@ -639,6 +646,7 @@ def dashboard_medios_pago(request):
 
 
 @login_required
+@require_permission("clientes.exportar_datos_clientes")
 def exportar_medios_pago(request):
     """
     Vista para exportar medios de pago del cliente (CSV)
@@ -696,6 +704,7 @@ def exportar_medios_pago(request):
 
 
 @login_required
+@require_permission("clientes.manage_medios_pago")
 def verificar_duplicados_ajax(request):
     """Vista AJAX para verificar posibles duplicados de medios de pago"""
     if request.method != 'POST':
@@ -845,6 +854,7 @@ def to_serializable(value):
     return value
 
 
+@method_decorator(require_permission("clientes.view_medios_pago"), name="dispatch")
 class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
     """Vista para seleccionar medio de acreditación para operaciones de venta"""
     template_name = 'operaciones/seleccionar_medio_acreditacion.html'
@@ -910,6 +920,7 @@ class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
         return JsonResponse({'error': 'Acción no válida'}, status=400)
 
 
+@method_decorator(require_permission("clientes.view_medios_pago"), name="dispatch")
 class SeleccionarMedioPagoView(LoginRequiredMixin, View):
     """Vista para seleccionar medio de pago para operaciones de compra"""
     template_name = 'operaciones/seleccionar_medio_pago.html'

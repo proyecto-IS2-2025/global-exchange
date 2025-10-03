@@ -1,73 +1,83 @@
-{% if grupo_operador %}
-  <h2 class="h4 mb-4 text-center">Bienvenido Operador</h2>
-  <p class="text-muted text-center">Accede al panel de operaciones desde el menú superior.</p>
-{% elif grupo_admin %}
-  <h2 class="h4 mb-4 text-center">Bienvenido Administrador</h2>
-  <p class="text-muted text-center">Accede al panel de administración desde las opciones de abajo.</p>
+{# Menu para staff - Ya no verifica grupo_admin vs grupo_operador #}
 
-  <div class="row row-cols-2 row-cols-md-4 g-4 mt-4 justify-content-center">
-    <div class="col">
-      <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-        <div class="display-3 mb-3"><i class="fas fa-users"></i></div>
-        <h6 class="fw-bold">Ver Clientes</h6>
-        <a href="{% url 'clientes:lista_clientes' %}" class="stretched-link"></a>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-        <div class="display-3 mb-3"><i class="fas fa-user-friends"></i></div>
-        <h6 class="fw-bold">Asignar Cliente a Usuario</h6>
-        <a href="{% url 'clientes:asociar_clientes_usuarios' %}" class="stretched-link"></a>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-        <div class="display-3 mb-3"><i class="fas fa-shield-alt"></i></div>
-        <h6 class="fw-bold">Roles</h6>
-        <a href="{% url 'group_list' %}" class="stretched-link"></a>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-        <div class="display-3 mb-3"><i class="fas fa-key"></i></div>
-        <h6 class="fw-bold">Permisos</h6>
-        <a href="{% url 'permission_create' %}" class="stretched-link"></a>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-        <div class="display-3 mb-3"><i class="fas fa-percent"></i></div>
-        <h6 class="fw-bold">Descuentos</h6>
-        <a href="{% url 'clientes:lista_descuentos' %}" class="stretched-link"></a>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-        <div class="display-3 mb-3"><i class="fas fa-credit-card"></i></div>
-        <h6 class="fw-bold">Medios de Cobro</h6>
-        <a href="{% url 'medios_pago:lista' %}" class="stretched-link"></a>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-        <div class="display-3 mb-3"><i class="fas fa-coins"></i></div>
-        <h6 class="fw-bold">Divisas</h6>
-        <a href="{% url 'divisas:lista' %}" class="stretched-link"></a>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-        <div class="display-3 mb-3"><i class="fas fa-rocket"></i></div>
-        <h6 class="fw-bold">Visualizador Tasas</h6>
-        <a href="{% url 'divisas:visualizador_tasas_admin' %}" class="stretched-link"></a>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-        <div class="display-3 mb-3"><i class="fas fa-arrows-rotate"></i></div>
-        <h6 class="fw-bold">Historial Transacciones</h6>
-        <a href="{% url 'transacciones:historial_admin' %}" class="stretched-link"></a>
-      </div>
+<h2 class="h4 mb-4 text-center">Panel de {{ tipo_usuario }}</h2>
+<p class="text-muted text-center">Gestiona el sistema desde las opciones de abajo.</p>
+
+<div class="row row-cols-2 row-cols-md-4 g-4 mt-4 justify-content-center">
+  
+  {# TODO PERMISOS: Cada tarjeta se envolverá con {% if perms.xxx %} #}
+  {# Por ahora, todas las tarjetas se muestran para cualquier staff #}
+  
+  <div class="col">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
+      <div class="display-3 mb-3"><i class="fas fa-users"></i></div>
+      <h6 class="fw-bold">Ver Clientes</h6>
+      <a href="{% url 'clientes:lista_clientes' %}" class="stretched-link"></a>
     </div>
   </div>
-{% endif %}
+  
+  <div class="col">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
+      <div class="display-3 mb-3"><i class="fas fa-user-friends"></i></div>
+      <h6 class="fw-bold">Asignar Cliente</h6>
+      <a href="{% url 'clientes:asociar_clientes_usuarios' %}" class="stretched-link"></a>
+    </div>
+  </div>
+  
+  <div class="col">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
+      <div class="display-3 mb-3"><i class="fas fa-shield-alt"></i></div>
+      <h6 class="fw-bold">Roles</h6>
+      <a href="{% url 'group_list' %}" class="stretched-link"></a>
+    </div>
+  </div>
+  
+  <div class="col">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
+      <div class="display-3 mb-3"><i class="fas fa-key"></i></div>
+      <h6 class="fw-bold">Permisos</h6>
+      <a href="{% url 'permission_create' %}" class="stretched-link"></a>
+    </div>
+  </div>
+  
+  <div class="col">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
+      <div class="display-3 mb-3"><i class="fas fa-percent"></i></div>
+      <h6 class="fw-bold">Descuentos</h6>
+      <a href="{% url 'clientes:lista_descuentos' %}" class="stretched-link"></a>
+    </div>
+  </div>
+  
+  <div class="col">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
+      <div class="display-3 mb-3"><i class="fas fa-credit-card"></i></div>
+      <h6 class="fw-bold">Medios de Cobro</h6>
+      <a href="{% url 'medios_pago:lista' %}" class="stretched-link"></a>
+    </div>
+  </div>
+  
+  <div class="col">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
+      <div class="display-3 mb-3"><i class="fas fa-coins"></i></div>
+      <h6 class="fw-bold">Divisas</h6>
+      <a href="{% url 'divisas:lista' %}" class="stretched-link"></a>
+    </div>
+  </div>
+  
+  <div class="col">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
+      <div class="display-3 mb-3"><i class="fas fa-rocket"></i></div>
+      <h6 class="fw-bold">Tasas</h6>
+      <a href="{% url 'divisas:visualizador_tasas_admin' %}" class="stretched-link"></a>
+    </div>
+  </div>
+  
+  <div class="col">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
+      <div class="display-3 mb-3"><i class="fas fa-arrows-rotate"></i></div>
+      <h6 class="fw-bold">Historial</h6>
+      <a href="{% url 'transacciones:historial_admin' %}" class="stretched-link"></a>
+    </div>
+  </div>
+  
+</div>

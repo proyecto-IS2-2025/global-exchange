@@ -6,7 +6,7 @@ from django.contrib.auth.views import LogoutView
 from autenticacion.views import registro_usuario
 from autenticacion.views import verificar_correo
 from autenticacion.views import login_view
-from interfaz.views import redireccion_por_grupo
+#from interfaz.views import redireccion_por_grupo
 
 
 # interfaz/urls.py
@@ -20,5 +20,5 @@ urlpatterns = [
 
     # Opciones admin
     # Redirección automática según grupo
-    path("redirect-dashboard/", views.redireccion_por_grupo, name="redirect_dashboard"),
+    #path("redirect-dashboard/", views.redireccion_por_grupo, name="redirect_dashboard"),
 ]
