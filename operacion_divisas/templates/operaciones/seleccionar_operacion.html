@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Seleccionar Tipo de Operación{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <!-- Encabezado mejorado -->
+      <div class="text-center mb-5">
+        <h2 class="display-5 fw-bold text-primary mb-3">Operaciones con Divisas</h2>
+        <p class="lead text-muted">Selecciona el tipo de operación que deseas realizar</p>
+        <div class="divider-custom">
+          <div class="divider-custom-line"></div>
+          <div class="divider-custom-icon">
+            <i class="fas fa-exchange-alt"></i>
+          </div>
+          <div class="divider-custom-line"></div>
+        </div>
+      </div>
+
+      <!-- Tarjetas de operaciones -->
+      <div class="row g-4">
+        <!-- Tarjeta Compra -->
+        <div class="col-md-6">
+          <div class="card operation-card h-100 border-0 shadow-lg hover-card">
+            <div class="card-body text-center p-4">
+              <div class="icon-wrapper mb-4">
+                <div class="operation-icon bg-success bg-gradient">
+                  <i class="fas fa-arrow-down text-white"></i>
+                </div>
+              </div>
+              <h3 class="card-title h4 fw-bold text-success">Comprar Divisas</h3>
+              <p class="card-text text-muted mb-4">
+                Adquiere divisas extranjeras al mejor precio del mercado.
+              </p>
+              <ul class="list-unstyled mb-4">
+                <li class="mb-2">
+                  <i class="fas fa-check-circle text-success me-2"></i>
+                  Tasas competitivas
+                </li>
+                <li class="mb-2">
+                  <i class="fas fa-check-circle text-success me-2"></i>
+                  Proceso seguro
+                </li>
+                <li class="mb-0">
+                  <i class="fas fa-check-circle text-success me-2"></i>
+                  Confirmación inmediata
+                </li>
+              </ul>
+              <a href="{% url 'operacion_divisas:compra' %}" class="btn btn-success btn-lg w-100 py-3 fw-bold">
+                <i class="fas fa-shopping-cart me-2"></i>Iniciar Compra
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjeta Venta -->
+        <div class="col-md-6">
+          <div class="card operation-card h-100 border-0 shadow-lg hover-card">
+            <div class="card-body text-center p-4">
+              <div class="icon-wrapper mb-4">
+                <div class="operation-icon bg-danger bg-gradient">
+                  <i class="fas fa-arrow-up text-white"></i>
+                </div>
+              </div>
+              <h3 class="card-title h4 fw-bold text-danger">Vender Divisas</h3>
+              <p class="card-text text-muted mb-4">
+                Convierte tus divisas extranjeras a guaraníes rápidamente.
+              </p>
+              <ul class="list-unstyled mb-4">
+                <li class="mb-2">
+                  <i class="fas fa-check-circle text-danger me-2"></i>
+                  Liquidez inmediata
+                </li>
+                <li class="mb-2">
+                  <i class="fas fa-check-circle text-danger me-2"></i>
+                  Transparencia total
+                </li>
+                <li class="mb-0">
+                  <i class="fas fa-check-circle text-danger me-2"></i>
+                  Proceso ágil y fácil
+                </li>
+              </ul>
+              <a href="{% url 'operacion_divisas:venta' %}" class="btn btn-danger btn-lg w-100 py-3 fw-bold">
+                <i class="fas fa-dollar-sign me-2"></i>Iniciar Venta
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+  .operation-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 15px;
+    overflow: hidden;
+  }
+  
+  .hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.15) !important;
+  }
+  
+  .operation-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-size: 1.8rem;
+  }
+  
+  .icon-wrapper {
+    position: relative;
+  }
+  
+  .icon-wrapper::after {
+    content: '';
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.03);
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 0;
+  }
+  
+  .divider-custom {
+    margin: 1.25rem 0 1.5rem;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .divider-custom-line {
+    width: 100%;
+    max-width: 7rem;
+    height: 0.25rem;
+    background-color: #2c3e50;
+    border-radius: 1rem;
+  }
+  
+  .divider-custom-line:first-child {
+    margin-right: 1rem;
+  }
+  
+  .divider-custom-line:last-child {
+    margin-left: 1rem;
+  }
+  
+  .divider-custom-icon {
+    color: #2c3e50;
+    font-size: 1.5rem;
+  }
+  
+  .btn {
+    border-radius: 10px;
+    transition: all 0.3s ease;
+  }
+  
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  }
+</style>
+{% endblock %}
