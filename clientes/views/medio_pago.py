@@ -857,7 +857,7 @@ def to_serializable(value):
 @method_decorator(require_permission("clientes.view_medios_pago"), name="dispatch")
 class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
     """Vista para seleccionar medio de acreditación para operaciones de venta"""
-    template_name = 'operaciones/seleccionar_medio_acreditacion.html'
+    template_name = 'operaciones/venta/seleccionar_medio_acreditacion.html'
 
     def get(self, request):
         cliente = get_cliente_activo(request)
@@ -904,7 +904,7 @@ class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
 
                 return JsonResponse({
                     'success': True,
-                    'redirect_url': reverse('divisas:venta_sumario'),
+                    'redirect_url': reverse('operacion_divisas:venta_sumario'),
                 })
 
             except ClienteMedioDePago.DoesNotExist:
@@ -914,7 +914,7 @@ class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
             request.session.pop('medio_seleccionado', None)
             return JsonResponse({
                 'success': True,
-                'redirect_url': reverse('divisas:venta_medios'),
+                'redirect_url': reverse('operacion_divisas:venta_medios'),
             })
 
         return JsonResponse({'error': 'Acción no válida'}, status=400)
@@ -923,7 +923,7 @@ class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
 @method_decorator(require_permission("clientes.view_medios_pago"), name="dispatch")
 class SeleccionarMedioPagoView(LoginRequiredMixin, View):
     """Vista para seleccionar medio de pago para operaciones de compra"""
-    template_name = 'operaciones/seleccionar_medio_pago.html'
+    template_name = 'operaciones/compra/seleccionar_medio_pago.html'
 
     def get(self, request):
         cliente = get_cliente_activo(request)
@@ -970,7 +970,7 @@ class SeleccionarMedioPagoView(LoginRequiredMixin, View):
 
                 return JsonResponse({
                     'success': True,
-                    'redirect_url': reverse('divisas:compra_sumario'),
+                    'redirect_url': reverse('operacion_divisas:compra_sumario'),
                 })
 
             except ClienteMedioDePago.DoesNotExist:

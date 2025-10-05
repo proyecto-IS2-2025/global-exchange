@@ -6,7 +6,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
 from divisas.models import Divisa, TasaCambio, CotizacionSegmento
 from clientes.models import Cliente, AsignacionCliente, Descuento, Segmento, ClienteMedioDePago
-from divisas.forms import DivisaForm, TasaCambioForm, VentaDivisaForm
+from divisas.forms import DivisaForm, TasaCambioForm
+from .forms import VentaDivisaForm, CompraDivisaForm
 from django.db.models import Max
 from django.db.models import OuterRef, Subquery
 from django.contrib.auth.decorators import login_required
@@ -22,7 +23,7 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 import logging
 from django.contrib import messages
 from divisas.views import redondear
-from divisas.forms import CompraDivisaForm
+
 
 
 
