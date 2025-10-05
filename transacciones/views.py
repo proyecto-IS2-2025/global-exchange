@@ -366,7 +366,7 @@ def crear_transaccion_desde_compra(request):
 # ═══════════════════════════════════════════════════════════════════
 
 @login_required
-@require_permission("transacciones.view_transaccion", check_client_assignment=True)
+@require_permission("transacciones.view_transacciones_asignadas", check_client_assignment=True)
 def confirmacion_operacion(request, numero_transaccion):
     """
     🔐 PROTEGIDA: transacciones.view_transaccion + validación cliente asignado
@@ -573,11 +573,11 @@ def historial_admin(request):
     return render(request, 'historial_admin.html', context)
 
 
-@method_decorator(require_permission("transacciones.view_transaccion", check_client_assignment=True), name="dispatch")
+@method_decorator(require_permission("transacciones.view_transacciones_asignadas", check_client_assignment=True), name="dispatch")
 class DetalleTransaccionView(LoginRequiredMixin, DetailView):
     """
-    🔐 PROTEGIDA: transacciones.view_transaccion + validación cliente asignado
-    
+    🔐 PROTEGIDA: transacciones.view_transacciones_asignadas + validación cliente asignado
+
     Vista detallada de una transacción.
     El decorador valida automáticamente los permisos y asignaciones.
     """

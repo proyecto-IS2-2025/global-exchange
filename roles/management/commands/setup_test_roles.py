@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group, Permission
 from django.db import transaction
 from django.contrib.contenttypes.models import ContentType
-from roles.models import RoleStatus  # ✅ IMPORTAR
+from roles.models import RoleStatus
 
 
 class Command(BaseCommand):
@@ -44,7 +44,7 @@ class Command(BaseCommand):
 
     def _ensure_role_status(self):
         """
-        ✅ NUEVO: Asegura que todos los grupos tengan RoleStatus
+        ✅ Asegura que todos los grupos tengan RoleStatus
         """
         self.stdout.write(self.style.HTTP_INFO('\n🔄 Verificando RoleStatus...'))
         
@@ -124,22 +124,20 @@ class Command(BaseCommand):
         """Configurar permisos para ADMINISTRADOR"""
         codenames = [
             # ═══════════════════════════════════════════════════════
-            # USUARIOS (5 permisos personalizados)
+            # USUARIOS
             # ═══════════════════════════════════════════════════════
             'manage_usuarios',
             'view_all_usuarios',
             'manage_usuario_roles',
             'activate_deactivate_usuarios',
             'reset_usuario_password',
-            
-            # Permisos nativos de usuarios
             'view_customuser',
             'add_customuser',
             'change_customuser',
             'delete_customuser',
             
             # ═══════════════════════════════════════════════════════
-            # CLIENTES (12 permisos personalizados)
+            # CLIENTES
             # ═══════════════════════════════════════════════════════
             'view_all_clientes',
             'view_assigned_clientes',
@@ -153,8 +151,6 @@ class Command(BaseCommand):
             'view_descuentos_segmento',
             'manage_descuentos_segmento',
             'view_historial_descuentos',
-            
-            # Permisos nativos de clientes
             'view_cliente',
             'add_cliente',
             'change_cliente',
@@ -187,7 +183,7 @@ class Command(BaseCommand):
             'delete_limitemensual',
             
             # ═══════════════════════════════════════════════════════
-            # TRANSACCIONES (7 permisos personalizados)
+            # TRANSACCIONES
             # ═══════════════════════════════════════════════════════
             'view_transacciones_globales',
             'view_transacciones_asignadas',
@@ -196,8 +192,6 @@ class Command(BaseCommand):
             'cancel_propias_transacciones',
             'view_historial_transacciones',
             'export_transacciones',
-            
-            # Permisos nativos de transacciones
             'view_transaccion',
             'add_transaccion',
             'change_transaccion',
@@ -205,14 +199,16 @@ class Command(BaseCommand):
             'view_historialtransaccion',
             
             # ═══════════════════════════════════════════════════════
-            # DIVISAS (3 permisos personalizados)
+            # DIVISAS
             # ═══════════════════════════════════════════════════════
             'view_cotizaciones_segmento',
             'manage_cotizaciones_segmento',
             'realizar_operacion',
-            
-            # Permisos nativos de divisas
-            'view_divisa',
+            'manage_divisas',           # ✅ Permiso personalizado
+            'view_divisas',             # ✅ Permiso personalizado
+            'manage_tasas_cambio',      # ✅ Permiso personalizado
+            'view_tasas_cambio',        # ✅ Permiso personalizado
+            'view_divisa',              # Permiso nativo
             'add_divisa',
             'change_divisa',
             'delete_divisa',
@@ -226,12 +222,10 @@ class Command(BaseCommand):
             'delete_cotizacionsegmento',
             
             # ═══════════════════════════════════════════════════════
-            # MEDIOS DE PAGO (2 permisos personalizados)
+            # MEDIOS DE PAGO
             # ═══════════════════════════════════════════════════════
             'view_catalogo_medios_pago',
             'manage_catalogo_medios_pago',
-            
-            # Permisos nativos de medios de pago
             'view_mediodepago',
             'add_mediodepago',
             'change_mediodepago',
@@ -259,8 +253,6 @@ class Command(BaseCommand):
             'view_limites_operacion',
             'view_medios_pago',
             'view_descuentos_segmento',
-            
-            # Permisos nativos necesarios
             'view_cliente',
             'view_clientemediodepago',
             'view_segmento',
@@ -274,8 +266,6 @@ class Command(BaseCommand):
             'view_transacciones_asignadas',
             'manage_estados_transacciones',
             'view_historial_transacciones',
-            
-            # Permisos nativos necesarios
             'view_transaccion',
             'add_transaccion',
             'change_transaccion',
@@ -286,9 +276,10 @@ class Command(BaseCommand):
             # ═══════════════════════════════════════════════════════
             'realizar_operacion',
             'view_cotizaciones_segmento',
-            
-            # Permisos nativos necesarios
-            'view_divisa',
+            'view_divisas',             # ✅ Permiso personalizado
+            'manage_tasas_cambio',      # ✅ Permiso personalizado
+            'view_tasas_cambio',        # ✅ Permiso personalizado
+            'view_divisa',              # Permiso nativo
             'view_tasacambio',
             'view_cotizacionsegmento',
             
@@ -296,8 +287,6 @@ class Command(BaseCommand):
             # MEDIOS DE PAGO
             # ═══════════════════════════════════════════════════════
             'view_catalogo_medios_pago',
-            
-            # Permisos nativos necesarios
             'view_mediodepago',
         ]
         
@@ -316,16 +305,12 @@ class Command(BaseCommand):
             # ═══════════════════════════════════════════════════════
             'view_transacciones_asignadas',
             'cancel_propias_transacciones',
-            
-            # Permisos nativos necesarios
             'view_transaccion',
             
             # ═══════════════════════════════════════════════════════
             # MEDIOS DE PAGO (SOLO LOS PROPIOS)
             # ═══════════════════════════════════════════════════════
             'view_medios_pago',
-            
-            # Permisos nativos necesarios
             'view_clientemediodepago',
             'view_mediodepago',
             
@@ -333,8 +318,6 @@ class Command(BaseCommand):
             # COTIZACIONES
             # ═══════════════════════════════════════════════════════
             'view_cotizaciones_segmento',
-            
-            # Permisos nativos necesarios
             'view_divisa',
             'view_tasacambio',
             'view_cotizacionsegmento',
@@ -343,8 +326,6 @@ class Command(BaseCommand):
             # DESCUENTOS (CONSULTA)
             # ═══════════════════════════════════════════════════════
             'view_descuentos_segmento',
-            
-            # Permisos nativos necesarios
             'view_segmento',
             'view_descuento',
         ]
@@ -358,8 +339,6 @@ class Command(BaseCommand):
             # COTIZACIONES PÚBLICAS (SOLO LECTURA)
             # ═══════════════════════════════════════════════════════
             'view_cotizaciones_segmento',
-            
-            # Permisos nativos necesarios
             'view_divisa',
             'view_tasacambio',
             'view_cotizacionsegmento',
@@ -377,8 +356,6 @@ class Command(BaseCommand):
             'view_limites_operacion',
             'view_descuentos_segmento',
             'view_historial_descuentos',
-            
-            # Permisos nativos necesarios
             'view_cliente',
             'view_asignacioncliente',
             'view_clientemediodepago',
@@ -395,8 +372,6 @@ class Command(BaseCommand):
             'view_transacciones_globales',
             'view_historial_transacciones',
             'export_transacciones',
-            
-            # Permisos nativos necesarios
             'view_transaccion',
             'view_historialtransaccion',
             
@@ -404,9 +379,9 @@ class Command(BaseCommand):
             # DIVISAS (SOLO LECTURA)
             # ═══════════════════════════════════════════════════════
             'view_cotizaciones_segmento',
-            
-            # Permisos nativos necesarios
-            'view_divisa',
+            'view_divisas',             # ✅ Permiso personalizado
+            'view_tasas_cambio',        # ✅ Permiso personalizado
+            'view_divisa',              # Permiso nativo
             'view_tasacambio',
             'view_cotizacionsegmento',
             
@@ -414,16 +389,12 @@ class Command(BaseCommand):
             # MEDIOS DE PAGO (SOLO LECTURA)
             # ═══════════════════════════════════════════════════════
             'view_catalogo_medios_pago',
-            
-            # Permisos nativos necesarios
             'view_mediodepago',
             
             # ═══════════════════════════════════════════════════════
             # USUARIOS (SOLO LECTURA)
             # ═══════════════════════════════════════════════════════
             'view_all_usuarios',
-            
-            # Permisos nativos necesarios
             'view_customuser',
         ]
         

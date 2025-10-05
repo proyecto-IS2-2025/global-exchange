@@ -22,11 +22,11 @@ from clientes.decorators import require_permission  # ← AGREGAR ESTE IMPORT
 # VISTAS DE DIVISAS
 # ═══════════════════════════════════════════════════════════════════
 
-@method_decorator(require_permission("divisas.view_divisa", check_client_assignment=False), name="dispatch")
+@method_decorator(require_permission("divisas.view_divisas", check_client_assignment=False), name="dispatch")
 class DivisaListView(LoginRequiredMixin, ListView):  # ← ELIMINAR PermissionRequiredMixin
     """
-    🔐 PROTEGIDA: divisas.view_divisa
-    
+    🔐 PROTEGIDA: divisas.view_divisas
+
     Vista de lista para gestionar divisas del sistema.
     """
     model = Divisa
@@ -39,11 +39,11 @@ class DivisaListView(LoginRequiredMixin, ListView):  # ← ELIMINAR PermissionRe
         return Divisa.objects.all().order_by('-es_moneda_base', 'code')
 
 
-@method_decorator(require_permission("divisas.add_divisa", check_client_assignment=False), name="dispatch")
+@method_decorator(require_permission("divisas.manage_divisas", check_client_assignment=False), name="dispatch")
 class DivisaCreateView(LoginRequiredMixin, CreateView):  # ← ELIMINAR PermissionRequiredMixin
     """
-    🔐 PROTEGIDA: divisas.add_divisa
-    
+    🔐 PROTEGIDA: divisas.manage_divisas
+
     Vista para crear una nueva divisa.
     Asigna `is_active` a `False` por defecto al guardar la nueva divisa.
     """
@@ -60,11 +60,11 @@ class DivisaCreateView(LoginRequiredMixin, CreateView):  # ← ELIMINAR Permissi
         return redirect(self.success_url)
 
 
-@method_decorator(require_permission("divisas.change_divisa", check_client_assignment=False), name="dispatch")
+@method_decorator(require_permission("divisas.manage_divisas", check_client_assignment=False), name="dispatch")
 class DivisaUpdateView(LoginRequiredMixin, UpdateView):  # ← ELIMINAR PermissionRequiredMixin
     """
-    🔐 PROTEGIDA: divisas.change_divisa
-    
+    🔐 PROTEGIDA: divisas.manage_divisas
+
     Vista para editar una divisa existente.
     Bloquea la edición de la moneda base (PYG).
     """
@@ -81,11 +81,11 @@ class DivisaUpdateView(LoginRequiredMixin, UpdateView):  # ← ELIMINAR Permissi
         return super().dispatch(request, *args, **kwargs)
 
 
-@method_decorator(require_permission("divisas.change_divisa", check_client_assignment=False), name="dispatch")
+@method_decorator(require_permission("divisas.manage_divisas", check_client_assignment=False), name="dispatch")
 class DivisaToggleActivaView(LoginRequiredMixin, View):  # ← ELIMINAR PermissionRequiredMixin
     """
-    🔐 PROTEGIDA: divisas.change_divisa
-    
+    🔐 PROTEGIDA: divisas.manage_divisas
+
     Vista para activar/desactivar una divisa.
     Bloquea la desactivación de la moneda base (PYG).
     """
@@ -109,11 +109,11 @@ class DivisaToggleActivaView(LoginRequiredMixin, View):  # ← ELIMINAR Permissi
 # VISTAS DE TASAS DE CAMBIO
 # ═══════════════════════════════════════════════════════════════════
 
-@method_decorator(require_permission("divisas.view_tasacambio", check_client_assignment=False), name="dispatch")
+@method_decorator(require_permission("divisas.view_tasas_cambio", check_client_assignment=False), name="dispatch")
 class TasaCambioListView(LoginRequiredMixin, ListView):  # ← AGREGAR DECORADOR
     """
-    🔐 PROTEGIDA: divisas.view_tasacambio
-    
+    🔐 PROTEGIDA: divisas.view_tasas_cambio
+
     Vista de lista para las tasas de cambio de una divisa específica.
     Muestra historial de tasas con filtros de fecha.
     """
@@ -140,11 +140,11 @@ class TasaCambioListView(LoginRequiredMixin, ListView):  # ← AGREGAR DECORADOR
         return ctx
 
 
-@method_decorator(require_permission("divisas.add_tasacambio", check_client_assignment=False), name="dispatch")
+@method_decorator(require_permission("divisas.manage_tasas_cambio", check_client_assignment=False), name="dispatch")
 class TasaCambioCreateView(LoginRequiredMixin, CreateView):  # ← ELIMINAR PermissionRequiredMixin
     """
-    🔐 PROTEGIDA: divisas.add_tasacambio
-    
+    🔐 PROTEGIDA: divisas.manage_tasas_cambio
+
     Permite registrar una nueva tasa de cambio para una divisa.
     Prellena valores con la última tasa registrada.
     Bloquea la creación de tasas para la moneda base (PYG).
@@ -189,11 +189,11 @@ class TasaCambioCreateView(LoginRequiredMixin, CreateView):  # ← ELIMINAR Perm
         return reverse('divisas:tasas', kwargs={'divisa_id': self.kwargs['divisa_id']})
 
 
-@method_decorator(require_permission("divisas.view_tasacambio", check_client_assignment=False), name="dispatch")
+@method_decorator(require_permission("divisas.view_tasas_cambio", check_client_assignment=False), name="dispatch")
 class TasaCambioAllListView(LoginRequiredMixin, ListView):  # ← AGREGAR DECORADOR
     """
-    🔐 PROTEGIDA: divisas.view_tasacambio
-    
+    🔐 PROTEGIDA: divisas.view_tasas_cambio
+
     Vista para ver todas las tasas de cambio de todas las divisas.
     Permite filtrar por divisa y rango de fechas.
     """

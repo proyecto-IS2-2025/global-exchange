@@ -14,9 +14,12 @@ User = get_user_model()
 
 
 @login_required
-@require_permission("clientes.assign_clientes_operadores", check_client_assignment=False)
+@require_permission("clientes.manage_cliente_assignment", check_client_assignment=False)  # ✅ CORREGIDO
 def asociar_clientes_usuarios_view(request):
-    """Vista para asociar clientes a usuarios del sistema."""
+    """
+    Vista para asociar clientes a usuarios del sistema.
+    Requiere permiso: clientes.manage_cliente_assignment
+    """
     if request.method == 'POST':
         usuario_id = request.POST.get('usuario')
         clientes_ids = request.POST.getlist('clientes')
@@ -60,10 +63,11 @@ def asociar_clientes_usuarios_view(request):
 
 
 @login_required
-@require_permission("clientes.assign_clientes_operadores", check_client_assignment=False)
+@require_permission("clientes.manage_cliente_assignment", check_client_assignment=False)  # ✅ CORREGIDO
 def listar_asociaciones(request):
     """
     Vista para listar y eliminar asociaciones de clientes con usuarios.
+    Requiere permiso: clientes.manage_cliente_assignment
 
     Permite a los usuarios de tipo staff ver una lista de todas las
     asignaciones existentes y eliminarlas si es necesario.

@@ -652,7 +652,7 @@ def dashboard_medios_pago(request):
 
 
 @login_required
-@require_permission("clientes.exportar_datos_clientes")
+@require_permission("clientes.export_clientes")
 def exportar_medios_pago(request):
     """
     Vista para exportar medios de pago del cliente (CSV)
