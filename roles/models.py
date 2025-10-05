@@ -1,25 +1,63 @@
+"""
+Modelos para gestión de roles y metadata de permisos.
+"""
 from django.db import models
-from django.contrib.auth.models import AbstractUser, Group
-from django.db import models
-from django.contrib.auth.models import AbstractUser, Group, Permission
-from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.models import Group, Permission
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
-class Role(models.Model):
-    name = models.CharField(max_length=50, unique=True)
-    description = models.TextField(blank=True)
-
-    def __str__(self):
-        return self.name
 
 class RoleStatus(models.Model):
     """
-    Modelo para gestionar el estado de los roles (Grupos).
+    Estado de activación de un rol/grupo.
     """
-    group = models.OneToOneField(Group, on_delete=models.CASCADE, related_name='status')
-    is_active = models.BooleanField(default=True)
+    group = models.OneToOneField(
+        Group,
+        on_delete=models.CASCADE,
+        related_name='status',
+        verbose_name='Grupo'
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name='Activo'
+    )
+    fecha_creacion = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Fecha de Creación'
+    )
+    fecha_modificacion = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Fecha de Modificación'
+    )
+
+    class Meta:
+        verbose_name = 'Estado de Rol'
+        verbose_name_plural = 'Estados de Roles'
 
     def __str__(self):
-        return f"Estado de {self.group.name}: {'Activo' if self.is_active else 'Inactivo'}"
+        estado = "Activo" if self.is_active else "Inactivo"
+        return f"{self.group.name} - {estado}"
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SEÑAL: CREAR ROLESTATUS AUTOMÁTICAMENTE AL CREAR UN GROUP
+# ═══════════════════════════════════════════════════════════════════════════
+
+@receiver(post_save, sender=Group)
+def create_role_status(sender, instance, created, **kwargs):
+    """
+    Crea automáticamente un RoleStatus cuando se crea un Group.
+    """
+    if created:
+        RoleStatus.objects.get_or_create(
+            group=instance,
+            defaults={'is_active': True}
+        )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# METADATA DE PERMISOS (tu código existente)
+# ═══════════════════════════════════════════════════════════════════════════
 
 class PermissionMetadata(models.Model):
     """

@@ -1,17 +1,24 @@
 # roles/management/commands/permissions_defs/clientes.py
+"""
+Definiciones de permisos personalizados para la app 'clientes'.
+"""
 
 PERMISOS_CLIENTES = [
-    # Visualización
+    # ═══════════════════════════════════════════════════════════════════
+    # VISUALIZACIÓN Y ASIGNACIÓN DE CLIENTES
+    # ═══════════════════════════════════════════════════════════════════
     {
         'app_label': 'clientes',
         'model': 'cliente',
         'codename': 'view_assigned_clientes',
         'name': 'Puede ver clientes asignados',
         'modulo': 'clientes',
-        'descripcion': 'Permite ver únicamente los clientes que están asignados al usuario',
-        'ejemplo': 'Un operador puede ver los datos de sus 5 clientes asignados pero no de otros',
+        'descripcion': 'Permite ver únicamente los clientes asignados al usuario actual.',
+        'ejemplo': 'Un operador puede listar y gestionar solo los clientes que le fueron asignados.',
         'nivel_riesgo': 'bajo',
-        'orden': 1,
+        'orden': 10,
+        'categoria': 'visualizacion',
+        'requiere_auditoria': False,
     },
     {
         'app_label': 'clientes',
@@ -19,158 +26,157 @@ PERMISOS_CLIENTES = [
         'codename': 'view_all_clientes',
         'name': 'Puede ver todos los clientes',
         'modulo': 'clientes',
-        'descripcion': 'Permite ver TODOS los clientes del sistema sin restricción de asignación',
-        'ejemplo': 'Un administrador puede ver cualquier cliente del sistema',
+        'descripcion': 'Permite visualizar el listado completo de clientes sin restricciones.',
+        'ejemplo': 'Un administrador puede acceder al directorio completo de clientes del sistema.',
         'nivel_riesgo': 'medio',
-        'orden': 2,
+        'orden': 20,
+        'categoria': 'visualizacion',
+        'requiere_auditoria': False,
     },
-    
-    # Gestión de asignaciones
     {
         'app_label': 'clientes',
         'model': 'asignacioncliente',
         'codename': 'manage_cliente_assignment',
         'name': 'Puede asignar clientes a operadores',
         'modulo': 'clientes',
-        'descripcion': 'Permite asociar y desasociar clientes con operadores del sistema',
-        'ejemplo': 'Un supervisor puede asignar nuevos clientes a sus operadores',
+        'descripcion': 'Permite crear, modificar y eliminar asignaciones de clientes a operadores.',
+        'ejemplo': 'Un administrador asigna 5 clientes nuevos al operador Juan Pérez.',
         'nivel_riesgo': 'alto',
-        'orden': 3,
+        'orden': 30,
+        'categoria': 'gestion_asignaciones',
+        'requiere_auditoria': True,
     },
     
-    # Límites
+    # ═══════════════════════════════════════════════════════════════════
+    # LÍMITES DE OPERACIÓN
+    # ═══════════════════════════════════════════════════════════════════
     {
         'app_label': 'clientes',
-        'model': 'limitediario',
-        'codename': 'manage_limits',
+        'model': 'limitediario',  # ← CORREGIDO
+        'codename': 'manage_limites_operacion',
         'name': 'Puede modificar límites diarios y mensuales',
         'modulo': 'clientes',
-        'descripcion': 'Permite crear y modificar los límites de operación diarios y mensuales del sistema',
-        'ejemplo': 'Un administrador puede aumentar el límite diario de operaciones de $10,000 a $15,000',
+        'descripcion': 'Permite ajustar los límites de transacciones diarias y mensuales de un cliente.',
+        'ejemplo': 'Un administrador aumenta el límite mensual de USD 5,000 a USD 10,000 para un cliente VIP.',
         'nivel_riesgo': 'critico',
-        'orden': 4,
+        'orden': 40,
+        'categoria': 'gestion_limites',
+        'requiere_auditoria': True,
     },
     {
         'app_label': 'clientes',
-        'model': 'limitediario',
+        'model': 'limitediario',  # ← CORREGIDO
         'codename': 'view_limites_operacion',
         'name': 'Puede ver límites diarios y mensuales',
         'modulo': 'clientes',
-        'descripcion': 'Permite consultar los límites máximos configurados para las operaciones de los clientes.',
-        'ejemplo': 'Revisar el límite mensual vigente antes de autorizar una operación.',
+        'descripcion': 'Permite consultar los límites de transacciones sin modificarlos.',
+        'ejemplo': 'Un operador verifica si su cliente puede realizar una operación de USD 3,000.',
         'nivel_riesgo': 'bajo',
         'orden': 50,
+        'categoria': 'consulta_limites',
+        'requiere_auditoria': False,
     },
     {
         'app_label': 'clientes',
-        'model': 'limitediario',
-        'codename': 'manage_limites_operacion',
+        'model': 'limitemensual',  # ← CORREGIDO (usar modelo diferente para admin)
+        'codename': 'admin_manage_limites',
         'name': 'Puede administrar límites diarios y mensuales',
         'modulo': 'clientes',
-        'descripcion': 'Autoriza la creación y modificación de límites diarios y mensuales aplicables a los clientes.',
-        'ejemplo': 'Actualizar el límite diario para el segmento corporativo.',
-        'nivel_riesgo': 'medio',
-        'orden': 55,
+        'descripcion': 'Permiso administrativo completo para gestionar límites del sistema.',
+        'ejemplo': 'Un administrador puede resetear límites de todos los clientes al inicio del mes.',
+        'nivel_riesgo': 'critico',
+        'orden': 60,
+        'categoria': 'administracion_limites',
+        'requiere_auditoria': True,
     },
     
-    # Medios de pago
+    # ═══════════════════════════════════════════════════════════════════
+    # MEDIOS DE PAGO DEL CLIENTE
+    # ═══════════════════════════════════════════════════════════════════
     {
         'app_label': 'clientes',
         'model': 'clientemediodepago',
         'codename': 'manage_medios_pago',
         'name': 'Puede gestionar medios de pago del cliente',
-        'modulo': 'medios_pago',
-        'descripcion': 'Crear, editar o eliminar medios de pago asociados a un cliente asignado.',
-        'ejemplo': 'Agregar tarjeta VISA para el cliente Juan Pérez.',
-        'nivel_riesgo': 'medio',
-        'orden': 40,
+        'modulo': 'clientes',
+        'descripcion': 'Permite agregar, editar o eliminar medios de pago asociados a un cliente.',
+        'ejemplo': 'Un operador registra la cuenta bancaria del Banco Itaú para su cliente.',
+        'nivel_riesgo': 'alto',
+        'orden': 70,
+        'categoria': 'gestion_medios_pago',
+        'requiere_auditoria': True,
     },
     {
         'app_label': 'clientes',
         'model': 'clientemediodepago',
         'codename': 'view_medios_pago',
         'name': 'Puede ver medios de pago del cliente',
-        'modulo': 'medios_pago',
-        'descripcion': 'Consultar los medios de pago habilitados para un cliente asignado.',
-        'ejemplo': 'Listar los alias bancarios disponibles para la empresa ACME.',
-        'nivel_riesgo': 'bajo',
-        'orden': 45,
+        'modulo': 'clientes',
+        'descripcion': 'Permite consultar los medios de pago registrados sin modificarlos.',
+        'ejemplo': 'Un operador verifica qué cuentas tiene registradas un cliente para acreditar fondos.',
+        'nivel_riesgo': 'medio',
+        'orden': 80,
+        'categoria': 'consulta_medios_pago',
+        'requiere_auditoria': False,
     },
     
-    # Exportación
+    # ═══════════════════════════════════════════════════════════════════
+    # EXPORTACIÓN Y REPORTES
+    # ═══════════════════════════════════════════════════════════════════
     {
         'app_label': 'clientes',
         'model': 'cliente',
-        'codename': 'export_cliente_data',
+        'codename': 'export_clientes',
         'name': 'Puede exportar datos de clientes',
-        'modulo': 'reportes',
-        'descripcion': 'Permite exportar información de clientes en formatos CSV/Excel',
-        'ejemplo': 'Un contador puede exportar todos los clientes con sus datos fiscales',
+        'modulo': 'clientes',
+        'descripcion': 'Permite descargar listados de clientes en formatos CSV, Excel o PDF.',
+        'ejemplo': 'Un administrador exporta el reporte de clientes activos del mes para análisis.',
         'nivel_riesgo': 'medio',
-        'orden': 1,
-    },
-    {
-        'app_label': 'clientes',
-        'model': 'descuento',
-        'codename': 'view_descuentos_segmento',
-        'name': 'Puede ver descuentos por segmento',
-        'modulo': 'clientes',
-        'descripcion': 'Permite consultar los descuentos configurados para cada segmento de clientes.',
-        'ejemplo': 'Ver el porcentaje de descuento aplicado al segmento VIP.',
-        'nivel_riesgo': 'bajo',
-        'orden': 60,
-    },
-    {
-        'app_label': 'clientes',
-        'model': 'descuento',
-        'codename': 'manage_descuentos_segmento',
-        'name': 'Puede administrar descuentos por segmento',
-        'modulo': 'clientes',
-        'descripcion': 'Autoriza la creación y modificación de descuentos asociados a segmentos de clientes.',
-        'ejemplo': 'Actualizar el descuento del segmento emprendedores.',
-        'nivel_riesgo': 'medio',
-        'orden': 65,
-    },
-    {
-        'app_label': 'clientes',
-        'model': 'historialdescuentos',
-        'codename': 'view_historial_descuentos',
-        'name': 'Puede ver el historial de descuentos',
-        'modulo': 'clientes',
-        'descripcion': 'Permite auditar los cambios realizados sobre los descuentos de segmentos.',
-        'ejemplo': 'Revisar quién modificó el descuento del segmento PyME la semana pasada.',
-        'nivel_riesgo': 'bajo',
-        'orden': 70,
+        'orden': 90,
+        'categoria': 'reportes',
+        'requiere_auditoria': True,
     },
     
     # ═══════════════════════════════════════════════════════════════════
-    # SEGMENTOS DE CLIENTE (COMENTADO - CRUD NO IMPLEMENTADO AÚN)
+    # DESCUENTOS POR SEGMENTO
     # ═══════════════════════════════════════════════════════════════════
-    # TODO: Descomentar cuando se implemente el CRUD de segmentos
-    # {
-    #     'app_label': 'clientes',
-    #     'model': 'segmentocliente',
-    #     'codename': 'manage_segmentos_cliente',
-    #     'name': 'Puede gestionar segmentos de cliente',
-    #     'modulo': 'clientes',
-    #     'descripcion': 'Permite crear, editar y eliminar segmentos de cliente (VIP, Gold, Standard)',
-    #     'ejemplo': 'Un administrador puede crear un nuevo segmento "Platinum" con descuentos especiales',
-    #     'nivel_riesgo': 'alto',
-    #     'orden': 120,
-    #     'categoria': 'gestion_segmentos',
-    #     'requiere_auditoria': True,
-    # },
-    # {
-    #     'app_label': 'clientes',
-    #     'model': 'segmentocliente',
-    #     'codename': 'view_segmentos_cliente',
-    #     'name': 'Puede ver segmentos de cliente',
-    #     'modulo': 'clientes',
-    #     'descripcion': 'Permite visualizar los segmentos disponibles y sus características',
-    #     'ejemplo': 'Un operador puede consultar qué beneficios tiene el segmento "Gold"',
-    #     'nivel_riesgo': 'bajo',
-    #     'orden': 121,
-    #     'categoria': 'consulta_segmentos',
-    #     'requiere_auditoria': False,
-    # },
+    {
+        'app_label': 'clientes',
+        'model': 'descuento',  # ← CORREGIDO
+        'codename': 'view_descuentos_segmento',
+        'name': 'Puede ver descuentos por segmento',
+        'modulo': 'clientes',
+        'descripcion': 'Permite consultar los descuentos y tarifas preferenciales por segmento.',
+        'ejemplo': 'Un operador verifica el descuento aplicable para clientes del segmento VIP.',
+        'nivel_riesgo': 'bajo',
+        'orden': 100,
+        'categoria': 'consulta_descuentos',
+        'requiere_auditoria': False,
+    },
+    {
+        'app_label': 'clientes',
+        'model': 'descuento',  # ← CORREGIDO
+        'codename': 'manage_descuentos_segmento',
+        'name': 'Puede administrar descuentos por segmento',
+        'modulo': 'clientes',
+        'descripcion': 'Permite crear, modificar y eliminar configuraciones de descuentos por segmento.',
+        'ejemplo': 'Un administrador crea un descuento del 15% para el segmento corporativo.',
+        'nivel_riesgo': 'critico',
+        'orden': 110,
+        'categoria': 'administracion_descuentos',
+        'requiere_auditoria': True,
+    },
+    {
+        'app_label': 'clientes',
+        'model': 'historialdescuentos',  # ← CORREGIDO
+        'codename': 'view_historial_descuentos',
+        'name': 'Puede ver el historial de descuentos',
+        'modulo': 'clientes',
+        'descripcion': 'Permite consultar el registro histórico de cambios en descuentos.',
+        'ejemplo': 'Un supervisor revisa cuándo se modificó el descuento del segmento premium.',
+        'nivel_riesgo': 'bajo',
+        'orden': 120,
+        'categoria': 'auditoria_descuentos',
+        'requiere_auditoria': False,
+    },
 ]

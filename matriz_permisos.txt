@@ -1,0 +1,262 @@
+================================================================================
+  MATRIZ DE PERMISOS POR ROL
+================================================================================
+
+PERMISO                                        ADMIN            CLIENTE          OBSERVADOR       OPERADOR         USUARIO_NO_REGISTRADO  USUARIO_REGISTRADO
+--------------------------------------------------------------------------------
+
+ADMIN:
+  add_logentry                                 ✗                ✗                ✗                ✗                ✗                ✗              
+  change_logentry                              ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_logentry                              ✗                ✗                ✗                ✗                ✗                ✗              
+  view_logentry                                ✗                ✗                ✗                ✗                ✗                ✗              
+
+AUTENTICACION:
+  add_perfilusuario                            ✗                ✗                ✗                ✗                ✗                ✗              
+  change_perfilusuario                         ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_perfilusuario                         ✗                ✗                ✗                ✗                ✗                ✗              
+  view_perfilusuario                           ✗                ✗                ✗                ✗                ✗                ✗              
+
+AUTH:
+  add_group                                    ✗                ✗                ✗                ✗                ✗                ✗              
+  add_permission                               ✗                ✗                ✗                ✗                ✗                ✗              
+  change_group                                 ✗                ✗                ✗                ✗                ✗                ✗              
+  change_permission                            ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_group                                 ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_permission                            ✗                ✗                ✗                ✗                ✗                ✗              
+  view_group                                   ✗                ✗                ✗                ✗                ✗                ✗              
+  view_permission                              ✗                ✗                ✗                ✗                ✗                ✗              
+
+BANCO:
+  add_bancouser                                ✗                ✗                ✗                ✗                ✗                ✗              
+  add_cuenta                                   ✗                ✗                ✗                ✗                ✗                ✗              
+  add_entidadbancaria                          ✗                ✗                ✗                ✗                ✗                ✗              
+  add_pagotarjeta                              ✗                ✗                ✗                ✗                ✗                ✗              
+  add_tarjetacredito                           ✗                ✗                ✗                ✗                ✗                ✗              
+  add_tarjetadebito                            ✗                ✗                ✗                ✗                ✗                ✗              
+  add_transferencia                            ✗                ✗                ✗                ✗                ✗                ✗              
+  change_bancouser                             ✗                ✗                ✗                ✗                ✗                ✗              
+  change_cuenta                                ✗                ✗                ✗                ✗                ✗                ✗              
+  change_entidadbancaria                       ✗                ✗                ✗                ✗                ✗                ✗              
+  change_pagotarjeta                           ✗                ✗                ✗                ✗                ✗                ✗              
+  change_tarjetacredito                        ✗                ✗                ✗                ✗                ✗                ✗              
+  change_tarjetadebito                         ✗                ✗                ✗                ✗                ✗                ✗              
+  change_transferencia                         ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_bancouser                             ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_cuenta                                ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_entidadbancaria                       ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_pagotarjeta                           ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_tarjetacredito                        ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_tarjetadebito                         ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_transferencia                         ✗                ✗                ✗                ✗                ✗                ✗              
+  view_bancouser                               ✗                ✗                ✗                ✗                ✗                ✗              
+  view_cuenta                                  ✗                ✗                ✗                ✗                ✗                ✗              
+  view_entidadbancaria                         ✗                ✗                ✗                ✗                ✗                ✗              
+  view_pagotarjeta                             ✗                ✗                ✗                ✗                ✗                ✗              
+  view_tarjetacredito                          ✗                ✗                ✗                ✗                ✗                ✗              
+  view_tarjetadebito                           ✗                ✗                ✗                ✗                ✗                ✗              
+  view_transferencia                           ✗                ✗                ✗                ✗                ✗                ✗              
+
+BILLETERA:
+  add_billetera                                ✗                ✗                ✗                ✗                ✗                ✗              
+  add_movimientobilletera                      ✗                ✗                ✗                ✗                ✗                ✗              
+  add_recargabilletera                         ✗                ✗                ✗                ✗                ✗                ✗              
+  add_transferenciabilletera                   ✗                ✗                ✗                ✗                ✗                ✗              
+  add_usuariobilletera                         ✗                ✗                ✗                ✗                ✗                ✗              
+  change_billetera                             ✗                ✗                ✗                ✗                ✗                ✗              
+  change_movimientobilletera                   ✗                ✗                ✗                ✗                ✗                ✗              
+  change_recargabilletera                      ✗                ✗                ✗                ✗                ✗                ✗              
+  change_transferenciabilletera                ✗                ✗                ✗                ✗                ✗                ✗              
+  change_usuariobilletera                      ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_billetera                             ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_movimientobilletera                   ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_recargabilletera                      ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_transferenciabilletera                ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_usuariobilletera                      ✗                ✗                ✗                ✗                ✗                ✗              
+  view_billetera                               ✗                ✗                ✗                ✗                ✗                ✗              
+  view_movimientobilletera                     ✗                ✗                ✗                ✗                ✗                ✗              
+  view_recargabilletera                        ✗                ✗                ✗                ✗                ✗                ✗              
+  view_transferenciabilletera                  ✗                ✗                ✗                ✗                ✗                ✗              
+  view_usuariobilletera                        ✗                ✗                ✗                ✗                ✗                ✗              
+
+CLIENTES:
+  add_asignacioncliente                        ✓                ✗                ✗                ✗                ✗                ✗              
+  add_cliente                                  ✓                ✗                ✗                ✗                ✗                ✗              
+  add_clientemediodepago                       ✓                ✗                ✗                ✗                ✗                ✗              
+  add_descuento                                ✗                ✗                ✗                ✗                ✗                ✗              
+  add_historialclientemediodepago              ✗                ✗                ✗                ✗                ✗                ✗              
+  add_historialdescuentos                      ✗                ✗                ✗                ✗                ✗                ✗              
+  add_limitediario                             ✓                ✗                ✗                ✗                ✗                ✗              
+  add_limitemensual                            ✓                ✗                ✗                ✗                ✗                ✗              
+  add_segmento                                 ✗                ✗                ✗                ✗                ✗                ✗              
+  change_asignacioncliente                     ✓                ✗                ✗                ✗                ✗                ✗              
+  change_cliente                               ✓                ✗                ✗                ✗                ✗                ✗              
+  change_clientemediodepago                    ✓                ✗                ✗                ✗                ✗                ✗              
+  change_descuento                             ✗                ✗                ✗                ✗                ✗                ✗              
+  change_historialclientemediodepago           ✗                ✗                ✗                ✗                ✗                ✗              
+  change_historialdescuentos                   ✗                ✗                ✗                ✗                ✗                ✗              
+  change_limitediario                          ✓                ✗                ✗                ✗                ✗                ✗              
+  change_limitemensual                         ✓                ✗                ✗                ✗                ✗                ✗              
+  change_segmento                              ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_asignacioncliente                     ✓                ✗                ✗                ✗                ✗                ✗              
+  delete_cliente                               ✓                ✗                ✗                ✗                ✗                ✗              
+  delete_clientemediodepago                    ✓                ✗                ✗                ✗                ✗                ✗              
+  delete_descuento                             ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_historialclientemediodepago           ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_historialdescuentos                   ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_limitediario                          ✓                ✗                ✗                ✗                ✗                ✗              
+  delete_limitemensual                         ✓                ✗                ✗                ✗                ✗                ✗              
+  delete_segmento                              ✗                ✗                ✗                ✗                ✗                ✗              
+  export_cliente_data                          ✗                ✗                ✗                ✗                ✗                ✗              
+  manage_cliente_assignment                    ✓                ✗                ✗                ✗                ✗                ✗              
+  manage_descuentos_segmento                   ✗                ✗                ✗                ✗                ✗                ✗              
+  manage_limites_operacion                     ✓                ✗                ✗                ✗                ✗                ✗              
+  manage_limits                                ✗                ✗                ✗                ✗                ✗                ✗              
+  manage_medios_pago                           ✗                ✗                ✗                ✗                ✗                ✗              
+  view_all_clientes                            ✓                ✗                ✓                ✗                ✗                ✗              
+  view_asignacioncliente                       ✓                ✗                ✓                ✗                ✗                ✗              
+  view_assigned_clientes                       ✓                ✗                ✗                ✓                ✗                ✗              
+  view_cliente                                 ✓                ✗                ✓                ✓                ✗                ✗              
+  view_clientemediodepago                      ✓                ✓                ✓                ✓                ✗                ✗              
+  view_descuento                               ✗                ✗                ✗                ✗                ✗                ✗              
+  view_descuentos_segmento                     ✓                ✗                ✗                ✓                ✗                ✗              
+  view_historial_descuentos                    ✗                ✗                ✗                ✗                ✗                ✗              
+  view_historialclientemediodepago             ✗                ✗                ✗                ✗                ✗                ✗              
+  view_historialdescuentos                     ✗                ✗                ✗                ✗                ✗                ✗              
+  view_limitediario                            ✓                ✗                ✓                ✗                ✗                ✗              
+  view_limitemensual                           ✓                ✗                ✓                ✗                ✗                ✗              
+  view_limites_operacion                       ✓                ✗                ✓                ✗                ✗                ✗              
+  view_medios_pago                             ✓                ✓                ✗                ✓                ✗                ✗              
+  view_segmento                                ✗                ✗                ✗                ✗                ✗                ✗              
+
+CONTENTTYPES:
+  add_contenttype                              ✗                ✗                ✗                ✗                ✗                ✗              
+  change_contenttype                           ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_contenttype                           ✗                ✗                ✗                ✗                ✗                ✗              
+  view_contenttype                             ✗                ✗                ✗                ✗                ✗                ✗              
+
+DIVISAS:
+  add_cotizacionsegmento                       ✗                ✗                ✗                ✗                ✗                ✗              
+  add_divisa                                   ✓                ✗                ✗                ✗                ✗                ✗              
+  add_tasacambio                               ✓                ✗                ✗                ✗                ✗                ✗              
+  approve_operaciones_divisas                  ✓                ✗                ✗                ✗                ✗                ✗              
+  change_cotizacionsegmento                    ✗                ✗                ✗                ✗                ✗                ✗              
+  change_divisa                                ✓                ✗                ✗                ✗                ✗                ✗              
+  change_tasacambio                            ✓                ✗                ✗                ✗                ✗                ✗              
+  delete_cotizacionsegmento                    ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_divisa                                ✓                ✗                ✗                ✗                ✗                ✗              
+  delete_tasacambio                            ✓                ✗                ✗                ✗                ✗                ✗              
+  manage_cotizaciones_segmento                 ✓                ✗                ✗                ✗                ✗                ✗              
+  realizar_operacion                           ✓                ✓                ✗                ✓                ✗                ✗              
+  ver_tasas_admin                              ✗                ✗                ✗                ✗                ✗                ✗              
+  view_cotizaciones_segmento                   ✓                ✓                ✓                ✓                ✗                ✓              
+  view_cotizacionsegmento                      ✗                ✗                ✗                ✗                ✗                ✗              
+  view_divisa                                  ✓                ✓                ✓                ✓                ✗                ✓              
+  view_reportes_divisas                        ✗                ✗                ✗                ✗                ✗                ✗              
+  view_tasacambio                              ✓                ✓                ✓                ✓                ✗                ✓              
+
+INTERFAZ:
+  add_perfilusuario                            ✗                ✗                ✗                ✗                ✗                ✗              
+  change_perfilusuario                         ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_perfilusuario                         ✗                ✗                ✗                ✗                ✗                ✗              
+  view_perfilusuario                           ✗                ✗                ✗                ✗                ✗                ✗              
+
+MEDIOS_PAGO:
+  add_campomediodepago                         ✗                ✗                ✗                ✗                ✗                ✗              
+  add_mediodepago                              ✓                ✗                ✗                ✗                ✗                ✗              
+  add_paymenttemplate                          ✗                ✗                ✗                ✗                ✗                ✗              
+  change_campomediodepago                      ✗                ✗                ✗                ✗                ✗                ✗              
+  change_mediodepago                           ✓                ✗                ✗                ✗                ✗                ✗              
+  change_paymenttemplate                       ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_campomediodepago                      ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_mediodepago                           ✓                ✗                ✗                ✗                ✗                ✗              
+  delete_paymenttemplate                       ✗                ✗                ✗                ✗                ✗                ✗              
+  manage_catalogo_medios_pago                  ✓                ✗                ✗                ✗                ✗                ✗              
+  view_campomediodepago                        ✗                ✗                ✗                ✗                ✗                ✗              
+  view_catalogo_medios_pago                    ✓                ✗                ✓                ✓                ✗                ✗              
+  view_mediodepago                             ✓                ✓                ✓                ✓                ✗                ✗              
+  view_paymenttemplate                         ✗                ✗                ✗                ✗                ✗                ✗              
+
+MFA:
+  add_otpcode                                  ✗                ✗                ✗                ✗                ✗                ✗              
+  change_otpcode                               ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_otpcode                               ✗                ✗                ✗                ✗                ✗                ✗              
+  view_otpcode                                 ✗                ✗                ✗                ✗                ✗                ✗              
+
+ROLES:
+  add_permissionchangelog                      ✗                ✗                ✗                ✗                ✗                ✗              
+  add_permissionmetadata                       ✗                ✗                ✗                ✗                ✗                ✗              
+  add_role                                     ✗                ✗                ✗                ✗                ✗                ✗              
+  add_rolestatus                               ✗                ✗                ✗                ✗                ✗                ✗              
+  change_permissionchangelog                   ✗                ✗                ✗                ✗                ✗                ✗              
+  change_permissionmetadata                    ✗                ✗                ✗                ✗                ✗                ✗              
+  change_role                                  ✗                ✗                ✗                ✗                ✗                ✗              
+  change_rolestatus                            ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_permissionchangelog                   ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_permissionmetadata                    ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_role                                  ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_rolestatus                            ✗                ✗                ✗                ✗                ✗                ✗              
+  view_permissionchangelog                     ✗                ✗                ✗                ✗                ✗                ✗              
+  view_permissionmetadata                      ✗                ✗                ✗                ✗                ✗                ✗              
+  view_role                                    ✗                ✗                ✗                ✗                ✗                ✗              
+  view_rolestatus                              ✗                ✗                ✗                ✗                ✗                ✗              
+
+SESSIONS:
+  add_session                                  ✗                ✗                ✗                ✗                ✗                ✗              
+  change_session                               ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_session                               ✗                ✗                ✗                ✗                ✗                ✗              
+  view_session                                 ✗                ✗                ✗                ✗                ✗                ✗              
+
+SIMULADOR:
+  add_categoriacliente                         ✗                ✗                ✗                ✗                ✗                ✗              
+  add_moneda                                   ✗                ✗                ✗                ✗                ✗                ✗              
+  add_tasa                                     ✗                ✗                ✗                ✗                ✗                ✗              
+  change_categoriacliente                      ✗                ✗                ✗                ✗                ✗                ✗              
+  change_moneda                                ✗                ✗                ✗                ✗                ✗                ✗              
+  change_tasa                                  ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_categoriacliente                      ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_moneda                                ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_tasa                                  ✗                ✗                ✗                ✗                ✗                ✗              
+  view_categoriacliente                        ✗                ✗                ✗                ✗                ✗                ✗              
+  view_moneda                                  ✗                ✗                ✗                ✗                ✗                ✗              
+  view_tasa                                    ✗                ✗                ✗                ✗                ✗                ✗              
+
+TRANSACCIONES:
+  add_configuraciontransaccion                 ✗                ✗                ✗                ✗                ✗                ✗              
+  add_historialtransaccion                     ✗                ✗                ✗                ✗                ✗                ✗              
+  add_transaccion                              ✓                ✗                ✗                ✓                ✗                ✗              
+  cancel_propias_transacciones                 ✓                ✓                ✗                ✗                ✗                ✗              
+  change_configuraciontransaccion              ✗                ✗                ✗                ✗                ✗                ✗              
+  change_historialtransaccion                  ✗                ✗                ✗                ✗                ✗                ✗              
+  change_transaccion                           ✓                ✗                ✗                ✗                ✗                ✗              
+  delete_configuraciontransaccion              ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_historialtransaccion                  ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_transaccion                           ✓                ✗                ✗                ✗                ✗                ✗              
+  export_transacciones                         ✓                ✗                ✓                ✗                ✗                ✗              
+  manage_estados_transacciones                 ✓                ✗                ✗                ✓                ✗                ✗              
+  manage_reversiones_transacciones             ✓                ✗                ✗                ✗                ✗                ✗              
+  view_configuraciontransaccion                ✗                ✗                ✗                ✗                ✗                ✗              
+  view_historial_transacciones                 ✓                ✗                ✓                ✓                ✗                ✗              
+  view_historialtransaccion                    ✓                ✗                ✓                ✗                ✗                ✗              
+  view_transaccion                             ✓                ✓                ✓                ✓                ✗                ✗              
+  view_transacciones_asignadas                 ✓                ✓                ✗                ✓                ✗                ✗              
+  view_transacciones_globales                  ✓                ✗                ✓                ✗                ✗                ✗              
+
+USERS:
+  activate_deactivate_usuarios                 ✓                ✗                ✗                ✗                ✗                ✗              
+  add_customuser                               ✗                ✗                ✗                ✗                ✗                ✗              
+  add_role                                     ✗                ✗                ✗                ✗                ✗                ✗              
+  change_customuser                            ✗                ✗                ✗                ✗                ✗                ✗              
+  change_role                                  ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_customuser                            ✗                ✗                ✗                ✗                ✗                ✗              
+  delete_role                                  ✗                ✗                ✗                ✗                ✗                ✗              
+  manage_usuario_roles                         ✓                ✗                ✗                ✗                ✗                ✗              
+  manage_usuarios                              ✓                ✗                ✗                ✗                ✗                ✗              
+  reset_usuario_password                       ✓                ✗                ✗                ✗                ✗                ✗              
+  view_all_usuarios                            ✓                ✗                ✗                ✗                ✗                ✗              
+  view_customuser                              ✗                ✗                ✗                ✗                ✗                ✗              
+  view_role                                    ✗                ✗                ✗                ✗                ✗                ✗              
+
+================================================================================
+
+[32;1mMatriz exportada a: matriz_permisos.txt[0m

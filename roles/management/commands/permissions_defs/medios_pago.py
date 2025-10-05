@@ -1,16 +1,23 @@
-# roles/management/commands/permissions_defs/medios_pago.py
+"""
+Definiciones de permisos personalizados para la app 'medios_pago'.
+"""
 
 PERMISOS_MEDIOS_PAGO = [
+    # ═══════════════════════════════════════════════════════════════════
+    # CATÁLOGO DE MEDIOS DE PAGO (ADMINISTRACIÓN)
+    # ═══════════════════════════════════════════════════════════════════
     {
         'app_label': 'medios_pago',
         'model': 'mediodepago',
         'codename': 'view_catalogo_medios_pago',
         'name': 'Puede ver el catálogo de medios de pago',
         'modulo': 'medios_pago',
-        'descripcion': 'Permite navegar el catálogo general de medios de pago configurados.',
-        'ejemplo': 'Consultar los medios de pago habilitados para transferencias bancarias.',
+        'descripcion': 'Permite consultar los medios de pago disponibles en el sistema (bancos, billeteras, etc).',
+        'ejemplo': 'Un operador consulta qué bancos están habilitados para transferencias.',
         'nivel_riesgo': 'bajo',
         'orden': 10,
+        'categoria': 'consulta_catalogo',
+        'requiere_auditoria': False,
     },
     {
         'app_label': 'medios_pago',
@@ -18,31 +25,11 @@ PERMISOS_MEDIOS_PAGO = [
         'codename': 'manage_catalogo_medios_pago',
         'name': 'Puede administrar el catálogo de medios de pago',
         'modulo': 'medios_pago',
-        'descripcion': 'Autoriza la creación, edición y baja de medios de pago disponibles.',
-        'ejemplo': 'Dar de alta un nuevo medio de pago para billeteras virtuales.',
-        'nivel_riesgo': 'alto',
+        'descripcion': 'Permite agregar, modificar o deshabilitar medios de pago en el sistema.',
+        'ejemplo': 'Un administrador agrega Banco Atlas con comisión del 2% para transferencias.',
+        'nivel_riesgo': 'critico',
         'orden': 20,
-    },
-    {
-        'app_label': 'medios_pago',
-        'model': 'campomediodepago',
-        'codename': 'configure_campos_medios_pago',
-        'name': 'Puede configurar campos dinámicos de medios de pago',
-        'modulo': 'medios_pago',
-        'descripcion': 'Habilita la definición de los campos requeridos para cada tipo de medio de pago.',
-        'ejemplo': 'Configurar el campo CBU obligatorio para transferencias bancarias.',
-        'nivel_riesgo': 'alto',
-        'orden': 30,
-    },
-    {
-        'app_label': 'medios_pago',
-        'model': 'mediodepago',
-        'codename': 'view_auditoria_medios_pago',
-        'name': 'Puede ver la auditoría de medios de pago',
-        'modulo': 'medios_pago',
-        'descripcion': 'Permite consultar cambios históricos y responsables sobre los medios de pago.',
-        'ejemplo': 'Revisar quién modificó los requisitos del medio de pago "Transferencia bancaria".',
-        'nivel_riesgo': 'medio',
-        'orden': 40,
+        'categoria': 'administracion_catalogo',
+        'requiere_auditoria': True,
     },
 ]

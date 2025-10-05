@@ -69,11 +69,14 @@
                                         <i class="fas fa-user-edit"></i> Usuarios
                                     </a>
                                     {% if group.name != 'admin' %}
-                                     <a href="{% url 'group_toggle_status' group.id %}" 
-                                        class="btn btn-sm {% if group.status.is_active %}btn-danger{% else %}btn-success{% endif %}">
-                                        <i class="fas {% if group.status.is_active %}fa-ban{% else %}fa-check-circle{% endif %}"></i> 
-                                        {% if group.status.is_active %}Desactivar{% else %}Activar{% endif %}
-                                    </a>
+                                     <form action="{% url 'group_toggle_status' group.id %}" method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit"
+                                                class="btn btn-sm {% if group.status.is_active %}btn-danger{% else %}btn-success{% endif %}">
+                                          <i class="fas {% if group.status.is_active %}fa-ban{% else %}fa-check-circle{% endif %}"></i>
+                                          {% if group.status.is_active %}Desactivar{% else %}Activar{% endif %}
+                                        </button>
+                                      </form>
                                     {% endif %}
                                 </div>
                             </td>

@@ -16,11 +16,11 @@ import logging
 import csv
 import re
 from django.utils.decorators import method_decorator
+from clientes.decorators import require_permission
 from medios_pago.models import MedioDePago
 from clientes.models import Cliente, ClienteMedioDePago, HistorialClienteMedioDePago, AsignacionCliente
 from clientes.forms import ClienteMedioDePagoCompleteForm, SelectMedioDePagoForm
 from .helpers import get_cliente_activo
-from clientes.decorators import require_permission
 
 logger = logging.getLogger(__name__)
 
@@ -145,8 +145,11 @@ def select_medio_pago_view(request):
     })
 
 
+@method_decorator(require_permission("clientes.manage_medios_pago", check_client_assignment=True), name="dispatch")
 class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
     """
+    🔐 PROTEGIDA: clientes.manage_medios_pago + validación cliente asignado
+    
     Vista mejorada para crear un nuevo medio de pago para el cliente
     """
     model = ClienteMedioDePago
@@ -293,8 +296,11 @@ class ClienteMedioDePagoCreateView(LoginRequiredMixin, CreateView):
         return reverse('clientes:medios_pago_cliente')
 
 
+@method_decorator(require_permission("clientes.manage_medios_pago", check_client_assignment=True), name="dispatch")
 class ClienteMedioDePagoUpdateView(LoginRequiredMixin, UpdateView):
     """
+    🔐 PROTEGIDA: clientes.manage_medios_pago + validación cliente asignado
+    
     Vista mejorada para editar un medio de pago del cliente
     """
     model = ClienteMedioDePago

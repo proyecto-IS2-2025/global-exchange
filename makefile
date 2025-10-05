@@ -101,8 +101,11 @@ delete-migrations:
 
 reset-db:
 	@echo "Reiniciando la base de datos..."
+	
 	dropdb --username=django_user  --if-exists global_exchange --host=localhost
 	createdb --username=django_user --host=localhost global_exchange 
+	
+	@echo "Cargando datos de prueba..."
 	poetry run python scripts/delete_migrations.py
 	poetry run python manage.py makemigrations	
 	poetry run python manage.py migrate
@@ -110,4 +113,15 @@ reset-db:
 	poetry run python manage.py loaddata users_data.json
 	poetry run python manage.py loaddata clientes_data.json
 	poetry run python manage.py loaddata divisas_data.json
+	
+	@echo "Configurando roles de prueba..."
+	poetry run python manage.py sync_permissions
+	poetry run python manage.py setup_test_roles --verbose
+	poetry run python manage.py sync_role_status
+	
 	@echo "Base de datos reiniciada y datos cargados."
+
+sync:
+	@echo "Sincronizando repositorio local con el remoto..."
+	 poetry run python manage.py sync_permissions
+	@echo "Repositorio sincronizado."
