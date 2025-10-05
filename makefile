@@ -99,32 +99,15 @@ delete-migrations:
 	find . -path "*/migrations/*.pyc" -delete
 	@echo "Archivos de migraciones eliminados."
 
-sync:
-	@echo "Sincronizando la base de datos sin migraciones..."
-	poetry run python manage.py sync_permissions
-	@echo "Base de datos sincronizada."
-
 reset-db:
 	@echo "Reiniciando la base de datos..."
-	dropdb -U django_user global_exchange && createdb -U django_user global_exchange
+	dropdb --username=django_user  --if-exists global_exchange --host=localhost
+	createdb --username=django_user --host=localhost global_exchange 
+	poetry run python scripts/delete_migrations.py
+	poetry run python manage.py makemigrations	
+	poetry run python manage.py migrate
 	poetry run python manage.py loaddata roles_data.json
 	poetry run python manage.py loaddata users_data.json
 	poetry run python manage.py loaddata clientes_data.json
 	poetry run python manage.py loaddata divisas_data.json
-	poetry run python manage.py loaddata medios_data.json
 	@echo "Base de datos reiniciada y datos cargados."
-
-test-permisos:
-	@echo "Ejecutando pruebas de permisos..."
-	poetry run python manage.py test roles.tests.test_permissions --verbosity=2
-	@echo "Pruebas de permisos completadas."
-
-find-hola:
-	@echo "Buscando 'hola' en los archivos del proyecto..."
-	grep -r "hola mundo" .
-	@echo "Búsqueda completada."
-
-show-perm:
-	@echo "Mostrando matriz de permisos..."
-	poetry run python manage.py show_permission_matrix
-	@echo "Matriz de permisos mostrada."
