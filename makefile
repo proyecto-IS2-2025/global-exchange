@@ -98,3 +98,16 @@ delete-migrations:
 	find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
 	find . -path "*/migrations/*.pyc" -delete
 	@echo "Archivos de migraciones eliminados."
+
+reset-db:
+	@echo "Reiniciando la base de datos..."
+	dropdb --username=django_user  --if-exists global_exchange --host=localhost
+	createdb --username=django_user --host=localhost global_exchange 
+	poetry run python scripts/delete_migrations.py
+	poetry run python manage.py makemigrations	
+	poetry run python manage.py migrate
+	poetry run python manage.py loaddata roles_data.json
+	poetry run python manage.py loaddata users_data.json
+	poetry run python manage.py loaddata clientes_data.json
+	poetry run python manage.py loaddata divisas_data.json
+	@echo "Base de datos reiniciada y datos cargados."
