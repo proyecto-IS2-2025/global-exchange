@@ -101,21 +101,61 @@
   },
   {
     "model": "users.customuser",
-    "pk": 1,
+    "pk": 6,
     "fields": {
       "password": "pbkdf2_sha256$1000000$jIRXr1HvZbtMX6eBxEowBv$VbkJvB8clLm/rzDzpBG1tWVBVikY9xz0RV/lLoJxDQM=",
       "last_login": null,
-      "is_superuser": true,
-      "username": "test",
+      "is_superuser": false,
+      "username": "test_admin",
       "first_name": "Test",
-      "last_name": "Principal",
-      "email": "test@gmail.com",
+      "last_name": "Admin",
+      "email": "test_admin@test.com",
       "is_staff": true,
       "is_active": true,
-      "date_joined": "2025-09-15T10:00:00Z",
+      "date_joined": "2025-10-03T10:00:00Z",
       "is_cambista": false,
       "ultimo_cliente_id": null,
       "groups": [1],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "users.customuser",
+    "pk": 7,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$jIRXr1HvZbtMX6eBxEowBv$VbkJvB8clLm/rzDzpBG1tWVBVikY9xz0RV/lLoJxDQM=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "test_operador",
+      "first_name": "Test",
+      "last_name": "Operador",
+      "email": "test_operador@test.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2025-10-03T10:00:00Z",
+      "is_cambista": true,
+      "ultimo_cliente_id": null,
+      "groups": [2],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "users.customuser",
+    "pk": 8,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$jIRXr1HvZbtMX6eBxEowBv$VbkJvB8clLm/rzDzpBG1tWVBVikY9xz0RV/lLoJxDQM=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "test_cliente",
+      "first_name": "Test",
+      "last_name": "Cliente",
+      "email": "test_cliente@test.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2025-10-03T10:00:00Z",
+      "is_cambista": true,
+      "ultimo_cliente_id": null,
+      "groups": [5],
       "user_permissions": []
     }
   }

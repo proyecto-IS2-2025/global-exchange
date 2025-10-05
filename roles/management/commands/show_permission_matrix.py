@@ -1,123 +1,133 @@
+"""
+Comando para visualizar la matriz de permisos asignados a cada rol.
+"""
 from collections import defaultdict
 from django.core.management.base import BaseCommand
-from django.contrib.auth.models import Permission
-
-from roles.models import PermissionMetadata
+from django.contrib.auth.models import Group, Permission
 
 
 class Command(BaseCommand):
-    help = "Muestra una matriz de permisos con su metadata organizada por módulo."
+    help = 'Muestra la matriz de permisos por rol'
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--module",
-            dest="module",
-            help="Filtra la salida a un módulo específico (usar el valor interno, p. ej. 'clientes').",
+            '--role',
+            type=str,
+            help='Mostrar permisos solo de un rol específico',
         )
         parser.add_argument(
-            "--app",
-            dest="app",
-            help="Filtra por etiqueta de aplicación (app_label) del permiso.",
-        )
-        parser.add_argument(
-            "--csv",
-            action="store_true",
-            dest="csv",
-            help="Exporta la matriz en formato CSV.",
+            '--export',
+            action='store_true',
+            help='Exportar a archivo CSV',
         )
 
     def handle(self, *args, **options):
-        qs = (
-            Permission.objects.select_related("metadata", "content_type")
-            .filter(metadata__isnull=False)
-            .order_by("metadata__modulo", "metadata__orden", "codename")
-        )
+        role_filter = options.get('role')
+        export = options.get('export')
 
-        module_filter = options.get("module")
-        if module_filter:
-            qs = qs.filter(metadata__modulo=module_filter)
+        # Obtener grupos
+        if role_filter:
+            try:
+                groups = [Group.objects.get(name=role_filter)]
+            except Group.DoesNotExist:
+                self.stdout.write(
+                    self.style.ERROR(f'✗ Rol "{role_filter}" no encontrado')
+                )
+                return
+        else:
+            groups = Group.objects.all().order_by('name')
 
-        app_filter = options.get("app")
-        if app_filter:
-            qs = qs.filter(content_type__app_label=app_filter)
-
-        if not qs.exists():
-            self.stdout.write(self.style.WARNING("No se encontraron permisos con metadata."))
+        if not groups:
+            self.stdout.write(
+                self.style.WARNING('⚠ No hay roles configurados')
+            )
             return
 
-        rows = []
-        for perm in qs:
-            metadata: PermissionMetadata = perm.metadata
-            rows.append(
-                {
-                    "modulo": metadata.modulo,
-                    "modulo_display": metadata.get_modulo_display(),
-                    "app": perm.content_type.app_label,
-                    "modelo": perm.content_type.model,
-                    "codename": perm.codename,
-                    "nombre": perm.name,
-                    "riesgo": metadata.get_nivel_riesgo_display() if metadata.nivel_riesgo else "",
-                    "orden": metadata.orden or "",
-                }
+        # Agrupar permisos por módulo
+        permission_matrix = self._build_matrix(groups)
+
+        # Mostrar en consola
+        self._display_matrix(permission_matrix, groups)
+
+        # Exportar si se solicita
+        if export:
+            self._export_to_csv(permission_matrix, groups)
+
+    def _build_matrix(self, groups):
+        """Construye la matriz de permisos"""
+        matrix = defaultdict(lambda: defaultdict(dict))
+
+        for group in groups:
+            perms = group.permissions.select_related('content_type').order_by(
+                'content_type__app_label', 'codename'
             )
 
-        if options.get("csv"):
-            self._print_csv(rows)
-        else:
-            self._print_table(rows)
+            for perm in perms:
+                app_label = perm.content_type.app_label
+                codename = perm.codename
+                matrix[app_label][codename][group.name] = True
 
-        summary = defaultdict(int)
-        for row in rows:
-            summary[row["modulo_display"]] += 1
+        return matrix
 
-        self.stdout.write("")
-        self.stdout.write(self.style.SUCCESS("Resumen por módulo:"))
-        for modulo, count in summary.items():
-            self.stdout.write(f"  • {modulo}: {count} permisos")
-        self.stdout.write(f"\nTotal de permisos listados: {len(rows)}")
+    def _display_matrix(self, matrix, groups):
+        """Muestra la matriz en consola"""
+        self.stdout.write('')
+        self.stdout.write(self.style.HTTP_INFO('=' * 80))
+        self.stdout.write(self.style.HTTP_INFO('  MATRIZ DE PERMISOS POR ROL'))
+        self.stdout.write(self.style.HTTP_INFO('=' * 80))
+        self.stdout.write('')
 
-    def _print_csv(self, rows):
-        header = [
-            "modulo",
-            "modulo_display",
-            "app",
-            "modelo",
-            "codename",
-            "nombre",
-            "riesgo",
-            "orden",
-        ]
-        self.stdout.write(",".join(header))
-        for row in rows:
-            values = [str(row[field]).replace(",", r"\,") for field in header]
-            self.stdout.write(",".join(values))
+        # Encabezados
+        header = f"{'PERMISO':<50}"
+        for group in groups:
+            header += f"{group.name.upper():<15}"
+        self.stdout.write(self.style.MIGRATE_HEADING(header))
+        self.stdout.write(self.style.MIGRATE_HEADING('-' * 80))
 
-    def _print_table(self, rows):
-        header = ["Módulo", "App", "Modelo", "Codename", "Nombre", "Riesgo", "Orden"]
-        data = [
-            [
-                row["modulo_display"],
-                row["app"],
-                row["modelo"],
-                row["codename"],
-                row["nombre"],
-                row["riesgo"],
-                row["orden"],
-            ]
-            for row in rows
-        ]
+        # Filas por módulo
+        for app_label in sorted(matrix.keys()):
+            self.stdout.write(self.style.WARNING(f'\n{app_label.upper()}:'))
 
-        widths = [len(col) for col in header]
-        for record in data:
-            for idx, value in enumerate(record):
-                widths[idx] = max(widths[idx], len(str(value)))
+            for codename in sorted(matrix[app_label].keys()):
+                row = f"  {codename:<48}"
 
-        line = "+".join("-" * (w + 2) for w in widths)
-        fmt = " | ".join("{:<" + str(w) + "}" for w in widths)
+                for group in groups:
+                    has_perm = matrix[app_label][codename].get(group.name, False)
+                    symbol = '✓' if has_perm else '✗'
+                    color = self.style.SUCCESS if has_perm else self.style.ERROR
+                    row += f"{color(symbol):<15}"
 
-        self.stdout.write(line.replace("-", "+"))
-        self.stdout.write(fmt.format(*header))
-        self.stdout.write(line.replace("-", "+"))
-        for record in data:
-            self.stdout.write(fmt.format(*record))
-        self.stdout.write(line.replace("-", "+"))
+                self.stdout.write(row)
+
+        self.stdout.write('')
+        self.stdout.write(self.style.HTTP_INFO('=' * 80))
+        self.stdout.write('')
+
+    def _export_to_csv(self, matrix, groups):
+        """Exporta la matriz a CSV"""
+        import csv
+        from datetime import datetime
+
+        filename = f'permission_matrix_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+
+        with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.writer(csvfile)
+
+            # Encabezados
+            headers = ['Módulo', 'Permiso'] + [g.name for g in groups]
+            writer.writerow(headers)
+
+            # Datos
+            for app_label in sorted(matrix.keys()):
+                for codename in sorted(matrix[app_label].keys()):
+                    row = [app_label, codename]
+
+                    for group in groups:
+                        has_perm = matrix[app_label][codename].get(group.name, False)
+                        row.append('✓' if has_perm else '✗')
+
+                    writer.writerow(row)
+
+        self.stdout.write(
+            self.style.SUCCESS(f'✓ Matriz exportada a: {filename}')
+        )

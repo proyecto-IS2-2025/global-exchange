@@ -19,7 +19,7 @@
     "model": "auth.group",
     "pk": 3,
     "fields": {
-      "name": "usuario_no_registrado",
+      "name": "observador",
       "permissions": []
     }
   },
@@ -27,7 +27,7 @@
     "model": "auth.group",
     "pk": 4,
     "fields": {
-      "name": "usuario_registrado",
+      "name": "usuario_no_registrado",
       "permissions": []
     }
   },
@@ -38,5 +38,13 @@
       "name": "cliente",
       "permissions": []
     }
-  }    
+  },
+  {
+    "model": "auth.group",
+    "pk": 6,
+    "fields": {
+      "name": "usuario_registrado",
+      "permissions": []
+    }
+  }
 ]

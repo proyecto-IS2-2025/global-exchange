@@ -116,7 +116,7 @@ reset-db:
 
 test-permisos:
 	@echo "Ejecutando pruebas de permisos..."
-	poetry run python manage.py test roles.tests_permisos
+	poetry run python manage.py test roles.tests.test_permissions --verbosity=2
 	@echo "Pruebas de permisos completadas."
 
 find-hola:

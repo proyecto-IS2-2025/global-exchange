@@ -5,9 +5,8 @@
 
 <div class="row row-cols-2 row-cols-md-4 g-4 mt-4 justify-content-center">
   
-  {# TODO PERMISOS: Cada tarjeta se envolverá con {% if perms.xxx %} #}
-  {# Por ahora, todas las tarjetas se muestran para cualquier staff #}
-  
+  {# Ver Clientes - Solo admin #}
+  {% if perms.clientes.view_all_clientes %}
   <div class="col">
     <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
       <div class="display-3 mb-3"><i class="fas fa-users"></i></div>
@@ -15,7 +14,10 @@
       <a href="{% url 'clientes:lista_clientes' %}" class="stretched-link"></a>
     </div>
   </div>
+  {% endif %}
   
+  {# Asignar Cliente - Solo admin #}
+  {% if perms.clientes.manage_cliente_assignment %}
   <div class="col">
     <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
       <div class="display-3 mb-3"><i class="fas fa-user-friends"></i></div>
@@ -23,7 +25,10 @@
       <a href="{% url 'clientes:asociar_clientes_usuarios' %}" class="stretched-link"></a>
     </div>
   </div>
+  {% endif %}
   
+  {# Roles - Solo admin o superuser #}
+  {% if user.is_superuser %}
   <div class="col">
     <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
       <div class="display-3 mb-3"><i class="fas fa-shield-alt"></i></div>
@@ -31,23 +36,10 @@
       <a href="{% url 'group_list' %}" class="stretched-link"></a>
     </div>
   </div>
+  {% endif %}
   
-  <div class="col">
-    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-      <div class="display-3 mb-3"><i class="fas fa-key"></i></div>
-      <h6 class="fw-bold">Permisos</h6>
-      <a href="{% url 'permission_create' %}" class="stretched-link"></a>
-    </div>
-  </div>
-  
-  <div class="col">
-    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-      <div class="display-3 mb-3"><i class="fas fa-percent"></i></div>
-      <h6 class="fw-bold">Descuentos</h6>
-      <a href="{% url 'clientes:lista_descuentos' %}" class="stretched-link"></a>
-    </div>
-  </div>
-  
+  {# Medios de Cobro - Solo admin #}
+  {% if perms.medios_pago.manage_catalogo_medios_pago %}
   <div class="col">
     <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
       <div class="display-3 mb-3"><i class="fas fa-credit-card"></i></div>
@@ -55,7 +47,10 @@
       <a href="{% url 'medios_pago:lista' %}" class="stretched-link"></a>
     </div>
   </div>
+  {% endif %}
   
+  {# Divisas - Admin y Operador #}
+  {% if perms.divisas.view_divisa %}
   <div class="col">
     <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
       <div class="display-3 mb-3"><i class="fas fa-coins"></i></div>
@@ -63,7 +58,10 @@
       <a href="{% url 'divisas:lista' %}" class="stretched-link"></a>
     </div>
   </div>
+  {% endif %}
   
+  {# Tasas - Solo admin #}
+  {% if perms.divisas.manage_cotizaciones_segmento %}
   <div class="col">
     <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
       <div class="display-3 mb-3"><i class="fas fa-rocket"></i></div>
@@ -71,7 +69,10 @@
       <a href="{% url 'divisas:visualizador_tasas_admin' %}" class="stretched-link"></a>
     </div>
   </div>
+  {% endif %}
   
+  {# Historial - Admin y Operador (con lógica diferente) #}
+  {% if perms.transacciones.view_transacciones_globales or perms.transacciones.view_transacciones_asignadas %}
   <div class="col">
     <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
       <div class="display-3 mb-3"><i class="fas fa-arrows-rotate"></i></div>
@@ -79,5 +80,25 @@
       <a href="{% url 'transacciones:historial_admin' %}" class="stretched-link"></a>
     </div>
   </div>
+  {% endif %}
+  
+  {# Límites - Solo admin #}
+  {% if perms.clientes.view_limites_operacion %}
+  <div class="col">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
+      <div class="display-3 mb-3"><i class="fas fa-chart-line"></i></div>
+      <h6 class="fw-bold">Límites</h6>
+      <a href="{% url 'clientes:lista_limites_diarios' %}" class="stretched-link"></a>
+    </div>
+  </div>
+  {% endif %}
   
 </div>
+
+{# Mensaje si NO tiene permisos #}
+{% if not perms.clientes.view_all_clientes and not perms.clientes.view_assigned_clientes %}
+<div class="alert alert-warning mt-4">
+  <i class="fas fa-exclamation-triangle"></i>
+  No tienes permisos asignados. Contacta al administrador.
+</div>
+{% endif %}

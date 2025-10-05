@@ -142,4 +142,35 @@ PERMISOS_CLIENTES = [
         'nivel_riesgo': 'bajo',
         'orden': 70,
     },
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # SEGMENTOS DE CLIENTE (COMENTADO - CRUD NO IMPLEMENTADO AÚN)
+    # ═══════════════════════════════════════════════════════════════════
+    # TODO: Descomentar cuando se implemente el CRUD de segmentos
+    # {
+    #     'app_label': 'clientes',
+    #     'model': 'segmentocliente',
+    #     'codename': 'manage_segmentos_cliente',
+    #     'name': 'Puede gestionar segmentos de cliente',
+    #     'modulo': 'clientes',
+    #     'descripcion': 'Permite crear, editar y eliminar segmentos de cliente (VIP, Gold, Standard)',
+    #     'ejemplo': 'Un administrador puede crear un nuevo segmento "Platinum" con descuentos especiales',
+    #     'nivel_riesgo': 'alto',
+    #     'orden': 120,
+    #     'categoria': 'gestion_segmentos',
+    #     'requiere_auditoria': True,
+    # },
+    # {
+    #     'app_label': 'clientes',
+    #     'model': 'segmentocliente',
+    #     'codename': 'view_segmentos_cliente',
+    #     'name': 'Puede ver segmentos de cliente',
+    #     'modulo': 'clientes',
+    #     'descripcion': 'Permite visualizar los segmentos disponibles y sus características',
+    #     'ejemplo': 'Un operador puede consultar qué beneficios tiene el segmento "Gold"',
+    #     'nivel_riesgo': 'bajo',
+    #     'orden': 121,
+    #     'categoria': 'consulta_segmentos',
+    #     'requiere_auditoria': False,
+    # },
 ]
