@@ -43,7 +43,7 @@
     <div class="container">
       <!-- Brand con icono -->
       <a class="navbar-brand fw-bold d-flex align-items-center" href="{% url 'inicio' %}">
-        <i class="fas fa-house me-2"></i> Global Exchange
+        <i class="fas fa-house me-2"></i> Global Exchange 
         {% if user.is_authenticated %}
           {% if grupo_admin %}
             <small class="text-white ms-1">(Admin)</small>
@@ -68,16 +68,22 @@
 
       <div class="collapse navbar-collapse" id="navbarMain">
         <ul class="navbar-nav ms-auto">
-          {% if user.is_authenticated %}
-            <li class="nav-item d-flex align-items-center">
-              <form method="post" action="{% url 'logout' %}" class="m-0 p-0">
-                {% csrf_token %}
-                <button type="submit" class="nav-link btn btn-link text-white px-0" style="text-decoration: none;">
-                  <i class="fas fa-sign-out-alt me-1"></i> Cerrar sesión
-                </button>
-              </form>
+           {% if user.is_authenticated %}
+            <li class="nav-item me-3">
+                <span class="nav-link text-white">
+                    <i class="fas fa-user-circle me-1"></i>
+                    Bienvenido, <strong>{{ user.username }}</strong>
+                </span>
             </li>
-          {% else %}
+            <li class="nav-item d-flex align-items-center">
+                <form method="post" action="{% url 'logout' %}" class="m-0 p-0">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-link btn btn-link text-white px-0" style="text-decoration: none;">
+                        <i class="fas fa-sign-out-alt me-1"></i> Cerrar sesión
+                    </button>
+                </form>
+            </li>
+        {% else %}
             <li class="nav-item">
               <a class="nav-link" href="{% url 'login' %}">
                 <i class="fas fa-sign-in-alt me-1"></i> Iniciar sesión

@@ -1,7 +1,5 @@
-<p class="text-muted">
-  Bienvenido, <strong>{{ user.get_full_name|default:user.username }}</strong>
-  <i class="fas fa-hand-paper"></i>
-</p>
+
+{% include "partials/visualizador.html" %}
 
 <!-- Botón Realizar operación -->
 <div class="text-center mt-4 mb-5">
@@ -11,10 +9,9 @@
       <span class="btn-text">Realizar Operación</span>
       <i class="fas fa-arrow-right ms-2"></i>
     </span>
-    <span class="btn-operacion-glow"></span>
   </a>
   <p class="text-muted mt-2 small">Compra y venta de divisas al mejor precio</p>
 </div>
 
-{% include "partials/visualizador.html" %}
+
 {% include "simulador/simulador_conversion.html" %}
