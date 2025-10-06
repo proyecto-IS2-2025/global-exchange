@@ -4,7 +4,7 @@ Vistas para la gestión de roles, grupos y permisos del sistema.
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth import get_user_model
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.db.models import Q, Count
