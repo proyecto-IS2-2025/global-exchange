@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load humanize %}
+
+{% block title %}Gestión de Notificaciones{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Configuración de Notificaciones de Tasas</h1>
+            <p class="text-muted">
+                Gestiona cómo y cuándo deseas recibir alertas sobre los cambios en las tasas de divisa.
+            </p>
+        </div>
+    </div>
+
+    <!-- ================= CONFIGURACIÓN GENERAL ================= -->
+    <div class="row mb-5">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    Configuración General
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="guardar_general" value="1">
+
+                        <div class="form-group mb-3">
+                            <label for="{{ form_general.habilitar_notificaciones.id_for_label }}" class="fw-bold">
+                                Habilitar todas las Notificaciones
+                            </label>
+                            {% render_field form_general.habilitar_notificaciones class="form-check-input" %}
+                            <small class="form-text text-muted">
+                                Activa o desactiva todas las alertas configuradas.
+                            </small>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="{{ form_general.canal_notificacion.id_for_label }}" class="fw-bold">
+                                Canal de Notificación
+                            </label>
+                            {% render_field form_general.canal_notificacion class="form-select" %}
+                            <small class="form-text text-muted">
+                                Elige si quieres notificaciones por el sistema, o sistema y correo electrónico.
+                            </small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Guardar Configuración General</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="my-5">
+
+    <!-- ================= BOTÓN NUEVA ALERTA ================= -->
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#nuevaAlertaModal">
+                <i class="fas fa-plus-circle"></i> Agregar Nueva Notificación
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= MODAL NUEVA ALERTA ================= -->
+    <div class="modal fade" id="nuevaAlertaModal" tabindex="-1" aria-labelledby="nuevaAlertaModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="nuevaAlertaModalLabel">Configurar Alerta de Tasa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <form method="post" id="form-alerta-tasa">
+                    {% csrf_token %}
+                    <input type="hidden" name="guardar_alerta" value="1">
+                    <div class="modal-body">
+
+                        <div class="form-group mb-3">
+                            <label class="fw-bold">Tipo de Notificación</label>
+                            {% render_field form_nueva_alerta.tipo_alerta class="form-select" id="id_tipo_alerta" %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 form-group mb-3">
+                                <label class="fw-bold">Divisa</label>
+                                {% render_field form_nueva_alerta.divisa class="form-select" %}
+                            </div>
+                            <div class="col-md-6 form-group mb-3">
+                                <label class="fw-bold">Tipo Operación</label>
+                                {% render_field form_nueva_alerta.tipo_operacion class="form-select" %}
+                            </div>
+                        </div>
+
+                        <div id="campos-umbral" class="border p-3 rounded mt-3 bg-light" style="display: none;">
+                            <h6 class="text-primary">Configuración de Umbral</h6>
+                            <div class="row">
+                                <div class="col-md-6 form-group mb-3">
+                                    <label class="fw-bold">Condición</label>
+                                    {% render_field form_nueva_alerta.condicion_umbral class="form-select" %}
+                                </div>
+                                <div class="col-md-6 form-group mb-3">
+                                    <label class="fw-bold">Monto</label>
+                                    {% render_field form_nueva_alerta.monto_umbral class="form-control" placeholder="Ej: 1.1500" %}
+                                </div>
+                            </div>
+                        </div>
+
+                        {% for field in form_nueva_alerta %}
+                            {% for error in field.errors %}
+                                <div class="alert alert-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form_nueva_alerta.non_field_errors %}
+                            <div class="alert alert-danger">{{ error }}</div>
+                        {% endfor %}
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success">Guardar Notificación</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= TABLA DE NOTIFICACIONES ================= -->
+    <div class="row">
+        <div class="col-12">
+            <h3 class="mb-3">Mis Notificaciones Activas/Inactivas</h3>
+
+            {% if notificaciones %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Divisa</th>
+                            <th>Operación</th>
+                            <th>Cliente</th> <!-- ✅ Nueva columna -->
+                            <th>Condición de Alerta</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for notificacion in notificaciones %}
+                        <tr>
+                            <td><strong>{{ notificacion.divisa }}</strong></td>
+                            <td>{{ notificacion.get_tipo_operacion_display }}</td>
+                            <td>{{ notificacion.cliente_asociado }}</td> <!-- ✅ Mostrar cliente -->
+                            <td>
+                                {% if notificacion.tipo_alerta == 'general' %}
+                                    <span class="badge bg-secondary">Cualquier Cambio de Tasa</span>
+                                {% else %}
+                                    <strong>Umbral:</strong> Tasa de {{ notificacion.get_condicion_umbral_display }}
+                                <span class="fw-bold text-danger">
+                                    Gs. {{ notificacion.monto_umbral|floatformat:0|intcomma }}
+                                </span>
+
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if notificacion.activa %}
+                                    <span class="badge bg-success">Activa</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">Deshabilitada</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'notificaciones:toggle_notificacion' pk=notificacion.pk %}"
+                                   class="btn btn-sm {% if notificacion.activa %}btn-warning{% else %}btn-success{% endif %}"
+                                   title="{% if notificacion.activa %}Deshabilitar{% else %}Habilitar{% endif %}">
+                                    <i class="fas {% if notificacion.activa %}fa-pause{% else %}fa-play{% endif %}"></i>
+                                </a>
+
+                                <button type="button" class="btn btn-sm btn-danger"
+                                        onclick="document.getElementById('delete-form-{{ notificacion.pk }}').submit();"
+                                        title="Eliminar Notificación">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+
+                                <form id="delete-form-{{ notificacion.pk }}" method="POST"
+                                      action="{% url 'notificaciones:eliminar_notificacion' pk=notificacion.pk %}"
+                                      style="display:none;">
+                                    {% csrf_token %}
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info" role="alert">
+                Aún no has configurado ninguna alerta. ¡Usa el botón "Agregar Nueva Notificación" para empezar!
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoAlertaSelect = document.getElementById('id_tipo_alerta');
+    const camposUmbral = document.getElementById('campos-umbral');
+
+    function toggleUmbralFields() {
+        if (tipoAlertaSelect && camposUmbral) {
+            camposUmbral.style.display = tipoAlertaSelect.value === 'umbral' ? 'block' : 'none';
+        }
+    }
+
+    toggleUmbralFields();
+    if (tipoAlertaSelect) {
+        tipoAlertaSelect.addEventListener('change', toggleUmbralFields);
+    }
+
+    // Si hubo error y se quiere reabrir el modal automáticamente
+    {% if alerta_form_error %}
+    const nuevaAlertaModal = new bootstrap.Modal(document.getElementById('nuevaAlertaModal'));
+    nuevaAlertaModal.show();
+    {% endif %}
+});
+</script>
+{% endblock %}

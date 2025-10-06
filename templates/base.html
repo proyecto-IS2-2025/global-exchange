@@ -63,6 +63,54 @@
             <li class="nav-item"><a class="nav-link" href="{% url 'registro' %}">Registrarse</a></li>
           {% endif %}
           {% if not grupo_admin %}
+          {% if user.is_authenticated %}
+          <<li class="nav-item dropdown me-3" style="position: relative;">
+            <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fas fa-bell"></i>
+              {% if notificaciones_count > 0 %}
+              <span class="position-absolute top-50 translate-middle bg-danger rounded-circle" style="width: 6px; height: 6px;"></span>
+              {% endif %}
+            </a>
+
+            <!-- 🔹 Menú de notificaciones ajustado -->
+            <ul class="dropdown-menu dropdown-menu-end p-2 shadow"
+                style="width: 500px; max-height: 400px; overflow-y: auto; position: absolute; right: -400px; top: 50px;">
+              <li class="dropdown-header fw-bold">Notificaciones</li>
+              <li><hr class="dropdown-divider"></li>
+
+              {% if notificaciones_header %}
+                {% for n in notificaciones_header %}
+                <li class="p-2 border-bottom d-flex justify-content-between align-items-start
+                           {% if n.estado_lectura == 'pendiente' %}bg-light{% endif %}">
+                  <div class="flex-grow-1">
+                    <small class="text-muted d-block">{{ n.fecha_creacion|date:"d/m/Y H:i" }}</small>
+                    <span class="d-block text-dark">{{ n.mensaje }}</span>
+                  </div>
+
+                  {% if n.estado_lectura == 'pendiente' %}
+                    <form method="post" action="{% url 'notificaciones:marcar_leida' n.id %}" class="ms-2">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-outline-success" title="Marcar como leída">
+                        <i class="fas fa-check"></i>
+                      </button>
+                    </form>
+                  {% endif %}
+                </li>
+                {% endfor %}
+              {% else %}
+                <li class="p-2 text-center text-muted">Sin notificaciones nuevas</li>
+              {% endif %}
+
+              <li><hr class="dropdown-divider"></li>
+              <li class="text-center">
+                <a href="{% url 'notificaciones:gestion_notificaciones' %}" class="text-primary small">
+                  Configurar notificaciones
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button"
                 data-bs-toggle="dropdown" aria-expanded="false">

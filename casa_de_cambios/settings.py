@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'transacciones',
     'banco',
     'billetera',
+    'notificaciones',
 ]
 
 MIDDLEWARE = [
@@ -67,6 +68,7 @@ TEMPLATES = [
                 'roles.context_processors.grupo_usuario',
                 'roles.context_processors.grupos_context',
                 'simulador.context_processors.simulador_context',
+                'notificaciones.context_processors.notificaciones_usuario',
             ],
         },
     },
