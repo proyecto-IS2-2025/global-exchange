@@ -17,7 +17,7 @@ from .forms import VentaDivisaForm, CompraDivisaForm
 from simulador.views import calcular_simulacion_api
 from clientes.views import get_medio_acreditacion_seleccionado, get_medio_pago_seleccionado
 from divisas.views import redondear
-from clientes.decorators import require_permission  # ← AGREGAR ESTE IMPORT
+from roles.decorators import require_permission  # ← AGREGAR ESTE IMPORT
 
 logger = logging.getLogger(__name__)
 

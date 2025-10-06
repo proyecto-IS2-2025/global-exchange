@@ -1,3 +1,4 @@
+<!-- filepath: c:\proyecto-is2\casa_de_cambios\templates\inicio.html -->
 {% extends "base.html" %}
 {% load static %}
 
@@ -11,7 +12,17 @@
            alt="Global Exchange" class="img-fluid mt-4" style="max-width: 500px;">
     </div>
     <h1 class="h3 text-center">Bienvenido a Global Exchange</h1>
-    <p class="text-center">Usa el menú superior para navegar.</p>
+    
+    {% if usuario_es_registrado %}
+      {# Usuario registrado SIN clientes asignados #}
+      <div class="alert alert-info text-center mt-4">
+        <i class="fas fa-info-circle me-2"></i>
+        Tu cuenta está en espera de aprobación. Un administrador debe asignarte clientes para que puedas realizar operaciones.
+      </div>
+    {% else %}
+      <p class="text-center">Usa el menú superior para navegar.</p>
+    {% endif %}
+    
     <hr class="my-5">
   {% endif %}
 
@@ -19,9 +30,29 @@
     
     {# Menú dinámico según tipo de usuario #}
     {% if usuario_es_staff %}
+      {# ✅ Admin/Operador → Panel de gestión #}
       {% include "menus/menu_staff.html" %}
-    {% else %}
+      
+    {% elif usuario_es_cliente %}
+      {# ✅ Operador de Cuenta CON clientes → Realizar operaciones #}
       {% include "menus/menu_cliente.html" %}
+      
+    {% elif usuario_es_registrado %}
+      {# ⚠️ Usuario registrado SIN clientes → Mensaje de espera #}
+      <div class="card shadow-sm">
+        <div class="card-body text-center py-5">
+          <i class="fas fa-hourglass-half fa-3x text-warning mb-3"></i>
+          <h3 class="card-title">Cuenta en Revisión</h3>
+          <p class="card-text text-muted">
+            Tu cuenta ha sido creada exitosamente. Estamos revisando tu solicitud y pronto un administrador te asignará los clientes correspondientes.
+          </p>
+          <hr class="my-4">
+          <p class="text-muted mb-0">
+            <i class="fas fa-envelope me-2"></i>
+            Recibirás un correo cuando tu cuenta esté lista para operar.
+          </p>
+        </div>
+      </div>
     {% endif %}
     
   {% else %}

@@ -204,11 +204,11 @@ class Command(BaseCommand):
             'view_cotizaciones_segmento',
             'manage_cotizaciones_segmento',
             'realizar_operacion',
-            'manage_divisas',           # ✅ Permiso personalizado
-            'view_divisas',             # ✅ Permiso personalizado
-            'manage_tasas_cambio',      # ✅ Permiso personalizado
-            'view_tasas_cambio',        # ✅ Permiso personalizado
-            'view_divisa',              # Permiso nativo
+            'manage_divisas',
+            'view_divisas',
+            'manage_tasas_cambio',
+            'view_tasas_cambio',
+            'view_divisa',
             'add_divisa',
             'change_divisa',
             'delete_divisa',
@@ -276,10 +276,10 @@ class Command(BaseCommand):
             # ═══════════════════════════════════════════════════════
             'realizar_operacion',
             'view_cotizaciones_segmento',
-            'view_divisas',             # ✅ Permiso personalizado
-            'manage_tasas_cambio',      # ✅ Permiso personalizado
-            'view_tasas_cambio',        # ✅ Permiso personalizado
-            'view_divisa',              # Permiso nativo
+            'view_divisas',
+            'manage_tasas_cambio',
+            'view_tasas_cambio',
+            'view_divisa',
             'view_tasacambio',
             'view_cotizacionsegmento',
             
@@ -293,7 +293,9 @@ class Command(BaseCommand):
         self._assign_permissions('operador', codenames, verbose)
 
     def _configure_cliente(self, verbose):
-        """Configurar permisos para CLIENTE"""
+        """
+        ✅ CORREGIDO: Configurar permisos para CLIENTE (operador de cuenta)
+        """
         codenames = [
             # ═══════════════════════════════════════════════════════
             # OPERACIONES BÁSICAS
@@ -306,16 +308,22 @@ class Command(BaseCommand):
             'view_transacciones_asignadas',
             'cancel_propias_transacciones',
             'view_transaccion',
+            'add_transaccion',            # ✅ AGREGADO
+            'view_historialtransaccion',
             
             # ═══════════════════════════════════════════════════════
-            # MEDIOS DE PAGO (SOLO LOS PROPIOS)
+            # MEDIOS DE PAGO (GESTIÓN COMPLETA)
             # ═══════════════════════════════════════════════════════
             'view_medios_pago',
+            'manage_medios_pago',
             'view_clientemediodepago',
+            'add_clientemediodepago',
+            'change_clientemediodepago',
+            'delete_clientemediodepago',
             'view_mediodepago',
             
             # ═══════════════════════════════════════════════════════
-            # COTIZACIONES
+            # COTIZACIONES Y DIVISAS
             # ═══════════════════════════════════════════════════════
             'view_cotizaciones_segmento',
             'view_divisa',
@@ -328,6 +336,12 @@ class Command(BaseCommand):
             'view_descuentos_segmento',
             'view_segmento',
             'view_descuento',
+            
+            # ═══════════════════════════════════════════════════════
+            # CLIENTES (CONSULTA DE ASIGNADOS)
+            # ═══════════════════════════════════════════════════════
+            'view_assigned_clientes',
+            'view_cliente',
         ]
         
         self._assign_permissions('cliente', codenames, verbose)
@@ -379,9 +393,9 @@ class Command(BaseCommand):
             # DIVISAS (SOLO LECTURA)
             # ═══════════════════════════════════════════════════════
             'view_cotizaciones_segmento',
-            'view_divisas',             # ✅ Permiso personalizado
-            'view_tasas_cambio',        # ✅ Permiso personalizado
-            'view_divisa',              # Permiso nativo
+            'view_divisas',
+            'view_tasas_cambio',
+            'view_divisa',
             'view_tasacambio',
             'view_cotizacionsegmento',
             

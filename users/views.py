@@ -7,7 +7,7 @@ from django.utils.decorators import method_decorator
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 
-from clientes.decorators import require_permission
+from roles.decorators import require_permission
 from .forms import CustomUserCreationForm, CustomUserChangeForm
 from .models import CustomUser
 

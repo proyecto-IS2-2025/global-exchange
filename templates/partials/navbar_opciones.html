@@ -1,56 +1,73 @@
+<!-- filepath: c:\proyecto-is2\casa_de_cambios\templates\partials\navbar_opciones.html -->
 <ul class="dropdown-menu dropdown-menu-end">
-  <li><a class="dropdown-item" href="{% url 'contacto' %}">Contacto</a></li>
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <!-- OPCIÓN PÚBLICA: Contacto -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <li>
+    <a class="dropdown-item" href="{% url 'contacto' %}">
+      <i class="fas fa-envelope me-2"></i> Contacto
+    </a>
+  </li>
 
-{% if user.is_authenticated %}
-
-  {% if grupo_usuario == "admin" %}
-      <a class="dropdown-item fw-bold text-success" href="{% url 'group_list' %}">
-        Ver roles
-      </a>
-    </li>
-    <li>
-      <a class="dropdown-item fw-bold text-success" href="{% url 'permission_create' %}">
-        Crear permisos
-      </a>
-    </li>
-
-  {% elif grupo_usuario == "operador" %}
+  {% if user.is_authenticated %}
     <li><hr class="dropdown-divider"></li>
-    <li>
-      <a class="dropdown-item fw-bold text-black text-info" href="#">
-        Ver clientes
-      </a>
-    </li>
 
-  {% elif grupo_usuario == "cliente" %}
-    <li><hr class="dropdown-divider"></li>
-    <li>
-      <a class="dropdown-item fw-bold text-secondary" href="{% url 'users:perfil_usuario' %}">
-        Mi perfil
-      </a>
-    </li>
-    <li>
-      <a class="dropdown-item fw-bold text-secondary" href="{% url 'clientes:seleccionar_cliente' %}">
-        Seleccionar Cliente
-      </a>
-    </li>    
+    <!-- ═════════════════════════════════════════════════════════════ -->
+    <!-- OPCIONES PARA OPERADOR DE CUENTA (con clientes asignados) -->
+    <!-- ═════════════════════════════════════════════════════════════ -->
+    {% if usuario_es_cliente %}
+      <li>
+        <a class="dropdown-item fw-bold text-primary" href="{% url 'users:perfil_usuario' %}">
+          <i class="fas fa-user me-2"></i> Mi Perfil
+        </a>
+      </li>
+
+      <li>
+        <a class="dropdown-item fw-bold text-primary" href="{% url 'clientes:seleccionar_cliente' %}">
+          <i class="fas fa-exchange-alt me-2"></i> Seleccionar Cliente
+        </a>
+      </li>
+
+      {% if cliente_activo %}
+        <li>
+          <a class="dropdown-item fw-bold text-primary" href="{% url 'clientes:medios_pago_cliente' %}">
+            <i class="fas fa-credit-card me-2"></i> Medios de Pago
+          </a>
+        </li>
+      {% endif %}
+    {% endif %}
+
+    <!-- ═════════════════════════════════════════════════════════════ -->
+    <!-- OPCIONES PARA USUARIO REGISTRADO (sin clientes asignados) -->
+    <!-- ═════════════════════════════════════════════════════════════ -->
+    {% if usuario_es_registrado %}
+      <li>
+        <a class="dropdown-item" href="{% url 'users:perfil_usuario' %}">
+          <i class="fas fa-user me-2"></i> Mi Perfil
+        </a>
+      </li>
+      
+      <li>
+        <a class="dropdown-item disabled text-muted" href="#" tabindex="-1" aria-disabled="true">
+          <i class="fas fa-hourglass-half me-2"></i> Esperando Aprobación
+        </a>
+      </li>
+    {% endif %}
+
   {% else %}
+    <!-- ═════════════════════════════════════════════════════════════ -->
+    <!-- OPCIONES PARA USUARIOS NO AUTENTICADOS -->
+    <!-- ═════════════════════════════════════════════════════════════ -->
     <li><hr class="dropdown-divider"></li>
     <li>
-      <a class="dropdown-item fw-bold text-secondary" href="{% url 'users:perfil_usuario' %}">
-        Mi perfil
+      <a class="dropdown-item" href="{% url 'login' %}">
+        <i class="fas fa-sign-in-alt me-2"></i> Iniciar sesión
       </a>
     </li>
     <li>
-      <a class="dropdown-item fw-bold text-secondary" href="{% url 'clientes:medios_pago_cliente' %}">
-        <i class="fas fa-credit-card me-2"></i>Medios de Pago
+      <a class="dropdown-item" href="{% url 'registro' %}">
+        <i class="fas fa-user-plus me-2"></i> Registrarse
       </a>
     </li>
-    <li>
-      <a class="dropdown-item fw-bold text-secondary" href="{% url 'clientes:seleccionar_cliente' %}">
-        Seleccionar Cliente
-      </a>
-    </li>   
   {% endif %}
-{% endif %}
 </ul>

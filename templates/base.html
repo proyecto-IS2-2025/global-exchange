@@ -1,3 +1,4 @@
+<!-- filepath: c:\proyecto-is2\casa_de_cambios\templates\base.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -38,19 +39,23 @@
   </style>
 </head>
 <body class="bg-light">
-  <!-- Navbar -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <!-- NAVBAR -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-      <!-- Brand con icono -->
+      <!-- Brand con icono y badge de rol -->
       <a class="navbar-brand fw-bold d-flex align-items-center" href="{% url 'inicio' %}">
         <i class="fas fa-house me-2"></i> Global Exchange
+        
+        {# ✅ Badge diferenciado por tipo de usuario #}
         {% if user.is_authenticated %}
-          {% if grupo_admin %}
-            <small class="text-white ms-1">(Admin)</small>
-          {% elif grupo_operador %}
-            <small class="text-white ms-1">(Operador)</small>
-          {% elif grupo_cliente %}
-            <small class="text-white ms-1">(Cliente)</small>
+          {% if usuario_es_staff %}
+            <small class="text-white ms-1">({{ tipo_usuario|title }})</small>
+          {% elif usuario_es_cliente %}
+            <small class="text-white ms-1">(Operador de Cuenta)</small>
+          {% elif usuario_es_registrado %}
+            <small class="text-warning ms-1">(⏳ Pendiente de Aprobación)</small>
           {% endif %}
         {% endif %}
       </a>
@@ -69,6 +74,7 @@
       <div class="collapse navbar-collapse" id="navbarMain">
         <ul class="navbar-nav ms-auto">
           {% if user.is_authenticated %}
+            <!-- Botón Cerrar Sesión -->
             <li class="nav-item d-flex align-items-center">
               <form method="post" action="{% url 'logout' %}" class="m-0 p-0">
                 {% csrf_token %}
@@ -78,6 +84,7 @@
               </form>
             </li>
           {% else %}
+            <!-- Links para usuarios no autenticados -->
             <li class="nav-item">
               <a class="nav-link" href="{% url 'login' %}">
                 <i class="fas fa-sign-in-alt me-1"></i> Iniciar sesión
@@ -90,7 +97,10 @@
             </li>
           {% endif %}
 
-          {% if not grupo_admin %}
+          {# ✅ Menú "Opciones" solo para NO staff #}
+          {# Staff (admin/operador) NO ve este menú #}
+          {# Operadores de cuenta, usuarios registrados y anónimos SÍ lo ven #}
+          {% if not usuario_es_staff %}
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button"
                  data-bs-toggle="dropdown" aria-expanded="false">
@@ -104,7 +114,9 @@
     </div>
   </nav>
 
-  <!-- Mensajes Django -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <!-- MENSAJES DJANGO -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
   {% if messages %}
     <div class="container mt-3">
       {% for message in messages %}
@@ -116,18 +128,25 @@
     </div>
   {% endif %}
 
-  <!-- Contenido -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <!-- CONTENIDO PRINCIPAL -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
   <main class="container py-4">
     {% block content %}{% endblock %}
   </main>
 
-  <!-- Footer fijo abajo -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <!-- FOOTER -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
   <footer class="border-top py-3 bg-white">
     <div class="container text-center text-muted small">
       © {{ now|default:""|date:"Y" }} Global Exchange
     </div>
   </footer>
 
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <!-- SCRIPTS -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
   <!-- Bootstrap JS (CDN) -->
   <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"

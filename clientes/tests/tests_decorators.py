@@ -4,7 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.test import RequestFactory, TestCase
 
-from clientes.decorators import require_permission
+from roles.decorators import require_permission
 from clientes.models import AsignacionCliente, Cliente, Segmento
 
 

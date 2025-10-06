@@ -95,7 +95,7 @@
       "date_joined": "2025-09-15T10:05:00Z",
       "is_cambista": true,
       "ultimo_cliente_id": null,
-      "groups": [4],
+      "groups": [6],
       "user_permissions": []
     }
   },
@@ -129,7 +129,7 @@
       "username": "test_operador",
       "first_name": "Test",
       "last_name": "Operador",
-      "email": "test_operador@test.com",
+      "email": "operador@test.com",
       "is_staff": true,
       "is_active": true,
       "date_joined": "2025-10-03T10:00:00Z",
@@ -149,13 +149,33 @@
       "username": "test_cliente",
       "first_name": "Test",
       "last_name": "Cliente",
-      "email": "test_cliente@test.com",
+      "email": "cliente@test.com",
       "is_staff": false,
       "is_active": true,
       "date_joined": "2025-10-03T10:00:00Z",
       "is_cambista": true,
       "ultimo_cliente_id": null,
       "groups": [5],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "users.customuser",
+    "pk": 9,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$jIRXr1HvZbtMX6eBxEowBv$VbkJvB8clLm/rzDzpBG1tWVBVikY9xz0RV/lLoJxDQM=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "test_usuario_registrado",
+      "first_name": "Test",
+      "last_name": "Usuario Registrado",
+      "email": "registrado@test.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2025-10-03T10:00:00Z",
+      "is_cambista": false,
+      "ultimo_cliente_id": null,
+      "groups": [6],
       "user_permissions": []
     }
   }

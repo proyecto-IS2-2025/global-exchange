@@ -15,7 +15,7 @@ from .models import Divisa, TasaCambio, CotizacionSegmento
 from clientes.models import Cliente, Segmento
 from .forms import DivisaForm, TasaCambioForm
 from .services import ultimas_por_segmento
-from clientes.decorators import require_permission  # ← AGREGAR ESTE IMPORT
+from roles.decorators import require_permission  # ← AGREGAR ESTE IMPORT
 
 
 # ═══════════════════════════════════════════════════════════════════

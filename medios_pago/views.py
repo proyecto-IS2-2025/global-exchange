@@ -11,7 +11,7 @@ import json
 
 from .models import MedioDePago, CampoMedioDePago, PaymentTemplate
 from .forms import MedioDePagoForm, create_campo_formset
-from clientes.decorators import require_permission
+from roles.decorators import require_permission
 
 
 @method_decorator(require_permission("medios_pago.view_catalogo_medios_pago", check_client_assignment=False), name="dispatch")

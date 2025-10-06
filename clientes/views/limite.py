@@ -14,7 +14,7 @@ from datetime import datetime, time
 
 from clientes.models import LimiteDiario, LimiteMensual
 from clientes.forms import LimiteDiarioForm, LimiteMensualForm
-from clientes.decorators import require_permission
+from roles.decorators import require_permission
 
 
 @login_required

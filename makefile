@@ -118,10 +118,17 @@ reset-db:
 	poetry run python manage.py sync_permissions
 	poetry run python manage.py setup_test_roles --verbose
 	poetry run python manage.py sync_role_status
+	poetry run python manage.py create_dev_user
 	
 	@echo "Base de datos reiniciada y datos cargados."
 
 sync:
 	@echo "Sincronizando repositorio local con el remoto..."
-	 poetry run python manage.py sync_permissions
+	 poetry run python manage.py sync_permissions --verbose
 	@echo "Repositorio sincronizado."
+
+check:
+	@echo "Verificando el estado del proyecto..."
+	poetry run python manage.py check
+	@echo "Verificación completada."
+

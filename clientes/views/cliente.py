@@ -13,7 +13,7 @@ from django.db.models import Q
 from clientes.models import Cliente, AsignacionCliente, Segmento
 from clientes.forms import ClienteForm
 import logging
-from clientes.decorators import require_permission
+from roles.decorators import require_permission
 
 logger = logging.getLogger(__name__)
 

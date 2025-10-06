@@ -8,7 +8,7 @@ from django.contrib.auth.models import Group
 from django.contrib import messages
 
 from clientes.models import Cliente, AsignacionCliente
-from clientes.decorators import require_permission
+from roles.decorators import require_permission
 
 User = get_user_model()
 

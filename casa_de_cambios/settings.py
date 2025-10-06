@@ -1,48 +1,73 @@
+"""
+Configuración de Django para el proyecto Casa de Cambios.
+"""
 from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-# Ya tenés BASE_DIR definido más abajo; si lo preferís aquí, usa:
-# BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(os.path.join(Path(__file__).resolve().parent.parent, '.env'))
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-# BASE_DIR = Path(__file__).resolve().parent.parent  # Duplicate definition removed
+# ═════════════════════════════════════════════════════════════════════
+# CONFIGURACIÓN BASE
+# ═════════════════════════════════════════════════════════════════════
 
-# Configuración adicional
-#DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes', 'on')
-DEBUG = True
-SECRET_KEY = os.environ.get('SECRET_KEY', 'tu-clave-por-defecto-para-desarrollo')
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Application definition
+# Cargar variables de entorno
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+
+# ═════════════════════════════════════════════════════════════════════
+# SEGURIDAD
+# ═════════════════════════════════════════════════════════════════════
+
+# ⚠️ IMPORTANTE: Asegúrate de tener SECRET_KEY en .env
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError(
+        "SECRET_KEY no está configurada. "
+        "Agrega SECRET_KEY='tu-clave-secreta' en el archivo .env"
+    )
+
+# Debug mode (solo True en desarrollo)
+DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes')
+
+# Hosts permitidos
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+
+# ═════════════════════════════════════════════════════════════════════
+# APLICACIONES
+# ═════════════════════════════════════════════════════════════════════
 
 INSTALLED_APPS = [
+    # Django apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'users.apps.UsersConfig',
     'django.contrib.humanize',
-    'interfaz',
-    'clientes',
+    
+    # Third-party apps
+    'widget_tweaks',
+    
+    # Local apps
+    'users.apps.UsersConfig',
     'roles',
+    'clientes',
     'divisas',
     'medios_pago',
-    'widget_tweaks',
-    'simulador',
     'transacciones',
+    'operacion_divisas',
     'banco',
     'billetera',
-    'mfa', 
+    'simulador',
+    'mfa',
     'autenticacion',
-    'operacion_divisas',
+    'interfaz',
 ]
+
+# ═════════════════════════════════════════════════════════════════════
+# MIDDLEWARE
+# ═════════════════════════════════════════════════════════════════════
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -50,25 +75,32 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'clientes.middleware.ClienteActivoMiddleware',
+    'clientes.middleware.ClienteActivoMiddleware',  # Middleware personalizado
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
 ROOT_URLCONF = 'casa_de_cambios.urls'
 
+# ═════════════════════════════════════════════════════════════════════
+# TEMPLATES
+# ═════════════════════════════════════════════════════════════════════
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                # ✅ Context processors de Django (TODOS necesarios)
+                'django.template.context_processors.debug',      # ← AGREGADO
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                
+                # ✅ Context processors personalizados
                 'roles.context_processors.grupo_usuario',
-                'roles.context_processors.grupos_context',
                 'simulador.context_processors.simulador_context',
             ],
         },
@@ -77,9 +109,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'casa_de_cambios.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+# ═════════════════════════════════════════════════════════════════════
+# BASE DE DATOS
+# ═════════════════════════════════════════════════════════════════════
 
 DATABASES = {
     'default': {
@@ -87,16 +119,19 @@ DATABASES = {
         'NAME': os.environ.get('DB_NAME', 'global_exchange'),
         'USER': os.environ.get('DB_USER', 'django_user'),
         'PASSWORD': os.environ.get('DB_PASSWORD', 'django123'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),  # ¡CORREGIDO!
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': int(os.environ.get('DB_PORT', '5432')),
         'TEST': {
-            'NAME': 'test_global_exchange',  # Nombre específico para la BD de prueba
+            'NAME': 'test_global_exchange',
         },
     }
 }
 
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+# ═════════════════════════════════════════════════════════════════════
+# AUTENTICACIÓN
+# ═════════════════════════════════════════════════════════════════════
+
+AUTH_USER_MODEL = 'users.CustomUser'
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -104,6 +139,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,  # ← Buena práctica: mínimo 8 caracteres
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -113,75 +151,97 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# URLs de autenticación
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/redirect-dashboard/'
+LOGOUT_REDIRECT_URL = 'inicio'
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
-
-USE_I18N = True
-
-USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
-# Configuración de archivos estáticos
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
-#email de verificación
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
+# ═════════════════════════════════════════════════════════════════════
+# EMAIL
+# ═════════════════════════════════════════════════════════════════════
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'glex.globalexchange@gmail.com'
-EMAIL_HOST_PASSWORD = 'tpsh yedw lthc oprs'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'glex.globalexchange@gmail.com')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'tpsh yedw lthc oprs')
 
-#login y logout redirect
-#LOGIN_REDIRECT_URL = 'inicio'
-LOGIN_URL = '/login/'
-LOGOUT_REDIRECT_URL = 'inicio'
-LOGIN_REDIRECT_URL = '/redirect-dashboard/'
+# ⚠️ RECOMENDACIÓN: Mover credenciales de email a .env
+# EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
-LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'   # a dónde redirige tras login exitoso (puedes poner 'inicio')
+# ═════════════════════════════════════════════════════════════════════
+# INTERNACIONALIZACIÓN
+# ═════════════════════════════════════════════════════════════════════
 
+LANGUAGE_CODE = 'es-py'  # Español de Paraguay
+TIME_ZONE = 'America/Asuncion'
+USE_I18N = True
+USE_TZ = True
 
+# ═════════════════════════════════════════════════════════════════════
+# ARCHIVOS ESTÁTICOS
+# ═════════════════════════════════════════════════════════════════════
 
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 
+# ═════════════════════════════════════════════════════════════════════
+# LOGGING
+# ═════════════════════════════════════════════════════════════════════
 
+import os  # ← Asegurar que está importado al inicio
 
-AUTH_USER_MODEL = 'users.CustomUser'
+# Crear carpeta de logs automáticamente
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(exist_ok=True)  # ← AGREGAR ESTA LÍNEA
 
-DEBUG = True
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'django.log',
+            'maxBytes': 1024 * 1024 * 5,  # 5 MB
+            'backupCount': 3,
+            'formatter': 'verbose',
         },
     },
     'root': {
         'handlers': ['console'],
         'level': 'INFO',
     },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+        'roles': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+    },
 }
 
+# ═════════════════════════════════════════════════════════════════════
+# OTROS
+# ═════════════════════════════════════════════════════════════════════
 
-TIME_ZONE = 'America/Asuncion'
-USE_TZ = True
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

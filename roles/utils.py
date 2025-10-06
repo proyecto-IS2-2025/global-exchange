@@ -3,6 +3,9 @@ Utilidades para gestión de permisos.
 """
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 def get_permissions_by_module(modulo):
@@ -79,72 +82,57 @@ def get_user_permission_count(user):
 
 def es_staff(user):
     """
-    Determina si un usuario tiene permisos de staff/empleado.
-    Un usuario es staff si tiene al menos un permiso administrativo.
+    Verifica si el usuario es staff (admin o operador).
     
     Args:
-        user: Instancia de Usuario
+        user: Instancia de CustomUser
         
     Returns:
-        bool: True si es staff, False si no
-        
-    Ejemplo:
-        >>> if es_staff(request.user):
-        ...     # Mostrar panel administrativo
+        bool: True si es admin o operador, False en caso contrario
     """
     if not user.is_authenticated:
         return False
     
+    # Superusuario siempre es staff
     if user.is_superuser:
         return True
     
-    # Lista de permisos que identifican a un usuario como staff
-    # Si tiene AL MENOS UNO de estos, es considerado staff
-    permisos_staff = [
-        'clientes.view_cliente',
-        'clientes.view_all_clientes',
-        'auth.view_group',
-        'divisas.view_divisas',
-        'divisas.manage_divisas',
-        'transacciones.view_transacciones_globales',
-        'medios_pago.view_mediodepago',
-        'users.manage_usuarios',
-    ]
-    
-    return any(user.has_perm(perm) for perm in permisos_staff)
+    # Verificar grupos de staff
+    grupos_staff = ['admin', 'operador']
+    return user.groups.filter(name__in=grupos_staff).exists()
 
 
 def obtener_tipo_usuario(user):
     """
-    Retorna un string descriptivo del tipo de usuario.
-    Útil para mostrar en la UI (navbar, perfil, etc.).
+    Obtiene el tipo de usuario basado en sus grupos.
     
     Args:
-        user: Instancia de Usuario
+        user: Instancia de CustomUser
         
     Returns:
-        str: Tipo de usuario ('Anónimo', 'Superadmin', 'Admin', 'Cliente', etc.)
-        
-    Ejemplo:
-        >>> tipo = obtener_tipo_usuario(request.user)
-        >>> # En template: "Bienvenido {{ tipo }}"
+        str: 'admin', 'operador', 'cliente', 'usuario_registrado' o 'anonimo'
     """
     if not user.is_authenticated:
-        return 'Anónimo'
+        return 'anonimo'
     
+    # Superusuario es admin
     if user.is_superuser:
-        return 'Superadmin'
+        return 'admin'
     
-    if es_staff(user):
-        # Intentar obtener el nombre del primer grupo como "rol"
-        primer_grupo = user.groups.first()
-        if primer_grupo:
-            # Capitalizar el nombre del grupo (admin → Admin, operador → Operador)
-            return primer_grupo.name.capitalize()
-        return 'Staff'
+    # Obtener grupos del usuario
+    grupos = list(user.groups.values_list('name', flat=True))
     
-    # Usuario sin permisos administrativos
-    return 'Cliente'
+    # Orden de prioridad
+    if 'admin' in grupos:
+        return 'admin'
+    elif 'operador' in grupos:
+        return 'operador'
+    elif 'cliente' in grupos:
+        return 'cliente'
+    elif 'usuario_registrado' in grupos:
+        return 'usuario_registrado'
+    
+    return 'anonimo'
 
 
 def get_modulos_con_permisos(user):
@@ -215,3 +203,20 @@ def tiene_permiso_en_modulo(user, modulo):
             return True
     
     return False
+
+
+def tiene_clientes_asignados(user):
+    """
+    Verifica si el usuario tiene clientes asignados.
+    
+    Args:
+        user: Instancia de CustomUser
+        
+    Returns:
+        bool: True si tiene clientes asignados, False en caso contrario
+    """
+    if not user.is_authenticated:
+        return False
+    
+    from clientes.models import AsignacionCliente
+    return AsignacionCliente.objects.filter(usuario=user).exists()

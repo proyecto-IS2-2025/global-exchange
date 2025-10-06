@@ -9,7 +9,7 @@ from django.urls import reverse_lazy
 
 from clientes.models import Descuento, HistorialDescuentos, Segmento
 from clientes.forms import DescuentoForm
-from clientes.decorators import require_permission
+from roles.decorators import require_permission
 
 
 @method_decorator(login_required, name='dispatch')
