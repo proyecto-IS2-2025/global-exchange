@@ -1,105 +1,246 @@
-{# Menu para staff - Basado en permisos #}
+{# Menu para staff - Basado en permisos con código de colores #}
 
 <h2 class="h4 mb-4 text-center">Panel de {{ tipo_usuario }}</h2>
 <p class="text-muted text-center">Gestiona el sistema desde las opciones de abajo.</p>
 
 <div class="row row-cols-2 row-cols-md-4 g-4 mt-4 justify-content-center">
   
-  {# ✅ CORREGIDO: Ver Clientes - Requiere AL MENOS UNO de los permisos #}
+  {# VER CLIENTES - Amarillo (Información sensible) #}
   {% if perms.clientes.view_all_clientes or perms.clientes.view_assigned_clientes %}
   <div class="col">
-    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-      <div class="display-3 mb-3"><i class="fas fa-users"></i></div>
+    <div class="card opcion_admin opcion-warning text-center border-0 rounded-4 h-100 p-4 shadow-hover">
+      <div class="display-3 mb-3">
+        <i class="fas fa-users text-warning"></i>
+      </div>
       <h6 class="fw-bold">Ver Clientes</h6>
+      {% if perms.clientes.view_all_clientes %}
+        <small class="text-muted d-block mt-1">Todos los clientes</small>
+      {% else %}
+        <small class="text-muted d-block mt-1">Clientes asignados</small>
+      {% endif %}
       <a href="{% url 'clientes:lista_clientes' %}" class="stretched-link"></a>
     </div>
   </div>
   {% endif %}
   
-  {# Asignar Cliente - Solo admin #}
+  {# ASIGNAR CLIENTES - Rojo (Crítico) #}
   {% if perms.clientes.manage_cliente_assignment %}
   <div class="col">
-    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-      <div class="display-3 mb-3"><i class="fas fa-user-friends"></i></div>
-      <h6 class="fw-bold">Asignar Cliente</h6>
+    <div class="card opcion_admin opcion-danger text-center border-0 rounded-4 h-100 p-4 shadow-hover">
+      <div class="display-3 mb-3">
+        <i class="fas fa-user-friends text-danger"></i>
+      </div>
+      <h6 class="fw-bold">Asignar Clientes</h6>
+      <small class="text-muted d-block mt-1">Gestión de asignaciones</small>
       <a href="{% url 'clientes:asociar_clientes_usuarios' %}" class="stretched-link"></a>
     </div>
   </div>
   {% endif %}
   
-  {# Roles - Solo superuser #}
+  {# ROLES - Rojo (Crítico) #}
   {% if user.is_superuser %}
   <div class="col">
-    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-      <div class="display-3 mb-3"><i class="fas fa-shield-alt"></i></div>
+    <div class="card opcion_admin opcion-danger text-center border-0 rounded-4 h-100 p-4 shadow-hover">
+      <div class="display-3 mb-3">
+        <i class="fas fa-shield-alt text-danger"></i>
+      </div>
       <h6 class="fw-bold">Roles</h6>
+      <small class="text-muted d-block mt-1">Gestión de permisos</small>
       <a href="{% url 'group_list' %}" class="stretched-link"></a>
     </div>
   </div>
   {% endif %}
   
-  {# Medios de Cobro - Solo admin #}
+  {# MEDIOS DE PAGO - Rojo (Crítico) #}
   {% if perms.medios_pago.manage_catalogo_medios_pago %}
   <div class="col">
-    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-      <div class="display-3 mb-3"><i class="fas fa-credit-card"></i></div>
-      <h6 class="fw-bold">Medios de Cobro</h6>
+    <div class="card opcion_admin opcion-danger text-center border-0 rounded-4 h-100 p-4 shadow-hover">
+      <div class="display-3 mb-3">
+        <i class="fas fa-credit-card text-danger"></i>
+      </div>
+      <h6 class="fw-bold">Medios de Pago</h6>
+      <small class="text-muted d-block mt-1">Catálogo de medios</small>
       <a href="{% url 'medios_pago:lista' %}" class="stretched-link"></a>
     </div>
   </div>
   {% endif %}
   
-  {# Divisas - Admin y Operador #}
+  {# DIVISAS - Verde (Normal) #}
   {% if perms.divisas.view_divisa %}
   <div class="col">
-    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-      <div class="display-3 mb-3"><i class="fas fa-coins"></i></div>
+    <div class="card opcion_admin opcion-success text-center border-0 rounded-4 h-100 p-4 shadow-hover">
+      <div class="display-3 mb-3">
+        <i class="fas fa-coins text-success"></i>
+      </div>
       <h6 class="fw-bold">Divisas</h6>
+      <small class="text-muted d-block mt-1">Catálogo de divisas</small>
       <a href="{% url 'divisas:lista' %}" class="stretched-link"></a>
     </div>
   </div>
   {% endif %}
   
-  {# Tasas - Solo admin #}
+  {# TASAS DE CAMBIO - Verde (Normal) #}
   {% if perms.divisas.manage_cotizaciones_segmento %}
   <div class="col">
-    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-      <div class="display-3 mb-3"><i class="fas fa-rocket"></i></div>
-      <h6 class="fw-bold">Tasas</h6>
+    <div class="card opcion_admin opcion-success text-center border-0 rounded-4 h-100 p-4 shadow-hover">
+      <div class="display-3 mb-3">
+        <i class="fas fa-chart-line text-success"></i>
+      </div>
+      <h6 class="fw-bold">Tasas de Cambio</h6>
+      <small class="text-muted d-block mt-1">Gestión de cotizaciones</small>
       <a href="{% url 'divisas:visualizador_tasas_admin' %}" class="stretched-link"></a>
     </div>
   </div>
   {% endif %}
   
-  {# Historial - Admin y Operador (con lógica diferente) #}
+  {# HISTORIAL - Amarillo (Sensible) #}
   {% if perms.transacciones.view_transacciones_globales or perms.transacciones.view_transacciones_asignadas %}
   <div class="col">
-    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-      <div class="display-3 mb-3"><i class="fas fa-arrows-rotate"></i></div>
+    <div class="card opcion_admin opcion-warning text-center border-0 rounded-4 h-100 p-4 shadow-hover">
+      <div class="display-3 mb-3">
+        <i class="fas fa-history text-warning"></i>
+      </div>
       <h6 class="fw-bold">Historial</h6>
+      {% if perms.transacciones.view_transacciones_globales %}
+        <small class="text-muted d-block mt-1">Todas las transacciones</small>
+      {% else %}
+        <small class="text-muted d-block mt-1">Transacciones asignadas</small>
+      {% endif %}
       <a href="{% url 'transacciones:historial_admin' %}" class="stretched-link"></a>
     </div>
   </div>
   {% endif %}
   
-  {# Límites - Solo admin #}
+  {# LÍMITES - Rojo (Crítico) #}
   {% if perms.clientes.view_limites_operacion %}
   <div class="col">
-    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-      <div class="display-3 mb-3"><i class="fas fa-chart-line"></i></div>
+    <div class="card opcion_admin opcion-danger text-center border-0 rounded-4 h-100 p-4 shadow-hover">
+      <div class="display-3 mb-3">
+        <i class="fas fa-gauge-high text-danger"></i>
+      </div>
       <h6 class="fw-bold">Límites</h6>
+      <small class="text-muted d-block mt-1">Límites operacionales</small>
       <a href="{% url 'clientes:panel_limites' %}" class="stretched-link"></a>
+    </div>
+  </div>
+  {% endif %}
+  
+  {# DESCUENTOS - Azul (Bajo) #}
+  {% if perms.clientes.manage_descuentos %}
+  <div class="col">
+    <div class="card opcion_admin opcion-info text-center border-0 rounded-4 h-100 p-4 shadow-hover">
+      <div class="display-3 mb-3">
+        <i class="fas fa-percent text-info"></i>
+      </div>
+      <h6 class="fw-bold">Descuentos</h6>
+      <small class="text-muted d-block mt-1">Gestión de descuentos</small>
+      <a href="{% url 'clientes:lista_descuentos' %}" class="stretched-link"></a>
     </div>
   </div>
   {% endif %}
   
 </div>
 
-{# ✅ MEJORADO: Mensaje más específico #}
-{% if not perms.clientes.view_all_clientes and not perms.clientes.view_assigned_clientes and not perms.divisas.view_divisa %}
-<div class="alert alert-warning mt-4 text-center">
-  <i class="fas fa-exclamation-triangle me-2"></i>
-  <strong>Sin permisos asignados</strong>
-  <p class="mb-0 mt-2">Tu cuenta aún no tiene permisos configurados. Contacta al administrador del sistema.</p>
+{# MENSAJE SI NO HAY PERMISOS #}
+{% if not perms.clientes.view_all_clientes and not perms.clientes.view_assigned_clientes and not perms.divisas.view_divisa and not perms.transacciones.view_transacciones_asignadas %}
+<div class="alert alert-warning mt-5 text-center shadow-sm" role="alert">
+  <div class="mb-3">
+    <i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
+  </div>
+  <h5 class="alert-heading">
+    <strong>Sin permisos asignados</strong>
+  </h5>
+  <p class="mb-3">
+    Tu cuenta de staff aún no tiene permisos configurados para acceder a las funcionalidades del sistema.
+  </p>
+  <hr>
+  <div class="d-flex justify-content-center gap-3 mt-3">
+    <a href="mailto:admin@casadecambios.com" class="btn btn-warning btn-sm">
+      <i class="fas fa-envelope me-2"></i>Contactar administrador
+    </a>
+    <a href="{% url 'inicio' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="fas fa-home me-2"></i>Volver al inicio
+    </a>
+  </div>
 </div>
 {% endif %}
+
+{# ESTILOS #}
+<style>
+/* Base */
+.opcion_admin {
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.opcion_admin .display-3 {
+  transition: transform 0.2s ease;
+}
+
+.opcion_admin:hover .display-3 {
+  transform: scale(1.1) rotate(3deg);
+}
+
+.opcion_admin small {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  font-weight: 500;
+}
+
+/* Crítico - Rojo */
+.opcion-danger {
+  background: linear-gradient(145deg, #fff5f5 0%, #ffe5e5 100%);
+  border-left: 4px solid #dc3545;
+}
+
+.opcion-danger:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(220, 53, 69, 0.25);
+  border-color: #dc3545;
+}
+
+/* Sensible - Amarillo */
+.opcion-warning {
+  background: linear-gradient(145deg, #fffbf0 0%, #fff3cd 100%);
+  border-left: 4px solid #ffc107;
+}
+
+.opcion-warning:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(255, 193, 7, 0.25);
+  border-color: #ffc107;
+}
+
+/* Normal - Verde */
+.opcion-success {
+  background: linear-gradient(145deg, #f1f9f4 0%, #d4edda 100%);
+  border-left: 4px solid #28a745;
+}
+
+.opcion-success:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(40, 167, 69, 0.25);
+  border-color: #28a745;
+}
+
+/* Bajo - Azul */
+.opcion-info {
+  background: linear-gradient(145deg, #f0f9ff 0%, #d1ecf1 100%);
+  border-left: 4px solid #17a2b8;
+}
+
+.opcion-info:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(23, 162, 184, 0.25);
+  border-color: #17a2b8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .opcion_admin:hover {
+    transform: translateY(-3px);
+  }
+}
+</style>
