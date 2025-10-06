@@ -75,9 +75,12 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'clientes.middleware.ClienteActivoMiddleware',  # Middleware personalizado
+    'clientes.middleware.ClienteActivoMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    
+    # ✅ AGREGAR AL FINAL (solo en desarrollo)
+    'roles.middleware.CustomErrorHandlerMiddleware',
 ]
 
 ROOT_URLCONF = 'casa_de_cambios.urls'
@@ -94,13 +97,13 @@ TEMPLATES = [
         'OPTIONS': {
             'context_processors': [
                 # ✅ Context processors de Django (TODOS necesarios)
-                'django.template.context_processors.debug',      # ← AGREGADO
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 
                 # ✅ Context processors personalizados
-                'roles.context_processors.grupo_usuario',
+                'roles.context_processors.grupo_usuario',  # ← MANTENER SOLO ESTE (incluye user_permissions)
                 'simulador.context_processors.simulador_context',
             ],
         },

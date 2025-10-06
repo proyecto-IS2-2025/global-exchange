@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Solicitud incorrecta{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-secondary">
+                <div class="card-header bg-secondary text-white text-center">
+                    <i class="bi bi-x-octagon" style="font-size: 3rem;"></i>
+                    <h2 class="mt-3">❌ Solicitud incorrecta</h2>
+                </div>
+                
+                <div class="card-body text-center">
+                    <h4 class="text-secondary mb-4">{{ mensaje }}</h4>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        Los datos enviados no son válidos o están incompletos.
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Volver atrás
+                        </a>
+                        <a href="{{ url_redireccion }}" class="btn btn-primary">
+                            <i class="bi bi-house"></i> Ir al inicio
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

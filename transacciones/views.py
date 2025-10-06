@@ -491,7 +491,7 @@ class HistorialTransaccionesClienteView(LoginRequiredMixin, ListView):
 
 
 @login_required
-@require_permission("transacciones.view_transacciones_globales")  # ✅ SIN check_client_assignment (correcto para admin)
+@require_permission("transacciones.view_transacciones_globales")  
 def historial_admin(request):
     """
     🔐 PROTEGIDA: transacciones.view_transacciones_globales

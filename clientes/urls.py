@@ -83,5 +83,6 @@ urlpatterns = [
     #Seleccionar medio de pago
     path('seleccionar-medio-pago/', views.SeleccionarMedioPagoView.as_view(), name='seleccionar_medio_pago'),
 
-
+    # ✅ NUEVA RUTA: Panel unificado de límites
+    path('limites/', views.panel_limites, name='panel_limites'),
 ]

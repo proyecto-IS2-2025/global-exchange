@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Gestión de Límites{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="card shadow-lg mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i> Gestión de Límites
+                    </h2>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'inicio' %}" class="btn btn-light">
+                            <i class="fas fa-arrow-left me-1"></i> Volver
+                        </a>
+                        {% if puede_gestionar %}
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="fas fa-plus me-1"></i> Nuevo Límite
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'clientes:crear_limite_diario' %}">
+                                        <i class="fas fa-calendar-day me-2"></i> Límite Diario
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'clientes:crear_limite_mensual' %}">
+                                        <i class="fas fa-calendar-alt me-2"></i> Límite Mensual
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs de Navegación -->
+            <ul class="nav nav-tabs mb-4" id="limitesTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="diarios-tab" data-bs-toggle="tab" data-bs-target="#diarios" type="button" role="tab">
+                        <i class="fas fa-calendar-day me-2"></i> Límites Diarios
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="mensuales-tab" data-bs-toggle="tab" data-bs-target="#mensuales" type="button" role="tab">
+                        <i class="fas fa-calendar-alt me-2"></i> Límites Mensuales
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Contenido de Tabs -->
+            <div class="tab-content" id="limitesTabsContent">
+                
+                <!-- TAB: Límites Diarios -->
+                <div class="tab-pane fade show active" id="diarios" role="tabpanel">
+                    <div class="card shadow">
+                        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-calendar-day me-2"></i> Límites Diarios
+                            </h5>
+                            <a href="{% url 'clientes:lista_limites_diarios' %}" class="btn btn-sm btn-light">
+                                <i class="fas fa-list me-1"></i> Ver Todos
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped align-middle">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th><i class="fas fa-calendar me-1"></i> Fecha</th>
+                                            <th><i class="fas fa-dollar-sign me-1"></i> Monto Máximo</th>
+                                            <th><i class="fas fa-clock me-1"></i> Vigencia</th>
+                                            {% if puede_gestionar %}
+                                            <th class="text-center"><i class="fas fa-cog me-1"></i> Acciones</th>
+                                            {% endif %}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for limite in limites_diarios %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ limite.fecha|date:"d/m/Y" }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ limite.fecha|date:"l" }}</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary fs-6">
+                                                    ${{ limite.monto|floatformat:2|intcomma }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">
+                                                    {{ limite.inicio_vigencia|date:"d/m/Y H:i" }}
+                                                </small>
+                                            </td>
+                                            {% if puede_gestionar %}
+                                            <td class="text-center">
+                                                <a href="{% url 'clientes:editar_limite_diario' limite.pk %}" 
+                                                   class="btn btn-sm btn-warning">
+                                                    <i class="fas fa-edit"></i> Editar
+                                                </a>
+                                            </td>
+                                            {% endif %}
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="{% if puede_gestionar %}4{% else %}3{% endif %}" class="text-center text-muted py-4">
+                                                <i class="fas fa-inbox fa-2x mb-2"></i>
+                                                <p>No hay límites diarios configurados.</p>
+                                                {% if puede_gestionar %}
+                                                <a href="{% url 'clientes:crear_limite_diario' %}" class="btn btn-primary">
+                                                    <i class="fas fa-plus me-1"></i> Crear Primer Límite
+                                                </a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: Límites Mensuales -->
+                <div class="tab-pane fade" id="mensuales" role="tabpanel">
+                    <div class="card shadow">
+                        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-calendar-alt me-2"></i> Límites Mensuales
+                            </h5>
+                            <a href="{% url 'clientes:lista_limites_mensuales' %}" class="btn btn-sm btn-light">
+                                <i class="fas fa-list me-1"></i> Ver Todos
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped align-middle">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th><i class="fas fa-calendar me-1"></i> Mes</th>
+                                            <th><i class="fas fa-dollar-sign me-1"></i> Monto Máximo</th>
+                                            <th><i class="fas fa-clock me-1"></i> Vigencia</th>
+                                            {% if puede_gestionar %}
+                                            <th class="text-center"><i class="fas fa-cog me-1"></i> Acciones</th>
+                                            {% endif %}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for limite in limites_mensuales %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ limite.mes|date:"F Y" }}</strong>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-success fs-6">
+                                                    ${{ limite.monto|floatformat:2|intcomma }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">
+                                                    {{ limite.inicio_vigencia|date:"d/m/Y H:i" }}
+                                                </small>
+                                            </td>
+                                            {% if puede_gestionar %}
+                                            <td class="text-center">
+                                                <a href="{% url 'clientes:editar_limite_mensual' limite.pk %}" 
+                                                   class="btn btn-sm btn-warning">
+                                                    <i class="fas fa-edit"></i> Editar
+                                                </a>
+                                            </td>
+                                            {% endif %}
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="{% if puede_gestionar %}4{% else %}3{% endif %}" class="text-center text-muted py-4">
+                                                <i class="fas fa-inbox fa-2x mb-2"></i>
+                                                <p>No hay límites mensuales configurados.</p>
+                                                {% if puede_gestionar %}
+                                                <a href="{% url 'clientes:crear_limite_mensual' %}" class="btn btn-success">
+                                                    <i class="fas fa-plus me-1"></i> Crear Primer Límite
+                                                </a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

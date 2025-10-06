@@ -4,11 +4,11 @@ Vistas para la gestión de roles, grupos y permisos del sistema.
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth import get_user_model
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.db.models import Q, Count
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden, HttpResponseNotFound, HttpResponseServerError, HttpResponseBadRequest
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 
@@ -522,3 +522,131 @@ class GroupToggleStatusView(RoleRequiredMixin, View):
         estado = "activado" if status.is_active else "desactivado"
         messages.success(request, f'Rol "{group.name}" {estado} correctamente.')
         return redirect('group_list')
+
+def permission_denied_view(request, exception=None):
+    """
+    Vista personalizada para error 403 (Permission Denied).
+    Redirige según el tipo de usuario.
+    """
+    if not request.user.is_authenticated:
+        # Usuario no autenticado → login
+        from django.contrib.auth.views import redirect_to_login
+        return redirect_to_login(request.path)
+    
+    user = request.user
+    grupos = list(user.groups.values_list('name', flat=True))
+    
+    # Determinar mensaje y URL de redirección
+    if user.is_superuser or 'admin' in grupos:
+        mensaje = 'No tienes permisos para acceder a esta sección como Administrador.'
+        url_redireccion = '/admin/dashboard/' if hasattr(request, 'resolver_match') else '/'
+        mostrar_menu_staff = True
+    elif 'operador' in grupos:
+        mensaje = 'No tienes permisos para acceder a esta sección como Operador.'
+        url_redireccion = '/'
+        mostrar_menu_staff = True
+    elif 'cliente' in grupos:
+        mensaje = 'No tienes permisos para acceder a esta sección como Operador de Cuenta.'
+        url_redireccion = '/'
+        mostrar_menu_staff = False
+    else:
+        mensaje = 'Tu cuenta está pendiente de aprobación por un administrador.'
+        url_redireccion = '/'
+        mostrar_menu_staff = False
+    
+    context = {
+        'titulo': 'Acceso Denegado',
+        'mensaje': mensaje,
+        'permiso_requerido': getattr(exception, 'args', [''])[0] if exception else None,
+        'usuario': user,
+        'usuario_autenticado': True,
+        'es_superusuario': user.is_superuser,
+        'url_redireccion': url_redireccion,
+        'mostrar_menu_staff': mostrar_menu_staff,
+        'tipo_usuario': grupos[0] if grupos else 'Usuario',
+    }
+    
+    return render(request, '403.html', context, status=403)
+
+
+def page_not_found_view(request, exception=None):
+    """
+    Vista personalizada para error 404 (Not Found).
+    Redirige al dashboard según el tipo de usuario.
+    """
+    if not request.user.is_authenticated:
+        url_redireccion = '/'
+        mostrar_menu_staff = False
+        tipo_usuario = 'Invitado'
+    else:
+        user = request.user
+        grupos = list(user.groups.values_list('name', flat=True))
+        
+        if user.is_superuser or 'admin' in grupos:
+            url_redireccion = '/admin/dashboard/'
+            mostrar_menu_staff = True
+            tipo_usuario = 'Administrador'
+        elif 'operador' in grupos:
+            url_redireccion = '/'
+            mostrar_menu_staff = True
+            tipo_usuario = 'Operador'
+        elif 'cliente' in grupos:
+            url_redireccion = '/'
+            mostrar_menu_staff = False
+            tipo_usuario = 'Operador de Cuenta'
+        else:
+            url_redireccion = '/'
+            mostrar_menu_staff = False
+            tipo_usuario = 'Usuario'
+    
+    context = {
+        'titulo': 'Página no encontrada',
+        'mensaje': 'La página que buscas no existe o fue movida.',
+        'url_redireccion': url_redireccion,
+        'mostrar_menu_staff': mostrar_menu_staff,
+        'tipo_usuario': tipo_usuario,
+        'usuario_autenticado': request.user.is_authenticated,
+    }
+    
+    return render(request, '404.html', context, status=404)
+
+
+def server_error_view(request):
+    """
+    Vista personalizada para error 500 (Server Error).
+    Siempre redirige al inicio para evitar loops.
+    """
+    context = {
+        'titulo': 'Error del servidor',
+        'mensaje': 'Ocurrió un error en el servidor. Nuestro equipo ha sido notificado.',
+        'url_redireccion': '/',
+        'mostrar_boton_reportar': True,
+        'usuario_autenticado': request.user.is_authenticated if hasattr(request, 'user') else False,
+    }
+    
+    return render(request, '500.html', context, status=500)
+
+
+def bad_request_view(request, exception=None):
+    """
+    Vista personalizada para error 400 (Bad Request).
+    """
+    if not request.user.is_authenticated:
+        url_redireccion = '/'
+    else:
+        user = request.user
+        grupos = list(user.groups.values_list('name', flat=True))
+        
+        if user.is_superuser or 'admin' in grupos or 'operador' in grupos:
+            url_redireccion = '/'
+        else:
+            url_redireccion = '/'
+    
+    context = {
+        'titulo': 'Solicitud incorrecta',
+        'mensaje': 'La solicitud enviada no es válida.',
+        'url_redireccion': url_redireccion,
+        'usuario_autenticado': request.user.is_authenticated,
+    }
+    
+    return render(request, '400.html', context, status=400)

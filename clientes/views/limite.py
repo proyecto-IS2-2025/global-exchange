@@ -1,6 +1,6 @@
 """
 Vistas para gestión de límites diarios y mensuales.
-VERSIÓN CORREGIDA - Sin select_related inválido
+VERSIÓN CORREGIDA
 """
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -18,7 +18,26 @@ from roles.decorators import require_permission
 
 
 @login_required
-@require_permission("clientes.view_limites_operacion", check_client_assignment=False)
+@require_permission("clientes.view_limites_operacion")
+def panel_limites(request):
+    """
+    Panel unificado de gestión de límites.
+    Muestra tanto límites diarios como mensuales en un solo template.
+    """
+    limites_diarios = LimiteDiario.objects.all().order_by('-fecha')[:10]
+    limites_mensuales = LimiteMensual.objects.all().order_by('-mes')[:10]
+    
+    context = {
+        'limites_diarios': limites_diarios,
+        'limites_mensuales': limites_mensuales,
+        'puede_gestionar': request.user.has_perm('clientes.manage_limites_operacion'),
+    }
+    
+    return render(request, "clientes/panel_limites.html", context)
+
+
+@login_required
+@require_permission("clientes.view_limites_operacion")
 def lista_limites_diarios(request):
     """
     Lista todos los límites diarios del sistema.
@@ -29,18 +48,20 @@ def lista_limites_diarios(request):
 
 
 @login_required
-@require_permission("clientes.view_limites_operacion", check_client_assignment=False)
+@require_permission("clientes.view_limites_operacion")
 def lista_limites_mensuales(request):
     """
     Lista todos los límites mensuales del sistema.
     Requiere permiso: clientes.view_limites_operacion
+    
+    ✅ CORRECCIÓN: Campo 'año' no existe, solo 'mes' (DateField)
     """
-    limites = LimiteMensual.objects.all().order_by('-mes', '-año')
+    limites = LimiteMensual.objects.all().order_by('-mes')  # ✅ Corregido
     return render(request, "clientes/limites_mensuales.html", {"limites": limites})
 
 
 @login_required
-@require_permission("clientes.manage_limites_operacion", check_client_assignment=False)
+@require_permission("clientes.manage_limites_operacion")
 def crear_limite_diario(request):
     """
     Crea un nuevo límite diario.
@@ -64,7 +85,7 @@ def crear_limite_diario(request):
 
             limite.save()
             messages.success(request, "Límite diario creado correctamente.")
-            return redirect("clientes:lista_limites_diarios")
+            return redirect("clientes:panel_limites")  # ✅ Redirige al panel unificado
         else:
             messages.error(request, "Error al crear el límite. Verifica los datos ingresados.")
     else:
@@ -74,7 +95,7 @@ def crear_limite_diario(request):
 
 
 @login_required
-@require_permission("clientes.manage_limites_operacion", check_client_assignment=False)
+@require_permission("clientes.manage_limites_operacion")
 def crear_limite_mensual(request):
     """
     Crea un nuevo límite mensual.
@@ -85,7 +106,7 @@ def crear_limite_mensual(request):
         if form.is_valid():
             limite = form.save()
             messages.success(request, "Límite mensual guardado correctamente.")
-            return redirect("clientes:lista_limites_mensuales")
+            return redirect("clientes:panel_limites")  # ✅ Redirige al panel unificado
         else:
             messages.error(request, "Error al crear el límite mensual. Verifica los datos ingresados.")
     else:
@@ -95,7 +116,7 @@ def crear_limite_mensual(request):
 
 
 @method_decorator(
-    require_permission("clientes.manage_limites_operacion", check_client_assignment=False), 
+    require_permission("clientes.manage_limites_operacion"), 
     name="dispatch"
 )
 class LimiteDiarioUpdateView(LoginRequiredMixin, UpdateView):
@@ -106,7 +127,7 @@ class LimiteDiarioUpdateView(LoginRequiredMixin, UpdateView):
     model = LimiteDiario
     form_class = LimiteDiarioForm 
     template_name = 'clientes/editar_limite_diario.html'
-    success_url = reverse_lazy('clientes:lista_limites_diarios')
+    success_url = reverse_lazy('clientes:panel_limites')  # ✅ Redirige al panel
 
     def form_valid(self, form):
         messages.success(self.request, "Límite diario actualizado correctamente.")
@@ -118,7 +139,7 @@ class LimiteDiarioUpdateView(LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(
-    require_permission("clientes.manage_limites_operacion", check_client_assignment=False), 
+    require_permission("clientes.manage_limites_operacion"), 
     name="dispatch"
 )
 class LimiteMensualUpdateView(LoginRequiredMixin, UpdateView):
@@ -129,7 +150,7 @@ class LimiteMensualUpdateView(LoginRequiredMixin, UpdateView):
     model = LimiteMensual
     form_class = LimiteMensualForm
     template_name = 'clientes/editar_limite_mensual.html'
-    success_url = reverse_lazy('clientes:lista_limites_mensuales')
+    success_url = reverse_lazy('clientes:panel_limites')  # ✅ Redirige al panel
 
     def form_valid(self, form):
         messages.success(self.request, "Límite mensual actualizado correctamente.")

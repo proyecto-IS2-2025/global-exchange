@@ -1,84 +1,135 @@
 """
 Context processor que inyecta información del usuario y permisos.
 """
-from .utils import es_staff, obtener_tipo_usuario
+
+
+def user_permissions(request):
+    """
+    Inyecta permisos del usuario en todos los templates.
+    
+    Variables disponibles:
+    - user_perms: Lista de permisos del usuario
+    - user_groups: Lista de grupos del usuario
+    - is_admin: ¿Es administrador?
+    - is_operador: ¿Es operador?
+    - is_cliente: ¿Es cliente?
+    - can_view_all_clients: ¿Puede ver todos los clientes?
+    - can_view_assigned_clients: ¿Puede ver clientes asignados?
+    - can_manage_medios_pago: ¿Puede gestionar medios de pago?
+    - can_realizar_operacion: ¿Puede realizar operaciones?
+    """
+    context = {
+        'user_perms': [],
+        'user_groups': [],
+        'is_admin': False,
+        'is_operador': False,
+        'is_cliente': False,
+        
+        # Permisos específicos comunes
+        'can_view_all_clients': False,
+        'can_view_assigned_clients': False,
+        'can_manage_medios_pago': False,
+        'can_realizar_operacion': False,
+        'can_view_transacciones_globales': False,
+        'can_view_transacciones_asignadas': False,
+        'can_manage_divisas': False,
+        'can_manage_tasas_cambio': False,
+    }
+    
+    if not request.user.is_authenticated:
+        return context
+    
+    user = request.user
+    
+    # Obtener permisos del usuario
+    context['user_perms'] = list(user.get_all_permissions())
+    
+    # Obtener grupos
+    context['user_groups'] = list(user.groups.values_list('name', flat=True))
+    
+    # Identificar rol principal
+    context['is_admin'] = user.is_superuser or 'admin' in context['user_groups']
+    context['is_operador'] = 'operador' in context['user_groups']
+    context['is_cliente'] = 'cliente' in context['user_groups']
+    
+    # Verificar permisos específicos comunes
+    context['can_view_all_clients'] = user.has_perm('clientes.view_all_clientes')
+    context['can_view_assigned_clients'] = user.has_perm('clientes.view_assigned_clientes')
+    context['can_manage_medios_pago'] = user.has_perm('clientes.manage_medios_pago')
+    context['can_realizar_operacion'] = user.has_perm('divisas.realizar_operacion')
+    context['can_view_transacciones_globales'] = user.has_perm('transacciones.view_transacciones_globales')
+    context['can_view_transacciones_asignadas'] = user.has_perm('transacciones.view_transacciones_asignadas')
+    context['can_manage_divisas'] = user.has_perm('divisas.manage_divisas')
+    context['can_manage_tasas_cambio'] = user.has_perm('divisas.manage_tasas_cambio')
+    
+    return context
 
 
 def grupo_usuario(request):
     """
-    Context processor que inyecta información dinámica del usuario.
+    ✅ FUNCIÓN PRINCIPAL (compatible con templates existentes)
     
-    Variables disponibles en templates:
-        - usuario_es_staff: bool (admin o operador de staff)
-        - usuario_es_cliente: bool (operador de cuenta CON clientes asignados)
-        - usuario_es_registrado: bool (usuario registrado SIN clientes asignados)
-        - tipo_usuario: str ('admin'|'operador'|'cliente'|'usuario_registrado'|'anonimo')
-        - grupos_usuario: list
-        - permisos_comunes: dict
-    
-    ⚠️ ACLARACIÓN DE ROLES:
-       - usuario_es_cliente: Usuario CON clientes asignados (puede operar)
-       - usuario_es_registrado: Usuario SIN clientes asignados (espera asignación)
-       - Cliente (modelo): Entidad de negocio (NO se loggea)
+    Inyecta TODAS las variables necesarias para base.html e inicio.html.
     """
+    # Obtener contexto base de user_permissions
+    context = user_permissions(request)
+    
     if not request.user.is_authenticated:
-        return {
+        # ✅ Variables para usuarios NO autenticados
+        context.update({
+            'grupo_usuario': None,
+            'tipo_usuario': None,
             'usuario_es_staff': False,
             'usuario_es_cliente': False,
             'usuario_es_registrado': False,
-            'tipo_usuario': 'anonimo',
-            'grupos_usuario': [],
-            'permisos_comunes': {},
-            
-            # Variables obsoletas (mantener temporalmente)
-            'grupo_admin': False,
-            'grupo_operador': False,
-            'grupo_cliente': False,
-        }
+        })
+        return context
     
-    # Información del usuario
-    usuario_es_staff = es_staff(request.user)
-    grupos = list(request.user.groups.values_list('name', flat=True))
+    user = request.user
+    grupos = list(user.groups.values_list('name', flat=True))
     
-    # ✅ Identificar tipo de usuario
-    usuario_es_cliente = 'cliente' in grupos and not usuario_es_staff
-    usuario_es_registrado = 'usuario_registrado' in grupos and not usuario_es_staff
+    # ═══════════════════════════════════════════════════════════════
+    # ✅ VARIABLES NECESARIAS PARA BASE.HTML E INICIO.HTML
+    # ═══════════════════════════════════════════════════════════════
     
-    # ✅ Helper de permisos comunes para templates
-    permisos_comunes = {
-        # Clientes (entidades de negocio)
-        'puede_ver_clientes': request.user.has_perm('clientes.view_all_clientes'),
-        'puede_gestionar_clientes': request.user.has_perm('clientes.manage_usuarios'),
-        
-        # Divisas
-        'puede_ver_divisas': request.user.has_perm('divisas.view_divisas'),
-        'puede_gestionar_divisas': request.user.has_perm('divisas.manage_divisas'),
-        'puede_gestionar_tasas': request.user.has_perm('divisas.manage_tasas_cambio'),
-        
-        # Transacciones
-        'puede_ver_transacciones_globales': request.user.has_perm('transacciones.view_transacciones_globales'),
-        'puede_gestionar_transacciones': request.user.has_perm('transacciones.manage_estados_transacciones'),
-        
-        # Usuarios y Roles
-        'puede_ver_usuarios': request.user.has_perm('users.view_all_usuarios'),
-        'puede_gestionar_usuarios': request.user.has_perm('users.manage_usuarios'),
-        'puede_gestionar_roles': request.user.has_perm('auth.change_group'),
-        
-        # Operaciones (para operadores de cuenta)
-        'puede_realizar_operaciones': request.user.has_perm('divisas.realizar_operacion'),
-    }
+    # 1. grupo_usuario: nombre del primer grupo o None
+    context['grupo_usuario'] = grupos[0] if grupos else None
     
-    return {
-        # ✅ Variables actuales
-        'usuario_es_staff': usuario_es_staff,
-        'usuario_es_cliente': usuario_es_cliente,  # CON clientes asignados
-        'usuario_es_registrado': usuario_es_registrado,  # SIN clientes asignados
-        'tipo_usuario': obtener_tipo_usuario(request.user),
-        'grupos_usuario': grupos,
-        'permisos_comunes': permisos_comunes,
-        
-        # ⚠️ Variables obsoletas (mantener temporalmente)
-        'grupo_admin': 'admin' in grupos,
-        'grupo_operador': 'operador' in grupos,
-        'grupo_cliente': 'cliente' in grupos,
-    }
+    # 2. tipo_usuario: admin/operador/cliente (para mostrar en navbar)
+    if user.is_superuser:
+        context['tipo_usuario'] = 'Superusuario'
+    elif 'admin' in grupos:
+        context['tipo_usuario'] = 'Administrador'
+    elif 'operador' in grupos:
+        context['tipo_usuario'] = 'Operador'
+    elif 'cliente' in grupos:
+        context['tipo_usuario'] = 'Operador de Cuenta'
+    else:
+        context['tipo_usuario'] = 'Usuario'
+    
+    # 3. usuario_es_staff: ¿Es admin u operador? (para mostrar menú staff)
+    context['usuario_es_staff'] = (
+        user.is_superuser or 
+        'admin' in grupos or 
+        'operador' in grupos
+    )
+    
+    # 4. usuario_es_cliente: ¿Tiene grupo cliente Y clientes asignados?
+    if 'cliente' in grupos:
+        # Verificar si tiene clientes asignados
+        try:
+            from clientes.models import Cliente
+            tiene_clientes = Cliente.objects.filter(usuario_asignado=user).exists()
+            context['usuario_es_cliente'] = tiene_clientes
+        except:
+            context['usuario_es_cliente'] = True  # Fallback
+    else:
+        context['usuario_es_cliente'] = False
+    
+    # 5. usuario_es_registrado: ¿Usuario sin grupos o sin clientes?
+    context['usuario_es_registrado'] = (
+        not context['usuario_es_staff'] and 
+        not context['usuario_es_cliente']
+    )
+    
+    return context

@@ -8,6 +8,8 @@ from django.utils.decorators import method_decorator
 from django.views.generic import ListView, UpdateView
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
+from django.conf import settings  # ✅ AGREGAR ESTA LÍNEA
 from django.db.models import Q
 
 from clientes.models import Cliente, AsignacionCliente, Segmento
@@ -19,20 +21,47 @@ logger = logging.getLogger(__name__)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# ✅ CORRECTO: Soporta ambos permisos + filtrado automático por asignación
+# ✅ CORRECCIÓN: Validación manual en dispatch (sin decorador con lista)
 # ═══════════════════════════════════════════════════════════════════════════
-@method_decorator(
-    require_permission(
-        ["clientes.view_all_clientes", "clientes.view_assigned_clientes"],
-        check_client_assignment=False  # ✅ CORREGIDO
-    ),
-    name="dispatch"
-)
 class ClienteListView(LoginRequiredMixin, ListView):
+    """
+    Vista para listar clientes.
+    - Admin/Observador: Ve todos los clientes
+    - Operador: Ve solo clientes asignados
+    
+    Requiere AL MENOS UNO de estos permisos:
+    - clientes.view_all_clientes (ver todos)
+    - clientes.view_assigned_clientes (ver asignados)
+    """
     model = Cliente
     template_name = "clientes/lista_clientes.html"
     context_object_name = "clientes"
     paginate_by = 20
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Validar permisos antes de procesar la vista.
+        Usuario debe tener AL MENOS UNO de los permisos.
+        """
+        user = request.user
+        
+        # ✅ Bypass para superusuario en desarrollo
+        if settings.DEBUG and user.is_superuser:
+            return super().dispatch(request, *args, **kwargs)
+        
+        # ✅ Verificar si tiene alguno de los permisos necesarios
+        tiene_permiso = (
+            user.has_perm('clientes.view_all_clientes') or
+            user.has_perm('clientes.view_assigned_clientes')
+        )
+        
+        if not tiene_permiso:
+            raise PermissionDenied(
+                "No tienes permisos para ver clientes. "
+                "Se requiere: clientes.view_all_clientes o clientes.view_assigned_clientes"
+            )
+        
+        return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         """
@@ -40,12 +69,16 @@ class ClienteListView(LoginRequiredMixin, ListView):
         - Admin/Observador (view_all_clientes): Ve todos
         - Operador (view_assigned_clientes): Ve solo asignados
         """
+        user = self.request.user
         qs = Cliente.objects.all().select_related("segmento")
         
-        # SI EL USUARIO SOLO TIENE view_assigned_clientes
-        if (not self.request.user.has_perm("clientes.view_all_clientes") and 
-            self.request.user.has_perm("clientes.view_assigned_clientes")):
-            qs = qs.filter(asignacioncliente__usuario=self.request.user).distinct()
+        # ✅ Filtrar por asignación si NO tiene permiso global
+        if not user.has_perm("clientes.view_all_clientes"):
+            if user.has_perm("clientes.view_assigned_clientes"):
+                qs = qs.filter(asignacioncliente__usuario=user).distinct()
+            else:
+                # Sin permisos (no debería llegar aquí por dispatch)
+                return Cliente.objects.none()
         
         # Aplicar filtros de búsqueda
         tipo_cliente = self.request.GET.get("tipo_cliente")
@@ -65,6 +98,8 @@ class ClienteListView(LoginRequiredMixin, ListView):
             not self.request.user.has_perm("clientes.view_all_clientes") and
             self.request.user.has_perm("clientes.view_assigned_clientes")
         )
+        context["puede_crear_cliente"] = self.request.user.has_perm("clientes.add_cliente")
+        context["puede_editar_cliente"] = self.request.user.has_perm("clientes.change_cliente")
         return context
 
 
@@ -72,7 +107,7 @@ class ClienteListView(LoginRequiredMixin, ListView):
 # ✅ CORRECTO: Usar change_cliente (permiso nativo)
 # ═══════════════════════════════════════════════════════════════════════════
 @method_decorator(
-    require_permission("clientes.change_cliente", check_client_assignment=False),
+    require_permission("clientes.change_cliente"),
     name="dispatch"
 )
 class ClienteUpdateView(LoginRequiredMixin, UpdateView):
@@ -85,12 +120,20 @@ class ClienteUpdateView(LoginRequiredMixin, UpdateView):
     template_name = "clientes/form.html"
     success_url = reverse_lazy("clientes:lista_clientes")
 
+    def form_valid(self, form):
+        messages.success(self.request, "Cliente actualizado correctamente.")
+        return super().form_valid(form)
+    
+    def form_invalid(self, form):
+        messages.error(self.request, "Error al actualizar el cliente.")
+        return super().form_invalid(form)
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # ✅ CORRECTO: Usar add_cliente (permiso nativo)
 # ═══════════════════════════════════════════════════════════════════════════
 @login_required
-@require_permission("clientes.add_cliente", check_client_assignment=False)
+@require_permission("clientes.add_cliente")
 def crear_cliente_view(request):
     """
     Vista para crear un nuevo cliente.
@@ -99,9 +142,11 @@ def crear_cliente_view(request):
     if request.method == 'POST':
         form = ClienteForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, "Cliente creado correctamente.")
+            cliente = form.save()
+            messages.success(request, f"Cliente {cliente.nombre_completo} creado correctamente.")
             return redirect('clientes:lista_clientes')
+        else:
+            messages.error(request, "Error al crear el cliente. Verifica los datos ingresados.")
     else:
         form = ClienteForm()
 
