@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Global Exchange</title>
 
-  <!-- Bootstrap CSS (CDN) -->
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
     rel="stylesheet"
@@ -14,12 +13,12 @@
     crossorigin="anonymous"
   />
 
-  <!-- CSS -->
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body class="bg-light">
-  <!-- Navbar -->
+
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
       <a class="navbar-brand fw-bold" href="{% url 'inicio' %}">
@@ -35,20 +34,19 @@
         {% endif %}
       </a>
 
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#navbarMain"
-        aria-controls="navbarMain"
-        aria-expanded="false"
-        aria-label="Toggle navigation">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+              data-bs-target="#navbarMain" aria-controls="navbarMain"
+              aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
 
       <div class="collapse navbar-collapse" id="navbarMain">
         <ul class="navbar-nav ms-auto">
+
+          <!-- Enlace a inicio -->
           <li class="nav-item"><a class="nav-link" href="{% url 'inicio' %}">Inicio</a></li>
+
+          <!-- Sesión -->
           {% if user.is_authenticated %}
             <li class="nav-item d-flex align-items-center">
               <form method="post" action="{% url 'logout' %}" class="m-0 p-0">
@@ -62,105 +60,65 @@
             <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Iniciar sesión</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'registro' %}">Registrarse</a></li>
           {% endif %}
+
+          <!-- Notificaciones (solo para usuarios no admin) -->
           {% if not grupo_admin %}
-          {% if user.is_authenticated %}
-          <<li class="nav-item dropdown me-3" style="position: relative;">
-            <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="fas fa-bell"></i>
-              {% if notificaciones_count > 0 %}
-              <span class="position-absolute top-50 translate-middle bg-danger rounded-circle" style="width: 6px; height: 6px;"></span>
-              {% endif %}
-            </a>
-
-            <!-- 🔹 Menú de notificaciones ajustado -->
-            <ul class="dropdown-menu dropdown-menu-end p-2 shadow"
-                style="width: 500px; max-height: 400px; overflow-y: auto; position: absolute; right: -400px; top: 50px;">
-              <li class="dropdown-header fw-bold">Notificaciones</li>
-              <li><hr class="dropdown-divider"></li>
-
-              {% if notificaciones_header %}
-                {% for n in notificaciones_header %}
-                <li class="p-2 border-bottom d-flex justify-content-between align-items-start
-                           {% if n.estado_lectura == 'pendiente' %}bg-light{% endif %}">
-                  <div class="flex-grow-1">
-                    <small class="text-muted d-block">{{ n.fecha_creacion|date:"d/m/Y H:i" }}</small>
-                    <span class="d-block text-dark">{{ n.mensaje }}</span>
-                  </div>
-
-                  {% if n.estado_lectura == 'pendiente' %}
-                    <form method="post" action="{% url 'notificaciones:marcar_leida' n.id %}" class="ms-2">
-                      {% csrf_token %}
-                      <button type="submit" class="btn btn-sm btn-outline-success" title="Marcar como leída">
-                        <i class="fas fa-check"></i>
-                      </button>
-                    </form>
-                  {% endif %}
-                </li>
-                {% endfor %}
-              {% else %}
-                <li class="p-2 text-center text-muted">Sin notificaciones nuevas</li>
-              {% endif %}
-
-              <li><hr class="dropdown-divider"></li>
-              <li class="text-center">
-                <a href="{% url 'notificaciones:gestion_notificaciones' %}" class="text-primary small">
-                  Configurar notificaciones
-                </a>
-              </li>
-            </ul>
-          </li>
+            {% if user.is_authenticated %}
+              {% include "partials/notificaciones_dropdown.html" %}
+            {% endif %}
           {% endif %}
 
+          <!-- Menú opciones -->
+          {% if user.is_authenticated %}
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button"
-                data-bs-toggle="dropdown" aria-expanded="false">
+                 data-bs-toggle="dropdown" aria-expanded="false">
                 Opciones
               </a>
               {% include "partials/navbar_opciones.html" %}
-            {% endif %}
-          </li>
+            </li>
+          {% endif %}
         </ul>
       </div>
     </div>
   </nav>
 
-  <!-- Mensajes Django -->
+  <!-- MENSAJES DJANGO -->
   {% if messages %}
-    <div class="container mt-3">
-      {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
-          {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-        </div>
-      {% endfor %}
+  <div class="container mt-3">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
     </div>
+    {% endfor %}
+  </div>
   {% endif %}
 
-
-
-  <!-- Contenido -->
+  <!-- CONTENIDO PRINCIPAL -->
   <main class="container py-4">
     {% block content %}{% endblock %}
   </main>
 
-  <!-- Footer simple (opcional) -->
+  <!-- FOOTER -->
   <footer class="border-top py-3">
     <div class="container text-center text-muted small">
       © {{ now|default:""|date:"Y" }} Global Exchange
     </div>
   </footer>
 
-  <!-- Bootstrap JS (CDN) -->
+  <!-- Bootstrap JS -->
   <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
     crossorigin="anonymous">
   </script>
 
-  <!-- jQuery solo si lo necesitas para AJAX -->
+  <!-- jQuery (opcional) -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-  <!-- Bloque extra_js para vistas -->
+  <!-- Bloque extra_js -->
   {% block extra_js %}{% endblock %}
+
 </body>
 </html>

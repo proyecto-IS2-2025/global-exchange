@@ -1,9 +1,7 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from users.models import CustomUser
 from django.core.validators import MinValueValidator
-
-# ASUMIMOS esta importación para el modelo Cliente
-# Por favor, ajusta 'clientes.Cliente' si tu app/modelo se llama diferente.
 from clientes.models import Cliente
 
 # Opciones fijas para los campos (sin cambios)
@@ -93,7 +91,11 @@ class NotificacionTasa(models.Model):
 
     def __str__(self):
         return f"Alerta de {self.divisa} para {self.cliente_asociado.nombre} ({self.get_tipo_alerta_display()})"
-
+    def clean(self):
+        super().clean()
+        # Solo permitir 'ambos' si no hay cliente (caso de configuración general)
+        if self.tipo_operacion == 'ambos' and self.cliente_asociado_id:
+            raise ValidationError("La opción 'Compra y Venta' solo se permite en la configuración general.")
 
 class Notificacion(models.Model):
     # La persona que recibe la notificación
