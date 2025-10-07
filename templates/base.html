@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Global Exchange</title>
 
+  <!-- Bootstrap CSS (CDN) -->
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
     rel="stylesheet"
@@ -13,67 +14,97 @@
     crossorigin="anonymous"
   />
 
+  <!-- CSS -->
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* Sticky footer layout */
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    main {
+      flex: 1;
+    }
+    footer {
+      margin-top: auto;
+    }
+  </style>
 </head>
-
 <body class="bg-light">
-
+  <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-      <a class="navbar-brand fw-bold" href="{% url 'inicio' %}">
-        Global Exchange
+      <!-- Brand con icono -->
+      <a class="navbar-brand fw-bold d-flex align-items-center" href="{% url 'inicio' %}">
+        <i class="fas fa-house me-2"></i> Global Exchange
         {% if user.is_authenticated %}
           {% if grupo_admin %}
-            <small class="text-white">(Admin)</small>
+            <small class="text-white ms-1">(Admin)</small>
           {% elif grupo_operador %}
-            <small class="text-white">(Operador)</small>
+            <small class="text-white ms-1">(Operador)</small>
           {% elif grupo_cliente %}
-            <small class="text-white">(Cliente)</small>
+            <small class="text-white ms-1">(Cliente)</small>
           {% endif %}
         {% endif %}
       </a>
 
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-              data-bs-target="#navbarMain" aria-controls="navbarMain"
-              aria-expanded="false" aria-label="Toggle navigation">
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navbarMain"
+        aria-controls="navbarMain"
+        aria-expanded="false"
+        aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
 
       <div class="collapse navbar-collapse" id="navbarMain">
         <ul class="navbar-nav ms-auto">
-
-          <!-- Enlace a inicio -->
-          <li class="nav-item"><a class="nav-link" href="{% url 'inicio' %}">Inicio</a></li>
-
-          <!-- Sesión -->
-          {% if user.is_authenticated %}
-            <li class="nav-item d-flex align-items-center">
-              <form method="post" action="{% url 'logout' %}" class="m-0 p-0">
-                {% csrf_token %}
-                <button type="submit" class="nav-link btn btn-link text-white px-0" style="text-decoration: none;">
-                  Cerrar sesión
-                </button>
-              </form>
+           {% if user.is_authenticated %}
+            <li class="nav-item me-3">
+                <span class="nav-link text-white">
+                    <i class="fas fa-user-circle me-1"></i>
+                    Bienvenido, <strong>{{ user.username }}</strong>
+                </span>
             </li>
-          {% else %}
-            <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Iniciar sesión</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'registro' %}">Registrarse</a></li>
+            <li class="nav-item d-flex align-items-center">
+                <form method="post" action="{% url 'logout' %}" class="m-0 p-0">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-link btn btn-link text-white px-0" style="text-decoration: none;">
+                        <i class="fas fa-sign-out-alt me-1"></i> Cerrar sesión
+                    </button>
+                </form>
+            </li>
+        {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'login' %}">
+                <i class="fas fa-sign-in-alt me-1"></i> Iniciar sesión
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'registro' %}">
+                <i class="fas fa-user-plus me-1"></i> Registrarse
+              </a>
+            </li>
           {% endif %}
-
-          <!-- Notificaciones (solo para usuarios no admin) -->
-          {% if not grupo_admin %}
+            {% if not grupo_admin %}
             {% if user.is_authenticated %}
               {% include "partials/notificaciones_dropdown.html" %}
             {% endif %}
           {% endif %}
-
-          <!-- Menú opciones -->
-          {% if user.is_authenticated %}
+          {% if not grupo_admin %}
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button"
                  data-bs-toggle="dropdown" aria-expanded="false">
-                Opciones
+                <i class="fas fa-bars me-1"></i> Opciones
               </a>
               {% include "partials/navbar_opciones.html" %}
             </li>
@@ -83,42 +114,40 @@
     </div>
   </nav>
 
-  <!-- MENSAJES DJANGO -->
+  <!-- Mensajes Django -->
   {% if messages %}
-  <div class="container mt-3">
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
-      {{ message }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    <div class="container mt-3">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+      {% endfor %}
     </div>
-    {% endfor %}
-  </div>
   {% endif %}
 
-  <!-- CONTENIDO PRINCIPAL -->
+  <!-- Contenido -->
   <main class="container py-4">
     {% block content %}{% endblock %}
   </main>
 
-  <!-- FOOTER -->
-  <footer class="border-top py-3">
+  <!-- Footer fijo abajo -->
+  <footer class="border-top py-3 bg-white">
     <div class="container text-center text-muted small">
       © {{ now|default:""|date:"Y" }} Global Exchange
     </div>
   </footer>
 
-  <!-- Bootstrap JS -->
+  <!-- Bootstrap JS (CDN) -->
   <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
     crossorigin="anonymous">
   </script>
 
-  <!-- jQuery (opcional) -->
+  <!-- jQuery solo si lo necesitas -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-  <!-- Bloque extra_js -->
   {% block extra_js %}{% endblock %}
-
 </body>
 </html>

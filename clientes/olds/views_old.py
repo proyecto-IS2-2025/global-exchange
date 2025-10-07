@@ -119,8 +119,50 @@ def listar_asociaciones(request):
             messages.error(request, f'Error al eliminar la asociación: {e}')
         return redirect('clientes:listar_asociaciones')
 
-    asignaciones = AsignacionCliente.objects.all().order_by('usuario__email')
-    context = {'asignaciones': asignaciones}
+    # --- LÓGICA DE FILTRADO ACTUALIZADA ---
+    # Inicialmente, obtiene todas las asignaciones
+    asignaciones = AsignacionCliente.objects.all().select_related('usuario', 'cliente')
+
+    # Obtener los parámetros de filtro de la URL
+    selected_user_id = request.GET.get('user_id')
+    selected_cliente_id = request.GET.get('cliente_id')
+
+    # Aplicar el filtro por usuario (por ID)
+    if selected_user_id:
+        try:
+            user_id = int(selected_user_id)
+            asignaciones = asignaciones.filter(usuario__id=user_id)
+        except ValueError:
+            pass # Ignorar si no es un ID válido
+
+    # Aplicar el filtro por cliente (por ID)
+    if selected_cliente_id:
+        try:
+            cliente_id = int(selected_cliente_id)
+            asignaciones = asignaciones.filter(cliente__id=cliente_id)
+        except ValueError:
+            pass # Ignorar si no es un ID válido
+
+    # Ordenar los resultados filtrados
+    asignaciones = asignaciones.order_by('usuario__email', 'cliente__nombre_completo')
+    # --- FIN DE LÓGICA DE FILTRADO ---
+    
+    # --- OBTENER DATOS PARA LOS FILTROS (SELECTS) ---
+    # 1. Obtener la lista completa de usuarios (excluyendo superusuarios)
+    all_users = User.objects.filter(is_superuser=False).order_by('email')
+    # 2. Obtener la lista completa de clientes
+    all_clientes = Cliente.objects.all().order_by('nombre_completo')
+    
+    # Se añade la información de los filtros y las listas al contexto
+    context = {
+        'asignaciones': asignaciones,
+        # Variables de selección actual para mantener el valor seleccionado en el HTML
+        'selected_user_id': selected_user_id,
+        'selected_cliente_id': selected_cliente_id,
+        # Listas para rellenar los selects
+        'all_users': all_users,
+        'all_clientes': all_clientes,
+    }
     return render(request, 'asociar_a_usuario/lista_asociaciones.html', context)
 
 @login_required
@@ -1311,7 +1353,7 @@ class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
 
                 return JsonResponse({
                     'success': True,
-                    'redirect_url': reverse('divisas:venta_sumario'),
+                    'redirect_url': reverse('operacion_divisas:venta_sumario'),
                 })
 
             except ClienteMedioDePago.DoesNotExist:
@@ -1322,7 +1364,7 @@ class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
             request.session.pop('medio_seleccionado', None)
             return JsonResponse({
                 'success': True,
-                'redirect_url': reverse('divisas:venta_medios'),
+                'redirect_url': reverse('operacion_divisas:venta_medios'),
             })
 
         return JsonResponse({'error': 'Acción no válida'}, status=400)
@@ -1387,7 +1429,7 @@ class SeleccionarMedioPagoView(LoginRequiredMixin, View):
 
                 return JsonResponse({
                     'success': True,
-                    'redirect_url': reverse('divisas:compra_sumario'),
+                    'redirect_url': reverse('operacion_divisas:compra_sumario'),
                 })
 
             except ClienteMedioDePago.DoesNotExist:

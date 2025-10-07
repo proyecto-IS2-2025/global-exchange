@@ -5,7 +5,7 @@
     <div class="row justify-content-center">
         <div class="col-xl-7 col-lg-8">
             <div class="d-flex align-items-center mb-4">
-                <a href="{% url 'divisas:compra' %}" class="btn btn-outline-secondary btn-back me-3" aria-label="Volver a Compra de Divisas">
+                <a href="{% url 'operacion_divisas:compra' %}" class="btn btn-outline-secondary btn-back me-3" aria-label="Volver a Compra de Divisas">
                     <i class="bi bi-arrow-left fs-5"></i>
                 </a>
                 <h2 class="mb-0 text-dark fw-bold">Confirmar compra de divisas</h2>
@@ -28,7 +28,7 @@
                                 <i class="bi bi-cash-stack text-success me-3 fs-3"></i>
                                 <div>
                                     <p class="mb-0 text-muted small">Vas a pagar</p>
-                                    <h5 class="mb-0 fw-semibold">{{ resultado.monto_original }} Gs.</h5>
+                                    <h5 class="mb-0 fw-semibold">{{ resultado.monto_original|floatformat:0 }} Gs.</h5>
                                 </div>
                             </div>
                         </div>
@@ -67,7 +67,7 @@
                     </button>
                 </form>
                 
-                <a href="{% url 'divisas:compra' %}" class="btn btn-outline-secondary btn-lg rounded-4 py-3 px-4 fw-bold">
+                <a href="{% url 'operacion_divisas:compra' %}" class="btn btn-outline-secondary btn-lg rounded-4 py-3 px-4 fw-bold">
                     <i class="bi bi-x-circle me-2"></i> Cancelar
                 </a>
             </div>
@@ -77,7 +77,7 @@
                     <i class="bi bi-exclamation-circle display-1 text-warning mb-3"></i>
                     <h4 class="mt-3 text-dark fw-bold">No hay simulación disponible</h4>
                     <p class="text-muted">Parece que no hay datos de conversión para mostrar. Por favor, inicia una nueva operación.</p>
-                    <a href="{% url 'divisas:compra' %}" class="btn btn-success-gradient mt-3 rounded-4 py-2 px-4">
+                    <a href="{% url 'operacion_divisas:compra' %}" class="btn btn-success-gradient mt-3 rounded-4 py-2 px-4">
                         <i class="bi bi-currency-exchange me-2"></i> Iniciar Compra
                     </a>
                 </div>

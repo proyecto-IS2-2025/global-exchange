@@ -9,12 +9,6 @@ los datos de divisas y tasas de cambio con reglas adicionales.
 """
 
 class DivisaForm(forms.ModelForm):
-    """
-    Formulario para crear o actualizar divisas.
-
-    Valida y normaliza el código de la divisa, asegurando que quede en
-    mayúsculas y sin espacios.
-    """
     class Meta:
         model = Divisa
         fields = ['nombre', 'code', 'simbolo', 'decimales']
@@ -23,14 +17,21 @@ class DivisaForm(forms.ModelForm):
         }
 
     def clean_code(self):
-        """
-        Normaliza el código de la divisa.
-
-        :return: Código en mayúsculas y sin espacios.
-        :rtype: str
-        """
-        return (self.cleaned_data.get('code') or '').upper().strip()
-
+        code = (self.cleaned_data.get('code') or '').upper().strip()
+        
+        # Bloquear creación con código PYG
+        if code == 'PYG' and not self.instance.pk:
+            raise forms.ValidationError(
+                'El código PYG está reservado para la moneda base del sistema.'
+            )
+        
+        # Bloquear cambio de código en PYG existente
+        if self.instance.pk and self.instance.code == 'PYG' and code != 'PYG':
+            raise forms.ValidationError(
+                'No se puede cambiar el código de la moneda base.'
+            )
+        
+        return code
 # forms.py
 class TasaCambioForm(forms.ModelForm):
     """
@@ -88,43 +89,46 @@ class TasaCambioForm(forms.ModelForm):
             raise forms.ValidationError('La comisión de venta debe ser mayor a 0.')
         return v
     
-from decimal import Decimal
-
-class VentaDivisaForm(forms.Form):
-    divisa = forms.ModelChoiceField(
-        queryset=Divisa.objects.filter(is_active=True).exclude(code='PYG'),
-        label="Divisa a vender",
-        empty_label="-- Seleccione divisa --"
-    )
-    monto = forms.DecimalField(
-        min_value=Decimal('0.00000001'),
-        decimal_places=8,
-        label="Monto (en la divisa seleccionada)"
-    )
 
 
+"""""""""
+# divisas/migrations/0004_crear_moneda_base_pyg.py
+from django.db import migrations
 
-from decimal import Decimal
+def crear_pyg(apps, schema_editor):
+    
+    Crea o actualiza la moneda base PYG.
+    Divisa = apps.get_model('divisas', 'Divisa')
+    
+    try:
+        pyg = Divisa.objects.get(code='PYG')
+        pyg.nombre = 'Guaraní'
+        pyg.simbolo = '₲'
+        pyg.is_active = True
+        pyg.decimales = 0
+        pyg.es_moneda_base = True
+        pyg.save()
+    except Divisa.DoesNotExist:
+        Divisa.objects.create(
+            code='PYG',
+            nombre='Guaraní',
+            simbolo='₲',
+            is_active=True,
+            decimales=0,
+            es_moneda_base=True,
+        )
 
-class CompraDivisaForm(forms.Form):
-    divisa = forms.ModelChoiceField(
-        queryset=Divisa.objects.filter(is_active=True).exclude(code='PYG'),
-        label="Divisa a comprar",
-        empty_label="-- Seleccione divisa --",
-        widget=forms.Select(attrs={
-            'class': 'form-select form-select-lg',
-            'data-placeholder': 'Seleccione la divisa que desea comprar...'
-        })
-    )
-    monto = forms.DecimalField(
-        min_value=Decimal('0.00000001'),
-        decimal_places=8,
-        label="Monto en Guaraníes (Gs.)",
-        widget=forms.NumberInput(attrs={
-            'class': 'form-control form-control-lg',
-            'placeholder': 'Ingrese el monto en guaraníes que desea cambiar',
-            'step': '1000',
-            'min': '1000'
-        }),
-        help_text="Ingrese el monto en guaraníes que desea convertir a la divisa seleccionada"
-    )
+def revertir_pyg(apps, schema_editor):
+    Eliminar PYG (solo para desarrollo)
+    Divisa = apps.get_model('divisas', 'Divisa')
+    Divisa.objects.filter(code='PYG').delete()
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('divisas', '0003_divisa_es_moneda_base_and_more'),  # ⭐ Cambiar aquí
+    ]
+
+    operations = [
+        migrations.RunPython(crear_pyg, revertir_pyg),
+    ]''''"""

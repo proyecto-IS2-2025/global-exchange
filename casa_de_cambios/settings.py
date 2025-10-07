@@ -40,6 +40,10 @@ INSTALLED_APPS = [
     'banco',
     'billetera',
     'notificaciones',
+
+    'mfa',
+    'autenticacion',
+    'operacion_divisas',
 ]
 
 MIDDLEWARE = [

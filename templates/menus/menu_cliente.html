@@ -1,0 +1,17 @@
+
+{% include "partials/visualizador.html" %}
+
+<!-- Botón Realizar operación -->
+<div class="text-center mt-4 mb-5">
+  <a href="{% url 'operacion_divisas:seleccionar_operacion' %}" class="btn-operacion">
+    <span class="btn-operacion-content">
+      <i class="fas fa-rocket me-2"></i>
+      <span class="btn-text">Realizar Operación</span>
+      <i class="fas fa-arrow-right ms-2"></i>
+    </span>
+  </a>
+  <p class="text-muted mt-2 small">Compra y venta de divisas al mejor precio</p>
+</div>
+
+
+{% include "simulador/simulador_conversion.html" %}

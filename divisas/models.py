@@ -122,28 +122,12 @@ class CotizacionSegmento(models.Model):
         return f"{self.divisa.code} / {self.segmento.name} @ {self.fecha:%Y-%m-%d %H:%M}"
 
 class Divisa(models.Model):
-    """
-    Representa una divisa o moneda.
-
-    Incluye código ISO, nombre, símbolo, estado (activa/deshabilitada) y
-    cantidad de decimales admitidos para cotización.
-
-    :param code: Código de la divisa (ISO u otro identificador).
-    :type code: str
-    :param nombre: Nombre descriptivo de la divisa.
-    :type nombre: str
-    :param simbolo: Símbolo de la divisa.
-    :type simbolo: str
-    :param is_active: Indica si la divisa está habilitada para operar.
-    :type is_active: bool
-    :param decimales: Precisión decimal permitida (0–8).
-    :type decimales: int
-    """
     code = models.CharField('Código', max_length=10, unique=True)
     nombre = models.CharField('Nombre', max_length=100)
     simbolo = models.CharField('Símbolo', max_length=5, default='', blank=True)
-    is_active = models.BooleanField('Activa', default=False)  # nace deshabilitada
-    decimales = models.PositiveSmallIntegerField('Decimales', default=2)  # nuevo campo
+    is_active = models.BooleanField('Activa', default=False)
+    decimales = models.PositiveSmallIntegerField('Decimales', default=2)
+    es_moneda_base = models.BooleanField('Moneda Base', default=False, editable=False)  # NUEVO
     creado = models.DateTimeField(auto_now_add=True)
     actualizado = models.DateTimeField(auto_now=True)
 
@@ -151,12 +135,10 @@ class Divisa(models.Model):
         verbose_name = 'Divisa'
         verbose_name_plural = 'Divisas'
         constraints = [
-            # Unicidad case-insensitive del código
             models.UniqueConstraint(
                 Upper('code'),
                 name='uniq_divisa_code_upper'
             ),
-            # Rango válido para cantidad de decimales
             models.CheckConstraint(
                 check=Q(decimales__gte=0) & Q(decimales__lte=8),
                 name='chk_divisa_decimales_0_8',
@@ -165,19 +147,28 @@ class Divisa(models.Model):
         indexes = [
             models.Index(fields=['code']),
             models.Index(fields=['is_active']),
+            models.Index(fields=['es_moneda_base']),  # NUEVO
         ]
 
     def save(self, *args, **kwargs):
         self.code = (self.code or '').upper().strip()
         self.simbolo = (self.simbolo or '').strip()
-        # Clamp defensivo por si llega algo fuera de rango antes del CheckConstraint
+        
+        # Auto-marcar PYG como moneda base
+        if self.code == 'PYG':
+            self.es_moneda_base = True
+            self.is_active = True
+        
         if self.decimales is None:
             self.decimales = 2
         else:
             self.decimales = max(0, min(8, int(self.decimales)))
+        
         super().save(*args, **kwargs)
 
     def __str__(self):
+        if self.es_moneda_base:
+            return f'{self.code} - {self.nombre} (Moneda base)'
         estado = 'Activa' if self.is_active else 'Deshabilitada'
         return f'{self.code} - {self.nombre} ({estado})'
 

@@ -15,4 +15,6 @@ urlpatterns = [
     path("billetera/", include("billetera.urls", namespace="billetera")),
     path('notificaciones/', include('notificaciones.urls')),
 
+    path('mfa/', include('mfa.urls')),
+    path('divisas/operacion/', include('operacion_divisas.urls', namespace='operacion_divisas')),
 ]
