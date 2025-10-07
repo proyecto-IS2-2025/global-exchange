@@ -69,12 +69,17 @@
       <div class="collapse navbar-collapse" id="navbarMain">
         <ul class="navbar-nav ms-auto">
            {% if user.is_authenticated %}
+
+
             <li class="nav-item me-3">
                 <span class="nav-link text-white">
                     <i class="fas fa-user-circle me-1"></i>
                     Bienvenido, <strong>{{ user.username }}</strong>
                 </span>
             </li>
+              {% if not grupo_admin %}
+                {% include "partials/notificaciones_dropdown.html" %}
+              {% endif %}
             <li class="nav-item d-flex align-items-center">
                 <form method="post" action="{% url 'logout' %}" class="m-0 p-0">
                     {% csrf_token %}
@@ -95,11 +100,7 @@
               </a>
             </li>
           {% endif %}
-            {% if not grupo_admin %}
-            {% if user.is_authenticated %}
-              {% include "partials/notificaciones_dropdown.html" %}
-            {% endif %}
-          {% endif %}
+
           {% if not grupo_admin %}
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button"
