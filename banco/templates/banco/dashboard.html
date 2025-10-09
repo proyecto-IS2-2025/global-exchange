@@ -5,81 +5,272 @@
 {% block extra_head %}
 <style>
   body {
-    background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    min-height: 100vh;
-    color: #f8f9fa;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: drift 20s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes drift {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(50px, 50px); }
   }
 
   .navbar-custom {
-    background-color: #ffffff;
-    border-bottom: 1px solid #e0e0e0;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: none;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    padding: 1rem 0;
   }
 
   .navbar-custom .navbar-brand {
     color: var(--color-principal);
-    font-weight: 700;
-    font-size: 1.5rem;
+    font-weight: 800;
+    font-size: 1.6rem;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
   .navbar-custom .nav-link {
     color: #495057;
     font-weight: 600;
-    transition: color 0.3s ease;
+    transition: all 0.3s ease;
+    padding: 8px 16px;
+    border-radius: 10px;
+    margin: 0 4px;
   }
 
-  .navbar-custom .nav-link:hover {
+  .navbar-custom .nav-link:hover,
+  .navbar-custom .nav-link.active {
     color: var(--color-principal);
+    background: rgba(102, 126, 234, 0.1);
+    transform: translateY(-2px);
   }
 
-  .badge-custom-dark {
-    background: var(--color-secundario);
-    font-size: 1rem;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
+  .navbar-custom .nav-link i {
+    font-size: 1.1rem;
   }
-  
-  .badge-custom-credit {
-    background: #28a745;
-    font-size: 1rem;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-  }
-  
+
   .dashboard-card {
-    background: #ffffff;
-    padding: 2rem;
-    border-radius: 1rem;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    color: #495057;
+    background: rgba(255, 255, 255, 0.98);
+    padding: 2.5rem;
+    border-radius: 24px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
     margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+
+  .dashboard-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-principal), var(--color-secundario), var(--color-principal));
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .dashboard-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+  }
+
+  .dashboard-card h3 {
+    color: #2d3748;
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dashboard-card h3 i {
+    color: var(--color-principal);
+    font-size: 1.8rem;
   }
 
   .info-item {
-    padding: 1rem 0;
-    border-bottom: 1px solid #eceeef;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
   }
 
-  .info-item:last-child {
-    border-bottom: none;
+  .info-item:hover {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+    border-color: var(--color-principal);
+    transform: translateX(8px);
+  }
+
+  .info-item h5 {
+    margin: 0;
+    font-weight: 600;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .info-item i {
+    color: var(--color-principal);
+    font-size: 1.3rem;
+  }
+
+  .badge-custom-dark {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    font-size: 1.1rem;
+    padding: 0.7rem 1.5rem;
+    border-radius: 30px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  
+  .badge-custom-credit {
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+    font-size: 1.1rem;
+    padding: 0.7rem 1.5rem;
+    border-radius: 30px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4);
+  }
+
+  .badge-tipo {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+
+  .tarjeta-info {
+    line-height: 1.8;
+    color: #495057;
+    font-size: 0.95rem;
+  }
+
+  .tarjeta-info strong {
+    color: #2d3748;
+    font-weight: 600;
   }
 
   .cvv-hidden {
-    letter-spacing: 3px;
+    letter-spacing: 4px;
+    font-weight: 700;
+  }
+
+  .toggle-cvv {
+    border-radius: 20px;
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: 2px solid #6c757d;
+  }
+
+  .toggle-cvv:hover {
+    background: #6c757d;
+    color: white;
+    transform: scale(1.05);
+  }
+
+  .action-btn {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .action-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  }
+
+  .action-btn-primary {
+    background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
+  }
+
+  .action-btn-secondary {
+    background: linear-gradient(135deg, #6c757d, #495057);
+  }
+
+  .alert {
+    border-radius: 16px;
+    border: none;
+    padding: 1.5rem;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    animation: slideInDown 0.5s ease-out;
+  }
+
+  @keyframes slideInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<nav class="navbar navbar-expand-lg navbar-custom">
+<nav class="navbar navbar-expand-lg navbar-custom sticky-top">
   <div class="container-fluid">
     <a class="navbar-brand" href="{% url 'banco:dashboard' %}">
       {% if entidad.logo_url %}
-          <img src="{{ entidad.logo_url }}" alt="Logo de {{ entidad.nombre }}" height="30" class="me-2">
+          <img src="{{ entidad.logo_url }}" alt="Logo" height="35" style="border-radius: 8px;">
       {% endif %}
       {{ entidad.nombre }}
     </a>
@@ -90,27 +281,27 @@
       <ul class="navbar-nav ms-auto">
         <li class="nav-item">
           <a class="nav-link active" href="{% url 'banco:dashboard' %}">
-            <i class="bi bi-grid me-2"></i> Panel de control
+            <i class="bi bi-grid"></i> Panel
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="{% url 'banco:transferir' %}">
-            <i class="bi bi-send-fill me-2"></i> Transferir
+            <i class="bi bi-arrow-left-right"></i> Transferir
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="{% url 'banco:pagar' %}">
-            <i class="bi bi-send-fill me-2"></i> Pagar
+            <i class="bi bi-credit-card"></i> Pagar
           </a>
         </li>        
         <li class="nav-item">
           <a class="nav-link" href="{% url 'banco:historial' %}">
-            <i class="bi bi-clock-history me-2"></i> Historial
+            <i class="bi bi-clock-history"></i> Historial
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="{% url 'banco:logout' %}">
-            <i class="bi bi-box-arrow-right me-2"></i> Salir
+            <i class="bi bi-box-arrow-right"></i> Salir
           </a>
         </li>
       </ul>
@@ -118,22 +309,21 @@
   </div>
 </nav>
 
-<div class="container mt-5">
+<div class="container mt-5 animate-fade-in">
 
   {% if messages %}
     {% for message in messages %}
       <div class="alert alert-success text-center" role="alert">
-        {{ message }}
+        <i class="bi bi-check-circle-fill me-2"></i>{{ message }}
       </div>
     {% endfor %}
   {% endif %}
 
   <!-- CUENTAS -->
-  <div class="dashboard-card text-center">
-    <h3 class="card-title mb-3"><i class="bi bi-wallet2"></i> Mis Cuentas</h3>
-
+  <div class="dashboard-card">
+    <h3><i class="bi bi-wallet2"></i> Mis Cuentas</h3>
     <div class="info-item">
-        <h5><i class="bi bi-bank me-2"></i> Saldo en Cuenta Corriente</h5>
+        <h5><i class="bi bi-bank"></i> Cuenta Corriente</h5>
         {% if cuenta %}
             <span class="badge badge-custom-dark">₲ {{ cuenta.saldo|floatformat:2 }}</span>
         {% else %}
@@ -144,58 +334,62 @@
 
   <!-- TARJETA DÉBITO -->
   <div class="dashboard-card">
-    <h3 class="card-title mb-3"><i class="bi bi-credit-card-2-front"></i> Tarjeta de Débito</h3>
+    <h3><i class="bi bi-credit-card-2-front"></i> Tarjeta de Débito</h3>
     {% if tarjeta_debito %}
       <div class="info-item">
-        <div>
-          Nº: •••• •••• •••• {{ tarjeta_debito.numero|slice:"-4:" }}<br>
-          Vencimiento: {{ tarjeta_debito.mes_vencimiento }}/{{ tarjeta_debito.anho_vencimiento }}<br>
-          Entidad: {{ tarjeta_debito.entidad.nombre }}<br>
-          CVV: <span id="cvv-debito" class="cvv-hidden">•••</span>
-          <button type="button" class="btn btn-sm btn-outline-secondary ms-2 toggle-cvv" data-cvv="{{ tarjeta_debito.cvv }}" data-target="cvv-debito">
-            Ver CVV
+        <div class="tarjeta-info">
+          <strong>Nº:</strong> •••• •••• •••• {{ tarjeta_debito.numero|slice:"-4:" }}<br>
+          <strong>Vencimiento:</strong> {{ tarjeta_debito.mes_vencimiento }}/{{ tarjeta_debito.anho_vencimiento }}<br>
+          <strong>Entidad:</strong> {{ tarjeta_debito.entidad.nombre }}<br>
+          <strong>CVV:</strong> <span id="cvv-debito" class="cvv-hidden">•••</span>
+          <button type="button" class="btn btn-sm toggle-cvv ms-2" data-cvv="{{ tarjeta_debito.cvv }}" data-target="cvv-debito">
+            <i class="bi bi-eye"></i> Ver CVV
           </button>
         </div>
-        <span class="badge badge-custom-dark">Débito</span>
+        <span class="badge badge-tipo bg-primary">Débito</span>
       </div>
     {% else %}
-      <p class="text-muted">No tenés tarjeta de débito registrada.</p>
+      <p class="text-muted text-center py-3">
+        <i class="bi bi-info-circle me-2"></i>No tenés tarjeta de débito registrada.
+      </p>
     {% endif %}
   </div>
 
   <!-- TARJETA CRÉDITO -->
   <div class="dashboard-card">
-    <h3 class="card-title mb-3"><i class="bi bi-credit-card"></i> Tarjeta de Crédito</h3>
+    <h3><i class="bi bi-credit-card"></i> Tarjeta de Crédito</h3>
     {% if tarjeta_credito %}
       <div class="info-item">
-        <div>
-          Nº: •••• •••• •••• {{ tarjeta_credito.numero|slice:"-4:" }}<br>
-          Vencimiento: {{ tarjeta_credito.mes_vencimiento }}/{{ tarjeta_credito.anho_vencimiento }}<br>
-          Entidad: {{ tarjeta_credito.entidad.nombre }}<br>
-          CVV: <span id="cvv-credito" class="cvv-hidden">•••</span>
-          <button type="button" class="btn btn-sm btn-outline-secondary ms-2 toggle-cvv" data-cvv="{{ tarjeta_credito.cvv }}" data-target="cvv-credito">
-            Ver CVV
+        <div class="tarjeta-info">
+          <strong>Nº:</strong> •••• •••• •••• {{ tarjeta_credito.numero|slice:"-4:" }}<br>
+          <strong>Vencimiento:</strong> {{ tarjeta_credito.mes_vencimiento }}/{{ tarjeta_credito.anho_vencimiento }}<br>
+          <strong>Entidad:</strong> {{ tarjeta_credito.entidad.nombre }}<br>
+          <strong>CVV:</strong> <span id="cvv-credito" class="cvv-hidden">•••</span>
+          <button type="button" class="btn btn-sm toggle-cvv ms-2" data-cvv="{{ tarjeta_credito.cvv }}" data-target="cvv-credito">
+            <i class="bi bi-eye"></i> Ver CVV
           </button>
         </div>
-        <span class="badge badge-custom-credit">Crédito</span>
+        <span class="badge badge-tipo bg-success">Crédito</span>
       </div>
 
       <div class="info-item">
-        <h5><i class="bi bi-cash me-2"></i> Límite disponible</h5>
+        <h5><i class="bi bi-cash-stack"></i> Límite Disponible</h5>
         <span class="badge badge-custom-credit">₲ {{ tarjeta_credito.disponible|floatformat:2 }}</span>
       </div>
     {% else %}
-      <p class="text-muted">No tenés tarjeta de crédito registrada.</p>
+      <p class="text-muted text-center py-3">
+        <i class="bi bi-info-circle me-2"></i>No tenés tarjeta de crédito registrada.
+      </p>
     {% endif %}
   </div>
 
   <!-- ACCIONES -->
-  <div class="text-center mt-4">
-    <a href="{% url 'banco:transferir' %}" class="btn btn-primary me-2">
-      <i class="bi bi-arrow-left-right"></i> Hacer Transferencia
+  <div class="text-center mt-5 mb-5">
+    <a href="{% url 'banco:transferir' %}" class="action-btn action-btn-primary me-3">
+      <i class="bi bi-arrow-left-right"></i> Transferir
     </a>
-    <a href="{% url 'banco:historial' %}" class="btn btn-secondary">
-      <i class="bi bi-clock-history"></i> Ver Historial
+    <a href="{% url 'banco:historial' %}" class="action-btn action-btn-secondary">
+      <i class="bi bi-clock-history"></i> Historial
     </a>
   </div>
 </div>
@@ -206,14 +400,25 @@
       button.addEventListener("click", function () {
         const targetId = this.dataset.target;
         const cvvElement = document.getElementById(targetId);
+        const icon = this.querySelector('i');
+        
         if (cvvElement.innerText === "•••") {
           cvvElement.innerText = this.dataset.cvv;
-          this.innerText = "Ocultar CVV";
+          icon.className = "bi bi-eye-slash";
+          this.innerHTML = '<i class="bi bi-eye-slash"></i> Ocultar';
         } else {
           cvvElement.innerText = "•••";
-          this.innerText = "Ver CVV";
+          icon.className = "bi bi-eye";
+          this.innerHTML = '<i class="bi bi-eye"></i> Ver CVV';
         }
       });
+    });
+
+    // Animación de entrada progresiva
+    const cards = document.querySelectorAll('.dashboard-card');
+    cards.forEach((card, index) => {
+      card.style.animationDelay = `${index * 0.1}s`;
+      card.classList.add('animate-fade-in');
     });
   });
 </script>
