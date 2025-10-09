@@ -475,14 +475,16 @@ def medio_pago_detail_ajax(request, pk):
         for campo in medio_pago.medio_de_pago.campos.all().order_by('orden', 'id'):
             valor = medio_pago.get_dato_campo(campo.nombre_campo)
             campos_data.append({
-                'id': campo.id,  # ✅ RESTAURAR: Necesario para el frontend
+                'id': campo.id,
                 'nombre': campo.nombre_campo,
-                'etiqueta': campo.etiqueta or campo.nombre_campo.title(),
-                'tipo': campo.get_tipo_dato_display(),  # ✅ RESTAURAR: Formato legible
-                'tipo_codigo': campo.tipo_dato,  # ✅ AGREGAR: Para lógica JS
-                'requerido': campo.is_required,  # ✅ RESTAURAR
+                # CAMBIO: etiqueta segura
+                'etiqueta': get_campo_etiqueta(campo),
+                'tipo': campo.get_tipo_dato_display(),
+                'tipo_codigo': campo.tipo_dato,
+                'requerido': getattr(campo, 'is_required', False),
                 'valor': valor,
-                'valor_enmascarado': campo.enmascarar_valor(valor) if valor else '',
+                # CAMBIO: enmascarar robusto
+                'valor_enmascarado': mask_value(campo, valor) if valor else '',
                 'tiene_valor': bool(valor and str(valor).strip())
             })
 
@@ -844,6 +846,46 @@ def to_serializable(value):
         return str(value)
     return value
 
+# === NUEVO: helpers seguros para etiqueta y enmascarado ===
+def get_campo_etiqueta(campo):
+    """
+    Devuelve una etiqueta legible para un campo aunque el modelo no tenga 'etiqueta'
+    """
+    return (
+        getattr(campo, 'etiqueta', None)
+        or getattr(campo, 'label', None)
+        or getattr(campo, 'nombre_amigable', None)
+        or getattr(campo, 'alias', None)
+        or str(getattr(campo, 'nombre_campo', '')).replace('_', ' ').title()
+        or 'Campo'
+    )
+
+def mask_value(campo, valor):
+    """
+    Enmascara el valor si el campo expone 'enmascarar_valor'; si no, aplica reglas genéricas.
+    """
+    if not valor:
+        return ''
+    try:
+        if hasattr(campo, 'enmascarar_valor') and callable(campo.enmascarar_valor):
+            return campo.enmascarar_valor(valor)
+    except Exception:
+        pass
+
+    s = str(valor)
+    # email
+    if '@' in s and '.' in s:
+        local, _, domain = s.partition('@')
+        return (local[:1] + '***@' + domain) if local else '***@' + domain
+    # numérico (últimos 4)
+    digits = re.sub(r'\D', '', s)
+    if len(digits) >= 6:
+        return '****' + digits[-4:]
+    # genérico
+    if len(s) > 6:
+        return s[:2] + '****' + s[-2:]
+    return '****'
+
 
 class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
     """Vista para seleccionar medio de acreditación para operaciones de venta"""
@@ -854,6 +896,46 @@ class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
         if not cliente:
             messages.warning(request, 'Debe seleccionar un cliente primero.')
             return redirect('clientes:seleccionar_cliente')
+
+        # Aceptar múltiples nombres de parámetros para el ID
+        def _get_medio_id_from(qd):
+            for k in ['medio_id', 'medio', 'medio_pago_id', 'medio_pago', 'id', 'pk', 'seleccionar']:
+                if qd.get(k):
+                    return qd.get(k)
+            return None
+
+        medio_id = _get_medio_id_from(request.GET)
+        accion = request.GET.get('accion') or ('seleccionar' if medio_id else None)
+
+        if accion == 'seleccionar' and medio_id:
+            try:
+                medio = ClienteMedioDePago.objects.select_related("medio_de_pago").get(
+                    id=medio_id, cliente=cliente, es_activo=True
+                )
+                campos = []
+                for campo in medio.medio_de_pago.campos.all().order_by('orden', 'id'):
+                    valor = medio.get_dato_campo(campo.nombre_campo)
+                    campos.append({
+                        "id": campo.id,
+                        "nombre": campo.nombre_campo,
+                        # CAMBIO: etiqueta segura
+                        "etiqueta": get_campo_etiqueta(campo),
+                        "valor": str(valor) if valor is not None else "",
+                        # CAMBIO: enmascarado robusto
+                        "valor_enmascarado": mask_value(campo, valor) if valor else "",
+                    })
+                request.session['medio_seleccionado'] = {
+                    "id": medio.id,
+                    "nombre": medio.medio_de_pago.nombre,
+                    "comision": str(medio.medio_de_pago.comision_porcentaje),
+                    "tipo": medio.medio_de_pago.nombre,
+                    "campos": campos,
+                }
+                request.session.modified = True
+                return redirect('operacion_divisas:venta_sumario')
+            except ClienteMedioDePago.DoesNotExist:
+                messages.error(request, 'Medio de pago no encontrado')
+                return redirect('clientes:seleccionar_medio_acreditacion')
 
         medios_activos = ClienteMedioDePago.objects.filter(
             cliente=cliente,
@@ -873,41 +955,75 @@ class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
     def post(self, request):
         cliente = get_cliente_activo(request)
         if not cliente:
-            return JsonResponse({'error': 'Cliente no seleccionado'}, status=400)
+            # Soporte JSON/HTML
+            accept = request.headers.get('Accept', '')
+            is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in accept
+            if is_ajax:
+                return JsonResponse({'error': 'Cliente no seleccionado'}, status=400)
+            messages.error(request, 'Cliente no seleccionado')
+            return redirect('clientes:seleccionar_medio_acreditacion')
 
-        medio_id = request.POST.get('medio_id')
-        accion = request.POST.get('accion')
+        # Detectar AJAX
+        accept = request.headers.get('Accept', '')
+        is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in accept
+
+        # Aceptar múltiples nombres de parámetros para el ID
+        def _get_medio_id_from(qd):
+            for k in ['medio_id', 'medio', 'medio_pago_id', 'medio_pago', 'id', 'pk', 'seleccionar']:
+                if qd.get(k):
+                    return qd.get(k)
+            return None
+
+        medio_id = _get_medio_id_from(request.POST)
+        accion = request.POST.get('accion') or ('seleccionar' if medio_id else None)
 
         if accion == 'seleccionar' and medio_id:
             try:
                 medio = ClienteMedioDePago.objects.select_related("medio_de_pago").get(
-                    id=medio_id,
-                    cliente=cliente,
-                    es_activo=True
+                    id=medio_id, cliente=cliente, es_activo=True
                 )
+                campos = []
+                for campo in medio.medio_de_pago.campos.all().order_by('orden', 'id'):
+                    valor = medio.get_dato_campo(campo.nombre_campo)
+                    campos.append({
+                        "id": campo.id,
+                        "nombre": campo.nombre_campo,
+                        # CAMBIO: etiqueta segura
+                        "etiqueta": get_campo_etiqueta(campo),
+                        "valor": str(valor) if valor is not None else "",
+                        # CAMBIO: enmascarado robusto
+                        "valor_enmascarado": mask_value(campo, valor) if valor else "",
+                    })
+
                 request.session['medio_seleccionado'] = {
                     "id": medio.id,
                     "nombre": medio.medio_de_pago.nombre,
                     "comision": str(medio.medio_de_pago.comision_porcentaje),
+                    "tipo": medio.medio_de_pago.nombre,
+                    "campos": campos,
                 }
                 request.session.modified = True
 
-                return JsonResponse({
-                    'success': True,
-                    'redirect_url': reverse('operacion_divisas:venta_sumario'),
-                })
+                if is_ajax:
+                    return JsonResponse({'success': True, 'redirect_url': reverse('operacion_divisas:venta_sumario')})
+                return redirect('operacion_divisas:venta_sumario')
 
             except ClienteMedioDePago.DoesNotExist:
-                return JsonResponse({'error': 'Medio de pago no encontrado'}, status=404)
+                if is_ajax:
+                    return JsonResponse({'error': 'Medio de pago no encontrado'}, status=404)
+                messages.error(request, 'Medio de pago no encontrado')
+                return redirect('clientes:seleccionar_medio_acreditacion')
 
         elif accion == 'cancelar':
             request.session.pop('medio_seleccionado', None)
-            return JsonResponse({
-                'success': True,
-                'redirect_url': reverse('operacion_divisas:venta_medios'),
-            })
+            if is_ajax:
+                return JsonResponse({'success': True, 'redirect_url': reverse('clientes:seleccionar_medio_acreditacion')})
+            return redirect('clientes:seleccionar_medio_acreditacion')
 
-        return JsonResponse({'error': 'Acción no válida'}, status=400)
+        if is_ajax:
+            return JsonResponse({'error': 'Acción no válida'}, status=400)
+        messages.error(request, 'Acción no válida')
+        return redirect('clientes:seleccionar_medio_acreditacion')
 
 
 class SeleccionarMedioPagoView(LoginRequiredMixin, View):
@@ -919,6 +1035,46 @@ class SeleccionarMedioPagoView(LoginRequiredMixin, View):
         if not cliente:
             messages.warning(request, 'Debe seleccionar un cliente primero.')
             return redirect('clientes:seleccionar_cliente')
+
+        # Aceptar múltiples nombres de parámetros para el ID
+        def _get_medio_id_from(qd):
+            for k in ['medio_id', 'medio', 'medio_pago_id', 'medio_pago', 'id', 'pk', 'seleccionar']:
+                if qd.get(k):
+                    return qd.get(k)
+            return None
+
+        medio_id = _get_medio_id_from(request.GET)
+        accion = request.GET.get('accion') or ('seleccionar' if medio_id else None)
+
+        if accion == 'seleccionar' and medio_id:
+            try:
+                medio = ClienteMedioDePago.objects.select_related("medio_de_pago").get(
+                    id=medio_id, cliente=cliente, es_activo=True
+                )
+                campos = []
+                for campo in medio.medio_de_pago.campos.all().order_by('orden', 'id'):
+                    valor = medio.get_dato_campo(campo.nombre_campo)
+                    campos.append({
+                        "id": campo.id,
+                        "nombre": campo.nombre_campo,
+                        # CAMBIO: etiqueta segura
+                        "etiqueta": get_campo_etiqueta(campo),
+                        "valor": str(valor) if valor is not None else "",
+                        # CAMBIO: enmascarado robusto
+                        "valor_enmascarado": mask_value(campo, valor) if valor else "",
+                    })
+                request.session['medio_pago_seleccionado'] = {
+                    "id": medio.id,
+                    "nombre": medio.medio_de_pago.nombre,
+                    "comision": str(medio.medio_de_pago.comision_porcentaje),
+                    "tipo": medio.medio_de_pago.nombre,
+                    "campos": campos,
+                }
+                request.session.modified = True
+                return redirect('operacion_divisas:compra_sumario')
+            except ClienteMedioDePago.DoesNotExist:
+                messages.error(request, 'Medio no encontrado')
+                return redirect('operacion_divisas:compra')
 
         medios_activos = ClienteMedioDePago.objects.filter(
             cliente=cliente,
@@ -938,41 +1094,74 @@ class SeleccionarMedioPagoView(LoginRequiredMixin, View):
     def post(self, request):
         cliente = get_cliente_activo(request)
         if not cliente:
-            return JsonResponse({'error': 'Cliente no seleccionado'}, status=400)
+            accept = request.headers.get('Accept', '')
+            is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in accept
+            if is_ajax:
+                return JsonResponse({'error': 'Cliente no seleccionado'}, status=400)
+            messages.error(request, 'Cliente no seleccionado')
+            return redirect('operacion_divisas:compra')
 
-        medio_id = request.POST.get('medio_id')
-        accion = request.POST.get('accion')
+        # Detectar AJAX
+        accept = request.headers.get('Accept', '')
+        is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in accept
+
+        # Aceptar múltiples nombres de parámetros para el ID
+        def _get_medio_id_from(qd):
+            for k in ['medio_id', 'medio', 'medio_pago_id', 'medio_pago', 'id', 'pk', 'seleccionar']:
+                if qd.get(k):
+                    return qd.get(k)
+            return None
+
+        medio_id = _get_medio_id_from(request.POST)
+        accion = request.POST.get('accion') or ('seleccionar' if medio_id else None)
 
         if accion == 'seleccionar' and medio_id:
             try:
                 medio = ClienteMedioDePago.objects.select_related("medio_de_pago").get(
-                    id=medio_id,
-                    cliente=cliente,
-                    es_activo=True
+                    id=medio_id, cliente=cliente, es_activo=True
                 )
+                campos = []
+                for campo in medio.medio_de_pago.campos.all().order_by('orden', 'id'):
+                    valor = medio.get_dato_campo(campo.nombre_campo)
+                    campos.append({
+                        "id": campo.id,
+                        "nombre": campo.nombre_campo,
+                        # CAMBIO: etiqueta segura
+                        "etiqueta": get_campo_etiqueta(campo),
+                        "valor": str(valor) if valor is not None else "",
+                        # CAMBIO: enmascarado robusto
+                        "valor_enmascarado": mask_value(campo, valor) if valor else "",
+                    })
+
                 request.session['medio_pago_seleccionado'] = {
                     "id": medio.id,
                     "nombre": medio.medio_de_pago.nombre,
                     "comision": str(medio.medio_de_pago.comision_porcentaje),
+                    "tipo": medio.medio_de_pago.nombre,
+                    "campos": campos,
                 }
                 request.session.modified = True
 
-                return JsonResponse({
-                    'success': True,
-                    'redirect_url': reverse('operacion_divisas:compra_sumario'),
-                })
+                if is_ajax:
+                    return JsonResponse({'success': True, 'redirect_url': reverse('operacion_divisas:compra_sumario')})
+                return redirect('operacion_divisas:compra_sumario')
 
             except ClienteMedioDePago.DoesNotExist:
-                return JsonResponse({'error': 'Medio no encontrado'}, status=404)
+                if is_ajax:
+                    return JsonResponse({'error': 'Medio no encontrado'}, status=404)
+                messages.error(request, 'Medio no encontrado')
+                return redirect('operacion_divisas:compra')
 
         elif accion == 'limpiar':
             request.session.pop('medio_pago_seleccionado', None)
-            return JsonResponse({
-                'success': True,
-                'redirect_url': reverse('clientes:seleccionar_medio_pago'),
-            })
+            if is_ajax:
+                return JsonResponse({'success': True, 'redirect_url': reverse('operacion_divisas:compra')})
+            return redirect('operacion_divisas:compra')
 
-        return JsonResponse({'error': 'Acción no válida'}, status=400)
+        if is_ajax:
+            return JsonResponse({'error': 'Acción no válida'}, status=400)
+        messages.error(request, 'Acción no válida')
+        return redirect('operacion_divisas:compra')
 
 
 def get_medio_pago_seleccionado(request):
