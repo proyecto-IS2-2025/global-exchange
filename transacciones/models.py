@@ -1,5 +1,6 @@
 # transacciones/models.py
 from django.db import models
+from django.conf import settings
 from django.utils import timezone
 import json
 from django.core.exceptions import ValidationError
@@ -10,6 +11,7 @@ from django.db.models.signals import post_save # Para la señal
 from django.dispatch import receiver # Para la señal
 from django.db.models import Q # Para filtros complejos en la señal
 from decimal import Decimal, ROUND_HALF_UP
+import uuid
 
 # ASUMIDO: Divisa y CotizacionSegmento están disponibles en la app 'divisas'
 from divisas.models import CotizacionSegmento # Importar el modelo de tasa
@@ -30,7 +32,6 @@ class Transaccion(models.Model):
         ('pagada', 'Pagada'),
         ('cancelada', 'Cancelada'),
         ('anulada', 'Anulada'),
-        ('completado', 'completado'),
     ]
 
     # Identificación de la transacción
@@ -106,10 +107,12 @@ class Transaccion(models.Model):
 
     observacion = models.TextField('Observación/Motivo de estado', blank=True, default='')
 
-    # Información del medio de pago/acreditación
+    # Nuevo/Ajustado: datos completos del medio seleccionado (id, nombre, tipo, comision, datos_campos, etc.)
     medio_pago_datos = models.JSONField(
         'Datos del Medio de Pago/Acreditación',
         default=dict,
+        blank=True,
+        null=True,
         help_text='Información del medio utilizado para la operación'
     )
     
@@ -223,6 +226,10 @@ class Transaccion(models.Model):
     def save(self, *args, **kwargs):
         print(">>> Entrando en save() de Transaccion")
         
+        # Generar número si no existe
+        if not getattr(self, 'numero_transaccion', None):
+            self.numero_transaccion = self._generar_numero_transaccion()
+        
         # Aplicar redondeo antes de cualquier validación
         self.aplicar_redondeo_montos()
         
@@ -231,16 +238,14 @@ class Transaccion(models.Model):
         except ValidationError as e:
             raise
         
-        if not self.numero_transaccion:
-            self.numero_transaccion = self._generate_transaction_number()
-        
         super().save(*args, **kwargs)
 
-    def _generate_transaction_number(self):
+    def _generar_numero_transaccion(self):
         """Generar número único de transacción"""
-        timestamp = timezone.now().strftime('%Y%m%d%H%M%S')
-        prefix = 'TRX'
-        return f"{prefix}{timestamp}"
+        # Formato simple y único: TRX-YYYYMMDD-XXXX
+        hoy = timezone.now().strftime('%Y%m%d')
+        random = uuid.uuid4().hex[:6].upper()
+        return f'TRX-{hoy}-{random}'
 
     def __str__(self):
         return f"{self.numero_transaccion} - {self.cliente.nombre_completo} - {self.get_tipo_operacion_display()}"
@@ -279,34 +284,32 @@ class Transaccion(models.Model):
         else:
             self.medio_pago_datos = {}
 
-    def cambiar_estado(self, nuevo_estado, observacion=None, usuario=None):
+    def cambiar_estado(self, nuevo_estado, observacion='', usuario=None):
         """
         Cambiar el estado de la transacción con validaciones
         """
-        estados_validos = dict(self.ESTADO_CHOICES).keys()
-        
-        if nuevo_estado not in estados_validos:
-            raise ValidationError(f'Estado "{nuevo_estado}" no es válido')
+        estado_actual = getattr(self, 'estado', '')
+        if nuevo_estado == estado_actual:
+            return
+        if nuevo_estado not in dict(self.ESTADO_CHOICES):
+            raise ValueError('Estado no válido')
 
-        estado_anterior = self.estado
+        # Persistir cambio
         self.estado = nuevo_estado
-        
-        if observacion:
-            if self.observaciones:
-                self.observaciones += f"\n[{timezone.now()}] {observacion}"
-            else:
-                self.observaciones = f"[{timezone.now()}] {observacion}"
+        self.save(update_fields=['estado'])
 
-        # Crear historial del cambio
-        HistorialTransaccion.objects.create(
-            transaccion=self,
-            estado_anterior=estado_anterior,
-            estado_nuevo=nuevo_estado,
-            observaciones=observacion or f'Cambio de estado de {estado_anterior} a {nuevo_estado}',
-            modificado_por=usuario
-        )
-
-        self.save()
+        # Registrar en historial
+        try:
+            HistorialTransaccion.objects.create(
+                transaccion=self,
+                estado_anterior=estado_actual,
+                estado_nuevo=nuevo_estado,
+                observaciones=observacion or '',
+                modificado_por=usuario if usuario and usuario.is_authenticated else None,
+            )
+        except Exception:
+            # Evitar romper si por alguna razón el historial falla
+            pass
 
     def get_comision_aplicada(self):
         """Obtener la comisión aplicada desde los datos del medio de pago"""
