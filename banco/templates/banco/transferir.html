@@ -6,352 +6,183 @@
 {% block extra_head %}
 <style>
 body {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-  font-family: 'Inter', sans-serif;
+  background: #f5f7fa;
 }
 
 .transferir-container {
-  padding: 3rem 0;
-  animation: fadeInUp 0.6s ease-out;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  padding: 2rem 0;
 }
 
 .transferir-card {
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(20px);
-  border-radius: 30px;
+  background: white;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  max-width: 650px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  max-width: 600px;
   margin: 0 auto;
 }
 
 .card-header-custom {
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
-  padding: 2.5rem;
+  padding: 2rem;
   text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.card-header-custom::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-  background-size: 30px 30px;
-  animation: drift 20s linear infinite;
-}
-
-@keyframes drift {
-  0% { transform: translate(0, 0); }
-  100% { transform: translate(30px, 30px); }
 }
 
 .card-header-custom h4 {
-  font-weight: 800;
-  font-size: 2rem;
+  font-weight: 600;
+  font-size: 1.5rem;
   margin: 0;
-  position: relative;
-  z-index: 1;
-  letter-spacing: -0.5px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .card-header-custom i {
-  font-size: 2rem;
+  font-size: 1.75rem;
 }
 
 .card-body-custom {
-  padding: 3rem;
+  padding: 2rem;
 }
 
 .form-label {
-  font-weight: 700;
-  color: #2d3748;
-  margin-bottom: 0.8rem;
-  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .form-label i {
   color: #667eea;
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
 
 .form-select,
 .form-control {
-  border: 2px solid #e2e8f0;
-  padding: 1rem 1.25rem;
-  border-radius: 14px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
+  border: 1px solid #d1d5db;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.2s;
   background: white;
-  font-weight: 500;
 }
 
 .form-select:focus,
 .form-control:focus {
   border-color: #667eea;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
   outline: none;
-  transform: translateY(-2px);
-}
-
-.form-select {
-  cursor: pointer;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23667eea' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
-}
-
-.input-icon {
-  position: relative;
-}
-
-.input-icon i {
-  position: absolute;
-  left: 1.25rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #667eea;
-  font-size: 1.2rem;
-  pointer-events: none;
-}
-
-.input-icon .form-control {
-  padding-left: 3.5rem;
 }
 
 .btn-enviar {
   background: linear-gradient(135deg, #667eea, #764ba2);
   border: none;
-  padding: 1.25rem 2rem;
-  font-size: 1.2rem;
-  font-weight: 800;
-  border-radius: 16px;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 10px;
   width: 100%;
   margin-top: 1.5rem;
   color: white;
-  transition: all 0.3s ease;
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-  position: relative;
-  overflow: hidden;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-}
-
-.btn-enviar::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  transition: left 0.5s;
+  gap: 8px;
 }
 
 .btn-enviar:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 15px 35px rgba(102, 126, 234, 0.5);
-}
-
-.btn-enviar:hover::before {
-  left: 100%;
-}
-
-.btn-enviar:active {
-  transform: translateY(-2px);
-}
-
-.btn-enviar i {
-  font-size: 1.4rem;
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 .alert {
-  border-radius: 14px;
+  border-radius: 10px;
   border: none;
-  padding: 1.25rem 1.5rem;
-  font-weight: 600;
+  padding: 1rem;
+  font-weight: 500;
   margin-bottom: 1.5rem;
-  animation: slideInDown 0.5s ease-out;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .alert-success {
-  background: linear-gradient(135deg, #11998e, #38ef7d);
-  color: white;
-  box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+  background: #d1fae5;
+  color: #065f46;
 }
 
 .alert-danger {
-  background: linear-gradient(135deg, #f56565, #e53e3e);
-  color: white;
-  box-shadow: 0 4px 15px rgba(229, 62, 62, 0.3);
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .alert-warning {
-  background: linear-gradient(135deg, #f093fb, #f5576c);
-  color: white;
-  box-shadow: 0 4px 15px rgba(245, 87, 108, 0.3);
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .alert-info {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-}
-
-@keyframes slideInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  background: #dbeafe;
+  color: #1e40af;
 }
 
 .btn-close {
-  filter: brightness(0) invert(1);
+  opacity: 0.5;
 }
 
 .btn-back {
-  background: linear-gradient(135deg, #6c757d, #495057);
+  background: #6b7280;
   color: white;
   border: none;
-  padding: 1rem 2.5rem;
-  font-size: 1.1rem;
-  font-weight: 700;
-  border-radius: 16px;
-  transition: all 0.3s ease;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  padding: 0.85rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 10px;
+  transition: all 0.2s;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   text-decoration: none;
 }
 
 .btn-back:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  background: linear-gradient(135deg, #495057, #343a40);
+  background: #4b5563;
   color: white;
-}
-
-.hidden {
-  display: none !important;
+  transform: translateY(-1px);
 }
 
 .transferencia-fields {
-  transition: all 0.4s ease;
+  transition: opacity 0.2s, max-height 0.2s;
+  overflow: hidden;
 }
 
 .transferencia-fields.hidden {
   opacity: 0;
   max-height: 0;
-  overflow: hidden;
+  margin: 0;
 }
 
 .transferencia-fields:not(.hidden) {
   opacity: 1;
   max-height: 500px;
-  animation: expandIn 0.4s ease-out;
-}
-
-@keyframes expandIn {
-  from {
-    opacity: 0;
-    max-height: 0;
-  }
-  to {
-    opacity: 1;
-    max-height: 500px;
-  }
-}
-
-.tipo-pago-selector {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.tipo-option {
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-  border: 3px solid transparent;
-  border-radius: 16px;
-  padding: 1.5rem;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.tipo-option:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-}
-
-.tipo-option.active {
-  border-color: #667eea;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-}
-
-.tipo-option i {
-  font-size: 2.5rem;
-  color: #667eea;
-  display: block;
-  margin-bottom: 0.5rem;
-}
-
-.tipo-option span {
-  font-weight: 700;
-  color: #2d3748;
 }
 
 .text-danger {
-  color: #e53e3e;
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
+  color: #dc2626;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
 }
 
 @media (max-width: 768px) {
   .card-body-custom {
-    padding: 2rem;
-  }
-
-  .transferir-container {
-    padding: 1.5rem 0;
-  }
-
-  .tipo-pago-selector {
-    grid-template-columns: 1fr;
+    padding: 1.5rem;
   }
 }
 </style>
@@ -368,12 +199,20 @@ body {
       </div>
       
       <div class="card-body-custom">
+        {% if cuenta %}
+          <div class="alert alert-info">
+            <i class="bi bi-person-badge"></i>
+            Tu cuenta origen: <strong>{{ cuenta.numero_cuenta }}</strong>
+            {% if entidad and entidad.nombre %} ({{ entidad.nombre }}){% endif %}
+          </div>
+        {% endif %}
+
         {% if messages %}
           {% for message in messages %}
           <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            <i class="bi bi-{% if message.tags == 'success' %}check-circle-fill{% elif message.tags == 'danger' %}exclamation-triangle-fill{% else %}info-circle-fill{% endif %}"></i>
+            <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'danger' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
             {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
           </div>
           {% endfor %}
         {% endif %}
@@ -381,7 +220,7 @@ body {
         <form method="post" action="{% url 'banco:transferir' %}">
           {% csrf_token %}
           
-          <div class="mb-4">
+          <div class="mb-3">
             <label class="form-label">
               <i class="bi bi-list-ul"></i> {{ form.tipo_pago.label }}
             </label>
@@ -392,7 +231,7 @@ body {
           </div>
 
           <div id="transferencia-fields" class="transferencia-fields">
-            <div class="mb-4">
+            <div class="mb-3">
               <label for="{{ form.entidad_destino.id_for_label }}" class="form-label">
                 <i class="bi bi-building"></i> {{ form.entidad_destino.label }}
               </label>
@@ -402,28 +241,22 @@ body {
               {% endif %}
             </div>
 
-            <div class="mb-4">
+            <div class="mb-3">
               <label for="{{ form.numero_cuenta_destino.id_for_label }}" class="form-label">
                 <i class="bi bi-hash"></i> {{ form.numero_cuenta_destino.label }}
               </label>
-              <div class="input-icon">
-                <i class="bi bi-123"></i>
-                {{ form.numero_cuenta_destino }}
-              </div>
+              {{ form.numero_cuenta_destino }}
               {% if form.numero_cuenta_destino.errors %}
                 <div class="text-danger">{{ form.numero_cuenta_destino.errors }}</div>
               {% endif %}
             </div>
           </div>
 
-          <div class="mb-4">
+          <div class="mb-3">
             <label for="{{ form.monto.id_for_label }}" class="form-label">
               <i class="bi bi-cash-stack"></i> {{ form.monto.label }}
             </label>
-            <div class="input-icon">
-              <i class="bi bi-currency-exchange"></i>
-              {{ form.monto }}
-            </div>
+            {{ form.monto }}
             {% if form.monto.errors %}
               <div class="text-danger">{{ form.monto.errors }}</div>
             {% endif %}
@@ -431,12 +264,12 @@ body {
 
           {% if error %}
             <div class="alert alert-danger">
-              <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
+              <i class="bi bi-exclamation-circle"></i> {{ error }}
             </div>
           {% endif %}
 
           <button type="submit" class="btn-enviar">
-            <i class="bi bi-send-check-fill"></i> Confirmar Movimiento
+            <i class="bi bi-send-check"></i> Confirmar Movimiento
           </button>
         </form>
       </div>
@@ -444,7 +277,7 @@ body {
 
     <div class="text-center mt-4">
       <a href="{% url 'banco:dashboard' %}" class="btn-back">
-        <i class="bi bi-arrow-left-circle-fill"></i> Volver al Panel
+        <i class="bi bi-arrow-left-circle"></i> Volver al Panel
       </a>
     </div>
   </div>
@@ -466,19 +299,14 @@ body {
     toggleTransferenciaFields();
     tipoPagoSelect.addEventListener('change', toggleTransferenciaFields);
 
-    // Animación del botón de envío
+    // Prevenir múltiples envíos
+    const form = document.querySelector('form');
     const btnEnviar = document.querySelector('.btn-enviar');
-    btnEnviar.addEventListener('click', function(e) {
-      if (this.classList.contains('processing')) {
-        e.preventDefault();
-        return;
-      }
-      
-      // Validar formulario antes de mostrar processing
-      const form = this.closest('form');
+    
+    form.addEventListener('submit', function() {
       if (form.checkValidity()) {
-        this.classList.add('processing');
-        this.innerHTML = '<i class="bi bi-hourglass-split"></i> Procesando...';
+        btnEnviar.disabled = true;
+        btnEnviar.innerHTML = '<i class="bi bi-hourglass-split"></i> Procesando...';
       }
     });
   });

@@ -9,19 +9,18 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   {% load banco_tags %}
   <style>
     :root {
-      --color-principal: {{ entidad.color_principal|default:"#1d3557" }};
-      --color-secundario: {{ entidad.color_secundario|default:"#457b9d" }};
-      --color-acento: #f72585;
-      --sombra-suave: 0 4px 20px rgba(0, 0, 0, 0.08);
-      --sombra-media: 0 8px 30px rgba(0, 0, 0, 0.12);
-      --sombra-fuerte: 0 15px 50px rgba(0, 0, 0, 0.15);
-      --border-radius: 16px;
-      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --color-principal: {{ entidad.color_principal|default:"#2563eb" }};
+      --color-secundario: {{ entidad.color_secundario|default:"#1e40af" }};
+      --gris-claro: #f8f9fa;
+      --gris-medio: #e9ecef;
+      --gris-oscuro: #495057;
+      --texto-principal: #1f2937;
+      --borde-radius: 12px;
     }
     
     * {
@@ -29,77 +28,51 @@
     }
 
     body {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: #f5f7fa;
       min-height: 100vh;
-      overflow-x: hidden;
+      color: var(--texto-principal);
     }
 
-    .bg-primary-custom {
-      background: linear-gradient(135deg, var(--color-principal), var(--color-secundario)) !important;
-    }
-    
-    .bg-gradient-custom {
-      background: linear-gradient(135deg, var(--color-principal), var(--color-secundario)) !important;
-    }
-    
     .btn-primary-custom {
-      background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
+      background: var(--color-principal);
       border: none;
-      border-radius: 12px;
-      padding: 12px 28px;
+      border-radius: var(--borde-radius);
+      padding: 12px 24px;
       font-weight: 600;
-      transition: var(--transition);
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      color: white;
+      transition: all 0.2s ease;
     }
     
     .btn-primary-custom:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+      background: var(--color-secundario);
+      transform: translateY(-1px);
     }
 
     .btn-outline-primary-custom {
       color: var(--color-principal);
       border: 2px solid var(--color-principal);
-      border-radius: 12px;
-      padding: 12px 28px;
+      border-radius: var(--borde-radius);
+      padding: 12px 24px;
       font-weight: 600;
-      transition: var(--transition);
-      background: transparent;
+      background: white;
+      transition: all 0.2s ease;
     }
     
     .btn-outline-primary-custom:hover {
-      background-color: var(--color-principal);
-      color: #fff;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      background: var(--color-principal);
+      color: white;
     }
 
     .card {
-      border: none;
-      border-radius: var(--border-radius);
-      box-shadow: var(--sombra-media);
-      backdrop-filter: blur(10px);
-      transition: var(--transition);
+      border: 1px solid var(--gris-medio);
+      border-radius: var(--borde-radius);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: box-shadow 0.2s ease;
+      background: white;
     }
 
     .card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--sombra-fuerte);
-    }
-
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .animate-fade-in {
-      animation: fadeInUp 0.6s ease-out;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
   </style>
 

@@ -54,6 +54,8 @@
                         <span class="badge bg-warning status-badge">{{ transaccion.get_estado_display }}</span>
                     {% elif transaccion.estado == 'pagada' %}
                         <span class="badge bg-success status-badge">{{ transaccion.get_estado_display }}</span>
+                    {% elif transaccion.estado == 'completado' %}
+                        <span class="badge bg-success status-badge">{{ transaccion.get_estado_display }}</span>
                     {% elif transaccion.estado == 'cancelada' %}
                         <span class="badge bg-danger status-badge">{{ transaccion.get_estado_display }}</span>
                     {% elif transaccion.estado == 'anulada' %}
