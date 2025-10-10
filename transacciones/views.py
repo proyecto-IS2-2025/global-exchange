@@ -22,12 +22,12 @@ from clientes.services import verificar_limites
 from decimal import Decimal, ROUND_HALF_UP
 import re  # NUEVO: para enmascarar valores
 import unicodedata  # NUEVO: normalización de texto
-
+from django.utils import timezone  # NUEVO: para timestamps seguros
 # NUEVO: modelos del banco
 try:
-    from banco.models import EntidadBancaria, Cuenta, BancoUser
+    from banco.models import EntidadBancaria, Cuenta, BancoUser, Transferencia  # <- usar Transferencia
 except Exception:
-    EntidadBancaria = Cuenta = BancoUser = None
+    EntidadBancaria = Cuenta = BancoUser = Transferencia = None
 
 # === NUEVO: constantes de la cuenta de la empresa ===
 EMPRESA_BANCO_NOMBRE = "Banco Py"
@@ -244,16 +244,10 @@ def _get_cuenta_empresa():
     # Si no se encontró la entidad, devolver None y el número esperado para logging aguas arriba
     return (entidad, EMPRESA_NUMERO_CUENTA)
 
-def realizar_transferencia_bancaria(entidad_src, numero_cuenta_src, entidad_dst, numero_cuenta_dst, monto):
+def realizar_transferencia_bancaria(entidad_src, numero_cuenta_src, entidad_dst, numero_cuenta_dst, monto, referencia=None):
     """
     Ejecuta transferencia entre dos cuentas. Hace fallback por número de cuenta único si la entidad no coincide.
-    Retorna dict: {'ok': bool, 'code': '00', 'message': '...'}
-    Códigos:
-      - '00': éxito
-      - '14': cuenta no encontrada
-      - '51': fondos insuficientes
-      - '12': datos inválidos
-      - '96': error del sistema
+    Retorna dict: {'ok': bool, 'code': '00', 'message': '...', 'comprobante': '...'}
     """
     if not Cuenta or not EntidadBancaria:
         return {'ok': False, 'code': '96', 'message': 'Módulo banco no disponible'}
@@ -349,8 +343,27 @@ def realizar_transferencia_bancaria(entidad_src, numero_cuenta_src, entidad_dst,
             cuenta_src.save(update_fields=['saldo'])
             cuenta_dst.save(update_fields=['saldo'])
 
+            # Registrar en banco.Transferencia para que aparezca en historial
+            comprobante_val = None
+            if Transferencia:
+                try:
+                    t = Transferencia.objects.create(
+                        cuenta_origen=cuenta_src,
+                        cuenta_destino=cuenta_dst,
+                        monto=monto_dec
+                    )
+                    comprobante_val = str(getattr(t, 'comprobante', ''))
+                    logger.info(f"[TRANSFER][TRX] Transferencia registrada comprobante={comprobante_val}")
+                except Exception as e_trx:
+                    logger.warning(f"[TRANSFER] No se pudo registrar Transferencia: {e_trx}")
+            else:
+                logger.warning("[TRANSFER] Modelo Transferencia no disponible")
+
         logger.info("[TRANSFER] Transferencia exitosa")
-        return {'ok': True, 'code': '00', 'message': 'Transferencia realizada con éxito'}
+        # Fallback de comprobante si no se pudo crear Transferencia
+        if not comprobante_val:
+            comprobante_val = str(referencia or f"TR-{datetime.now().strftime('%Y%m%d%H%M%S%f')[-12:]}")
+        return {'ok': True, 'code': '00', 'message': 'Transferencia realizada con éxito', 'comprobante': comprobante_val}
     except Exception as e:
         logger.error(f'Error en transferencia bancaria: {e}', exc_info=True)
         return {'ok': False, 'code': '96', 'message': 'Error interno del sistema'}
@@ -477,7 +490,8 @@ def crear_transaccion_desde_venta(request):
                     numero_cuenta_src=cta_emp,
                     entidad_dst=ent_cli_hint,
                     numero_cuenta_dst=cta_cli,
-                    monto=transaccion.monto_destino
+                    monto=transaccion.monto_destino,
+                    referencia=transaccion.numero_transaccion  # NUEVO: referencia para historial
                 )
                 if resultado.get('ok'):
                     transaccion.cambiar_estado('completado', observacion='Acreditación automática realizada', usuario=request.user)
@@ -663,7 +677,8 @@ def crear_transaccion_desde_compra(request):
                     numero_cuenta_src=cta_cli,
                     entidad_dst=ent_emp,
                     numero_cuenta_dst=cta_emp,
-                    monto=transaccion.monto_origen
+                    monto=transaccion.monto_origen,
+                    referencia=transaccion.numero_transaccion  # NUEVO: referencia para historial
                 )
                 if resultado.get('ok'):
                     transaccion.cambiar_estado('pagada', observacion='Pago automático recibido', usuario=request.user)
