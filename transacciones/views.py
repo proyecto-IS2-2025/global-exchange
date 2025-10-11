@@ -20,6 +20,7 @@ from transacciones.models import Transaccion
 logger = logging.getLogger(__name__)
 from clientes.services import verificar_limites
 from decimal import Decimal, ROUND_HALF_UP
+import re  # NUEVO: para enmascarar valores
 
 def redondear(valor, decimales=2):
     """
@@ -43,6 +44,66 @@ def determinar_decimales_divisa(codigo_divisa):
     return 0 if codigo_divisa.upper() == 'PYG' else 2
 
 
+# ==== NUEVO: helpers de presentación de medio de pago/acreditación ====
+def _humanize_etiqueta(nombre):
+    try:
+        s = str(nombre or '').strip()
+        if not s:
+            return 'Campo'
+        return s.replace('_', ' ').replace('.', ' ').strip().title()
+    except Exception:
+        return 'Campo'
+
+def _mask_generic(valor):
+    if not valor:
+        return ''
+    s = str(valor).strip()
+    # Email
+    if '@' in s and '.' in s:
+        local, _, domain = s.partition('@')
+        return (local[:1] + '***@' + domain) if local else '***@' + domain
+    # Numéricos largos: últimos 4
+    digits = re.sub(r'\D', '', s)
+    if len(digits) >= 6:
+        return '****' + digits[-4:]
+    # Genérico
+    if len(s) > 6:
+        return s[:2] + '****' + s[-2:]
+    return '****'
+
+def _build_medio_display(medio_datos):
+    """
+    Construye un objeto 'medio' listo para plantilla:
+    { nombre, comision, tipo, campos: [ { etiqueta, valor, valor_enmascarado } ] }
+    """
+    if not isinstance(medio_datos, dict):
+        return {}
+
+    nombre = medio_datos.get('nombre') or ''
+    comision = medio_datos.get('comision') or ''
+    tipo = medio_datos.get('tipo') or ''
+    campos_list = medio_datos.get('campos')
+
+    # Si no hay lista de campos, construirla a partir de datos_campos
+    if not campos_list:
+        campos_list = []
+        datos_campos = medio_datos.get('datos_campos') or {}
+        if isinstance(datos_campos, dict):
+            for key, value in datos_campos.items():
+                etiqueta = _humanize_etiqueta(key)
+                campos_list.append({
+                    'etiqueta': etiqueta,
+                    'valor': '' if value is None else str(value),
+                    'valor_enmascarado': _mask_generic(value) if value else '',
+                })
+
+    return {
+        'nombre': nombre,
+        'comision': comision,
+        'tipo': tipo,
+        'campos': campos_list,
+    }
+
 @login_required
 def crear_transaccion_desde_venta(request):
     """
@@ -50,7 +111,7 @@ def crear_transaccion_desde_venta(request):
     """
     if request.method != 'POST':
         messages.error(request, "Método no permitido.")
-        return redirect('divisas:venta_sumario')
+        return redirect('operacion_divisas:venta_sumario')
 
     try:
         operacion = request.session.get("operacion")
@@ -58,7 +119,7 @@ def crear_transaccion_desde_venta(request):
 
         if not operacion:
             messages.error(request, "No se encontró información de la operación.")
-            return redirect("divisas:venta")
+            return redirect("operacion_divisas:venta")
 
         if not medio_inst:
             messages.error(request, "No se encontró el medio de acreditación seleccionado.")
@@ -78,7 +139,7 @@ def crear_transaccion_desde_venta(request):
         
         if not codigo_divisa:
             messages.error(request, "No se encontró el código de divisa en la operación.")
-            return redirect('divisas:venta_sumario')
+            return redirect('operacion_divisas:venta_sumario')
         
         # Buscar divisas con manejo de errores más específico
         try:
@@ -87,7 +148,7 @@ def crear_transaccion_desde_venta(request):
         except Divisa.DoesNotExist:
             logger.error(f"No se encontró divisa con código: {codigo_divisa}")
             messages.error(request, f"No se encontró la divisa con código: {codigo_divisa}")
-            return redirect('divisas:venta_sumario')
+            return redirect('operacion_divisas:venta_sumario')
         
         try:
             divisa_destino = Divisa.objects.get(code__iexact='PYG')
@@ -95,7 +156,7 @@ def crear_transaccion_desde_venta(request):
         except Divisa.DoesNotExist:
             logger.error("No se encontró la divisa PYG (Guaraní)")
             messages.error(request, "Error: No se encontró la divisa Guaraní (PYG) en el sistema.")
-            return redirect('divisas:venta_sumario')
+            return redirect('operacion_divisas:venta_sumario')
 
         # Convertir montos a Decimal de forma segura
         try:
@@ -105,7 +166,7 @@ def crear_transaccion_desde_venta(request):
         except (ValueError, TypeError) as e:
             logger.error(f"Error al convertir montos a Decimal: {e}")
             messages.error(request, "Error en los datos de la operación.")
-            return redirect('divisas:venta_sumario')
+            return redirect('operacion_divisas:venta_sumario')
 
         # 🔹 Aplicar redondeo según regla - MEJORA ESPECÍFICA
         decimales_origen = determinar_decimales_divisa(divisa_origen.code)
@@ -119,7 +180,7 @@ def crear_transaccion_desde_venta(request):
         ok, msg = verificar_limites(cliente, monto_destino)
         if not ok:
             messages.error(request, msg)
-            return redirect('divisas:venta_sumario')
+            return redirect('operacion_divisas:venta_sumario')
 
         # Preparar datos del medio
         medio_datos = preparar_datos_medio(medio_inst)
@@ -157,7 +218,7 @@ def crear_transaccion_desde_venta(request):
     except Exception as e:
         logger.error(f"Error al crear transacción de venta: {e}")
         messages.error(request, f"Error al procesar la transacción: {str(e)}")
-        return redirect('divisas:venta_sumario')
+        return redirect('operacion_divisas:venta_sumario')
 
 
 @login_required
@@ -167,7 +228,7 @@ def crear_transaccion_desde_compra(request):
     """
     if request.method != 'POST':
         messages.error(request, "Método no permitido.")
-        return redirect('divisas:compra_sumario')
+        return redirect('operacion_divisas:compra_sumario')
     
     try:
         # Obtener datos de la sesión
@@ -176,7 +237,7 @@ def crear_transaccion_desde_compra(request):
         
         if not operacion:
             messages.error(request, "No se encontró información de la operación.")
-            return redirect("divisas:compra")
+            return redirect("operacion_divisas:compra")
         
         if not medio_inst:
             messages.error(request, "No se encontró el medio de pago seleccionado.")
@@ -196,7 +257,7 @@ def crear_transaccion_desde_compra(request):
         
         if not codigo_divisa:
             messages.error(request, "No se encontró el código de divisa en la operación.")
-            return redirect('divisas:compra_sumario')
+            return redirect('operacion_divisas:compra_sumario')
                 
         # Obtener divisas - Para compra: origen=PYG, destino=divisa comprada
         try:
@@ -205,7 +266,7 @@ def crear_transaccion_desde_compra(request):
         except Divisa.DoesNotExist:
             logger.error("No se encontró la divisa PYG (Guaraní)")
             messages.error(request, "Error: No se encontró la divisa Guaraní (PYG) en el sistema.")
-            return redirect('divisas:compra_sumario')
+            return redirect('operacion_divisas:compra_sumario')
             
         try:
             divisa_destino = Divisa.objects.get(code__iexact=codigo_divisa)
@@ -213,7 +274,7 @@ def crear_transaccion_desde_compra(request):
         except Divisa.DoesNotExist:
             logger.error(f"No se encontró divisa con código: {codigo_divisa}")
             messages.error(request, f"No se encontró la divisa con código: {codigo_divisa}")
-            return redirect('divisas:compra_sumario')
+            return redirect('operacion_divisas:compra_sumario')
 
         # Convertir montos a Decimal de forma segura
         try:
@@ -223,12 +284,12 @@ def crear_transaccion_desde_compra(request):
         except (ValueError, TypeError) as e:
             logger.error(f"Error al convertir montos a Decimal: {e}")
             messages.error(request, "Error en los datos de la operación.")
-            return redirect('divisas:compra_sumario')
+            return redirect('operacion_divisas:compra_sumario')
 
         ok, msg = verificar_limites(cliente, monto_destino)
         if not ok:
             messages.error(request, msg)
-            return redirect('divisas:compra_sumario')
+            return redirect('operacion_divisas:compra_sumario')
         # Preparar datos del medio de pago
         medio_datos = {}
         if isinstance(medio_inst, dict) and medio_inst.get("id"):
@@ -315,7 +376,7 @@ def crear_transaccion_desde_compra(request):
     except Exception as e:
         logger.error(f"Error al crear transacción de compra: {e}")
         messages.error(request, f"Error al procesar la transacción: {str(e)}")
-        return redirect('divisas:compra_sumario')
+        return redirect('operacion_divisas:compra_sumario')
 
 
 def preparar_datos_medio(medio_inst):
@@ -334,7 +395,7 @@ def preparar_datos_medio(medio_inst):
             
             # Determinar el tipo
             tipo_label = "No definido"
-            if medio_model.tipo_medio:
+            if getattr(medio_model, 'tipo_medio', None):
                 from medios_pago.models import TIPO_MEDIO_CHOICES
                 tipo_dict = dict(TIPO_MEDIO_CHOICES)
                 tipo_label = tipo_dict.get(medio_model.tipo_medio, "No definido")
@@ -342,12 +403,25 @@ def preparar_datos_medio(medio_inst):
                 api_info = medio_model.get_api_info()
                 tipo_label = api_info.get("nombre_usuario", "No definido")
 
+            datos_campos = medio_real.datos_campos or {}
+
+            # NUEVO: construir lista de campos con etiqueta y valor enmascarado
+            campos = []
+            if isinstance(datos_campos, dict):
+                for key, value in datos_campos.items():
+                    campos.append({
+                        'etiqueta': _humanize_etiqueta(key),
+                        'valor': '' if value is None else str(value),
+                        'valor_enmascarado': _mask_generic(value) if value else '',
+                    })
+
             medio_datos = {
                 'id': medio_inst.get("id"),
                 'nombre': medio_model.nombre,
                 'tipo': tipo_label,
                 'comision': f"{medio_model.comision_porcentaje:.2f}%",
-                'datos_campos': medio_real.datos_campos or {},
+                'datos_campos': datos_campos,
+                'campos': campos,  # NUEVO: listo para mostrar en plantillas
                 'es_principal': medio_real.es_principal,
             }
             
@@ -358,6 +432,8 @@ def preparar_datos_medio(medio_inst):
                 'nombre': medio_inst.get("nombre", "Medio desconocido"),
                 'tipo': "No definido",
                 'comision': "0%",
+                'datos_campos': {},
+                'campos': [],
             }
     
     return medio_datos
@@ -393,8 +469,26 @@ def confirmacion_operacion(request, numero_transaccion):
         messages.error(request, "No tiene permisos para ver esta transacción.")
         return redirect('inicio')
     
+    # NUEVO: construir medio para la plantilla desde la transacción y adjuntar alias en el objeto
+    medio_raw = transaccion.get_medio_pago_info()
+    medio = _build_medio_display(medio_raw)
+
+    # Adjuntar propiedades derivadas para plantillas que lean desde transaccion.*
+    transaccion.medio_display = medio
+    transaccion.medio_campos = medio.get('campos', [])
+    transaccion.medio_nombre = medio.get('nombre') or ''
+    transaccion.medio_comision = medio.get('comision') or ''
+    transaccion.medio_tipo = medio.get('tipo') or ''
+    transaccion.tiene_datos_medio = bool(transaccion.medio_campos)
+
     return render(request, 'confirmacion_operacion.html', {
         'transaccion': transaccion,
+        # Alias adicionales en contexto por compatibilidad
+        'medio': medio,                   # Objeto listo para plantilla
+        'medio_pago': medio,              # Alias opcional
+        'medio_campos': transaccion.medio_campos,
+        'tiene_datos_medio': transaccion.tiene_datos_medio,
+        'medio_datos': medio_raw,         # RAW por si la plantilla lo usa
     })
 
 
@@ -609,7 +703,26 @@ class DetalleTransaccionView(LoginRequiredMixin, DetailView):
         context['puede_cancelar'] = self.object.puede_cancelarse
         context['puede_anular'] = self.object.puede_anularse
         context['es_admin'] = self.request.user.is_staff
-        
+
+        # NUEVO: medio listo para renderizado y alias/flags de ayuda
+        medio_raw = self.object.get_medio_pago_info()
+        medio = _build_medio_display(medio_raw)
+
+        # Adjuntar propiedades derivadas para plantillas que lean desde transaccion.*
+        self.object.medio_display = medio
+        self.object.medio_campos = medio.get('campos', [])
+        self.object.medio_nombre = medio.get('nombre') or ''
+        self.object.medio_comision = medio.get('comision') or ''
+        self.object.medio_tipo = medio.get('tipo') or ''
+        self.object.tiene_datos_medio = bool(self.object.medio_campos)
+
+        # Además incluir en el contexto por compatibilidad
+        context['medio'] = medio
+        context['medio_pago'] = medio
+        context['medio_campos'] = self.object.medio_campos
+        context['tiene_datos_medio'] = self.object.tiene_datos_medio
+        context['medio_datos'] = medio_raw
+
         return context
 
 

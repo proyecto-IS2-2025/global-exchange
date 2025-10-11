@@ -54,32 +54,52 @@
 
       <!-- Medio de pago -->
       <h5 class="mb-3">Medio de Pago</h5>
-      {% if medio %}
+      {% with medio_ses=request.session.medio_pago_seleccionado %}
+      {% with nombre=medio.nombre|default:medio_ses.nombre comision=medio.comision|default:medio_ses.comision tipo=medio.tipo|default:medio_ses.tipo %}
+      <table class="table table-sm">
+        <tbody>
+          <tr>
+            <th scope="row">Medio</th>
+            <td>{{ nombre|default:"-" }}</td>
+          </tr>
+          <tr>
+            <th scope="row">Tipo</th>
+            <td>{{ tipo|default:"-" }}</td>
+          </tr>
+          <tr>
+            <th scope="row">Comisión</th>
+            <td>
+              {% if comision %}{{ comision }}{% else %}<span class="text-muted">No aplica</span>{% endif %}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      {% with campos=medio.campos|default:medio_ses.campos %}
+      {% if campos %}
+        <h6>Datos del medio</h6>
         <table class="table table-sm">
           <tbody>
-            <tr>
-              <th scope="row">Nombre</th>
-              <td>{{ medio.nombre }}</td>
-            </tr>
-            <tr>
-              <th scope="row">Tipo</th>
-              <td>{{ medio.tipo }}</td>
-            </tr>
-            <tr>
-              <th scope="row">Comisión</th>
-              <td>
-                {% if medio.comision %}
-                  {{ medio.comision }}
-                {% else %}
-                  <span class="text-muted">No aplica</span>
-                {% endif %}
-              </td>
-            </tr>
+            {% for c in campos %}
+              <tr>
+                <th scope="row">{{ c.etiqueta }}</th>
+                <td>
+                  {% if c.valor_enmascarado %}
+                    {{ c.valor_enmascarado }}
+                  {% elif c.valor %}
+                    {{ c.valor }}
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
           </tbody>
         </table>
-      {% else %}
-        <p class="text-warning">No seleccionaste un medio de pago.</p>
       {% endif %}
+      {% endwith %}
+      {% endwith %}
+      {% endwith %}
 
     </div>
     <div class="card-footer text-end">
