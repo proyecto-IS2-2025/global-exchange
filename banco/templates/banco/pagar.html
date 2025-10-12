@@ -5,83 +5,267 @@
 {% block extra_head %}
 <style>
 body {
-  background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
-  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  min-height: 100vh;
+  background: #f5f7fa;
 }
 
-.card-header {
-  background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
-  color: #fff;
-  font-weight: 600;
-  font-size: 1.2rem;
+.pago-container {
+  padding: 2rem 0;
+}
+
+.pago-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  max-width: 550px;
+  margin: 0 auto;
+}
+
+.card-header-custom {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 2rem;
   text-align: center;
-  border-radius: 1rem 1rem 0 0;
 }
 
-.btn-custom {
-  background-color: var(--color-principal);
-  color: #fff;
-  border-radius: 0.5rem;
+.card-header-custom h4 {
   font-weight: 600;
+  font-size: 1.5rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
-.btn-custom:hover {
-  background-color: var(--color-secundario);
+.card-header-custom i {
+  font-size: 1.75rem;
 }
 
+.card-body-custom {
+  padding: 2rem;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-label i {
+  color: #667eea;
+  font-size: 1rem;
+}
+
+.form-select,
+.form-control {
+  border: 1px solid #d1d5db;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  background: white;
+}
+
+.form-select:focus,
+.form-control:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  outline: none;
+}
+
+.btn-pagar {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: none;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 10px;
+  width: 100%;
+  margin-top: 1.5rem;
+  color: white;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-pagar:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.alert {
+  border-radius: 10px;
+  border: none;
+  padding: 1rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alert-danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.btn-back {
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 0.85rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 10px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.btn-back:hover {
+  background: #4b5563;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.tarjeta-preview {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  color: white;
+}
+
+.tarjeta-preview h6 {
+  font-weight: 600;
+  font-size: 0.8rem;
+  opacity: 0.9;
+  margin-bottom: 0.5rem;
+  letter-spacing: 1px;
+}
+
+.tarjeta-preview .numero {
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  font-family: 'Courier New', monospace;
+}
+
+@media (max-width: 768px) {
+  .card-body-custom {
+    padding: 1.5rem;
+  }
+}
 </style>
 {% endblock %}
 
-
 {% block content %}
-<div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6">
-      <div class="card">
-        <div class="card-header">
-          <i class="bi bi-credit-card me-2"></i> Realizar Pago
-        </div>
-        <div class="card-body">
-          {% if error %}
-            <div class="alert alert-danger">{{ error }}</div>
-          {% endif %}
-
-          <form method="post">
-            {% csrf_token %}
-
-            <div class="mb-3">
-              <label class="form-label fw-bold">Seleccionar tarjeta</label>
-              <select name="tipo" class="form-select" required>
-                {% if user.tarjetas_debito.first %}
-                  <option value="DEBITO">Débito (****{{ user.tarjetas_debito.first.numero|slice:"-4:" }})</option>
-                {% endif %}
-                {% if user.tarjetas_credito.first %}
-                  <option value="CREDITO">Crédito (****{{ user.tarjetas_credito.first.numero|slice:"-4:" }})</option>
-                {% endif %}
-              </select>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label fw-bold">Monto (₲)</label>
-              <input type="number" step="0.01" name="monto" class="form-control" required>
-            </div>
-
-            <div class="d-grid">
-              <button type="submit" class="btn btn-custom btn-lg">
-                <i class="bi bi-cash-stack me-2"></i> Pagar
-              </button>
-            </div>
-          </form>
-        </div>
+<div class="pago-container">
+  <div class="container">
+    <div class="pago-card">
+      <div class="card-header-custom">
+        <h4>
+          <i class="bi bi-credit-card"></i> Realizar Pago
+        </h4>
       </div>
+      
+      <div class="card-body-custom">
+        {% if cuenta %}
+          <div class="tarjeta-preview">
+            <h6>CUENTA ASOCIADA</h6>
+            <div class="numero">Nº {{ cuenta.numero_cuenta }}</div>
+          </div>
+        {% endif %}
 
-      <div class="text-center mt-4">
-        <a href="{% url 'banco:dashboard' %}" class="btn btn-light">
-          <i class="bi bi-arrow-left-circle me-2"></i> Volver al Panel
-        </a>
+        {% if error %}
+          <div class="alert alert-danger">
+            <i class="bi bi-exclamation-circle"></i> {{ error }}
+          </div>
+        {% endif %}
+
+        <form method="post">
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label class="form-label">
+              <i class="bi bi-credit-card-2-front"></i> Seleccionar tarjeta
+            </label>
+            <select name="tipo" class="form-select" id="tarjetaSelect" required>
+              {% if user.tarjetas_debito.first %}
+                <option value="DEBITO" data-numero="{{ user.tarjetas_debito.first.numero }}">
+                  Débito - ****{{ user.tarjetas_debito.first.numero|slice:"-4:" }}
+                </option>
+              {% endif %}
+              {% if user.tarjetas_credito.first %}
+                <option value="CREDITO" data-numero="{{ user.tarjetas_credito.first.numero }}">
+                  Crédito - ****{{ user.tarjetas_credito.first.numero|slice:"-4:" }}
+                </option>
+              {% endif %}
+            </select>
+          </div>
+
+          <div class="tarjeta-preview" id="tarjetaPreview">
+            <h6>TARJETA SELECCIONADA</h6>
+            <div class="numero" id="numeroPreview">•••• •••• •••• ••••</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">
+              <i class="bi bi-cash-stack"></i> Monto a pagar (₲)
+            </label>
+            <input type="number" step="1" name="monto" class="form-control" placeholder="Ej: 100000" required>
+          </div>
+
+          <button type="submit" class="btn-pagar">
+            <i class="bi bi-check-circle"></i> Confirmar Pago
+          </button>
+        </form>
       </div>
+    </div>
+
+    <div class="text-center mt-4">
+      <a href="{% url 'banco:dashboard' %}" class="btn-back">
+        <i class="bi bi-arrow-left-circle"></i> Volver al Panel
+      </a>
     </div>
   </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const select = document.getElementById('tarjetaSelect');
+    const preview = document.getElementById('numeroPreview');
+
+    function updatePreview() {
+      const selectedOption = select.options[select.selectedIndex];
+      const numero = selectedOption.dataset.numero;
+      if (numero) {
+        const ultimos4 = numero.slice(-4);
+        preview.textContent = `•••• •••• •••• ${ultimos4}`;
+      }
+    }
+
+    select.addEventListener('change', updatePreview);
+    updatePreview();
+
+    // Prevenir múltiples envíos
+    const form = document.querySelector('form');
+    const btnPagar = document.querySelector('.btn-pagar');
+    
+    form.addEventListener('submit', function() {
+      btnPagar.disabled = true;
+      btnPagar.innerHTML = '<i class="bi bi-hourglass-split"></i> Procesando...';
+    });
+  });
+</script>
 {% endblock %}
