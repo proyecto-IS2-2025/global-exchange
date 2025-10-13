@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'mfa',
     'autenticacion',
     'operacion_divisas',
+    'tauser',  # ✅ NUEVO
 ]
 
 MIDDLEWARE = [

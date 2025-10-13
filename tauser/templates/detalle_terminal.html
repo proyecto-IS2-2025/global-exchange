@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Información de la Terminal -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-dark text-white py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-desktop me-2"></i>
+                        {{ terminal.nombre }}
+                    </h4>
+                    <div>
+                        {% if perms.tauser.change_terminal %}
+                        <a href="{% url 'tauser:terminal_update' pk=terminal.pk %}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit me-1"></i> Editar
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'tauser:terminal_list' %}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i> Volver
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong><i class="fas fa-barcode me-2"></i> Código:</strong> <code>{{ terminal.codigo }}</code></p>
+                        <p><strong><i class="fas fa-map-marker-alt me-2"></i> Ubicación:</strong> {{ terminal.ubicacion }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong><i class="fas fa-user-tie me-2"></i> Responsable:</strong> 
+                            {% if terminal.usuario_responsable %}
+                                {{ terminal.usuario_responsable.username }}
+                            {% else %}
+                                <span class="text-muted">Sin asignar</span>
+                            {% endif %}
+                        </p>
+                        <p><strong><i class="fas fa-power-off me-2"></i> Estado:</strong>
+                            {% if terminal.is_activa %}
+                                <span class="badge bg-success">Activa</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactiva</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 bg-success text-white">
+                    <div class="card-body text-center">
+                        <h3 class="mb-0">{{ operaciones_exitosas }}</h3>
+                        <p class="mb-0"><i class="fas fa-check-circle me-1"></i> Operaciones Exitosas</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 bg-danger text-white">
+                    <div class="card-body text-center">
+                        <h3 class="mb-0">{{ operaciones_fallidas }}</h3>
+                        <p class="mb-0"><i class="fas fa-times-circle me-1"></i> Operaciones Fallidas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventario de Divisas -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-primary text-white py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-boxes-stacked me-2"></i>
+                        Inventario de Divisas
+                    </h5>
+                    {% if perms.tauser.change_inventariodivisaterminal %}
+                    <a href="{% url 'tauser:inventario_terminal' terminal_pk=terminal.pk %}" class="btn btn-light btn-sm">
+                        <i class="fas fa-edit me-1"></i> Gestionar Inventario
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card-body">
+                {% if inventarios %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th><i class="fas fa-money-bill me-1"></i> Divisa</th>
+                                <th class="text-end"><i class="fas fa-box me-1"></i> Cantidad Disponible</th>
+                                <th class="text-end"><i class="fas fa-exclamation-triangle me-1"></i> Mínimo</th>
+                                <th class="text-center"><i class="fas fa-info-circle me-1"></i> Estado</th>
+                                <th><i class="fas fa-clock me-1"></i> Última Actualización</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for inventario in inventarios %}
+                            <tr {% if inventario.necesita_reposicion %}class="table-warning"{% endif %}>
+                                <td>
+                                    <strong>{{ inventario.divisa.nombre }}</strong>
+                                    <span class="badge bg-secondary ms-1">{{ inventario.divisa.code }}</span>
+                                </td>
+                                <td class="text-end">
+                                    <strong>{{ inventario.cantidad|floatformat:2 }}</strong>
+                                </td>
+                                <td class="text-end">
+                                    {{ inventario.cantidad_minima|floatformat:2 }}
+                                </td>
+                                <td class="text-center">
+                                    {% if inventario.necesita_reposicion %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            Requiere Reposición
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle me-1"></i>
+                                            OK
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ inventario.ultima_actualizacion|date:"d/m/Y H:i" }}
+                                    </small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if inventarios_con_alerta %}
+                <div class="alert alert-warning mt-3" role="alert">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        Alertas de Inventario
+                    </h6>
+                    <p class="mb-0">{{ inventarios_con_alerta|length }} divisa(s) requieren reposición.</p>
+                </div>
+                {% endif %}
+
+                {% else %}
+                <div class="alert alert-info mb-0" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No hay inventario registrado para esta terminal.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Últimas Operaciones -->
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-secondary text-white py-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    Últimas 20 Operaciones
+                </h5>
+            </div>
+            
+            <div class="card-body">
+                {% if ultimas_operaciones %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Cliente</th>
+                                <th>Tipo</th>
+                                <th>Divisa</th>
+                                <th class="text-end">Monto</th>
+                                <th class="text-center">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for operacion in ultimas_operaciones %}
+                            <tr>
+                                <td>
+                                    <small>{{ operacion.fecha_operacion|date:"d/m/Y H:i" }}</small>
+                                </td>
+                                <td>
+                                    <small>{{ operacion.cliente.nombre_completo|truncatewords:3 }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ operacion.get_tipo_operacion_display }}</span>
+                                </td>
+                                <td>
+                                    {% if operacion.divisa %}
+                                        <span class="badge bg-secondary">{{ operacion.divisa.code }}</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if operacion.monto_operacion %}
+                                        {{ operacion.monto_operacion|floatformat:2 }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if operacion.fue_exitoso %}
+                                        <i class="fas fa-check-circle text-success"></i>
+                                    {% else %}
+                                        <i class="fas fa-times-circle text-danger" title="{{ operacion.mensaje_error }}"></i>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info mb-0" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No hay operaciones registradas en esta terminal.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
