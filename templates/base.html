@@ -44,15 +44,6 @@
       <!-- Brand con icono -->
       <a class="navbar-brand fw-bold d-flex align-items-center" href="{% url 'inicio' %}">
         <i class="fas fa-house me-2"></i> Global Exchange 
-        {% if user.is_authenticated %}
-          {% if grupo_admin %}
-            <small class="text-white ms-1">(Admin)</small>
-          {% elif grupo_operador %}
-            <small class="text-white ms-1">(Operador)</small>
-          {% elif grupo_cliente %}
-            <small class="text-white ms-1">(Cliente)</small>
-          {% endif %}
-        {% endif %}
       </a>
 
       <button
