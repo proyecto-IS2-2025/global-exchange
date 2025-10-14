@@ -107,14 +107,27 @@
         <i class="bi bi-arrow-left"></i> Volver
       </a>
       
-      <!-- Formulario para crear transacción -->
-      <form method="post" action="{% url 'transacciones:crear_desde_compra' %}" class="d-inline">
+      <!-- Formulario para iniciar verificación MFA -->
+      <form method="post" action="" class="d-inline" id="mfa-form">
         {% csrf_token %}
-        <button type="submit" class="btn btn-success">
-          <i class="bi bi-check-circle"></i> Confirmar Compra
+        <button type="submit" class="btn btn-success" id="mfa-btn">
+          <i class="bi bi-shield-check me-2"></i> Continuar a Verificación
         </button>
       </form>
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('mfa-form');
+    const btn = document.getElementById('mfa-btn');
+    
+    form.addEventListener('submit', function(e) {
+        // Deshabilitar botón y mostrar spinner
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Enviando código de seguridad...';
+    });
+});
+</script>
 {% endblock %}

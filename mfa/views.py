@@ -23,7 +23,8 @@ def mfa_resend_view(request):
         user = User.objects.get(pk=user_id)
     except User.DoesNotExist:
         messages.error(request, "Usuario no encontrado.")
-        del request.session['mfa_user_id']
+        if 'mfa_user_id' in request.session:
+            del request.session['mfa_user_id']
         return redirect('login')
 
     # Llama a la función que genera y envía (con su chequeo de tiempo)
@@ -45,7 +46,8 @@ def mfa_verify_view(request):
         user = User.objects.get(pk=user_id)
     except User.DoesNotExist:
         messages.error(request, "Usuario no encontrado.")
-        del request.session['mfa_user_id']
+        if 'mfa_user_id' in request.session:
+            del request.session['mfa_user_id']
         return redirect('login')
 
     if request.method == 'POST':
@@ -53,9 +55,12 @@ def mfa_verify_view(request):
         entered_code = request.POST.get('otp_code', '').strip()
 
         if check_otp_validity(user, entered_code):
-            # Éxito: Iniciar sesión, limpiar sesión MFA y redirigir
+            # Éxito: Limpiar sesión MFA ANTES de login
+            if 'mfa_user_id' in request.session:
+                del request.session['mfa_user_id']
+            
+            # Iniciar sesión
             login(request, user)
-            del request.session['mfa_user_id']
             messages.success(request, f"¡Inicio de sesión exitoso!")
             
             # Usar tu redirección existente por grupo
