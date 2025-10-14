@@ -107,8 +107,8 @@
         <i class="bi bi-arrow-left"></i> Volver
       </a>
       
-      <!-- Formulario para crear transacción -->
-      <form method="post" action="{% url 'transacciones:crear_desde_compra' %}" class="d-inline">
+      <!-- Formulario para confirmar compra (ahora pasa por SumarioCompraView.post() para validar Stripe) -->
+      <form method="post" action="" class="d-inline">
         {% csrf_token %}
         <button type="submit" class="btn btn-success">
           <i class="bi bi-check-circle"></i> Confirmar Compra

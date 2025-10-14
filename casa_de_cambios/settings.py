@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import stripe
 
 # Ya tenés BASE_DIR definido más abajo; si lo preferís aquí, usa:
 # BASE_DIR = Path(__file__).resolve().parent.parent
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
     'mfa', 
     'autenticacion',
     'operacion_divisas',
+    'stripe_payments',
 ]
 
 MIDDLEWARE = [
@@ -185,3 +187,9 @@ LOGGING = {
 
 TIME_ZONE = 'America/Asuncion'
 USE_TZ = True
+
+
+STRIPE_PUBLISHABLE_KEY = "pk_test_51SCTnvFayINu5q7y2Xs9rtuAXlKXFESkR2jtUI6yrPVRkbn2mA5lJ3QOMGYcSVVn4V3BbjfJnUHuu1gYxfZspNDz00hJkOST0s"
+STRIPE_SECRET_KEY = "sk_test_51SCTnvFayINu5q7yTXQJO2Old7r5bI35yOYD43Zvas0j0ZXr66aFt4cpy73ZKn61iUPcmGlNkxaZ1ib0XUVYoc8O00cfCofmn1"
+STRIPE_WEBHOOK_SECRET = "whsec_32b4e065fe19a60910470282b157b2536e644e0d6fdf5a01cebcdbee92334f8d"
+stripe.api_key = STRIPE_SECRET_KEY
