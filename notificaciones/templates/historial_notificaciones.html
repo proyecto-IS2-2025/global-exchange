@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notificaciones{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sidebar de filtros (similar a Jira) -->
+        <div class="col-md-3 col-lg-2">
+            <div class="card shadow-sm border-0" style="position: sticky; top: 20px;">
+                <div class="card-body p-3">
+                    <h6 class="text-uppercase text-muted mb-3" style="font-size: 0.75rem; font-weight: 600;">
+                        <i class="fas fa-filter me-2"></i>Filtros
+                    </h6>
+                    
+                    <!-- Filtro por estado -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold mb-2" style="font-size: 0.875rem;">Estado</label>
+                        <div class="list-group list-group-flush">
+                            <a href="?estado=todas" 
+                               class="list-group-item list-group-item-action border-0 px-2 py-2 {% if filtro_estado == 'todas' or not filtro_estado %}active{% endif %}"
+                               style="font-size: 0.875rem; border-radius: 4px;">
+                                <i class="fas fa-inbox me-2"></i>Todas
+                                {% if total_todas %}<span class="badge bg-secondary float-end">{{ total_todas }}</span>{% endif %}
+                            </a>
+                            <a href="?estado=pendiente" 
+                               class="list-group-item list-group-item-action border-0 px-2 py-2 {% if filtro_estado == 'pendiente' %}active{% endif %}"
+                               style="font-size: 0.875rem; border-radius: 4px;">
+                                <i class="fas fa-circle text-primary me-2" style="font-size: 0.5rem;"></i>No leídas
+                                {% if total_pendientes %}<span class="badge bg-primary float-end">{{ total_pendientes }}</span>{% endif %}
+                            </a>
+                            <a href="?estado=leida" 
+                               class="list-group-item list-group-item-action border-0 px-2 py-2 {% if filtro_estado == 'leida' %}active{% endif %}"
+                               style="font-size: 0.875rem; border-radius: 4px;">
+                                <i class="fas fa-check-circle text-success me-2" style="font-size: 0.75rem;"></i>Leídas
+                                {% if total_leidas %}<span class="badge bg-success float-end">{{ total_leidas }}</span>{% endif %}
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Filtro por fecha -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold mb-2" style="font-size: 0.875rem;">Período</label>
+                        <div class="list-group list-group-flush">
+                            <a href="?periodo=hoy{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}" 
+                               class="list-group-item list-group-item-action border-0 px-2 py-2 {% if filtro_periodo == 'hoy' %}active{% endif %}"
+                               style="font-size: 0.875rem; border-radius: 4px;">
+                                Hoy
+                            </a>
+                            <a href="?periodo=semana{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}" 
+                               class="list-group-item list-group-item-action border-0 px-2 py-2 {% if filtro_periodo == 'semana' %}active{% endif %}"
+                               style="font-size: 0.875rem; border-radius: 4px;">
+                                Esta semana
+                            </a>
+                            <a href="?periodo=mes{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}" 
+                               class="list-group-item list-group-item-action border-0 px-2 py-2 {% if filtro_periodo == 'mes' %}active{% endif %}"
+                               style="font-size: 0.875rem; border-radius: 4px;">
+                                Este mes
+                            </a>
+                            <a href="?{% if filtro_estado %}estado={{ filtro_estado }}{% endif %}" 
+                               class="list-group-item list-group-item-action border-0 px-2 py-2 {% if not filtro_periodo %}active{% endif %}"
+                               style="font-size: 0.875rem; border-radius: 4px;">
+                                Todas las fechas
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Botón limpiar filtros -->
+                    {% if filtro_estado or filtro_periodo %}
+                    <div class="d-grid">
+                        <a href="?" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Limpiar filtros
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel principal de notificaciones -->
+        <div class="col-md-9 col-lg-10">
+            <div class="card shadow-sm border-0">
+                <!-- Header -->
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
+                    <div>
+                        <h4 class="mb-0 fw-bold">Notificaciones</h4>
+                        <small class="text-muted">
+                            {% if filtro_estado == 'pendiente' %}
+                                Mostrando solo las no leídas
+                            {% elif filtro_estado == 'leida' %}
+                                Mostrando solo las leídas
+                            {% else %}
+                                Mostrando todas las notificaciones
+                            {% endif %}
+                        </small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        {% if notificaciones and total_pendientes > 0 %}
+                        <form method="post" action="{% url 'notificaciones:marcar_todas_leidas' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>Marcar todas como leídas
+                            </button>
+                        </form>
+                        {% endif %}
+                        <a href="{% url 'notificaciones:gestion_notificaciones' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-cog me-1"></i>Configuración
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Lista de notificaciones -->
+                <div class="card-body p-0">
+                    {% if notificaciones %}
+                        <div class="list-group list-group-flush">
+                            {% for notif in notificaciones %}
+                            <div class="list-group-item border-0 px-4 py-3 {% if notif.estado_lectura == 'pendiente' %}bg-light-blue{% endif %}" 
+                                 style="border-bottom: 1px solid #f0f0f0 !important; transition: background-color 0.2s;">
+                                <div class="d-flex align-items-start gap-3">
+                                    <!-- Indicador de estado -->
+                                    <div class="flex-shrink-0 mt-1">
+                                        {% if notif.estado_lectura == 'pendiente' %}
+                                            <span class="badge bg-primary rounded-circle p-0" style="width: 10px; height: 10px;"></span>
+                                        {% else %}
+                                            <div style="width: 10px;"></div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Contenido -->
+                                    <div class="flex-grow-1" style="min-width: 0;">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div>
+                                                <small class="text-muted d-block" style="font-size: 0.8rem;">
+                                                    <i class="far fa-clock me-1"></i>
+                                                    {{ notif.fecha_creacion|date:"d/m/Y H:i" }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                        
+                                        <p class="mb-2" style="font-size: 0.95rem; line-height: 1.5; color: #212529;">
+                                            {{ notif.mensaje }}
+                                        </p>
+
+                                        {% if notif.alerta_base %}
+                                        <div class="mt-2">
+                                            <span class="badge bg-light text-dark border" style="font-size: 0.75rem;">
+                                                <i class="fas fa-chart-line me-1"></i>
+                                                Alerta de tasa: {{ notif.alerta_base.divisa.code }}
+                                            </span>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Acciones -->
+                                    <div class="flex-shrink-0">
+                                        {% if notif.estado_lectura == 'pendiente' %}
+                                        <form method="post" action="{% url 'notificaciones:marcar_leida' notif.id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" 
+                                                    class="btn btn-sm btn-outline-success rounded-circle" 
+                                                    title="Marcar como leída"
+                                                    style="width: 32px; height: 32px; padding: 0;">
+                                                <i class="fas fa-check" style="font-size: 0.8rem;"></i>
+                                            </button>
+                                        </form>
+                                        {% else %}
+                                        <span class="text-success" title="Leída">
+                                            <i class="fas fa-check-circle" style="font-size: 1.2rem;"></i>
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Paginación -->
+                        {% if is_paginated %}
+                        <div class="d-flex justify-content-center py-4">
+                            <nav aria-label="Paginación de notificaciones">
+                                <ul class="pagination mb-0">
+                                    {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}{% if filtro_periodo %}&periodo={{ filtro_periodo }}{% endif %}">
+                                            <i class="fas fa-angle-double-left"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}{% if filtro_periodo %}&periodo={{ filtro_periodo }}{% endif %}">
+                                            <i class="fas fa-angle-left"></i>
+                                        </a>
+                                    </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}{% if filtro_periodo %}&periodo={{ filtro_periodo }}{% endif %}">
+                                            <i class="fas fa-angle-right"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}{% if filtro_periodo %}&periodo={{ filtro_periodo }}{% endif %}">
+                                            <i class="fas fa-angle-double-right"></i>
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                        {% endif %}
+
+                    {% else %}
+                        <!-- Estado vacío -->
+                        <div class="text-center py-5">
+                            <i class="fas fa-bell-slash text-muted mb-3" style="font-size: 4rem; opacity: 0.3;"></i>
+                            <h5 class="text-muted">No hay notificaciones</h5>
+                            <p class="text-muted">
+                                {% if filtro_estado or filtro_periodo %}
+                                    No se encontraron notificaciones con los filtros aplicados.
+                                    <br>
+                                    <small class="text-muted">
+                                        Filtros activos: 
+                                        {% if filtro_estado %}Estado: {{ filtro_estado }}{% endif %}
+                                        {% if filtro_periodo %}Período: {{ filtro_periodo }}{% endif %}
+                                    </small>
+                                {% else %}
+                                    Cuando recibas notificaciones, aparecerán aquí.
+                                {% endif %}
+                            </p>
+
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Hover en notificaciones */
+    .list-group-item:hover {
+        background-color: #f8f9fa !important;
+        cursor: pointer;
+    }
+
+    /* Notificaciones no leídas */
+    .bg-light-blue {
+        background-color: #f0f7ff !important;
+    }
+
+    /* Hover en items del sidebar */
+    .list-group-item-action:hover {
+        background-color: #e9ecef !important;
+    }
+
+    .list-group-item-action.active {
+        background-color: #0d6efd !important;
+        border-color: #0d6efd !important;
+        color: white !important;
+    }
+
+    /* Scrollbar personalizada */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+</style>
+{% endblock %}

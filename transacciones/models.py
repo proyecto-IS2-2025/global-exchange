@@ -8,6 +8,7 @@ from clientes.services import verificar_limites
 from django.db import transaction # Necesario para transacciones atómicas
 import logging # Para registrar la acción
 from django.db.models.signals import post_save # Para la señal
+from notificaciones.models import Notificacion  # Para crear notificaciones
 from django.dispatch import receiver # Para la señal
 from django.db.models import Q # Para filtros complejos en la señal
 from decimal import Decimal, ROUND_HALF_UP
@@ -373,6 +374,20 @@ class Transaccion(models.Model):
                 # El campo 'usuario' puede ser nulo o apuntar a un usuario de sistema
                 modificado_por=None,
             )
+            
+            # 🔔 CREAR NOTIFICACIÓN para el usuario que procesó la transacción
+            if self.procesado_por:
+                mensaje_notificacion = (
+                    f"Su transacción {self.numero_transaccion} ha sido cancelada por un cambio en la cotización. "
+                    f"Ingrese a su historial de transacciones para corroborarlo."
+                )
+                
+                Notificacion.objects.create(
+                    usuario=self.procesado_por,
+                    mensaje=mensaje_notificacion,
+                    estado_lectura='pendiente',
+                    correo_enviado=False
+                )
 
             # Enviar notificación (ver helper abajo)
             self._enviar_notificacion_cancelacion(razon)

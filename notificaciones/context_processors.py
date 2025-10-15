@@ -2,16 +2,17 @@ from .models import Notificacion
 
 def notificaciones_usuario(request):
     if request.user.is_authenticated:
-        # 🔹 Primero obtenemos todas las notificaciones del usuario
-        notificaciones_qs = Notificacion.objects.filter(
-            usuario=request.user
+        # 🔹 Obtenemos solo las notificaciones pendientes del usuario
+        notificaciones_pendientes = Notificacion.objects.filter(
+            usuario=request.user,
+            estado_lectura='pendiente'
         ).order_by('-fecha_creacion')
 
-        # 🔹 Luego contamos las pendientes
-        cantidad_no_leidas = notificaciones_qs.filter(estado_lectura='pendiente').count()
+        # 🔹 Contamos las pendientes
+        cantidad_no_leidas = notificaciones_pendientes.count()
 
-        # 🔹 Y finalmente recortamos para mostrar solo las últimas 5
-        notificaciones = notificaciones_qs[:5]
+        # 🔹 Mostramos solo las últimas 5 pendientes
+        notificaciones = notificaciones_pendientes
     else:
         notificaciones = []
         cantidad_no_leidas = 0

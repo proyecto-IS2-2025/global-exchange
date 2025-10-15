@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% load static %}
+
+{% block title %}Editar Notificación - Global Exchange{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --neutral-50: #fafafa;
+        --neutral-100: #f5f5f5;
+        --neutral-200: #e5e5e5;
+        --neutral-300: #d4d4d4;
+        --neutral-400: #a3a3a3;
+        --neutral-500: #737373;
+        --neutral-600: #525252;
+        --neutral-700: #404040;
+        --neutral-800: #262626;
+        --neutral-900: #171717;
+        --accent-blue: #3b82f6;
+        --accent-blue-hover: #2563eb;
+        --accent-green: #10b981;
+        --accent-red: #ef4444;
+    }
+
+    body {
+        background-color: var(--neutral-50);
+    }
+
+    .form-container {
+        max-width: 900px;
+        margin: 40px auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--neutral-200);
+        overflow: hidden;
+    }
+    
+    .form-header {
+        background: var(--neutral-100);
+        padding: 1.75rem 2rem;
+        border-bottom: 1px solid var(--neutral-200);
+    }
+    
+    .form-header h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--neutral-900);
+        margin-bottom: 0.375rem;
+    }
+    
+    .form-header small {
+        color: var(--neutral-500);
+        font-size: 0.9rem;
+    }
+    
+    .form-body {
+        padding: 2rem;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        color: var(--neutral-700);
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-control, .form-select {
+        border: 1px solid var(--neutral-300);
+        border-radius: 8px;
+        padding: 0.625rem 0.875rem;
+        transition: border-color 0.15s, box-shadow 0.15s;
+        font-size: 0.95rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+
+    .form-check-input {
+        width: 1.25rem;
+        height: 1.25rem;
+        border: 2px solid var(--neutral-300);
+        border-radius: 4px;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    .form-check-input:checked {
+        background-color: var(--accent-blue);
+        border-color: var(--accent-blue);
+    }
+
+    .form-check-input:focus {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+
+    .form-check-label {
+        color: var(--neutral-700);
+        font-weight: 500;
+    }
+
+    .form-text {
+        color: var(--neutral-500);
+        font-size: 0.85rem;
+        margin-top: 0.375rem;
+    }
+
+    .btn-modern {
+        padding: 0.625rem 1.25rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+        border: none;
+    }
+
+    .btn-primary-modern {
+        background: var(--accent-blue);
+        color: white;
+    }
+
+    .btn-primary-modern:hover {
+        background: var(--accent-blue-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-secondary-modern {
+        background: var(--neutral-300);
+        color: var(--neutral-700);
+    }
+
+    .btn-secondary-modern:hover {
+        background: var(--neutral-400);
+        transform: translateY(-1px);
+    }
+    
+    .btn-group-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        padding: 1.5rem 2rem;
+        background: var(--neutral-50);
+        border-top: 1px solid var(--neutral-200);
+    }
+
+    .info-box {
+        background: #dbeafe;
+        border-left: 3px solid var(--accent-blue);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-box i {
+        color: var(--accent-blue);
+    }
+
+    .alert-danger {
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        border-left: 3px solid var(--accent-red);
+        border-radius: 8px;
+        color: #991b1b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="form-container">
+        <div class="form-header">
+            <h2>
+                <i class="fas fa-edit" style="color: var(--accent-blue);"></i> 
+                Editar Notificación: {{ alerta.divisa }}
+            </h2>
+            <small>
+                {{ alerta.get_tipo_alerta_display }} • {{ alerta.get_tipo_operacion_display }}
+            </small>
+        </div>
+
+        <div class="form-body">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST" action="" id="form-editar">
+                {% csrf_token %}
+                
+                <!-- Divisa -->
+                <div class="mb-3">
+                    <label for="id_divisa" class="form-label">
+                        <i class="fas fa-money-bill-wave text-muted me-1"></i>
+                        Divisa
+                    </label>
+                    <select name="divisa" id="id_divisa" class="form-select">
+                        <option value="">Seleccione una divisa</option>
+                        {% for divisa in form.divisa.field.queryset %}
+                            {% if divisa.code != 'PYG' %}
+                                <option value="{{ divisa.pk }}" {% if alerta.divisa == divisa.code %}selected{% endif %}>
+                                    {{ divisa }}
+                                </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    {% if form.divisa.errors %}
+                        <div class="text-danger mt-1 small">{{ form.divisa.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <!-- Tipo de Alerta -->
+                    <div class="col-md-6 mb-3">
+                        <label for="id_tipo_alerta" class="form-label">
+                            <i class="fas fa-tag text-muted me-1"></i>
+                            Tipo de alerta
+                        </label>
+                        {% render_field form.tipo_alerta class="form-select" id="id_tipo_alerta" %}
+                        {% if form.tipo_alerta.errors %}
+                            <div class="text-danger mt-1 small">{{ form.tipo_alerta.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Tipo de Operación -->
+                    <div class="col-md-6 mb-3">
+                        <label for="id_tipo_operacion" class="form-label">
+                            <i class="fas fa-exchange-alt text-muted me-1"></i>
+                            Tipo de operación
+                        </label>
+                        {% render_field form.tipo_operacion class="form-select" id="id_tipo_operacion" %}
+                        {% if form.tipo_operacion.errors %}
+                            <div class="text-danger mt-1 small">{{ form.tipo_operacion.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Campos de Umbral (se muestran solo si tipo_alerta == 'umbral') -->
+                <div id="campos-umbral" style="display: none;">
+                    <div class="info-box">
+                        <i class="fas fa-info-circle me-2"></i> 
+                        <strong>Notificación de umbral:</strong> Recibirás una alerta cuando la tasa alcance el monto especificado.
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_monto_umbral" class="form-label">Monto umbral (Guaraníes)</label>
+                            {% render_field form.monto_umbral class="form-control" placeholder="Ej: 7500" %}
+                            {% if form.monto_umbral.errors %}
+                                <div class="text-danger mt-1 small">{{ form.monto_umbral.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="id_condicion_umbral" class="form-label">Condición</label>
+                            {% render_field form.condicion_umbral class="form-select" %}
+                            {% if form.condicion_umbral.errors %}
+                                <div class="text-danger mt-1 small">{{ form.condicion_umbral.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estado Activo -->
+                <div class="mb-4">
+                    <div class="form-check">
+                        <input type="checkbox" 
+                               name="activa" 
+                               id="id_activa" 
+                               class="form-check-input" 
+                               {% if alerta.activa %}checked{% endif %}>
+                        <label for="id_activa" class="form-check-label" style="cursor: pointer;">
+                            <strong>Mantener alerta activa</strong>
+                            <br>
+                            <small class="form-text">Si está desactivada, no recibirás notificaciones</small>
+                        </label>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="btn-group-actions">
+            <a href="{% url 'notificaciones:gestion_notificaciones' %}" class="btn btn-secondary-modern btn-modern">
+                <i class="fas fa-times me-2"></i>
+                Cancelar
+            </a>
+            <button type="submit" form="form-editar" class="btn btn-primary-modern btn-modern">
+                <i class="fas fa-save me-2"></i>
+                Guardar cambios
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoAlertaSelect = document.getElementById('id_tipo_alerta');
+    const tipoOperacionSelect = document.getElementById('id_tipo_operacion');
+    const camposUmbral = document.getElementById('campos-umbral');
+
+    function toggleUmbralFields() {
+        if (tipoAlertaSelect && camposUmbral) {
+            const isUmbral = tipoAlertaSelect.value === 'umbral';
+            camposUmbral.style.display = isUmbral ? 'block' : 'none';
+            
+            // Si es umbral, ocultar la opción "Compra y Venta" y resetear si está seleccionada
+            if (tipoOperacionSelect) {
+                const ambosOption = Array.from(tipoOperacionSelect.options).find(opt => opt.value === 'ambos');
+                if (ambosOption) {
+                    if (isUmbral) {
+                        ambosOption.style.display = 'none';
+                        // Si estaba seleccionada "ambos", cambiar a la primera opción válida
+                        if (tipoOperacionSelect.value === 'ambos') {
+                            tipoOperacionSelect.value = 'compra';
+                        }
+                    } else {
+                        ambosOption.style.display = '';
+                    }
+                }
+            }
+        }
+    }
+
+    // Ejecutar al cargar la página
+    toggleUmbralFields();
+    
+    // Ejecutar al cambiar el tipo de alerta
+    if (tipoAlertaSelect) {
+        tipoAlertaSelect.addEventListener('change', toggleUmbralFields);
+    }
+});
+</script>
+{% endblock %}

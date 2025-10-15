@@ -12,9 +12,15 @@ urlpatterns = [
     # La vista principal (Listado y Formularios de Configuración)
     path('', views.GestionNotificacionesView.as_view(), name='gestion_notificaciones'),
 
+    # Historial completo de notificaciones (nuevo)
+    path('historial/', views.historial_notificaciones, name='historial'),
+    
     # Acciones individuales
     path('toggle/<int:pk>/', views.toggle_notificacion, name='toggle_notificacion'),
+    path('editar/<int:pk>/', views.editar_notificacion, name='editar_notificacion'),
     path('eliminar/<int:pk>/', views.eliminar_notificacion, name='eliminar_notificacion'),
     path('marcar-leida/<int:pk>/', views.marcar_leida, name='marcar_leida'),
+    path('limpiar-todas/', views.limpiar_todas, name='limpiar_todas'),
+    path('marcar-todas-leidas/', views.marcar_todas_leidas, name='marcar_todas_leidas'),
 
 ]

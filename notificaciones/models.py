@@ -13,6 +13,7 @@ CANAL_CHOICES = [
 TIPO_ALERTA_CHOICES = [
     ('general', 'Cambio General'),
     ('umbral', 'Alcanzar Umbral'),
+    ('transaccion_cancelada', 'Transacción Cancelada'),  # Nuevo tipo para uso interno
 ]
 
 OPERACION_CHOICES = [
@@ -58,7 +59,7 @@ class NotificacionTasa(models.Model):
 
     # Estado y tipo
     activa = models.BooleanField(default=True)
-    tipo_alerta = models.CharField(max_length=10, choices=TIPO_ALERTA_CHOICES)
+    tipo_alerta = models.CharField(max_length=25, choices=TIPO_ALERTA_CHOICES)  # Aumentado para 'transaccion_cancelada'
     tipo_operacion = models.CharField(max_length=10, choices=OPERACION_CHOICES)
 
     # Campos de Umbral
@@ -90,12 +91,28 @@ class NotificacionTasa(models.Model):
         verbose_name_plural = "Notificaciones de Tasa"
 
     def __str__(self):
-        return f"Alerta de {self.divisa} para {self.cliente_asociado.nombre} ({self.get_tipo_alerta_display()})"
+        return f"Alerta de {self.divisa} para {self.cliente_asociado.nombre_completo} ({self.get_tipo_alerta_display()})"
+    
     def clean(self):
         super().clean()
-        # Solo permitir 'ambos' si no hay cliente (caso de configuración general)
-        if self.tipo_operacion == 'ambos' and self.cliente_asociado_id:
-            raise ValidationError("La opción 'Compra y Venta' solo se permite en la configuración general.")
+        errors = {}
+        
+        # 1. Validar que umbral no tenga 'ambos'
+        if self.tipo_alerta == 'umbral' and self.tipo_operacion == 'ambos':
+            errors['tipo_operacion'] = 'Para notificaciones de umbral debe seleccionar Compra o Venta, no ambos.'
+        
+        # 2. Validar campos requeridos para umbral
+        if self.tipo_alerta == 'umbral':
+            if not self.condicion_umbral:
+                errors['condicion_umbral'] = 'La condición de umbral es requerida.'
+            if not self.monto_umbral:
+                errors['monto_umbral'] = 'El monto de umbral es requerido.'
+        
+        # Nota: La validación de duplicados se hace en la vista para evitar problemas
+        # con campos no asignados durante la validación del formulario
+        
+        if errors:
+            raise ValidationError(errors)
 
 class Notificacion(models.Model):
     # La persona que recibe la notificación
