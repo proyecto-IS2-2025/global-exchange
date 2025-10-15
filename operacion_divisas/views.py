@@ -25,6 +25,7 @@ from django.contrib import messages
 from divisas.views import redondear
 # MFA para compra
 from mfa.utils import generate_and_send_otp, check_otp_validity
+from mfa.models import MFAConfig
 
 
 
@@ -434,17 +435,32 @@ class SumarioCompraView(TemplateView):
             messages.error(request, "Debe seleccionar un medio de pago.")
             return redirect("clientes:seleccionar_medio_pago")
         
-        # Guardar flag en sesión para indicar que es una compra pendiente de MFA
-        request.session['mfa_compra_pending'] = True
-        request.session['mfa_compra_user_id'] = request.user.id
-        request.session.modified = True
+        # ==========================================================
+        # === VERIFICAR SI MFA ESTÁ ACTIVO ===
+        # ==========================================================
+        mfa_config = MFAConfig.get_config()
         
-        # Generar y enviar código OTP
-        if generate_and_send_otp(request.user, request):
-            return redirect("operacion_divisas:compra_mfa_verify")
+        if mfa_config.mfa_compra_enabled:
+            # MFA ACTIVO: Iniciar flujo de verificación
+            # Guardar flag en sesión
+            request.session['mfa_compra_pending'] = True
+            request.session['mfa_compra_user_id'] = request.user.id
+            request.session.modified = True
+            
+            # Generar y enviar código OTP
+            if generate_and_send_otp(request.user, request):
+                return redirect("operacion_divisas:compra_mfa_verify")
+            else:
+                messages.error(request, "Error al enviar el código de verificación.")
+                return redirect("operacion_divisas:compra_sumario")
         else:
-            messages.error(request, "Error al enviar el código de verificación.")
-            return redirect("operacion_divisas:compra_sumario")
+            # MFA DESACTIVADO: Crear transacción directamente
+            request.method = 'POST'
+            request.POST = request.POST.copy()
+            messages.success(request, "Procesando tu compra...")
+            
+            from transacciones.views import crear_transaccion_desde_compra
+            return crear_transaccion_desde_compra(request)
 
 
 # ============================================================================
@@ -464,6 +480,27 @@ def compra_mfa_verify_view(request):
     if not mfa_compra_pending or mfa_compra_user_id != request.user.id:
         messages.error(request, "No hay una compra pendiente de verificación.")
         return redirect("operacion_divisas:compra")
+    
+    # ============================================================
+    # === VERIFICAR SI MFA SIGUE ACTIVO ===
+    # ============================================================
+    # Si el admin desactivó MFA mientras el usuario estaba en el proceso,
+    # procesar la compra directamente sin pedir código
+    mfa_config = MFAConfig.get_config()
+    
+    if not mfa_config.mfa_compra_enabled:
+        # MFA fue desactivado - procesar directamente
+        if 'mfa_compra_pending' in request.session:
+            del request.session['mfa_compra_pending']
+        if 'mfa_compra_user_id' in request.session:
+            del request.session['mfa_compra_user_id']
+        
+        request.method = 'POST'
+        request.POST = request.POST.copy()
+        messages.info(request, "Verificación MFA desactivada. Procesando tu compra...")
+        
+        from transacciones.views import crear_transaccion_desde_compra
+        return crear_transaccion_desde_compra(request)
     
     # Verificar que existan los datos de operación y medio
     operacion = request.session.get("operacion")
