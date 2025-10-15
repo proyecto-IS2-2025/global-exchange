@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Todas las Notificaciones - Global Exchange{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-12">
+            <!-- Encabezado -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-bell"></i> Todas las Notificaciones</h2>
+                <a href="{% url 'notificaciones:gestion_notificaciones' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-cog"></i> Configurar notificaciones
+                </a>
+            </div>
+
+            <!-- Lista de Notificaciones -->
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    {% if notificaciones %}
+                        <div class="list-group list-group-flush">
+                            {% for notificacion in notificaciones %}
+                            <div class="list-group-item {% if notificacion.estado_lectura == 'pendiente' %}bg-light{% endif %}" 
+                                 data-notificacion-id="{{ notificacion.id }}">
+                                <div class="d-flex w-100 justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-2">
+                                            {% if notificacion.estado_lectura == 'pendiente' %}
+                                                <span class="badge bg-primary me-2">Nueva</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary me-2">Leída</span>
+                                            {% endif %}
+                                            <small class="text-muted">
+                                                <i class="far fa-clock"></i> 
+                                                {{ notificacion.fecha_creacion|date:"d/m/Y H:i" }}
+                                            </small>
+                                        </div>
+                                        <p class="mb-1">{{ notificacion.mensaje }}</p>
+                                    </div>
+                                    
+                                    {% if notificacion.estado_lectura == 'pendiente' %}
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-success marcar-leida-btn ms-3" 
+                                            data-notificacion-id="{{ notificacion.id }}"
+                                            data-url="{% url 'notificaciones:marcar_leida' notificacion.id %}"
+                                            title="Marcar como leída">
+                                        <i class="fas fa-check"></i> Marcar como leída
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No tienes notificaciones</h5>
+                            <p class="text-muted">Cuando recibas notificaciones, aparecerán aquí.</p>
+                            <a href="{% url 'notificaciones:gestion_notificaciones' %}" class="btn btn-primary mt-3">
+                                <i class="fas fa-cog"></i> Configurar notificaciones
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Animación de deslizamiento para notificaciones */
+@keyframes slideOut {
+    0% {
+        transform: translateX(0);
+        opacity: 1;
+        max-height: 200px;
+    }
+    50% {
+        transform: translateX(100%);
+        opacity: 0;
+        max-height: 200px;
+    }
+    100% {
+        transform: translateX(100%);
+        opacity: 0;
+        max-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        margin-top: 0;
+        margin-bottom: 0;
+        border: none;
+    }
+}
+
+.list-group-item.slide-out {
+    animation: slideOut 0.5s ease-out forwards;
+    overflow: hidden;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Obtener el token CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    const csrftoken = getCookie('csrftoken');
+    
+    // Agregar listener a todos los botones de marcar como leída
+    document.querySelectorAll('.marcar-leida-btn').forEach(function(button) {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const notificacionId = this.getAttribute('data-notificacion-id');
+            const url = this.getAttribute('data-url');
+            const notificacionItem = document.querySelector(`div.list-group-item[data-notificacion-id="${notificacionId}"]`);
+            
+            // Deshabilitar el botón para evitar clicks múltiples
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+            
+            // Realizar la petición AJAX
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Aplicar animación de deslizamiento
+                    if (notificacionItem) {
+                        notificacionItem.classList.add('slide-out');
+                        
+                        // Esperar a que termine la animación antes de remover
+                        setTimeout(function() {
+                            notificacionItem.remove();
+                            
+                            // Si no quedan más notificaciones, mostrar mensaje
+                            const notificacionesRestantes = document.querySelectorAll('.list-group-item[data-notificacion-id]').length;
+                            if (notificacionesRestantes === 0) {
+                                const cardBody = document.querySelector('.card-body');
+                                cardBody.innerHTML = `
+                                    <div class="text-center py-5">
+                                        <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                                        <h5 class="text-muted">No tienes notificaciones pendientes</h5>
+                                        <p class="text-muted">¡Has revisado todas tus notificaciones!</p>
+                                        <a href="{% url 'notificaciones:gestion_notificaciones' %}" class="btn btn-primary mt-3">
+                                            <i class="fas fa-cog"></i> Configurar notificaciones
+                                        </a>
+                                    </div>
+                                `;
+                            }
+                        }, 500);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error al marcar notificación como leída:', error);
+                alert('Hubo un error al marcar la notificación como leída. Por favor, intente nuevamente.');
+                // Restaurar el botón en caso de error
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-check"></i> Marcar como leída';
+            });
+        });
+    });
+});
+</script>
+
+{% endblock %}

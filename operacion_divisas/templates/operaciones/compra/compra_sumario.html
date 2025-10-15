@@ -39,7 +39,7 @@
                   {% if operacion.divisa == "PYG" %}
                     {{ operacion.monto_divisa|floatformat:0|intcomma }} {{ operacion.divisa }}
                   {% else %}
-                    {{ operacion.monto_divisa|floatformat:2 }} {{ operacion.divisa }}
+                    {{ operacion.monto_divisa|floatformat:2|intcomma }} {{ operacion.divisa }}
                   {% endif %}
                 </strong>
               </td>
