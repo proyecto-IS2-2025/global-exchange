@@ -42,7 +42,7 @@
                                         {% if resultado.moneda_code == "PYG" %}
                                             {{ resultado.monto_original|floatformat:0|intcomma }} {{ resultado.moneda_code }}
                                         {% else %}
-                                            {{ resultado.monto_original|floatformat:2 }} {{ resultado.moneda_code }}
+                                            {{ resultado.monto_original|floatformat:2|intcomma }} {{ resultado.moneda_code }}
                                         {% endif %}
                                     </h5>
                                 </div>

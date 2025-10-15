@@ -9,7 +9,6 @@ categorización por segmentos.
 """
 
 from django.db import models
-from users.models import CustomUser
 from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
 

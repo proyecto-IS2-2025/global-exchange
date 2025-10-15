@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test - Dropdown de Tipo de Alerta</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Test del Dropdown</h1>
+        <p>Este es el HTML exacto que Django genera:</p>
+        
+        <div class="form-group mb-3">
+            <label class="fw-bold">Tipo de Notificación</label>
+            <select name="tipo_alerta" class="form-select" id="id_tipo_alerta">
+                <option value="general" selected>Cambio General</option>
+                <option value="umbral">Alcanzar Umbral</option>
+                <option value="periodica">Reporte Periódico</option>
+            </select>
+        </div>
+        
+        <div class="alert alert-info">
+            <strong>Si ves 3 opciones arriba (Cambio General, Alcanzar Umbral, Reporte Periódico), 
+            entonces el problema es de caché en tu navegador.</strong>
+        </div>
+        
+        <div class="alert alert-warning">
+            <strong>Soluciones:</strong>
+            <ol>
+                <li>Presiona <kbd>Ctrl + Shift + R</kbd> en la página de notificaciones</li>
+                <li>O abre una ventana de incógnito</li>
+                <li>O limpia el caché del navegador</li>
+            </ol>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
