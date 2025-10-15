@@ -5,127 +5,310 @@
 
 {% block extra_head %}
 <style>
-    .card-header-custom {
-        background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
-        color: #fff;
-        padding: 1.5rem;
-        font-size: 1.3rem;
-        font-weight: 600;
-        text-align: center;
-        border-bottom: none;
-    }
+body {
+  background: #f5f7fa;
+}
 
-    .btn-send {
-        background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
-        border: none;
-        border-radius: 0.6rem;
-        padding: 0.8rem 1.25rem;
-        font-size: 1rem;
-        font-weight: 600;
-        color: #fff;
-        transition: transform 0.2s ease, background 0.2s ease;
-    }
+.transferir-container {
+  padding: 2rem 0;
+}
 
-    .btn-send:hover {
-        background: linear-gradient(135deg, var(--color-secundario), var(--color-principal));
-        transform: translateY(-2px);
-    }
-    
-    .hidden {
-        display: none;
-    }
+.transferir-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.card-header-custom {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 2rem;
+  text-align: center;
+}
+
+.card-header-custom h4 {
+  font-weight: 600;
+  font-size: 1.5rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.card-header-custom i {
+  font-size: 1.75rem;
+}
+
+.card-body-custom {
+  padding: 2rem;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-label i {
+  color: #667eea;
+  font-size: 1rem;
+}
+
+.form-select,
+.form-control {
+  border: 1px solid #d1d5db;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  background: white;
+}
+
+.form-select:focus,
+.form-control:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  outline: none;
+}
+
+.btn-enviar {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: none;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 10px;
+  width: 100%;
+  margin-top: 1.5rem;
+  color: white;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-enviar:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.alert {
+  border-radius: 10px;
+  border: none;
+  padding: 1rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alert-success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.alert-danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.alert-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.alert-info {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.btn-close {
+  opacity: 0.5;
+}
+
+.btn-back {
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 0.85rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 10px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.btn-back:hover {
+  background: #4b5563;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.transferencia-fields {
+  transition: opacity 0.2s, max-height 0.2s;
+  overflow: hidden;
+}
+
+.transferencia-fields.hidden {
+  opacity: 0;
+  max-height: 0;
+  margin: 0;
+}
+
+.transferencia-fields:not(.hidden) {
+  opacity: 1;
+  max-height: 500px;
+}
+
+.text-danger {
+  color: #dc2626;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+@media (max-width: 768px) {
+  .card-body-custom {
+    padding: 1.5rem;
+  }
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="card mx-auto" style="max-width: 500px;">
-        <div class="card-header-custom rounded-top">
-            <i class="bi bi-wallet2 me-2"></i> Realizar un Movimiento
-        </div>
-        <div class="card-body p-4">
-            {% if messages %}
-                {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                {% endfor %}
+<div class="transferir-container">
+  <div class="container">
+    <div class="transferir-card">
+      <div class="card-header-custom">
+        <h4>
+          <i class="bi bi-arrow-left-right"></i> Realizar Movimiento
+        </h4>
+      </div>
+      
+      <div class="card-body-custom">
+        {% if cuenta %}
+          <div class="alert alert-info">
+            <i class="bi bi-person-badge"></i>
+            Tu cuenta origen: <strong>{{ cuenta.numero_cuenta }}</strong>
+            {% if entidad and entidad.nombre %} ({{ entidad.nombre }}){% endif %}
+          </div>
+        {% endif %}
+
+        {% if messages %}
+          {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'danger' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+          {% endfor %}
+        {% endif %}
+
+        <form method="post" action="{% url 'banco:transferir' %}">
+          {% csrf_token %}
+          
+          <div class="mb-3">
+            <label class="form-label">
+              <i class="bi bi-list-ul"></i> {{ form.tipo_pago.label }}
+            </label>
+            {{ form.tipo_pago }}
+            {% if form.tipo_pago.errors %}
+              <div class="text-danger">{{ form.tipo_pago.errors }}</div>
             {% endif %}
+          </div>
 
-            <!-- 🔹 FORMULARIO -->
-            <form method="post" action="{% url 'banco:transferir' %}">
-                {% csrf_token %}
-                
-                <div class="mb-3">
-                    <label for="{{ form.tipo_pago.id_for_label }}" class="form-label">{{ form.tipo_pago.label }}</label>
-                    {{ form.tipo_pago }}
-                    {% if form.tipo_pago.errors %}
-                        <div class="text-danger small mt-1">{{ form.tipo_pago.errors }}</div>
-                    {% endif %}
-                </div>
+          <div id="transferencia-fields" class="transferencia-fields">
+            <div class="mb-3">
+              <label for="{{ form.entidad_destino.id_for_label }}" class="form-label">
+                <i class="bi bi-building"></i> {{ form.entidad_destino.label }}
+              </label>
+              {{ form.entidad_destino }}
+              {% if form.entidad_destino.errors %}
+                <div class="text-danger">{{ form.entidad_destino.errors }}</div>
+              {% endif %}
+            </div>
 
-                <div id="transferencia-fields">
-                    <div class="mb-3">
-                        <label for="{{ form.entidad_destino.id_for_label }}" class="form-label">{{ form.entidad_destino.label }}</label>
-                        {{ form.entidad_destino }}
-                        {% if form.entidad_destino.errors %}
-                            <div class="text-danger small mt-1">{{ form.entidad_destino.errors }}</div>
-                        {% endif %}
-                    </div>
+            <div class="mb-3">
+              <label for="{{ form.numero_cuenta_destino.id_for_label }}" class="form-label">
+                <i class="bi bi-hash"></i> {{ form.numero_cuenta_destino.label }}
+              </label>
+              {{ form.numero_cuenta_destino }}
+              {% if form.numero_cuenta_destino.errors %}
+                <div class="text-danger">{{ form.numero_cuenta_destino.errors }}</div>
+              {% endif %}
+            </div>
+          </div>
 
-                    <div class="mb-3">
-                        <label for="{{ form.numero_cuenta_destino.id_for_label }}" class="form-label">{{ form.numero_cuenta_destino.label }}</label>
-                        {{ form.numero_cuenta_destino }}
-                        {% if form.numero_cuenta_destino.errors %}
-                            <div class="text-danger small mt-1">{{ form.numero_cuenta_destino.errors }}</div>
-                        {% endif %}
-                    </div>
-                </div>
+          <div class="mb-3">
+            <label for="{{ form.monto.id_for_label }}" class="form-label">
+              <i class="bi bi-cash-stack"></i> {{ form.monto.label }}
+            </label>
+            {{ form.monto }}
+            {% if form.monto.errors %}
+              <div class="text-danger">{{ form.monto.errors }}</div>
+            {% endif %}
+          </div>
 
-                <div class="mb-3">
-                    <label for="{{ form.monto.id_for_label }}" class="form-label">{{ form.monto.label }}</label>
-                    {{ form.monto }}
-                    {% if form.monto.errors %}
-                        <div class="text-danger small mt-1">{{ form.monto.errors }}</div>
-                    {% endif %}
-                </div>
+          {% if error %}
+            <div class="alert alert-danger">
+              <i class="bi bi-exclamation-circle"></i> {{ error }}
+            </div>
+          {% endif %}
 
-                {% if error %}
-                    <div class="alert alert-danger mt-2">
-                        {{ error }}
-                    </div>
-                {% endif %}
-
-                <button type="submit" class="btn btn-send w-100 mt-3">
-                    <i class="bi bi-send-check"></i> Enviar movimiento
-                </button>
-            </form>
-        </div>
+          <button type="submit" class="btn-enviar">
+            <i class="bi bi-send-check"></i> Confirmar Movimiento
+          </button>
+        </form>
+      </div>
     </div>
 
     <div class="text-center mt-4">
-        <a href="{% url 'banco:dashboard' %}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left-circle"></i> Volver al panel principal
-        </a>
+      <a href="{% url 'banco:dashboard' %}" class="btn-back">
+        <i class="bi bi-arrow-left-circle"></i> Volver al Panel
+      </a>
     </div>
+  </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const tipoPagoSelect = document.getElementById('id_tipo_pago');
-        const transferenciaFields = document.getElementById('transferencia-fields');
+  document.addEventListener('DOMContentLoaded', function() {
+    const tipoPagoSelect = document.getElementById('id_tipo_pago');
+    const transferenciaFields = document.getElementById('transferencia-fields');
 
-        function toggleTransferenciaFields() {
-            if (tipoPagoSelect.value === 'TRANSFERENCIA') {
-                transferenciaFields.style.display = 'block';
-            } else {
-                transferenciaFields.style.display = 'none';
-            }
-        }
+    function toggleTransferenciaFields() {
+      if (tipoPagoSelect.value === 'TRANSFERENCIA') {
+        transferenciaFields.classList.remove('hidden');
+      } else {
+        transferenciaFields.classList.add('hidden');
+      }
+    }
 
-        toggleTransferenciaFields();
-        tipoPagoSelect.addEventListener('change', toggleTransferenciaFields);
+    toggleTransferenciaFields();
+    tipoPagoSelect.addEventListener('change', toggleTransferenciaFields);
+
+    // Prevenir múltiples envíos
+    const form = document.querySelector('form');
+    const btnEnviar = document.querySelector('.btn-enviar');
+    
+    form.addEventListener('submit', function() {
+      if (form.checkValidity()) {
+        btnEnviar.disabled = true;
+        btnEnviar.innerHTML = '<i class="bi bi-hourglass-split"></i> Procesando...';
+      }
     });
+  });
 </script>
 {% endblock %}

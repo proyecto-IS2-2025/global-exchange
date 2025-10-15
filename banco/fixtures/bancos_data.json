@@ -22,11 +22,22 @@
     }
   },
   {
+    "model": "banco.entidadbancaria",
+    "pk": 3,
+    "fields": {
+      "nombre": "Banco Nacional",
+      "codigo": "BNAC",
+      "color_principal": "#0a9396",
+      "color_secundario": "#94d2bd",
+      "logo_url": "https://example.com/logos/banco_nacional.png"
+    }
+  },
+  {
     "model": "banco.bancouser",
     "pk": 1,
     "fields": {
       "entidad": 1,
-      "email": "juan@bancopy.com",
+      "email": "GlobalExchange@bancopy.com",
       "password": "1234"
     }
   },
@@ -40,13 +51,49 @@
     }
   },
   {
+    "model": "banco.bancouser",
+    "pk": 3,
+    "fields": {
+      "entidad": 1,
+      "email": "soporte@bancopy.com",
+      "password": "1234"
+    }
+  },
+  {
+    "model": "banco.bancouser",
+    "pk": 4,
+    "fields": {
+      "entidad": 2,
+      "email": "soporte@bancoguarani.com",
+      "password": "1234"
+    }
+  },
+  {
+    "model": "banco.bancouser",
+    "pk": 5,
+    "fields": {
+      "entidad": 3,
+      "email": "contacto@banconacional.com",
+      "password": "1234"
+    }
+  },
+  {
+    "model": "banco.bancouser",
+    "pk": 6,
+    "fields": {
+      "entidad": 3,
+      "email": "ventas@banconacional.com",
+      "password": "1234"
+    }
+  },
+  {
     "model": "banco.cuenta",
     "pk": 1,
     "fields": {
       "usuario": 1,
       "numero_cuenta": "000111222",
       "entidad": 1,
-      "saldo": "5000000.00"
+      "saldo": "5000000000.00"
     }
   },
   {
@@ -57,6 +104,46 @@
       "numero_cuenta": "000333444",
       "entidad": 2,
       "saldo": "3000000.00"
+    }
+  },
+  {
+    "model": "banco.cuenta",
+    "pk": 3,
+    "fields": {
+      "usuario": 3,
+      "numero_cuenta": "000555666",
+      "entidad": 1,
+      "saldo": "2000000.00"
+    }
+  },
+  {
+    "model": "banco.cuenta",
+    "pk": 4,
+    "fields": {
+      "usuario": 4,
+      "numero_cuenta": "000777888",
+      "entidad": 2,
+      "saldo": "1000000.00"
+    }
+  },
+  {
+    "model": "banco.cuenta",
+    "pk": 5,
+    "fields": {
+      "usuario": 5,
+      "numero_cuenta": "000999000",
+      "entidad": 3,
+      "saldo": "500000.00"
+    }
+  },
+  {
+    "model": "banco.cuenta",
+    "pk": 6,
+    "fields": {
+      "usuario": 6,
+      "numero_cuenta": "000112223",
+      "entidad": 3,
+      "saldo": "300000.00"
     }
   },
   {
@@ -86,6 +173,58 @@
     }
   },
   {
+    "model": "banco.tarjetadebito",
+    "pk": 3,
+    "fields": {
+      "usuario": 3,
+      "entidad": 1,
+      "cuenta": 3,
+      "numero": "4511111111111111",
+      "mes_vencimiento": 8,
+      "anho_vencimiento": 2028,
+      "cvv": "111"
+    }
+  },
+  {
+    "model": "banco.tarjetadebito",
+    "pk": 4,
+    "fields": {
+      "usuario": 4,
+      "entidad": 2,
+      "cuenta": 4,
+      "numero": "4522222222222222",
+      "mes_vencimiento": 10,
+      "anho_vencimiento": 2027,
+      "cvv": "222"
+    }
+  },
+  {
+    "model": "banco.tarjetadebito",
+    "pk": 5,
+    "fields": {
+      "usuario": 5,
+      "entidad": 3,
+      "cuenta": 5,
+      "numero": "4533333333333333",
+      "mes_vencimiento": 7,
+      "anho_vencimiento": 2029,
+      "cvv": "333"
+    }
+  },
+  {
+    "model": "banco.tarjetadebito",
+    "pk": 6,
+    "fields": {
+      "usuario": 6,
+      "entidad": 3,
+      "cuenta": 6,
+      "numero": "4544444444444444",
+      "mes_vencimiento": 2,
+      "anho_vencimiento": 2028,
+      "cvv": "444"
+    }
+  },
+  {
     "model": "banco.tarjetacredito",
     "pk": 1,
     "fields": {
@@ -111,6 +250,62 @@
       "cvv": "321",
       "limite_credito": "2000000.00",
       "saldo_usado": "500000.00"
+    }
+  },
+  {
+    "model": "banco.tarjetacredito",
+    "pk": 3,
+    "fields": {
+      "usuario": 3,
+      "entidad": 1,
+      "numero": "4555555555555555",
+      "mes_vencimiento": 3,
+      "anho_vencimiento": 2029,
+      "cvv": "456",
+      "limite_credito": "2000000.00",
+      "saldo_usado": "0.00"
+    }
+  },
+  {
+    "model": "banco.tarjetacredito",
+    "pk": 4,
+    "fields": {
+      "usuario": 4,
+      "entidad": 2,
+      "numero": "4666666666666666",
+      "mes_vencimiento": 11,
+      "anho_vencimiento": 2028,
+      "cvv": "789",
+      "limite_credito": "2000000.00",
+      "saldo_usado": "0.00"
+    }
+  },
+  {
+    "model": "banco.tarjetacredito",
+    "pk": 5,
+    "fields": {
+      "usuario": 5,
+      "entidad": 3,
+      "numero": "4777777777777777",
+      "mes_vencimiento": 7,
+      "anho_vencimiento": 2029,
+      "cvv": "321",
+      "limite_credito": "2000000.00",
+      "saldo_usado": "0.00"
+    }
+  },
+  {
+    "model": "banco.tarjetacredito",
+    "pk": 6,
+    "fields": {
+      "usuario": 6,
+      "entidad": 3,
+      "numero": "4888888888888888",
+      "mes_vencimiento": 4,
+      "anho_vencimiento": 2029,
+      "cvv": "456",
+      "limite_credito": "2000000.00",
+      "saldo_usado": "0.00"
     }
   }
 ]

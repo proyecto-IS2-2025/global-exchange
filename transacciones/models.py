@@ -31,6 +31,7 @@ class Transaccion(models.Model):
     ESTADO_CHOICES = [
         ('pendiente', 'Pendiente'),
         ('pagada', 'Pagada'),
+        ('completado', 'Completado'),  # <-- NUEVO estado
         ('cancelada', 'Cancelada'),
         ('anulada', 'Anulada'),
     ]

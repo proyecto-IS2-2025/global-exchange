@@ -21,6 +21,18 @@ logger = logging.getLogger(__name__)
 from clientes.services import verificar_limites
 from decimal import Decimal, ROUND_HALF_UP
 import re  # NUEVO: para enmascarar valores
+import unicodedata  # NUEVO: normalización de texto
+from django.utils import timezone  # NUEVO: para timestamps seguros
+# NUEVO: modelos del banco
+try:
+    from banco.models import EntidadBancaria, Cuenta, BancoUser, Transferencia  # <- usar Transferencia
+except Exception:
+    EntidadBancaria = Cuenta = BancoUser = Transferencia = None
+
+# === NUEVO: constantes de la cuenta de la empresa ===
+EMPRESA_BANCO_NOMBRE = "Banco Py"
+EMPRESA_BANCO_CODIGO = "BPY"
+EMPRESA_NUMERO_CUENTA = "000111222"
 
 def redondear(valor, decimales=2):
     """
@@ -44,8 +56,11 @@ def determinar_decimales_divisa(codigo_divisa):
     return 0 if codigo_divisa.upper() == 'PYG' else 2
 
 
-# ==== NUEVO: helpers de presentación de medio de pago/acreditación ====
+# ==== RESTAURAR: helpers de presentación de medio de pago/acreditación ===#
 def _humanize_etiqueta(nombre):
+    """
+    Convierte claves como 'numero_cuenta' -> 'Numero Cuenta'
+    """
     try:
         s = str(nombre or '').strip()
         if not s:
@@ -55,6 +70,9 @@ def _humanize_etiqueta(nombre):
         return 'Campo'
 
 def _mask_generic(valor):
+    """
+    Enmascara emails y números largos (últimos 4). Fallback genérico.
+    """
     if not valor:
         return ''
     s = str(valor).strip()
@@ -78,7 +96,6 @@ def _build_medio_display(medio_datos):
     """
     if not isinstance(medio_datos, dict):
         return {}
-
     nombre = medio_datos.get('nombre') or ''
     comision = medio_datos.get('comision') or ''
     tipo = medio_datos.get('tipo') or ''
@@ -90,19 +107,266 @@ def _build_medio_display(medio_datos):
         datos_campos = medio_datos.get('datos_campos') or {}
         if isinstance(datos_campos, dict):
             for key, value in datos_campos.items():
-                etiqueta = _humanize_etiqueta(key)
                 campos_list.append({
-                    'etiqueta': etiqueta,
+                    'etiqueta': _humanize_etiqueta(key),
                     'valor': '' if value is None else str(value),
                     'valor_enmascarado': _mask_generic(value) if value else '',
                 })
-
     return {
         'nombre': nombre,
         'comision': comision,
         'tipo': tipo,
         'campos': campos_list,
     }
+
+# === NUEVO: helpers de normalización ===
+def _normalize_account_number(value):
+    """Deja solo dígitos en el número de cuenta, preservando ceros a la izquierda."""
+    if value is None:
+        return ''
+    return re.sub(r'\D', '', str(value))
+
+def _normalize_text(s):
+    """
+    Normaliza texto: quita acentos y caracteres no ASCII, minúsculas, compacta espacios.
+    Ej: 'Guaraní' -> 'guarani', 'GuaranÝ' -> 'guarany'
+    """
+    if not s:
+        return ''
+    s = str(s).strip()
+    s = unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode('ascii')
+    s = re.sub(r'\s+', ' ', s)
+    return s.lower()
+
+# ==== NUEVO: helpers de transferencia bancaria ===#
+def _get_entidad(entidad_hint):
+    """
+    Devuelve instancia de EntidadBancaria a partir de hint (id, código o nombre),
+    con matching aproximado (ignora acentos y errores típicos de codificación).
+    """
+    if not EntidadBancaria:
+        return None
+    if entidad_hint is None:
+        return None
+    try:
+        hint = str(entidad_hint).strip()
+        # ID exacto
+        if hint.isdigit():
+            obj = EntidadBancaria.objects.filter(pk=int(hint)).first()
+            if obj:
+                return obj
+        # Código exacto
+        obj = EntidadBancaria.objects.filter(codigo__iexact=hint).first()
+        if obj:
+            return obj
+        # Nombre exacto
+        obj = EntidadBancaria.objects.filter(nombre__iexact=hint).first()
+        if obj:
+            return obj
+
+        # Matching aproximado por nombre/código normalizados
+        n_hint = _normalize_text(hint)
+        # Heurística: algunos fallos convierten 'í' en 'y' -> intentamos variante
+        n_hint_variant = n_hint.replace('y', 'i')
+        candidatos = list(EntidadBancaria.objects.all())
+        for e in candidatos:
+            n_nombre = _normalize_text(e.nombre)
+            n_codigo = _normalize_text(e.codigo)
+            if n_hint in (n_nombre, n_codigo) or n_hint_variant in (n_nombre, n_codigo):
+                return e
+            # Coincidencia por contains
+            if n_hint and (n_hint in n_nombre or n_hint in n_codigo):
+                return e
+            if n_hint_variant and (n_hint_variant in n_nombre or n_hint_variant in n_codigo):
+                return e
+    except Exception:
+        return None
+    return None
+
+def _extraer_cuenta_desde_medio(medio_datos):
+    """
+    Busca en medio_datos la entidad y el número de cuenta del cliente.
+    Normaliza el número de cuenta (solo dígitos) y acepta etiquetas/keys flexibles.
+    Retorna (entidad_hint, numero_cuenta).
+    """
+    if not isinstance(medio_datos, dict):
+        return (None, None)
+
+    entidad_hint = None
+    numero_cuenta = None
+
+    # 1) Intentar datos_campos raw
+    datos = medio_datos.get('datos_campos') or {}
+    if isinstance(datos, dict):
+        for k, v in datos.items():
+            key = (k or '').lower()
+            if numero_cuenta is None and ('cuenta' in key or 'account' in key or key in ('numero', 'nro', 'nro_cuenta', 'numero_cuenta')):
+                if v:
+                    numero_cuenta = _normalize_account_number(v)
+            if entidad_hint is None and any(t in key for t in ('entidad', 'banco', 'bank', 'entidad_id', 'entidad_codigo')):
+                if v:
+                    entidad_hint = str(v).strip()
+
+    # 2) Intentar campos serializados (con etiqueta legible)
+    if (entidad_hint is None or not numero_cuenta) and isinstance(medio_datos.get('campos'), list):
+        for c in medio_datos['campos']:
+            etiqueta = (c.get('etiqueta') or '').lower()
+            valor = c.get('valor') or c.get('valor_enmascarado') or ''
+            if not valor:
+                continue
+            if not numero_cuenta and ('cuenta' in etiqueta or 'account' in etiqueta or 'número' in etiqueta or etiqueta in ('numero', 'nro', 'nro cuenta', 'numero de cuenta')):
+                numero_cuenta = _normalize_account_number(valor)
+            if entidad_hint is None and any(t in etiqueta for t in ('entidad', 'banco', 'bank', 'código banco')):
+                entidad_hint = str(valor).strip()
+
+    return (entidad_hint, numero_cuenta or None)
+
+def _get_cuenta_empresa():
+    """
+    Retorna (entidad_empresa, numero_cuenta_empresa) según datos fijos:
+    - Entidad: 'Banco Py' (código 'BPY')
+    - Número de cuenta: '000111222'
+    Intenta resolver la entidad por código/nombre. Mantiene fallback por BancoUser si no está la entidad.
+    """
+    entidad = _get_entidad(EMPRESA_BANCO_CODIGO) or _get_entidad(EMPRESA_BANCO_NOMBRE)
+
+    if not entidad and BancoUser and Cuenta:
+        # Fallback: intentar por usuario conocido y su primera cuenta
+        try:
+            bu = BancoUser.objects.filter(email__iexact='GlobalExchange@bancopy.com').first()
+            if bu:
+                cta = Cuenta.objects.filter(usuario=bu).order_by('id').first()
+                if cta:
+                    return (cta.entidad, cta.numero_cuenta)
+        except Exception:
+            pass
+
+    # Si no se encontró la entidad, devolver None y el número esperado para logging aguas arriba
+    return (entidad, EMPRESA_NUMERO_CUENTA)
+
+def realizar_transferencia_bancaria(entidad_src, numero_cuenta_src, entidad_dst, numero_cuenta_dst, monto, referencia=None):
+    """
+    Ejecuta transferencia entre dos cuentas. Hace fallback por número de cuenta único si la entidad no coincide.
+    Retorna dict: {'ok': bool, 'code': '00', 'message': '...', 'comprobante': '...'}
+    """
+    if not Cuenta or not EntidadBancaria:
+        return {'ok': False, 'code': '96', 'message': 'Módulo banco no disponible'}
+
+    def _pick_by_hint(qs, hint):
+        # Intenta elegir una cuenta del queryset cuyo banco coincida con el "hint" aproximado
+        try:
+            if not hint:
+                return None
+            n_hint = _normalize_text(str(hint))
+            n_hint_variant = n_hint.replace('y', 'i')
+            for c in qs.select_related('entidad'):
+                n_nombre = _normalize_text(getattr(c.entidad, 'nombre', ''))
+                n_codigo = _normalize_text(getattr(c.entidad, 'codigo', ''))
+                if n_hint in (n_nombre, n_codigo) or n_hint_variant in (n_nombre, n_codigo):
+                    return c
+                if n_hint and (n_hint in n_nombre or n_hint in n_codigo):
+                    return c
+                if n_hint_variant and (n_hint_variant in n_nombre or n_hint_variant in n_codigo):
+                    return c
+        except Exception:
+            return None
+        return None
+
+    try:
+        # Validar y normalizar
+        num_src = _normalize_account_number(numero_cuenta_src)
+        num_dst = _normalize_account_number(numero_cuenta_dst)
+
+        logger.info(f"[TRANSFER] Solicitud transferencia monto={monto} src_entidad={entidad_src} src_cuenta_raw={numero_cuenta_src} -> dst_entidad={entidad_dst} dst_cuenta_raw={numero_cuenta_dst}")
+        logger.debug(f"[TRANSFER] Normalizado: src_cuenta={num_src}, dst_cuenta={num_dst}")
+
+        if not (num_src and num_dst and monto is not None):
+            return {'ok': False, 'code': '12', 'message': 'Datos de transferencia incompletos'}
+
+        ent_src = entidad_src if isinstance(entidad_src, EntidadBancaria) else _get_entidad(entidad_src)
+        ent_dst = entidad_dst if isinstance(entidad_dst, EntidadBancaria) else _get_entidad(entidad_dst)
+
+        with transaction.atomic():
+            # Origen
+            cuenta_src = None
+            if ent_src:
+                cuenta_src = Cuenta.objects.select_for_update().filter(entidad=ent_src, numero_cuenta=num_src).first()
+            if not cuenta_src:
+                qs_src = Cuenta.objects.select_for_update().filter(numero_cuenta=num_src)
+                if qs_src.count() == 1:
+                    cuenta_src = qs_src.first()
+                    ent_src = cuenta_src.entidad
+                elif qs_src.count() > 1:
+                    elegida = _pick_by_hint(qs_src, entidad_src)
+                    if elegida:
+                        cuenta_src = elegida
+                        ent_src = cuenta_src.entidad
+                    else:
+                        logger.warning(f"[TRANSFER] Múltiples cuentas origen con el mismo número ({num_src}) y no se pudo desambiguar por entidad='{entidad_src}'")
+                        return {'ok': False, 'code': '14', 'message': 'Cuenta origen no encontrada'}
+                else:
+                    return {'ok': False, 'code': '14', 'message': 'Cuenta origen no encontrada'}
+
+            # Destino
+            cuenta_dst = None
+            if ent_dst:
+                cuenta_dst = Cuenta.objects.select_for_update().filter(entidad=ent_dst, numero_cuenta=num_dst).first()
+            if not cuenta_dst:
+                qs_dst = Cuenta.objects.select_for_update().filter(numero_cuenta=num_dst)
+                if qs_dst.count() == 1:
+                    cuenta_dst = qs_dst.first()
+                    ent_dst = cuenta_dst.entidad
+                elif qs_dst.count() > 1:
+                    elegida = _pick_by_hint(qs_dst, entidad_dst)
+                    if elegida:
+                        cuenta_dst = elegida
+                        ent_dst = cuenta_dst.entidad
+                    else:
+                        logger.warning(f"[TRANSFER] Múltiples cuentas destino con el mismo número ({num_dst}) y no se pudo desambiguar por entidad='{entidad_dst}'")
+                        return {'ok': False, 'code': '14', 'message': 'Cuenta destino no encontrada'}
+                else:
+                    return {'ok': False, 'code': '14', 'message': 'Cuenta destino no encontrada'}
+
+            monto_dec = Decimal(str(monto))
+            if monto_dec <= 0:
+                return {'ok': False, 'code': '12', 'message': 'Monto inválido'}
+
+            logger.info(f"[TRANSFER] Ejecutando: ORIGEN(entidad={getattr(ent_src,'codigo',None)}/{getattr(ent_src,'nombre',None)}, cuenta={cuenta_src.numero_cuenta}) "
+                        f"-> DESTINO(entidad={getattr(ent_dst,'codigo',None)}/{getattr(ent_dst,'nombre',None)}, cuenta={cuenta_dst.numero_cuenta}) por Gs. {monto_dec}")
+
+            if cuenta_src.saldo < monto_dec:
+                return {'ok': False, 'code': '51', 'message': 'Fondos insuficientes en la cuenta de origen'}
+
+            # Debitar y acreditar
+            cuenta_src.saldo = cuenta_src.saldo - monto_dec
+            cuenta_dst.saldo = cuenta_dst.saldo + monto_dec
+            cuenta_src.save(update_fields=['saldo'])
+            cuenta_dst.save(update_fields=['saldo'])
+
+            # Registrar en banco.Transferencia para que aparezca en historial
+            comprobante_val = None
+            if Transferencia:
+                try:
+                    t = Transferencia.objects.create(
+                        cuenta_origen=cuenta_src,
+                        cuenta_destino=cuenta_dst,
+                        monto=monto_dec
+                    )
+                    comprobante_val = str(getattr(t, 'comprobante', ''))
+                    logger.info(f"[TRANSFER][TRX] Transferencia registrada comprobante={comprobante_val}")
+                except Exception as e_trx:
+                    logger.warning(f"[TRANSFER] No se pudo registrar Transferencia: {e_trx}")
+            else:
+                logger.warning("[TRANSFER] Modelo Transferencia no disponible")
+
+        logger.info("[TRANSFER] Transferencia exitosa")
+        # Fallback de comprobante si no se pudo crear Transferencia
+        if not comprobante_val:
+            comprobante_val = str(referencia or f"TR-{datetime.now().strftime('%Y%m%d%H%M%S%f')[-12:]}")
+        return {'ok': True, 'code': '00', 'message': 'Transferencia realizada con éxito', 'comprobante': comprobante_val}
+    except Exception as e:
+        logger.error(f'Error en transferencia bancaria: {e}', exc_info=True)
+        return {'ok': False, 'code': '96', 'message': 'Error interno del sistema'}
 
 @login_required
 def crear_transaccion_desde_venta(request):
@@ -212,6 +476,37 @@ def crear_transaccion_desde_venta(request):
         # Limpiar sesión
         limpiar_sesion_operacion(request)
 
+        # NUEVO: realizar transferencia de la EMPRESA -> CLIENTE por monto_destino (PYG)
+        try:
+            medio_datos = transaccion.get_medio_pago_info() or {}
+            ent_cli_hint, cta_cli = _extraer_cuenta_desde_medio(medio_datos)
+            ent_emp, cta_emp = _get_cuenta_empresa()
+
+            logger.debug(f"[VENTA] Extract medio -> entidad_cliente='{ent_cli_hint}', cuenta_cliente_raw='{cta_cli}' | empresa_entidad='{getattr(ent_emp,'codigo',ent_emp)}', empresa_cuenta='{cta_emp}'")
+
+            if ent_cli_hint and cta_cli and ent_emp and cta_emp:
+                resultado = realizar_transferencia_bancaria(
+                    entidad_src=ent_emp,
+                    numero_cuenta_src=cta_emp,
+                    entidad_dst=ent_cli_hint,
+                    numero_cuenta_dst=cta_cli,
+                    monto=transaccion.monto_destino,
+                    referencia=transaccion.numero_transaccion  # NUEVO: referencia para historial
+                )
+                if resultado.get('ok'):
+                    transaccion.cambiar_estado('completado', observacion='Acreditación automática realizada', usuario=request.user)
+                    messages.success(request, 'Transferencia realizada: operación completada.')
+                else:
+                    logger.warning(f"[VENTA] Transferencia fallida: {resultado}")
+                    messages.warning(request, f"No se pudo realizar la transferencia: {resultado.get('message')} (código {resultado.get('code')})")
+            else:
+                logger.warning("[VENTA] Datos bancarios insuficientes para transferencia (empresa->cliente)")
+                messages.warning(request, "No se encontraron datos bancarios suficientes para la transferencia al cliente.")
+        except Exception as e:
+            logger.error(f"[VENTA] Error post-transferencia: {e}", exc_info=True)
+            messages.warning(request, "Ocurrió un error al procesar la transferencia al cliente.")
+
+        # <-- RESTAURADO: siempre retornar una respuesta HTTP
         messages.success(request, f'Transacción {transaccion.numero_transaccion} creada exitosamente.')
         return redirect('transacciones:confirmacion_operacion', numero_transaccion=transaccion.numero_transaccion)
 
@@ -367,12 +662,41 @@ def crear_transaccion_desde_compra(request):
         
         # Limpiar datos de sesión
         limpiar_sesion_operacion(request, ['operacion', 'compra_resultado', 'medio_pago_seleccionado'])
-        
+
+        # NUEVO: realizar transferencia del CLIENTE -> EMPRESA por monto_origen (PYG)
+        try:
+            medio_datos = transaccion.get_medio_pago_info() or {}
+            ent_cli_hint, cta_cli = _extraer_cuenta_desde_medio(medio_datos)
+            ent_emp, cta_emp = _get_cuenta_empresa()
+
+            logger.debug(f"[COMPRA] Extract medio -> entidad_cliente='{ent_cli_hint}', cuenta_cliente_raw='{cta_cli}' | empresa_entidad='{getattr(ent_emp,'codigo',ent_emp)}', empresa_cuenta='{cta_emp}'")
+
+            if ent_cli_hint and cta_cli and ent_emp and cta_emp:
+                resultado = realizar_transferencia_bancaria(
+                    entidad_src=ent_cli_hint,
+                    numero_cuenta_src=cta_cli,
+                    entidad_dst=ent_emp,
+                    numero_cuenta_dst=cta_emp,
+                    monto=transaccion.monto_origen,
+                    referencia=transaccion.numero_transaccion  # NUEVO: referencia para historial
+                )
+                if resultado.get('ok'):
+                    transaccion.cambiar_estado('pagada', observacion='Pago automático recibido', usuario=request.user)
+                    messages.success(request, 'Transferencia recibida: operación pagada.')
+                else:
+                    logger.warning(f"[COMPRA] Transferencia fallida: {resultado}")
+                    messages.warning(request, f"No se pudo recibir la transferencia: {resultado.get('message')} (código {resultado.get('code')})")
+            else:
+                logger.warning("[COMPRA] Datos bancarios insuficientes para transferencia (cliente->empresa)")
+                messages.warning(request, "No se encontraron datos bancarios suficientes para la transferencia desde el cliente.")
+        except Exception as e:
+            logger.error(f"[COMPRA] Error post-transferencia: {e}", exc_info=True)
+            messages.warning(request, "Ocurrió un error al procesar la transferencia desde el cliente.")
+
+        # <-- RESTAURADO: siempre retornar una respuesta HTTP
         messages.success(request, f'Transacción {transaccion.numero_transaccion} creada exitosamente.')
-        
-        # Redirigir a la página de confirmación
         return redirect('transacciones:confirmacion_operacion', numero_transaccion=transaccion.numero_transaccion)
-        
+
     except Exception as e:
         logger.error(f"Error al crear transacción de compra: {e}")
         messages.error(request, f"Error al procesar la transacción: {str(e)}")
