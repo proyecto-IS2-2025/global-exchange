@@ -28,32 +28,23 @@
         </a>
       </li>
 
-      {% if cliente_activo %}
-        <li>
-          <a class="dropdown-item fw-bold text-primary" href="{% url 'clientes:medios_pago_cliente' %}">
-            <i class="fas fa-credit-card me-2"></i> Medios de Pago
-          </a>
-        </li>
-      {% endif %}
-    {% endif %}
-
-    <!-- ═════════════════════════════════════════════════════════════ -->
-    <!-- OPCIONES PARA USUARIO REGISTRADO (sin clientes asignados) -->
-    <!-- ═════════════════════════════════════════════════════════════ -->
-    {% if usuario_es_registrado %}
-      <li>
-        <a class="dropdown-item" href="{% url 'users:perfil_usuario' %}">
-          <i class="fas fa-user me-2"></i> Mi Perfil
-        </a>
-      </li>
-      
-      <li>
-        <a class="dropdown-item disabled text-muted" href="#" tabindex="-1" aria-disabled="true">
-          <i class="fas fa-hourglass-half me-2"></i> Esperando Aprobación
-        </a>
-      </li>
-    {% endif %}
-
+  {% if cliente_activo %}
+    <li><hr class="dropdown-divider"></li>
+    <li>
+      <a class="dropdown-item fw-bold text-secondary" href="{% url 'users:perfil_usuario' %}">
+        Mi perfil
+      </a>
+    </li>
+    <li>
+      <a class="dropdown-item fw-bold text-secondary" href="{% url 'clientes:seleccionar_cliente' %}">
+        Seleccionar Cliente
+      </a>
+    </li> 
+    <li>
+      <a class="dropdown-item fw-bold text-secondary"  href="{% url 'notificaciones:gestion_notificaciones' %}">
+        Configurar notificaciones
+      </a>
+    </li>   
   {% else %}
     <!-- ═════════════════════════════════════════════════════════════ -->
     <!-- OPCIONES PARA USUARIOS NO AUTENTICADOS -->
@@ -70,4 +61,5 @@
       </a>
     </li>
   {% endif %}
+{% endif %}
 </ul>

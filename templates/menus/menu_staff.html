@@ -20,6 +20,13 @@
       {% endif %}
       <a href="{% url 'clientes:lista_clientes' %}" class="stretched-link"></a>
     </div>
+    <div class="col">
+      <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 bg-primary bg-opacity-10">
+        <div class="display-3 mb-3 text-primary"><i class="fas fa-shield-halved"></i></div>
+        <h6 class="fw-bold text-primary">Configuración MFA</h6>
+        <a href="{% url 'mfa:config' %}" class="stretched-link"></a>
+      </div>
+    </div>
   </div>
   {% endif %}
   

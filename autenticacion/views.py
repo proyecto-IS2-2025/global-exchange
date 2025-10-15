@@ -19,7 +19,8 @@ from .utils import enviar_verificacion
 # Importa tus modelos para el registro
 from autenticacion.models import PerfilUsuario 
 # Importar la utilidad de MFA de la nueva aplicación
-from mfa.utils import generate_and_send_otp 
+from mfa.utils import generate_and_send_otp
+from mfa.models import MFAConfig 
 
 
 User = get_user_model()
@@ -121,15 +122,38 @@ def login_view(request):
 
         if user is not None:
             if user.is_active:
-                # Proceso MFA (mantener como está)
-                request.session['mfa_user_id'] = user.id
+                # ==========================================================
+                # === VERIFICAR SI MFA ESTÁ ACTIVO ===
+                # ==========================================================
+                mfa_config = MFAConfig.get_config()
                 
-                if generate_and_send_otp(user, request):
-                    return redirect(reverse('mfa:mfa_verify'))
+                if mfa_config.mfa_login_enabled:
+                    # MFA ACTIVO: Iniciar flujo de verificación
+                    # 1. Almacenar el ID del usuario en la sesión
+                    request.session['mfa_user_id'] = user.id
+                    
+                    # 2. Generar y enviar el código OTP
+                    if generate_and_send_otp(user, request):
+                        # 3. Redirigir a la página de verificación MFA
+                        return redirect(reverse('mfa:mfa_verify'))
+                    else:
+                        # Si falla, limpiar sesión temporal
+                        if 'mfa_user_id' in request.session:
+                            del request.session['mfa_user_id']
+                        return render(request, 'login.html')
                 else:
-                    if 'mfa_user_id' in request.session:
-                        del request.session['mfa_user_id']
-                    return render(request, 'login.html') 
+                    # MFA DESACTIVADO: Login directo
+                    # El usuario ya tiene el backend correcto desde authenticate()
+                    login(request, user)
+                    
+                    # DEBUG: Verificar que la sesión se haya creado
+                    print(f"DEBUG Login directo: user={user.email}, is_authenticated={request.user.is_authenticated}, session_key={request.session.session_key}")
+                    
+                    messages.success(request, f"¡Bienvenido, {user.get_full_name() or user.username}!")
+                    
+                    # Redirigir directamente a inicio
+                    return redirect('inicio')
+
             else:
                 messages.error(request, 'Tu cuenta no ha sido activada. Revisa tu correo.')
         else:

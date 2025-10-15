@@ -1,0 +1,403 @@
+<li class="nav-item dropdown me-3" style="position: relative;">
+  <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <i class="fas fa-bell"></i>
+    {% if notificaciones_count > 0 %}
+    <span class="position-absolute top-50 translate-middle bg-primary rounded-circle" style="width: 8px; height: 8px;"></span>
+    {% endif %}
+  </a>
+
+  <ul class="dropdown-menu dropdown-menu-end shadow-lg notificaciones-panel"
+      style="width: 450px; right: -450px; padding: 0; border-radius: 8px; border: 1px solid #e0e0e0;">
+    
+    <!-- Header moderno con acciones -->
+    <li class="d-flex justify-content-between align-items-center px-3 py-3" style="background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0;">
+      <h6 class="mb-0 fw-bold" style="color: #212529;">Notificaciones</h6>
+      <div class="d-flex gap-2">
+        {% if notificaciones_count > 0 %}
+        <!-- Botón marcar todas como leídas -->
+        <button type="button" 
+                class="btn btn-sm btn-light btn-limpiar-todo rounded-circle p-0" 
+                data-url="{% url 'notificaciones:limpiar_todas' %}"
+                title="Marcar todas como leídas"
+                style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 1px solid #dee2e6;">
+          <i class="fas fa-eye" style="font-size: 14px; color: #6c757d;"></i>
+        </button>
+        {% endif %}
+        
+        <!-- Botón abrir en nueva ventana -->
+        <a href="{% url 'notificaciones:historial' %}" 
+           class="btn btn-sm btn-light rounded-circle p-0"
+           title="Ver todas las notificaciones"
+           style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 1px solid #dee2e6;">
+          <i class="fas fa-external-link-alt" style="font-size: 12px; color: #6c757d;"></i>
+        </a>
+        
+        <!-- Botón de configuración -->
+        <a href="{% url 'notificaciones:gestion_notificaciones' %}"
+           class="btn btn-sm btn-light rounded-circle p-0"
+           title="Configuración de notificaciones"
+           style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 1px solid #dee2e6;">
+          <i class="fas fa-cog" style="font-size: 14px; color: #6c757d;"></i>
+        </a>
+      </div>
+    </li>
+
+    <!-- Contenedor scrolleable de notificaciones -->
+    <div id="notificaciones-container" style="max-height: 400px; overflow-y: auto; padding: 0;">
+      {% if notificaciones_header %}
+        {% for n in notificaciones_header %}
+        <li class="notificacion-item px-3 py-2 d-flex align-items-start gap-2 {% if n.estado_lectura == 'pendiente' %}notificacion-no-leida{% endif %}" 
+            style="list-style: none; transition: all 0.3s ease; opacity: 1; transform: translateX(0); border-bottom: 1px solid #f0f0f0; cursor: pointer;"
+            data-notif-id="{{ n.id }}">
+          
+          <!-- Indicador de no leída (punto azul) -->
+          {% if n.estado_lectura == 'pendiente' %}
+          <div class="flex-shrink-0 mt-1">
+            <span class="badge bg-primary rounded-circle p-0" style="width: 8px; height: 8px;"></span>
+          </div>
+          {% else %}
+          <div class="flex-shrink-0 mt-1" style="width: 8px;"></div>
+          {% endif %}
+          
+          <!-- Contenido de la notificación -->
+          <div class="flex-grow-1" style="min-width: 0;">
+            <div class="d-flex justify-content-between align-items-start mb-1">
+              <small class="text-muted" style="font-size: 0.75rem;">{{ n.fecha_creacion|date:"d/m/Y H:i" }}</small>
+            </div>
+            <p class="mb-0" style="font-size: 0.9rem; color: #212529; line-height: 1.4;">{{ n.mensaje }}</p>
+          </div>
+
+          <!-- Botón de marcar como leída -->
+          {% if n.estado_lectura == 'pendiente' %}
+          <div class="flex-shrink-0">
+            <button type="button" 
+                    class="btn btn-sm btn-marcar-leida rounded-circle p-0" 
+                    data-url="{% url 'notificaciones:marcar_leida' n.id %}"
+                    title="Marcar como leída"
+                    style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: 1px solid #dee2e6; background-color: white;">
+              <i class="fas fa-check" style="font-size: 10px; color: #28a745;"></i>
+            </button>
+          </div>
+          {% endif %}
+        </li>
+        {% endfor %}
+      {% else %}
+        <li class="px-3 py-5 text-center text-muted" style="list-style: none;" id="sin-notificaciones">
+          <i class="fas fa-bell-slash mb-2" style="font-size: 2rem; opacity: 0.3;"></i>
+          <p class="mb-0">Sin notificaciones nuevas</p>
+        </li>
+      {% endif %}
+    </div>
+  </ul>
+</li>
+
+<style>
+  /* Animación de slide-out */
+  .notificacion-item.slide-out {
+    opacity: 0 !important;
+    transform: translateX(100%) !important;
+    max-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+  }
+  
+  /* Efecto hover en notificaciones */
+  .notificacion-item:hover {
+    background-color: #f8f9fa !important;
+  }
+  
+  /* Estilo para notificaciones no leídas */
+  .notificacion-no-leida {
+    background-color: #f0f7ff;
+  }
+  
+  /* Efecto hover en botones del header */
+  .notificaciones-panel .btn-light:hover {
+    background-color: #e9ecef !important;
+  }
+  
+  /* Scrollbar personalizada */
+  #notificaciones-container::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  #notificaciones-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  
+  #notificaciones-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+  }
+  
+  #notificaciones-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
+</style>
+
+<script>
+(function() {
+  'use strict';
+  
+  console.log('=== INICIO Script de notificaciones ===');
+  
+  // Función para obtener el CSRF token
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  function inicializarNotificaciones() {
+    console.log('Inicializando notificaciones...');
+    
+    const csrftoken = getCookie('csrftoken');
+    console.log('CSRF Token:', csrftoken ? 'Encontrado ✓' : 'NO ENCONTRADO ✗');
+
+    // Verificar que los botones existen
+    const botonesLeida = document.querySelectorAll('.btn-marcar-leida');
+    const botonesLimpiar = document.querySelectorAll('.btn-limpiar-todo');
+    console.log('Botones marcar leída:', botonesLeida.length);
+    console.log('Botones limpiar todo:', botonesLimpiar.length);
+    
+    if (botonesLimpiar.length > 0) {
+      console.log('Data-url del botón limpiar:', botonesLimpiar[0].dataset.url);
+    }
+
+    // Función para actualizar el badge de notificaciones
+    function actualizarBadge() {
+      const notificaciones = document.querySelectorAll('.notificacion-item');
+      const badge = document.querySelector('.nav-link .bg-danger');
+      
+      if (notificaciones.length === 0) {
+        // Ocultar badge
+        if (badge) badge.style.display = 'none';
+        
+        // Mostrar mensaje de sin notificaciones
+        const container = document.getElementById('notificaciones-container');
+        container.innerHTML = '<li class="p-2 text-center text-muted" style="list-style: none;" id="sin-notificaciones">Sin notificaciones nuevas</li>';
+        
+        // Ocultar botón de limpiar todo
+        const btnLimpiar = document.querySelector('.btn-limpiar-todo');
+        if (btnLimpiar) btnLimpiar.parentElement.remove();
+      }
+    }
+
+    // Prevenir que el dropdown se cierre al hacer clic en botones
+    const dropdownMenu = document.querySelector('.notificaciones-panel');
+    if (dropdownMenu) {
+      dropdownMenu.addEventListener('click', function(e) {
+        console.log('Click en dropdown detectado', e.target);
+        // Si el clic fue en un botón de acción, prevenir que se cierre el dropdown
+        if (e.target.closest('.btn-marcar-leida') || e.target.closest('.btn-limpiar-todo')) {
+          console.log('Click en botón de acción, previniendo cierre');
+          e.stopPropagation();
+        }
+      });
+    }
+
+    // Agregar listeners directos a los botones existentes
+    document.querySelectorAll('.btn-marcar-leida').forEach(function(btn) {
+      console.log('Agregando listener directo a botón marcar leída');
+      btn.addEventListener('click', function(e) {
+        console.log('LISTENER DIRECTO: Click en marcar leída');
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const url = this.dataset.url;
+        const notifItem = this.closest('.notificacion-item');
+        
+        console.log('URL:', url);
+        console.log('Elemento:', notifItem);
+        
+        if (!notifItem) return;
+        
+        notifItem.classList.add('slide-out');
+        
+        fetch(url, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json',
+          },
+          credentials: 'same-origin'
+        })
+        .then(response => {
+          console.log('Respuesta:', response.status);
+          if (response.ok) {
+            setTimeout(() => {
+              notifItem.remove();
+              actualizarBadge();
+            }, 300);
+          }
+        })
+        .catch(error => console.error('Error:', error));
+      });
+    });
+
+    document.querySelectorAll('.btn-limpiar-todo').forEach(function(btn) {
+      console.log('Agregando listener directo a botón limpiar todo');
+      btn.addEventListener('click', function(e) {
+        console.log('LISTENER DIRECTO: Click en limpiar todo');
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const url = this.dataset.url;
+        const notificaciones = document.querySelectorAll('.notificacion-item');
+        
+        console.log('URL:', url);
+        console.log('Notificaciones:', notificaciones.length);
+        
+        this.disabled = true;
+        
+        notificaciones.forEach(notif => notif.classList.add('slide-out'));
+        
+        fetch(url, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json',
+          },
+          credentials: 'same-origin'
+        })
+        .then(response => {
+          console.log('Respuesta:', response.status);
+          if (response.ok) {
+            setTimeout(() => {
+              notificaciones.forEach(notif => notif.remove());
+              actualizarBadge();
+            }, 300);
+          } else {
+            this.disabled = false;
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          this.disabled = false;
+        });
+      });
+    });
+
+    // Manejar el clic en el botón de marcar como leída (individual)
+    document.addEventListener('click', function(e) {
+      const btnLeida = e.target.closest('.btn-marcar-leida');
+      if (btnLeida) {
+        console.log('Click en marcar leída detectado');
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const url = btnLeida.dataset.url;
+        const notifItem = btnLeida.closest('.notificacion-item');
+        
+        console.log('URL:', url);
+        console.log('Elemento encontrado:', notifItem);
+        
+        if (!notifItem) {
+          console.error('No se encontró el elemento notificacion-item');
+          return;
+        }
+        
+        // Aplicar animación de salida
+        notifItem.classList.add('slide-out');
+        console.log('Animación aplicada');
+        
+        // Enviar petición AJAX
+        fetch(url, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json',
+          },
+          credentials: 'same-origin'
+        })
+        .then(response => {
+          console.log('Respuesta recibida:', response.status);
+          if (response.ok) {
+            // Esperar a que termine la animación antes de eliminar
+            setTimeout(() => {
+              console.log('Eliminando notificación');
+              notifItem.remove();
+              actualizarBadge();
+            }, 300);
+          } else {
+            console.error('Error en respuesta:', response.status);
+          }
+        })
+        .catch(error => {
+          console.error('Error en fetch:', error);
+        });
+      }
+    });
+
+    // Manejar el clic en el botón de limpiar todas
+    document.addEventListener('click', function(e) {
+      const btnLimpiar = e.target.closest('.btn-limpiar-todo');
+      if (btnLimpiar) {
+        console.log('Click en limpiar todo detectado');
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const url = btnLimpiar.dataset.url;
+        const notificaciones = document.querySelectorAll('.notificacion-item');
+        
+        console.log('URL:', url);
+        console.log('Notificaciones encontradas:', notificaciones.length);
+        
+        // Deshabilitar el botón para evitar múltiples clics
+        btnLimpiar.disabled = true;
+        
+        // Aplicar animación a todas las notificaciones
+        notificaciones.forEach(notif => {
+          notif.classList.add('slide-out');
+        });
+        console.log('Animaciones aplicadas');
+        
+        // Enviar petición AJAX
+        fetch(url, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json',
+          },
+          credentials: 'same-origin'
+        })
+        .then(response => {
+          console.log('Respuesta recibida:', response.status);
+          if (response.ok) {
+            // Esperar a que termine la animación antes de eliminar
+            setTimeout(() => {
+              console.log('Eliminando todas las notificaciones');
+              notificaciones.forEach(notif => notif.remove());
+              actualizarBadge();
+            }, 300);
+          } else {
+            console.error('Error en respuesta:', response.status);
+            btnLimpiar.disabled = false;
+          }
+        })
+        .catch(error => {
+          console.error('Error en fetch:', error);
+          btnLimpiar.disabled = false;
+        });
+      }
+    });
+  }
+  
+  // Ejecutar cuando el DOM esté listo
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', inicializarNotificaciones);
+  } else {
+    inicializarNotificaciones();
+  }
+})();
+</script>

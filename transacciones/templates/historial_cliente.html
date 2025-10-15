@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}Mi Historial de Transacciones{% endblock %}
 
@@ -80,6 +81,26 @@
 .btn-premium .fas {
     font-size: 1.2rem; 
 }
+
+.badge.status-pendiente { /* Usá el valor exacto de 'transaccion.estado' */
+    background-color: #ffc107; /* Amarillo */
+}
+
+.badge.status-pagada {
+    background-color: #28a745; /* Verde */
+    color: white !important; /* Texto blanco para mejor contraste */
+}
+
+.badge.status-cancelada {
+    background-color: #dc3545; /* Rojo */
+    color: white !important;
+}
+
+.badge.status-a_retirar {
+    background-color: #6c757d; /* Gris */
+    color: white !important;
+}
+
 </style>
     <!-- Encabezado -->
     <div class="row mb-4">
@@ -224,9 +245,9 @@
                                         <div class="col-5">
                                             <div class="border rounded p-2">
                                                 <div class="amount-highlight text-truncate">    {% if transaccion.divisa_origen.code == 'PYG' %}
-        {{ transaccion.monto_origen|floatformat:0 }}
+        {{ transaccion.monto_origen|floatformat:0|intcomma }}
     {% else %}
-        {{ transaccion.monto_origen|floatformat:2 }}
+        {{ transaccion.monto_origen|floatformat:2|intcomma }}
     {% endif %}
 </div>
                                                 <small class="text-muted">{{ transaccion.divisa_origen.code }}</small>
@@ -238,9 +259,9 @@
                                         <div class="col-5">
                                             <div class="border rounded p-2">
                                                 <div class="amount-highlight text-truncate">    {% if transaccion.divisa_destino.code == 'PYG' %}
-        {{ transaccion.monto_destino|floatformat:0 }}
+        {{ transaccion.monto_destino|floatformat:0|intcomma }}
     {% else %}
-        {{ transaccion.monto_destino|floatformat:2 }}
+        {{ transaccion.monto_destino|floatformat:2|intcomma }}
     {% endif %}
 </div>
                                                 <small class="text-muted">{{ transaccion.divisa_destino.code }}</small>
@@ -253,7 +274,7 @@
                                 <div class="text-center mb-3">
                                     <small class="text-muted">
                                         <i class="bi bi-calculator me-1"></i>
-                                        Tasa: Gs. {{ transaccion.tasa_de_cambio_aplicada|floatformat:0 }}
+                                        Tasa: Gs. {{ transaccion.tasa_de_cambio_aplicada|floatformat:0|intcomma }}
                                     </small>
                                 </div>
 

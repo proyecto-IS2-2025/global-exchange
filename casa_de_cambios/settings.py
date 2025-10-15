@@ -59,8 +59,9 @@ INSTALLED_APPS = [
     'operacion_divisas',
     'banco',
     'billetera',
+    'notificaciones',
     'simulador',
-    'mfa',
+    'mfa', 
     'autenticacion',
     'interfaz',
 ]
@@ -105,6 +106,7 @@ TEMPLATES = [
                 # ✅ Context processors personalizados
                 'roles.context_processors.grupo_usuario',  # ← MANTENER SOLO ESTE (incluye user_permissions)
                 'simulador.context_processors.simulador_context',
+                'notificaciones.context_processors.notificaciones_usuario',
             ],
         },
     },
@@ -193,6 +195,30 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+
+#email de verificación
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'glex.globalexchange@gmail.com'
+EMAIL_HOST_PASSWORD = 'tpsh yedw lthc oprs'
+
+#login y logout redirect
+#LOGIN_REDIRECT_URL = 'inicio'
+LOGIN_URL = '/login/'
+LOGOUT_REDIRECT_URL = 'inicio'
+LOGIN_REDIRECT_URL = '/redirect-dashboard/'
+
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'   # a dónde redirige tras login exitoso (puedes poner 'inicio')
+
+
 # ═════════════════════════════════════════════════════════════════════
 # LOGGING
 # ═════════════════════════════════════════════════════════════════════
@@ -203,6 +229,12 @@ import os  # ← Asegurar que está importado al inicio
 LOGS_DIR = BASE_DIR / 'logs'
 LOGS_DIR.mkdir(exist_ok=True)  # ← AGREGAR ESTA LÍNEA
 
+
+
+
+AUTH_USER_MODEL = 'users.CustomUser'
+
+DEBUG = True
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

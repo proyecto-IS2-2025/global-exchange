@@ -91,6 +91,7 @@ def cliente_dashboard(request):
 """
 #Redirect
 @login_required
+@login_required
 def redireccion_por_grupo(request):
     #Redirige al usuario según su grupo.
     #Como no hay dashboards específicos todavía, todos van a inicio.

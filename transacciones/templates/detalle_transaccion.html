@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}Detalle de Transacción - {{ transaccion.numero_transaccion }}{% endblock %}
 
@@ -41,6 +42,12 @@
 
 {% block content %}
 <div class="container mt-4">
+    <div>
+        <a href="{% url 'transacciones:historial_cliente' %}" 
+            class="btn btn-secondary mb-2">
+            <i class="fas fa-arrow-left me-2"></i>Volver
+        </a>
+    </div>
     <!-- Encabezado -->
     <div class="card mb-4 border-0 shadow">
         <div class="card-header bg-primary transaction-header text-white py-4">
@@ -53,6 +60,8 @@
                     {% if transaccion.estado == 'pendiente' %}
                         <span class="badge bg-warning status-badge">{{ transaccion.get_estado_display }}</span>
                     {% elif transaccion.estado == 'pagada' %}
+                        <span class="badge bg-success status-badge">{{ transaccion.get_estado_display }}</span>
+                    {% elif transaccion.estado == 'completado' %}
                         <span class="badge bg-success status-badge">{{ transaccion.get_estado_display }}</span>
                     {% elif transaccion.estado == 'cancelada' %}
                         <span class="badge bg-danger status-badge">{{ transaccion.get_estado_display }}</span>
@@ -95,12 +104,14 @@
                             </div>
                             <div class="mb-3">
                                 <label class="text-muted small">Monto Origen</label>
-                                <p class="mb-0 fw-bold fs-5">    {% if transaccion.divisa_origen.code == 'PYG' %}
-        {{ transaccion.monto_origen|floatformat:0 }}
-    {% else %}
-        {{ transaccion.monto_origen|floatformat:2 }}
-    {% endif %}
-    {{ transaccion.divisa_origen.code }}</p>
+                                <p class="mb-0 fw-bold fs-5">
+                                    {% if transaccion.divisa_origen.code == 'PYG' %}
+                                        {{ transaccion.monto_origen|floatformat:0|intcomma }}
+                                    {% else %}
+                                        {{ transaccion.monto_origen|floatformat:2|intcomma }}
+                                    {% endif %}
+                                    {{ transaccion.divisa_origen.code }}
+                                </p>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -113,16 +124,18 @@
                             </div>
                             <div class="mb-3">
                                 <label class="text-muted small">Monto Destino</label>
-                                <p class="mb-0 fw-bold fs-5 text-success">    {% if transaccion.divisa_destino.code == 'PYG' %}
-        {{ transaccion.monto_destino|floatformat:0 }}
-    {% else %}
-        {{ transaccion.monto_destino|floatformat:2 }}
-    {% endif %}
-    {{ transaccion.divisa_destino.code }}</p>
+                                <p class="mb-0 fw-bold fs-5 text-success">
+                                    {% if transaccion.divisa_destino.code == 'PYG' %}
+                                        {{ transaccion.monto_destino|floatformat:0|intcomma }}
+                                    {% else %}
+                                        {{ transaccion.monto_destino|floatformat:2|intcomma }}
+                                    {% endif %}
+                                    {{ transaccion.divisa_destino.code }}
+                                </p>
                             </div>
                             <div class="mb-3">
                                 <label class="text-muted small">Tasa de Cambio</label>
-                                <p class="mb-0 fw-bold">Gs. {{ transaccion.tasa_de_cambio_aplicada|floatformat:0 }}</p>
+                                <p class="mb-0 fw-bold">Gs. {{ transaccion.tasa_de_cambio_aplicada|floatformat:0|intcomma }}</p>
                             </div>
                         </div>
                     </div>
@@ -164,6 +177,43 @@
                             {% endif %}
                         </div>
                     </div>
+
+                    {# NUEVO: datos del medio (campos) con fallback #}
+                    {% with campos=medio_campos|default:medio.campos %}
+                    {% if campos %}
+                        <hr>
+                        <h6 class="mb-2">Datos del medio</h6>
+                        <table class="table table-sm mb-0">
+                            <tbody>
+                                {% for c in campos %}
+                                <tr>
+                                    <th class="w-50">{{ c.etiqueta }}</th>
+                                    <td>
+                                        {% if c.valor_enmascarado %}
+                                            {{ c.valor_enmascarado }}
+                                        {% else %}
+                                            {{ c.valor|default:"-" }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% elif medio_datos.datos_campos %}
+                        <hr>
+                        <h6 class="mb-2">Datos del medio</h6>
+                        <table class="table table-sm mb-0">
+                            <tbody>
+                                {% for k, v in medio_datos.datos_campos.items %}
+                                <tr>
+                                    <th class="w-50">{{ k|title }}</th>
+                                    <td>{{ v|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
+                    {% endwith %}
                 </div>
             </div>
             {% endif %}
@@ -232,15 +282,6 @@
                         </a>
                         {% endif %}
                         
-                        <a href="{% url 'transacciones:historial_cliente' %}" 
-                           class="btn btn-outline-primary btn-sm w-100 mb-2">
-                            <i class="bi bi-list me-2"></i>Ver Historial
-                        </a>
-                        
-                        <a href="{% url 'inicio' %}" 
-                           class="btn btn-primary btn-sm w-100">
-                            <i class="bi bi-house me-2"></i>Volver al Inicio
-                        </a>
                     {% endif %}
 
                     <!-- Acciones para admin -->
@@ -266,11 +307,6 @@
                                 <i class="bi bi-arrow-repeat me-2"></i>Cambiar Estado
                             </button>
                         </form>
-                        
-                        <a href="{% url 'transacciones:historial_admin' %}" 
-                           class="btn btn-outline-primary btn-sm w-100 mb-2">
-                            <i class="bi bi-list me-2"></i>Historial Admin
-                        </a>
                     {% endif %}
                 </div>
             </div>

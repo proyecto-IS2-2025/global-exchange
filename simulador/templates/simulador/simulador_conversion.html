@@ -138,13 +138,13 @@
                 
                 if (data.success) {
                     const resultado = parseFloat(data.monto_resultado).toLocaleString('es-PY', { 
-                        minimumFractionDigits: 2, 
-                        maximumFractionDigits: 2
+                        minimumFractionDigits: 0, 
+                        maximumFractionDigits: 0
                     });
                     
                     const tasa_aplicada = parseFloat(data.tasa_aplicada).toLocaleString('es-PY', { 
-                        minimumFractionDigits: 2, 
-                        maximumFractionDigits: 2
+                        minimumFractionDigits: 0, 
+                        maximumFractionDigits: 0
                     });
                     
                     const porcentaje_descuento = parseFloat(data.porcentaje_descuento).toLocaleString('es-PY', {
