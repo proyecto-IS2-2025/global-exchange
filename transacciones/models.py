@@ -108,6 +108,15 @@ class Transaccion(models.Model):
 
     observacion = models.TextField('Observación/Motivo de estado', blank=True, default='')
 
+    # Campo antiguo (mantener para compatibilidad con BD existente)
+    metodo_pago = models.CharField(
+        'Método de Pago (obsoleto)',
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text='Campo antiguo - usar medio_pago_datos en su lugar'
+    )
+
     # Nuevo/Ajustado: datos completos del medio seleccionado (id, nombre, tipo, comision, datos_campos, etc.)
     medio_pago_datos = models.JSONField(
         'Datos del Medio de Pago/Acreditación',
@@ -270,6 +279,52 @@ class Transaccion(models.Model):
     def puede_anularse(self):
         """True si la transacción puede anularse"""
         return self.estado in ['pagada', 'a_retirar']
+
+    @property
+    def es_pago_stripe(self):
+        """True si es un pago realizado con Stripe"""
+        try:
+            if not self.medio_pago_datos:
+                return False
+            
+            # Verificar si el tipo de medio es 'stripe'
+            if self.medio_pago_datos.get('tipo') == 'stripe':
+                return True
+            
+            # Verificar si hay información de Stripe en el medio_pago_datos
+            stripe_payment_intent_id = self.medio_pago_datos.get('stripe_payment_intent_id')
+            if stripe_payment_intent_id:
+                return True
+            
+            # Verificar si el nombre del medio contiene "stripe"
+            nombre = self.medio_pago_datos.get('nombre', '').lower()
+            if 'stripe' in nombre:
+                return True
+            
+            return False
+        except (TypeError, AttributeError):
+            return False
+
+    @property
+    def card_last4(self):
+        """Obtener los últimos 4 dígitos de la tarjeta si es pago Stripe"""
+        try:
+            if self.es_pago_stripe and self.medio_pago_datos:
+                return self.medio_pago_datos.get('stripe_card_last4')
+        except (TypeError, AttributeError):
+            pass
+        return None
+
+    @property
+    def card_brand(self):
+        """Obtener la marca de la tarjeta si es pago Stripe"""
+        try:
+            if self.es_pago_stripe and self.medio_pago_datos:
+                return self.medio_pago_datos.get('stripe_card_brand')
+        except (TypeError, AttributeError):
+            pass
+        return None
+
 
     def get_medio_pago_info(self):
         """Obtener información del medio de pago de forma segura"""

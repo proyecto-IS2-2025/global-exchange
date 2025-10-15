@@ -586,12 +586,15 @@ class SumarioCompraView(TemplateView):
             return redirect('operacion_divisas:compra_sumario')
     
     def _procesar_pago_normal(self, request, operacion, medio_pago):
-        """Procesa el pago sin Stripe (método tradicional) - redirige a crear transacción"""
+        """Procesa el pago sin Stripe (método tradicional) - llama directamente a crear transacción"""
         logger.info(f"=== PROCESANDO PAGO NORMAL (BANCO) ===")
-        logger.info(f"Redirigiendo a crear_desde_compra para procesamiento bancario")
+        logger.info(f"Llamando a crear_transaccion_desde_compra para procesamiento bancario")
         
-        # Redirigir a la vista que crea la transacción normal
-        return redirect('transacciones:crear_desde_compra')
+        # Importar la vista de transacciones y llamarla directamente
+        from transacciones.views import crear_transaccion_desde_compra
+        
+        # Llamar directamente a la vista (que espera POST)
+        return crear_transaccion_desde_compra(request)
     
     def _get_client_ip(self, request):
         """Obtiene la IP del cliente"""

@@ -145,23 +145,32 @@ def _get_entidad(entidad_hint):
     con matching aproximado (ignora acentos y errores típicos de codificación).
     """
     if not EntidadBancaria:
+        logger.warning("[_get_entidad] Modelo EntidadBancaria no disponible")
         return None
     if entidad_hint is None:
+        logger.debug("[_get_entidad] entidad_hint es None")
         return None
     try:
         hint = str(entidad_hint).strip()
+        logger.debug(f"[_get_entidad] Buscando entidad con hint='{hint}'")
+        
         # ID exacto
         if hint.isdigit():
             obj = EntidadBancaria.objects.filter(pk=int(hint)).first()
             if obj:
+                logger.info(f"[_get_entidad] Encontrada por ID: {obj}")
                 return obj
+        
         # Código exacto
         obj = EntidadBancaria.objects.filter(codigo__iexact=hint).first()
         if obj:
+            logger.info(f"[_get_entidad] Encontrada por código: {obj}")
             return obj
+        
         # Nombre exacto
         obj = EntidadBancaria.objects.filter(nombre__iexact=hint).first()
         if obj:
+            logger.info(f"[_get_entidad] Encontrada por nombre: {obj}")
             return obj
 
         # Matching aproximado por nombre/código normalizados
@@ -169,17 +178,26 @@ def _get_entidad(entidad_hint):
         # Heurística: algunos fallos convierten 'í' en 'y' -> intentamos variante
         n_hint_variant = n_hint.replace('y', 'i')
         candidatos = list(EntidadBancaria.objects.all())
+        logger.debug(f"[_get_entidad] Intentando matching aproximado. n_hint='{n_hint}', variante='{n_hint_variant}', candidatos={len(candidatos)}")
+        
         for e in candidatos:
             n_nombre = _normalize_text(e.nombre)
             n_codigo = _normalize_text(e.codigo)
+            # Matching exacto normalizado
             if n_hint in (n_nombre, n_codigo) or n_hint_variant in (n_nombre, n_codigo):
+                logger.info(f"[_get_entidad] Encontrada por matching exacto normalizado: {e}")
                 return e
             # Coincidencia por contains
             if n_hint and (n_hint in n_nombre or n_hint in n_codigo):
+                logger.info(f"[_get_entidad] Encontrada por contains en nombre/código: {e}")
                 return e
             if n_hint_variant and (n_hint_variant in n_nombre or n_hint_variant in n_codigo):
+                logger.info(f"[_get_entidad] Encontrada por contains variante: {e}")
                 return e
-    except Exception:
+        
+        logger.warning(f"[_get_entidad] No se encontró entidad para hint='{hint}'")
+    except Exception as ex:
+        logger.error(f"[_get_entidad] Error al buscar entidad: {ex}", exc_info=True)
         return None
     return None
 
@@ -190,35 +208,71 @@ def _extraer_cuenta_desde_medio(medio_datos):
     Retorna (entidad_hint, numero_cuenta).
     """
     if not isinstance(medio_datos, dict):
+        logger.debug("[_extraer_cuenta] medio_datos no es dict")
         return (None, None)
 
+    logger.debug(f"[_extraer_cuenta] Procesando medio_datos: {medio_datos}")
+    
     entidad_hint = None
     numero_cuenta = None
 
     # 1) Intentar datos_campos raw
     datos = medio_datos.get('datos_campos') or {}
     if isinstance(datos, dict):
+        logger.debug(f"[_extraer_cuenta] Analizando datos_campos: {datos}")
         for k, v in datos.items():
             key = (k or '').lower()
-            if numero_cuenta is None and ('cuenta' in key or 'account' in key or key in ('numero', 'nro', 'nro_cuenta', 'numero_cuenta')):
-                if v:
-                    numero_cuenta = _normalize_account_number(v)
-            if entidad_hint is None and any(t in key for t in ('entidad', 'banco', 'bank', 'entidad_id', 'entidad_codigo')):
-                if v:
-                    entidad_hint = str(v).strip()
+            # Normalizar key: quitar acentos, espacios, etc.
+            key_normalized = _normalize_text(key)
+            
+            # Buscar número de cuenta con todas las variantes posibles (inglés y español)
+            if numero_cuenta is None:
+                # Variantes en español e inglés
+                cuenta_variants = ['cuenta', 'account', 'numero', 'nro', 'numero_cuenta', 'numero de cuenta', 
+                                  'account_number', 'account number', 'nro_cuenta', 'nro cuenta']
+                if any(variant in key_normalized for variant in cuenta_variants):
+                    if v:
+                        numero_cuenta = _normalize_account_number(v)
+                        logger.debug(f"[_extraer_cuenta] Encontrado numero_cuenta desde key='{k}': raw='{v}', normalizado='{numero_cuenta}'")
+            
+            # Buscar entidad bancaria con todas las variantes posibles (inglés y español)
+            if entidad_hint is None:
+                # Variantes en español e inglés
+                entidad_variants = ['entidad', 'banco', 'bank', 'bank_name', 'bank name', 'entidad_id', 
+                                   'entidad_codigo', 'entidad bancaria', 'entidad_bancaria', 'nombre del banco',
+                                   'nombre de banco', 'nombre de la entidad']
+                if any(variant in key_normalized for variant in entidad_variants):
+                    if v:
+                        entidad_hint = str(v).strip()
+                        logger.debug(f"[_extraer_cuenta] Encontrado entidad_hint desde key='{k}': '{entidad_hint}'")
 
     # 2) Intentar campos serializados (con etiqueta legible)
     if (entidad_hint is None or not numero_cuenta) and isinstance(medio_datos.get('campos'), list):
+        logger.debug(f"[_extraer_cuenta] Analizando campos serializados: {medio_datos.get('campos')}")
         for c in medio_datos['campos']:
             etiqueta = (c.get('etiqueta') or '').lower()
+            etiqueta_normalized = _normalize_text(etiqueta)
             valor = c.get('valor') or c.get('valor_enmascarado') or ''
             if not valor:
                 continue
-            if not numero_cuenta and ('cuenta' in etiqueta or 'account' in etiqueta or 'número' in etiqueta or etiqueta in ('numero', 'nro', 'nro cuenta', 'numero de cuenta')):
-                numero_cuenta = _normalize_account_number(valor)
-            if entidad_hint is None and any(t in etiqueta for t in ('entidad', 'banco', 'bank', 'código banco')):
-                entidad_hint = str(valor).strip()
+            
+            # Buscar número de cuenta
+            if not numero_cuenta:
+                cuenta_variants = ['cuenta', 'account', 'numero', 'nro', 'numero de cuenta', 'numero_cuenta',
+                                  'account_number', 'account number', 'nro cuenta', 'nro_cuenta']
+                if any(variant in etiqueta_normalized for variant in cuenta_variants):
+                    numero_cuenta = _normalize_account_number(valor)
+                    logger.debug(f"[_extraer_cuenta] Encontrado numero_cuenta desde etiqueta='{etiqueta}': raw='{valor}', normalizado='{numero_cuenta}'")
+            
+            # Buscar entidad bancaria
+            if entidad_hint is None:
+                entidad_variants = ['entidad', 'banco', 'bank', 'codigo banco', 'entidad bancaria',
+                                   'bank name', 'nombre del banco', 'nombre de banco', 'nombre de la entidad']
+                if any(variant in etiqueta_normalized for variant in entidad_variants):
+                    entidad_hint = str(valor).strip()
+                    logger.debug(f"[_extraer_cuenta] Encontrado entidad_hint desde etiqueta='{etiqueta}': '{entidad_hint}'")
 
+    logger.info(f"[_extraer_cuenta] Resultado final: entidad_hint='{entidad_hint}', numero_cuenta='{numero_cuenta}'")
     return (entidad_hint, numero_cuenta or None)
 
 def _get_cuenta_empresa():
@@ -228,20 +282,32 @@ def _get_cuenta_empresa():
     - Número de cuenta: '000111222'
     Intenta resolver la entidad por código/nombre. Mantiene fallback por BancoUser si no está la entidad.
     """
+    logger.debug(f"[_get_cuenta_empresa] Buscando entidad empresa: código='{EMPRESA_BANCO_CODIGO}', nombre='{EMPRESA_BANCO_NOMBRE}'")
+    
     entidad = _get_entidad(EMPRESA_BANCO_CODIGO) or _get_entidad(EMPRESA_BANCO_NOMBRE)
 
     if not entidad and BancoUser and Cuenta:
         # Fallback: intentar por usuario conocido y su primera cuenta
+        logger.debug("[_get_cuenta_empresa] Entidad no encontrada, intentando fallback por BancoUser")
         try:
             bu = BancoUser.objects.filter(email__iexact='GlobalExchange@bancopy.com').first()
             if bu:
+                logger.debug(f"[_get_cuenta_empresa] BancoUser encontrado: {bu}")
                 cta = Cuenta.objects.filter(usuario=bu).order_by('id').first()
                 if cta:
+                    logger.info(f"[_get_cuenta_empresa] Cuenta empresa encontrada por fallback: entidad={cta.entidad}, cuenta={cta.numero_cuenta}")
                     return (cta.entidad, cta.numero_cuenta)
-        except Exception:
-            pass
+            else:
+                logger.warning("[_get_cuenta_empresa] No se encontró BancoUser con email 'GlobalExchange@bancopy.com'")
+        except Exception as ex:
+            logger.error(f"[_get_cuenta_empresa] Error en fallback: {ex}", exc_info=True)
 
     # Si no se encontró la entidad, devolver None y el número esperado para logging aguas arriba
+    if entidad:
+        logger.info(f"[_get_cuenta_empresa] Entidad empresa encontrada: {entidad}, cuenta={EMPRESA_NUMERO_CUENTA}")
+    else:
+        logger.warning(f"[_get_cuenta_empresa] No se encontró entidad empresa. Retornando (None, '{EMPRESA_NUMERO_CUENTA}')")
+    
     return (entidad, EMPRESA_NUMERO_CUENTA)
 
 def realizar_transferencia_bancaria(entidad_src, numero_cuenta_src, entidad_dst, numero_cuenta_dst, monto, referencia=None):
@@ -484,7 +550,14 @@ def crear_transaccion_desde_venta(request):
 
             logger.debug(f"[VENTA] Extract medio -> entidad_cliente='{ent_cli_hint}', cuenta_cliente_raw='{cta_cli}' | empresa_entidad='{getattr(ent_emp,'codigo',ent_emp)}', empresa_cuenta='{cta_emp}'")
 
-            if ent_cli_hint and cta_cli and ent_emp and cta_emp:
+            # Validar que se tengan todos los datos necesarios
+            if not ent_cli_hint or not cta_cli:
+                logger.warning(f"[VENTA] Faltan datos del cliente: entidad='{ent_cli_hint}', cuenta='{cta_cli}'")
+                messages.warning(request, "No se encontró información bancaria del cliente en el medio de acreditación seleccionado. La transacción quedó pendiente.")
+            elif not ent_emp or not cta_emp:
+                logger.error(f"[VENTA] Faltan datos de la empresa: entidad='{ent_emp}', cuenta='{cta_emp}'")
+                messages.warning(request, "Error de configuración: no se encontró la cuenta bancaria de la empresa. Contacte al administrador.")
+            else:
                 resultado = realizar_transferencia_bancaria(
                     entidad_src=ent_emp,
                     numero_cuenta_src=cta_emp,
@@ -499,9 +572,6 @@ def crear_transaccion_desde_venta(request):
                 else:
                     logger.warning(f"[VENTA] Transferencia fallida: {resultado}")
                     messages.warning(request, f"No se pudo realizar la transferencia: {resultado.get('message')} (código {resultado.get('code')})")
-            else:
-                logger.warning("[VENTA] Datos bancarios insuficientes para transferencia (empresa->cliente)")
-                messages.warning(request, "No se encontraron datos bancarios suficientes para la transferencia al cliente.")
         except Exception as e:
             logger.error(f"[VENTA] Error post-transferencia: {e}", exc_info=True)
             messages.warning(request, "Ocurrió un error al procesar la transferencia al cliente.")
@@ -671,7 +741,14 @@ def crear_transaccion_desde_compra(request):
 
             logger.debug(f"[COMPRA] Extract medio -> entidad_cliente='{ent_cli_hint}', cuenta_cliente_raw='{cta_cli}' | empresa_entidad='{getattr(ent_emp,'codigo',ent_emp)}', empresa_cuenta='{cta_emp}'")
 
-            if ent_cli_hint and cta_cli and ent_emp and cta_emp:
+            # Validar que se tengan todos los datos necesarios
+            if not ent_cli_hint or not cta_cli:
+                logger.warning(f"[COMPRA] Faltan datos del cliente: entidad='{ent_cli_hint}', cuenta='{cta_cli}'")
+                messages.warning(request, "No se encontró información bancaria del cliente en el medio de pago seleccionado. La transacción quedó pendiente.")
+            elif not ent_emp or not cta_emp:
+                logger.error(f"[COMPRA] Faltan datos de la empresa: entidad='{ent_emp}', cuenta='{cta_emp}'")
+                messages.warning(request, "Error de configuración: no se encontró la cuenta bancaria de la empresa. Contacte al administrador.")
+            else:
                 resultado = realizar_transferencia_bancaria(
                     entidad_src=ent_cli_hint,
                     numero_cuenta_src=cta_cli,
@@ -686,9 +763,6 @@ def crear_transaccion_desde_compra(request):
                 else:
                     logger.warning(f"[COMPRA] Transferencia fallida: {resultado}")
                     messages.warning(request, f"No se pudo recibir la transferencia: {resultado.get('message')} (código {resultado.get('code')})")
-            else:
-                logger.warning("[COMPRA] Datos bancarios insuficientes para transferencia (cliente->empresa)")
-                messages.warning(request, "No se encontraron datos bancarios suficientes para la transferencia desde el cliente.")
         except Exception as e:
             logger.error(f"[COMPRA] Error post-transferencia: {e}", exc_info=True)
             messages.warning(request, "Ocurrió un error al procesar la transferencia desde el cliente.")
