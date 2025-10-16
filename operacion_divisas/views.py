@@ -49,6 +49,43 @@ class VentaDivisaView(LoginRequiredMixin, FormView):
     template_name = "operaciones/venta/venta.html"
     form_class = VentaDivisaForm
 
+    def get(self, request, *args, **kwargs):
+        """Manejar peticiones AJAX para calcular conversión"""
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            try:
+                divisa_id = request.GET.get('divisa_id')
+                monto = request.GET.get('monto')
+                
+                if not divisa_id or not monto:
+                    return JsonResponse({'success': False, 'error': 'Datos incompletos'})
+                
+                divisa = Divisa.objects.get(id=divisa_id)
+                
+                payload = {
+                    "tipo_operacion": "venta",
+                    "monto": str(monto),
+                    "moneda": divisa.code
+                }
+                
+                rf = RequestFactory()
+                post_req = rf.post(
+                    '/simulador/calcular/',
+                    data=json.dumps(payload),
+                    content_type='application/json'
+                )
+                post_req.session = request.session
+                post_req.user = request.user
+                
+                resp = calcular_simulacion_api(post_req)
+                data = json.loads(resp.content)
+                
+                return JsonResponse(data)
+                
+            except Exception as e:
+                return JsonResponse({'success': False, 'error': str(e)})
+        
+        return super().get(request, *args, **kwargs)
+
     def form_valid(self, form):
         divisa = form.cleaned_data['divisa']
         monto = form.cleaned_data['monto']
@@ -268,6 +305,43 @@ def post(self, request, *args, **kwargs):
 class CompraDivisaView(LoginRequiredMixin, FormView):
     template_name = "operaciones/compra/compra.html"
     form_class = CompraDivisaForm
+
+    def get(self, request, *args, **kwargs):
+        """Manejar peticiones AJAX para calcular conversión"""
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            try:
+                divisa_id = request.GET.get('divisa_id')
+                monto = request.GET.get('monto')
+                
+                if not divisa_id or not monto:
+                    return JsonResponse({'success': False, 'error': 'Datos incompletos'})
+                
+                divisa = Divisa.objects.get(id=divisa_id)
+                
+                payload = {
+                    "tipo_operacion": "compra",
+                    "monto": str(monto),
+                    "moneda": divisa.code
+                }
+                
+                rf = RequestFactory()
+                post_req = rf.post(
+                    '/simulador/calcular/',
+                    data=json.dumps(payload),
+                    content_type='application/json'
+                )
+                post_req.session = request.session
+                post_req.user = request.user
+                
+                resp = calcular_simulacion_api(post_req)
+                data = json.loads(resp.content)
+                
+                return JsonResponse(data)
+                
+            except Exception as e:
+                return JsonResponse({'success': False, 'error': str(e)})
+        
+        return super().get(request, *args, **kwargs)
 
     def form_valid(self, form):
         divisa = form.cleaned_data['divisa']

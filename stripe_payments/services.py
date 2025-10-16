@@ -440,12 +440,17 @@ def _extract_card_data(medio_pago_data: Dict) -> Optional[Dict]:
                     logger.info(f"✓ Año de vencimiento encontrado en campo '{nombre_campo}'")
                 
                 # CVC/CVV/CBU - Detectar por nombre del campo o posición
-                elif 'cbu' in nombre_normalizado or 'cvc' in nombre_normalizado or 'cvv' in nombre_normalizado or 'cvu' in nombre_normalizado:
+                # Incluir más variaciones: "código de seguridad", "codigo seguridad", "cvc", "cvv", "cbu", "cvu"
+                elif ('codigo' in nombre_normalizado and 'seguridad' in nombre_normalizado) or \
+                     'cbu' in nombre_normalizado or 'cvc' in nombre_normalizado or \
+                     'cvv' in nombre_normalizado or 'cvu' in nombre_normalizado:
                     card_data['cvc'] = str(valor)
                     logger.info(f"✓ CVC encontrado en campo '{nombre_campo}'")
                 
                 # Nombre del titular
-                elif 'titular' in nombre_normalizado or ('nombre' in nombre_normalizado and 'tarjeta' in nombre_normalizado):
+                # Incluir más variaciones: "nombre en la tarjeta", "titular", "nombre tarjeta"
+                elif 'titular' in nombre_normalizado or \
+                     ('nombre' in nombre_normalizado and 'tarjeta' in nombre_normalizado):
                     card_data['cardholder_name'] = str(valor)
                     logger.info(f"✓ Nombre del titular encontrado en campo '{nombre_campo}'")
             
@@ -462,25 +467,35 @@ def _extract_card_data(medio_pago_data: Dict) -> Optional[Dict]:
                 
                 for nombre_campo, valor in datos_campos.items():
                     nombre_lower = nombre_campo.lower()
+                    # Normalizar: quitar tildes y caracteres especiales
+                    nombre_normalizado = nombre_lower.replace('ú', 'u').replace('ó', 'o').replace('á', 'a').replace('é', 'e').replace('í', 'i')
                     
-                    if 'tarjeta' in nombre_lower or 'card' in nombre_lower:
-                        if 'numero' in nombre_lower or 'number' in nombre_lower:
-                            card_data['card_number'] = str(valor).replace(' ', '').replace('-', '')
+                    # Número de tarjeta
+                    if ('tarjeta' in nombre_normalizado or 'card' in nombre_normalizado) and \
+                       ('numero' in nombre_normalizado or 'number' in nombre_normalizado):
+                        card_data['card_number'] = str(valor).replace(' ', '').replace('-', '')
                     
-                    if 'mes' in nombre_lower and ('venc' in nombre_lower or 'exp' in nombre_lower):
+                    # Mes de vencimiento
+                    if 'mes' in nombre_normalizado and ('venc' in nombre_normalizado or 'exp' in nombre_normalizado):
                         card_data['exp_month'] = int(valor)
                     
-                    if 'año' in nombre_lower and ('venc' in nombre_lower or 'exp' in nombre_lower):
+                    # Año de vencimiento
+                    if 'año' in nombre_lower and ('venc' in nombre_normalizado or 'exp' in nombre_normalizado):
                         year = int(valor)
                         if year < 100:
                             card_data['exp_year'] = 2000 + year
                         else:
                             card_data['exp_year'] = year
                     
-                    if 'cvc' in nombre_lower or 'cvv' in nombre_lower or ('seguridad' in nombre_lower and 'codigo' in nombre_lower):
+                    # CVC/CVV - Incluir "código de seguridad"
+                    if ('codigo' in nombre_normalizado and 'seguridad' in nombre_normalizado) or \
+                       'cvc' in nombre_normalizado or 'cvv' in nombre_normalizado or \
+                       'cbu' in nombre_normalizado or 'cvu' in nombre_normalizado:
                         card_data['cvc'] = str(valor)
                     
-                    if 'titular' in nombre_lower or ('nombre' in nombre_lower and 'tarjeta' in nombre_lower):
+                    # Nombre del titular
+                    if 'titular' in nombre_normalizado or \
+                       ('nombre' in nombre_normalizado and 'tarjeta' in nombre_normalizado):
                         card_data['cardholder_name'] = str(valor)
             
             # Fallback: buscar en estructura antigua con 'campos'
@@ -490,9 +505,11 @@ def _extract_card_data(medio_pago_data: Dict) -> Optional[Dict]:
                 
                 for campo in campos:
                     nombre = campo.get('nombre', '').lower()
+                    # Normalizar
+                    nombre_normalizado = nombre.replace('ú', 'u').replace('ó', 'o').replace('á', 'a').replace('é', 'e').replace('í', 'i')
                     valor = campo.get('valor', '')
                     
-                    if 'tarjeta' in nombre or 'card_number' in nombre or 'número de tarjeta' in nombre:
+                    if 'tarjeta' in nombre or 'card_number' in nombre or 'numero' in nombre_normalizado:
                         card_data['card_number'] = valor.replace(' ', '').replace('-', '')
                     elif 'mes' in nombre and 'vencimiento' in nombre:
                         card_data['exp_month'] = int(valor)
@@ -502,9 +519,10 @@ def _extract_card_data(medio_pago_data: Dict) -> Optional[Dict]:
                             card_data['exp_year'] = 2000 + year
                         else:
                             card_data['exp_year'] = year
-                    elif 'cvc' in nombre or 'cvv' in nombre or 'seguridad' in nombre:
+                    elif ('codigo' in nombre_normalizado and 'seguridad' in nombre_normalizado) or \
+                         'cvc' in nombre or 'cvv' in nombre or 'cbu' in nombre:
                         card_data['cvc'] = valor
-                    elif 'nombre' in nombre and 'tarjeta' in nombre:
+                    elif 'nombre' in nombre and 'tarjeta' in nombre or 'titular' in nombre:
                         card_data['cardholder_name'] = valor
         
         else:

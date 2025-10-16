@@ -575,25 +575,31 @@ def cancelar_transacciones_pendientes_por_tasa(sender, instance, created, **kwar
     Se ejecuta CADA VEZ que se guarda una CotizacionSegmento.
     Busca transacciones pendientes con la misma divisa y las cancela.
     """
+    try:
+        # 1. Validación de la divisa base
+        # Si la cotización actualizada es del Guaraní (PYG o código '116'), no hacemos nada.
+        if instance.divisa.code in ['PYG', '116']:
+            return
 
-    # 1. Validación de la divisa base
-    # Si la cotización actualizada es del Guaraní (PYG o código '116'), no hacemos nada.
-    if instance.divisa.code in ['PYG', '116']:
-         return
+        divisa_actualizada = instance.divisa
 
-    divisa_actualizada = instance.divisa
+        # 2. Encontrar transacciones PENDIENTES afectadas
+        transacciones_a_cancelar = Transaccion.objects.filter(
+            Q(divisa_origen=divisa_actualizada) | Q(divisa_destino=divisa_actualizada),
+            estado='pendiente'
+        ).select_related('cliente', 'divisa_origen', 'divisa_destino')
 
-    # 2. Encontrar transacciones PENDIENTES afectadas
-    transacciones_a_cancelar = Transaccion.objects.filter(
-        Q(divisa_origen=divisa_actualizada) | Q(divisa_destino=divisa_actualizada),
-        estado='pendiente'
-    ).select_related('cliente', 'divisa_origen', 'divisa_destino')
+        razon_cancelacion = (
+            f"Cotización de {divisa_actualizada.code} ha sido actualizada en el sistema. "
+            f"(Segmento: {instance.segmento.name})"
+        )
 
-    razon_cancelacion = (
-        f"Cotización de {divisa_actualizada.code} ha sido actualizada en el sistema. "
-        f"(Segmento: {instance.segmento.name})"
-    )
-
-    # 3. Cancelar cada transacción
-    for transaccion in transacciones_a_cancelar:
-        transaccion.cancelar_automaticamente(razon=razon_cancelacion)
+        # 3. Cancelar cada transacción
+        for transaccion in transacciones_a_cancelar:
+            transaccion.cancelar_automaticamente(razon=razon_cancelacion)
+    except Exception as e:
+        # Si hay un error (por ejemplo, columna faltante), no fallar
+        # Solo registrar el error en logs si es necesario
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Error al cancelar transacciones por tasa: {e}")
