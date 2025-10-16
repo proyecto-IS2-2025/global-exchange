@@ -233,8 +233,8 @@ class Denominacion(models.Model):
     )
     valor = models.DecimalField(
         'Valor nominal',
-        max_digits=50,
-        decimal_places=2,
+        max_digits=20,
+        decimal_places=8,
         help_text='Valor del billete (ej: 100, 50, 20, etc.)'
     )
     is_active = models.BooleanField(
@@ -294,7 +294,7 @@ class Denominacion(models.Model):
                 self.orden = BASE
                 
         super().save(*args, **kwargs)
-        
+
 class DesgloseDenominacion(models.Model):
     """
     Desglose de denominaciones para una transacción específica.
