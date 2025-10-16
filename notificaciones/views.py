@@ -1,22 +1,67 @@
+"""
+Vistas para el módulo de notificaciones.
+
+Este módulo contiene todas las vistas necesarias para gestionar el sistema de
+notificaciones de tasas de cambio. Incluye vistas para:
+    - Configuración general de notificaciones por usuario
+    - Creación, edición y eliminación de reglas de alerta
+    - Activación/desactivación de alertas
+    - Marcado de lectura de notificaciones individuales
+    - Historial completo de notificaciones con filtros y paginación
+
+Vistas principales:
+    - GestionNotificacionesView: Vista principal de configuración (CBV)
+    - toggle_notificacion: Activar/desactivar alerta
+    - eliminar_notificacion: Eliminar alerta permanentemente
+    - editar_notificacion: Editar alerta existente
+    - marcar_leida: Marcar notificación individual como leída
+    - limpiar_todas: Marcar todas las notificaciones como leídas
+    - historial_notificaciones: Listado completo con filtros
+    - marcar_todas_leidas: Marcar todas como leídas desde historial
+"""
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages  # Opcional: Para mostrar mensajes de éxito/error
+from django.contrib import messages
 from clientes.models import Cliente
 from .models import Notificacion
-
-# ASUMIMOS que estos modelos y forms están definidos en notificaciones/models.py y notificaciones/forms.py
 from .models import NotificacionTasa, ConfiguracionGeneral
 from .forms import NotificacionTasaForm, ConfiguracionGeneralForm
 
 
-# VISTA PRINCIPAL (CBV)
 class GestionNotificacionesView(LoginRequiredMixin, View):
+    """
+    Vista principal para gestión de notificaciones de tasas de cambio.
+
+    Esta vista centraliza toda la configuración de notificaciones del usuario,
+    permitiendo:
+        - Configurar preferencias generales (activar/desactivar, canal)
+        - Crear nuevas reglas de alerta
+        - Ver listado de todas las alertas configuradas
+
+    Maneja dos tipos de POST:
+        - 'guardar_general': Guarda configuración general del usuario
+        - 'guardar_alerta': Crea nueva regla de alerta con validación de duplicados
+
+    :ivar template_name: Ruta de la plantilla HTML
+    :type template_name: str
+    """
     # Nota: Ajusta la ruta del template si es necesario (ej: 'notificaciones/gestion.html')
     template_name = 'gestion.html'
 
     def get_context_data(self, **kwargs):
+        """
+        Prepara el contexto necesario para renderizar la vista.
+
+        Obtiene o crea la configuración general del usuario, prepara formularios
+        y obtiene todas las notificaciones existentes del usuario ordenadas por ID.
+
+        :param kwargs: Argumentos adicionales de contexto
+        :return: Diccionario con el contexto para la plantilla
+        :rtype: dict
+        """
         user = self.request.user
 
         # Lógica para Configuración General y Listado
@@ -32,9 +77,33 @@ class GestionNotificacionesView(LoginRequiredMixin, View):
         }
 
     def get(self, request, *args, **kwargs):
+        """
+        Maneja peticiones GET mostrando el formulario de configuración.
+
+        :param request: Objeto de petición HTTP
+        :return: Respuesta HTTP renderizada
+        :rtype: HttpResponse
+        """
         return render(request, self.template_name, self.get_context_data())
 
     def post(self, request, *args, **kwargs):
+        """
+        Maneja peticiones POST para guardar configuraciones o crear alertas.
+
+        Procesa dos tipos de acciones según el botón presionado:
+            - 'guardar_general': Actualiza la configuración general del usuario
+            - 'guardar_alerta': Crea una nueva regla de alerta con validación de duplicados
+
+        La creación de alertas incluye:
+            - Validación de formulario
+            - Asignación de usuario y cliente desde sesión
+            - Validación de duplicados antes de guardar
+            - Manejo de errores con re-renderizado del formulario
+
+        :param request: Objeto de petición HTTP
+        :return: Redirección o re-renderizado con errores
+        :rtype: HttpResponse
+        """
         user = request.user
 
         # 1. Lógica para guardar la CONFIGURACIÓN GENERAL
@@ -123,11 +192,19 @@ class GestionNotificacionesView(LoginRequiredMixin, View):
         return redirect('notificaciones:gestion_notificaciones')
 
 
-# VISTAS DE ACCIÓN (FBVs)
 @login_required
 def toggle_notificacion(request, pk):
     """
-    Invierte el estado (Activa/Inactiva) de una notificación específica.
+    Alterna el estado activo/inactivo de una regla de alerta.
+
+    Cambia el campo 'activa' de True a False o viceversa. Una alerta inactiva
+    no genera notificaciones hasta que se vuelva a activar.
+
+    :param request: Objeto de petición HTTP
+    :param pk: ID de la notificación a alternar
+    :type pk: int
+    :return: Redirección a la página de gestión de notificaciones
+    :rtype: HttpResponseRedirect
     """
     alerta = get_object_or_404(NotificacionTasa, pk=pk, usuario=request.user)
     alerta.activa = not alerta.activa
@@ -139,7 +216,16 @@ def toggle_notificacion(request, pk):
 @login_required
 def eliminar_notificacion(request, pk):
     """
-    Elimina una notificación específica del cliente.
+    Elimina permanentemente una regla de alerta.
+
+    Solo procesa peticiones POST por seguridad. Elimina la regla de alerta
+    del usuario especificado por el pk.
+
+    :param request: Objeto de petición HTTP
+    :param pk: ID de la notificación a eliminar
+    :type pk: int
+    :return: Redirección a la página de gestión de notificaciones
+    :rtype: HttpResponseRedirect
     """
     if request.method == 'POST':
         alerta = get_object_or_404(NotificacionTasa, pk=pk, usuario=request.user)
@@ -151,8 +237,17 @@ def eliminar_notificacion(request, pk):
 @login_required
 def editar_notificacion(request, pk):
     """
-    Permite editar una notificación existente.
-    No se puede editar notificaciones del tipo 'transaccion_cancelada'.
+    Permite editar una regla de alerta existente.
+
+    Muestra un formulario pre-poblado con los datos actuales de la alerta.
+    No permite editar alertas del tipo 'transaccion_cancelada' ya que son
+    generadas automáticamente por el sistema.
+
+    :param request: Objeto de petición HTTP
+    :param pk: ID de la notificación a editar
+    :type pk: int
+    :return: Renderizado del formulario o redirección tras guardar
+    :rtype: HttpResponse
     """
     alerta = get_object_or_404(NotificacionTasa, pk=pk, usuario=request.user)
     
@@ -183,8 +278,16 @@ from django.views.decorators.http import require_POST
 @require_POST
 def marcar_leida(request, pk):
     """
-    Marca una notificación como leída.
-    Si es petición AJAX, retorna JSON. Si no, redirige.
+    Marca una notificación individual como leída.
+
+    Cambia el estado de una notificación de 'pendiente' a 'leida'.
+    Soporta peticiones AJAX (retorna JSON) y peticiones normales de navegador.
+
+    :param request: Objeto de petición HTTP
+    :param pk: ID de la notificación a marcar como leída
+    :type pk: int
+    :return: JSON si es AJAX, redirección si no
+    :rtype: JsonResponse or HttpResponseRedirect
     """
     from django.http import JsonResponse
     
@@ -204,7 +307,13 @@ def marcar_leida(request, pk):
 def limpiar_todas(request):
     """
     Marca todas las notificaciones pendientes del usuario como leídas.
-    Si es petición AJAX, retorna JSON. Si no, redirige.
+
+    Actualiza en bulk todas las notificaciones con estado 'pendiente' a 'leida'.
+    Útil para limpiar el panel de notificaciones. Soporta peticiones AJAX.
+
+    :param request: Objeto de petición HTTP
+    :return: JSON con cantidad de notificaciones limpiadas si es AJAX, redirección si no
+    :rtype: JsonResponse or HttpResponseRedirect
     """
     from django.http import JsonResponse
     
@@ -224,8 +333,19 @@ def limpiar_todas(request):
 @login_required
 def historial_notificaciones(request):
     """
-    Vista para mostrar todas las notificaciones del usuario con filtros.
+    Vista para mostrar el historial completo de notificaciones con filtros.
+
+    Muestra todas las notificaciones del usuario con capacidades de filtrado
+    por estado (pendiente/leída) y período (hoy/semana/mes), con paginación.
     Similar al panel de notificaciones de Jira.
+
+    Filtros disponibles:
+        - estado: 'pendiente', 'leida', o todas
+        - periodo: 'hoy', 'semana', 'mes', o todas
+
+    :param request: Objeto de petición HTTP
+    :return: Página HTML renderizada con notificaciones paginadas y filtradas
+    :rtype: HttpResponse
     """
     from django.core.paginator import Paginator
     from datetime import datetime, timedelta
@@ -287,7 +407,14 @@ def historial_notificaciones(request):
 @require_POST
 def marcar_todas_leidas(request):
     """
-    Marca todas las notificaciones del usuario como leídas.
+    Marca todas las notificaciones del usuario como leídas desde el historial.
+
+    Actualiza en bulk todas las notificaciones con estado 'pendiente' a 'leida'.
+    Muestra un mensaje con la cantidad de notificaciones marcadas.
+
+    :param request: Objeto de petición HTTP
+    :return: Redirección a la página de historial de notificaciones
+    :rtype: HttpResponseRedirect
     """
     cantidad = Notificacion.objects.filter(
         usuario=request.user,

@@ -1,18 +1,52 @@
+"""
+Formularios para el módulo de notificaciones.
+
+Este módulo contiene los formularios necesarios para la configuración y gestión
+de notificaciones de tasas de cambio. Incluye formularios para configuración
+general del usuario y para crear/editar reglas de alerta individuales.
+
+Formularios:
+    - ConfiguracionGeneralForm: Preferencias globales de notificaciones
+    - NotificacionTasaForm: Crear/editar reglas de alerta con validación condicional
+"""
+
 from django import forms
 from .models import ConfiguracionGeneral, NotificacionTasa
 from divisas.models import Divisa
 from .models import NotificacionTasa, ConfiguracionGeneral, OPERACION_CHOICES, TIPO_ALERTA_CHOICES
 
 
-# Formulario para la Configuración General
 class ConfiguracionGeneralForm(forms.ModelForm):
+    """
+    Formulario para configuración general de notificaciones del usuario.
+
+    Permite al usuario activar/desactivar notificaciones y seleccionar
+    el canal de notificación preferido (sistema, correo, o ambos).
+
+    :Meta model: ConfiguracionGeneral
+    :Meta fields: ['habilitar_notificaciones', 'canal_notificacion']
+    """
+    
     class Meta:
         model = ConfiguracionGeneral
         fields = ['habilitar_notificaciones', 'canal_notificacion']
 
 
-# Formulario para Agregar/Editar una Notificación Específica
 class NotificacionTasaForm(forms.ModelForm):
+    """
+    Formulario para crear y editar reglas de alerta de tasas de cambio.
+
+    Este formulario maneja la creación y edición de reglas de notificación
+    con características especiales:
+        - Convierte objetos Divisa a códigos string
+        - Filtra divisas activas (excluye PYG/Guaraní)
+        - Excluye tipo 'transaccion_cancelada' (uso interno)
+        - Validaciones condicionales según tipo de alerta
+        - Establece valores iniciales en modo edición
+
+    :Meta model: NotificacionTasa
+    :Meta fields: ['divisa', 'tipo_operacion', 'tipo_alerta', 'condicion_umbral', 'monto_umbral']
+    """
     # 1. Definir el campo 'divisa' como ModelChoiceField
     divisa = forms.ModelChoiceField(
         # Filtramos por las divisas activas, ordenadas por código, excluyendo PYG (Guaraní)
@@ -47,6 +81,16 @@ class NotificacionTasaForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializa el formulario y establece valores iniciales en modo edición.
+
+        Cuando se está editando una notificación existente, convierte el código
+        de divisa almacenado como string en el modelo al objeto Divisa completo
+        para que el ModelChoiceField lo muestre correctamente.
+
+        :param args: Argumentos posicionales del formulario
+        :param kwargs: Argumentos de palabra clave del formulario
+        """
         super().__init__(*args, **kwargs)
         
         # Si estamos editando (instance existe), establecer el valor inicial de divisa
@@ -59,20 +103,35 @@ class NotificacionTasaForm(forms.ModelForm):
             except Divisa.DoesNotExist:
                 pass
 
-    # 3. CONVERSIÓN CRUCIAL: Convertir el objeto Divisa al string (code)
     def clean_divisa(self):
         """
-        Toma el objeto Divisa seleccionado por el usuario y devuelve solo su 'code' (e.g., 'USD').
-        Esto es lo que Django usará para asignarlo al CharField 'divisa' del modelo.
+        Convierte el objeto Divisa seleccionado en su código string.
+
+        El formulario usa un ModelChoiceField que devuelve objetos Divisa,
+        pero el modelo NotificacionTasa almacena el código como CharField.
+        Este método realiza la conversión necesaria.
+
+        :return: Código de la divisa seleccionada (ej: 'USD', 'EUR')
+        :rtype: str or None
         """
         divisa_obj = self.cleaned_data.get('divisa')
         if divisa_obj:
             return divisa_obj.code
-        # Si no hay objeto (ej. validación fallida), retorna el valor original o lanza un error si es necesario.
         return divisa_obj
 
-    # 4. Validación condicional (para umbral)
     def clean(self):
+        """
+        Validación condicional de los datos del formulario.
+
+        Aplica reglas de validación según el tipo de alerta:
+            - Alertas de umbral: requiere monto_umbral y condicion_umbral,
+              no permite tipo_operacion='ambos'
+            - Alertas generales: limpia campos de umbral irrelevantes
+
+        :return: Datos del formulario limpiados y validados
+        :rtype: dict
+        :raises ValidationError: Si alguna validación condicional falla
+        """
         cleaned_data = super().clean()
         tipo_alerta = cleaned_data.get('tipo_alerta')
         tipo_operacion = cleaned_data.get('tipo_operacion')
