@@ -2,6 +2,9 @@ from .models import NotificacionTasa, Notificacion
 from divisas.models import CotizacionSegmento
 from django.core.mail import send_mail
 from .models import ConfiguracionGeneral
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def evaluar_alertas(nueva_cotizacion: CotizacionSegmento):
@@ -9,12 +12,18 @@ def evaluar_alertas(nueva_cotizacion: CotizacionSegmento):
     Evalúa las alertas configuradas por los usuarios según la nueva cotización.
     Crea notificaciones con formato uniforme y mensajes claros.
     """
+    
+    logger.info(f"🔔 Evaluando alertas para: {nueva_cotizacion.divisa.code} - Segmento: {nueva_cotizacion.segmento}")
 
     reglas_activas = NotificacionTasa.objects.filter(
         divisa=nueva_cotizacion.divisa.code,
         activa=True,
         cliente_asociado__segmento=nueva_cotizacion.segmento
     )
+    
+    logger.info(f"📊 Reglas activas encontradas: {reglas_activas.count()}")
+    for regla in reglas_activas:
+        logger.info(f"  - Regla ID {regla.id}: {regla.usuario.username} - {regla.tipo_alerta} - {regla.cliente_asociado.nombre_completo}")
 
     for regla in reglas_activas:
         config = ConfiguracionGeneral.objects.filter(usuario=regla.usuario).first()
@@ -92,9 +101,12 @@ def evaluar_alertas(nueva_cotizacion: CotizacionSegmento):
 
         # 🔹 Crear la notificación si corresponde
         if condicion_cumplida:
-            Notificacion.objects.create(
+            notif = Notificacion.objects.create(
                 usuario=regla.usuario,
                 alerta_base=regla,
                 mensaje=mensaje,
                 correo_enviado=True if canal in ["correo", "sistema_y_correo"] else False
             )
+            logger.info(f"✅ Notificación creada ID {notif.id} para {regla.usuario.username}")
+        else:
+            logger.info(f"⏭️  Condición no cumplida para regla ID {regla.id}")
