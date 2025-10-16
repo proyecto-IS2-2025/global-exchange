@@ -212,24 +212,21 @@ class TasaCambio(models.Model):
 
 class Denominacion(models.Model):
     """
-    Representa las denominaciones (billetes/monedas) disponibles para una divisa.
+    Representa las denominaciones (billetes) disponibles para una divisa.
     
     Por ejemplo, para USD: 1, 5, 10, 20, 50, 100
     Para PYG: 2000, 5000, 10000, 20000, 50000, 100000
     
     :param divisa: Divisa a la que pertenece esta denominación.
     :type divisa: Divisa
-    :param valor: Valor nominal del billete/moneda.
+    :param valor: Valor nominal del billete.
     :type valor: Decimal
-    :param tipo: Tipo de denominación (billete o moneda).
-    :type tipo: str
     :param is_active: Indica si la denominación está disponible.
     :type is_active: bool
     """
     
     TIPO_CHOICES = [
         ('billete', 'Billete'),
-        ('moneda', 'Moneda'),
     ]
     
     divisa = models.ForeignKey(
@@ -242,7 +239,7 @@ class Denominacion(models.Model):
         'Valor nominal',
         max_digits=50,
         decimal_places=2,
-        help_text='Valor del billete o moneda (ej: 100, 50, 20, etc.)'
+        help_text='Valor del billete (ej: 100, 50, 20, etc.)'
     )
     tipo = models.CharField(
         'Tipo',
@@ -303,10 +300,6 @@ class Denominacion(models.Model):
     def es_billete(self):
         return self.tipo == 'billete'
     
-    @property
-    def es_moneda(self):
-        return self.tipo == 'moneda'
-    
     def save(self, *args, **kwargs):
         # Auto-asignar orden basado en el valor (billetes grandes primero)
         if self.orden is None or self.orden == 0:
@@ -329,13 +322,13 @@ class DesgloseDenominacion(models.Model):
     """
     Desglose de denominaciones para una transacción específica.
     
-    Registra qué billetes/monedas se entregaron en una operación.
+    Registra qué billetes se entregaron en una operación.
     
     :param transaccion: Transacción relacionada.
     :type transaccion: transacciones.Transaccion
     :param denominacion: Denominación entregada.
     :type denominacion: Denominacion
-    :param cantidad: Cantidad de billetes/monedas.
+    :param cantidad: Cantidad de billetes
     :type cantidad: int
     """
     
@@ -355,7 +348,7 @@ class DesgloseDenominacion(models.Model):
     cantidad = models.PositiveIntegerField(
         'Cantidad',
         default=1,
-        help_text='Cantidad de billetes/monedas de esta denominación'
+        help_text='Cantidad de billetes de esta denominación'
     )
     creado = models.DateTimeField(auto_now_add=True)
     

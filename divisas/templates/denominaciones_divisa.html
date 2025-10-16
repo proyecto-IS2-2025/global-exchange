@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block extra_head %}
+<style>
+.badge-divisa {
+    color: white !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    font-weight: 600;
+    padding: 0.5rem 0.75rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    font-size: 1rem;
+}
+
+.badge-divisa[style*="background-color: #f"] {
+    color: #212529 !important;
+    text-shadow: none;
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+.card-header-divisa {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-card {
+    background: #f8f9fa;
+    border-left: 4px solid #667eea;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.denominacion-row:hover {
+    background-color: #f8f9fa;
+    transition: background-color 0.3s;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header card-header-divisa text-white py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-money-bill-wave me-2"></i>
+                    Denominaciones de {{ divisa.nombre }} ({{ divisa.code }})
+                </h4>
+                <div>
+                    <a href="{% url 'divisas:lista' %}" class="btn btn-light btn-sm me-2">
+                        <i class="fas fa-arrow-left me-1"></i> Volver a Divisas
+                    </a>
+                    {% if perms.divisas.add_denominacion %}
+                    <a href="{% url 'divisas:denominacion_quick_create' %}?divisa={{ divisa.id }}" class="btn btn-success">
+                        <i class="fas fa-plus me-1"></i> Nueva Denominación
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <!-- Información de la Divisa -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center border-0 bg-light">
+                        <div class="card-body">
+                            <h2 class="display-4 text-primary mb-0">{{ divisa.simbolo }}</h2>
+                            <p class="text-muted mb-0">Símbolo</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-number">{{ estadisticas.total }}</div>
+                                <div class="text-muted small">Total</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card" style="border-left-color: #28a745;">
+                                <div class="stat-number" style="color: #28a745;">{{ estadisticas.billetes }}</div>
+                                <div class="text-muted small">Billetes</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card" style="border-left-color: #17a2b8;">
+                                <div class="stat-number" style="color: #17a2b8;">{{ estadisticas.activas }}</div>
+                                <div class="text-muted small">Activas</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <form method="get" class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <select name="tipo" class="form-select">
+                        <option value="">Todos los tipos</option>
+                        <option value="billete" {% if request.GET.tipo == 'billete' %}selected{% endif %}>Billetes</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select name="estado" class="form-select">
+                        <option value="">Todos los estados</option>
+                        <option value="activas" {% if request.GET.estado == 'activas' %}selected{% endif %}>Solo activas</option>
+                        <option value="inactivas" {% if request.GET.estado == 'inactivas' %}selected{% endif %}>Solo inactivas</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-1"></i> Filtrar
+                    </button>
+                </div>
+            </form>
+
+            <!-- Tabla de Denominaciones -->
+            {% if denominaciones %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="15%">Código</th>
+                            <th width="20%">Valor</th>
+                            <th width="15%">Tipo</th>
+                            <th width="15%" class="text-center">Estado</th>
+                            <th width="20%" class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for denom in denominaciones %}
+                        <tr class="denominacion-row">
+                            <td>
+                                <span class="badge badge-divisa" data-color="{{ denom.color }}">
+                                    {{ denom.divisa.code }}
+                                </span>
+                            </td>
+                            <td>
+                                <strong class="fs-5">{{ denom.valor_formateado }}</strong>
+                            </td>
+                            <td>
+                                {% if denom.es_billete %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-money-bill me-1"></i> Billete
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if denom.is_active %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle me-1"></i> Activa
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-times-circle me-1"></i> Inactiva
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    {% if perms.divisas.change_denominacion %}
+                                    <a href="{% url 'divisas:denominacion_form' pk=denom.pk %}" 
+                                       class="btn btn-sm btn-warning" 
+                                       title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form method="post" action="{% url 'divisas:denominacion_toggle' pk=denom.pk %}" 
+                                          style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" 
+                                                class="btn btn-sm btn-{% if denom.is_active %}danger{% else %}success{% endif %}"
+                                                title="{% if denom.is_active %}Desactivar{% else %}Activar{% endif %}">
+                                            <i class="fas fa-power-off"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            {% if is_paginated %}
+            <nav aria-label="Navegación de páginas">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">
+                                Anterior
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">
+                                Siguiente
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <div class="alert alert-info text-center" role="alert">
+                <i class="fas fa-info-circle me-2 fs-3"></i>
+                <h5 class="mt-3">No hay denominaciones registradas para {{ divisa.code }}</h5>
+                <p class="mb-0">Aún no se han creado denominaciones para esta divisa.</p>
+                {% if perms.divisas.add_denominacion %}
+                <a href="{% url 'divisas:denominacion_quick_create' %}?divisa={{ divisa.id }}" class="btn btn-primary mt-3">
+                    <i class="fas fa-plus me-1"></i> Crear Primera Denominación
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Ajustar contraste de texto automáticamente según luminosidad del color de fondo
+    const badges = document.querySelectorAll('.badge-divisa');
+    
+    badges.forEach(badge => {
+        const bgColor = badge.dataset.color || '#6c757d';
+        
+        // Convertir hex a RGB
+        const hex = bgColor.replace('#', '');
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        
+        // Calcular luminosidad (fórmula estándar)
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        
+        // Si el fondo es claro, usar texto oscuro
+        if (luminance > 0.5) {
+            badge.style.color = '#212529';
+            badge.style.textShadow = 'none';
+            badge.style.borderColor = 'rgba(0, 0, 0, 0.1)';
+        } else {
+            badge.style.color = 'white';
+            badge.style.textShadow = '0 1px 2px rgba(0, 0, 0, 0.3)';
+            badge.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -26,14 +26,21 @@ urlpatterns = [
     path("tasas/admin/", views.visualizador_tasas_admin, name="visualizador_tasas_admin"),
     
     # Denominaciones
+    #path('denominaciones/', views.DenominacionListView.as_view(), name='denominacion_list'),
+    #path('denominaciones/nueva/', views.DenominacionCreateView.as_view(), name='denominacion_create'),
+    #path('denominaciones/rapida/', views.DenominacionQuickCreateView.as_view(), name='denominacion_quick_create'),
+    #path('denominaciones/<int:pk>/editar/', views.DenominacionUpdateView.as_view(), name='denominacion_form'),
+    #path('denominaciones/<int:pk>/toggle/', views.DenominacionDeleteView.as_view(), name='denominacion_toggle'),
+    #path('denominaciones/divisa/<int:divisa_id>/', views.DenominacionesDivisaView.as_view(), name='denominaciones_divisa'),
+    #path('denominaciones/disponibles/<int:divisa_id>/json/', views.denominaciones_disponibles_json, name='denominaciones_json'),
+    
     path('denominaciones/', views.DenominacionListView.as_view(), name='denominacion_list'),
+    path('denominaciones/<int:divisa_id>/', views.DenominacionesDivisaView.as_view(), name='denominaciones_divisa'),
     path('denominaciones/nueva/', views.DenominacionCreateView.as_view(), name='denominacion_create'),
     path('denominaciones/rapida/', views.DenominacionQuickCreateView.as_view(), name='denominacion_quick_create'),
-    path('denominaciones/<int:pk>/editar/', views.DenominacionUpdateView.as_view(), name='denominacion_form'),
+    path('denominaciones/editar/<int:pk>/', views.DenominacionUpdateView.as_view(), name='denominacion_form'),
     path('denominaciones/<int:pk>/toggle/', views.DenominacionDeleteView.as_view(), name='denominacion_toggle'),
-    path('denominaciones/divisa/<int:divisa_id>/', views.DenominacionesDivisaView.as_view(), name='denominaciones_divisa'),
-    path('denominaciones/disponibles/<int:divisa_id>/json/', views.denominaciones_disponibles_json, name='denominaciones_json'),
-    
+
     # Calculadora
     path('calculadora-denominaciones/', views.CalculadoraDenominacionesView.as_view(), name='calculadora_denominaciones'),
     

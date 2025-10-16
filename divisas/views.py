@@ -358,7 +358,7 @@ def visualizador_tasas_admin(request):
 # ==================== CRUD DE DENOMINACIONES ====================
 
 class DenominacionListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
-    """Lista todas las denominaciones por divisa"""
+    """Lista todas las denominaciones con filtros"""
     model = Denominacion
     template_name = 'denominacion_list.html'
     context_object_name = 'denominaciones'
@@ -366,18 +366,16 @@ class DenominacionListView(LoginRequiredMixin, PermissionRequiredMixin, ListView
     paginate_by = 50
     
     def get_queryset(self):
-        queryset = Denominacion.objects.select_related('divisa').order_by(
-            'divisa__code', '-valor'
-        )
+        queryset = Denominacion.objects.select_related('divisa').all()
         
-        # Filtro por divisa
-        divisa_id = self.request.GET.get('divisa')
+        # NUEVO: Filtro por divisa desde URL
+        divisa_id = self.kwargs.get('divisa_id') or self.request.GET.get('divisa')
         if divisa_id:
             queryset = queryset.filter(divisa_id=divisa_id)
         
         # Filtro por tipo
         tipo = self.request.GET.get('tipo')
-        if tipo in ['billete', 'moneda']:
+        if tipo in ['billete']:
             queryset = queryset.filter(tipo=tipo)
         
         # Filtro por estado
@@ -387,13 +385,81 @@ class DenominacionListView(LoginRequiredMixin, PermissionRequiredMixin, ListView
         elif estado == 'inactivas':
             queryset = queryset.filter(is_active=False)
         
-        return queryset
+        # Ordenar por valor descendente (billetes más grandes primero)
+        return queryset.order_by('-valor')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
+        # Lista de divisas para el filtro
         context['divisas'] = Divisa.objects.filter(is_active=True).order_by('code')
-        context['total_denominaciones'] = Denominacion.objects.count()
-        context['denominaciones_activas'] = Denominacion.objects.filter(is_active=True).count()
+        
+        # NUEVO: Divisa seleccionada (si existe)
+        divisa_id = self.kwargs.get('divisa_id') or self.request.GET.get('divisa')
+        if divisa_id:
+            try:
+                context['divisa_seleccionada'] = Divisa.objects.get(id=divisa_id)
+            except Divisa.DoesNotExist:
+                context['divisa_seleccionada'] = None
+        
+        # Estadísticas
+        denominaciones_qs = self.get_queryset()
+        context['total_denominaciones'] = denominaciones_qs.count()
+        context['denominaciones_activas'] = denominaciones_qs.filter(is_active=True).count()
+        
+        # NUEVO: Estadísticas por divisa si hay filtro
+        if divisa_id:
+            context['estadisticas_divisa'] = {
+                'billetes': denominaciones_qs.filter(tipo='billete').count(),
+                'activas': denominaciones_qs.filter(is_active=True).count(),
+                'inactivas': denominaciones_qs.filter(is_active=False).count(),
+            }
+        
+        return context
+
+
+# NUEVA vista para denominaciones de una divisa específica
+class DenominacionesDivisaView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    """Vista para mostrar denominaciones de una divisa específica"""
+    model = Denominacion
+    template_name = 'denominaciones_divisa.html'
+    context_object_name = 'denominaciones'
+    permission_required = 'divisas.view_denominacion'
+    paginate_by = 50
+    
+    def get_queryset(self):
+        self.divisa = get_object_or_404(Divisa, id=self.kwargs['divisa_id'])
+        
+        queryset = Denominacion.objects.filter(divisa=self.divisa)
+        
+        # Filtro por tipo
+        tipo = self.request.GET.get('tipo')
+        if tipo in ['billete']:
+            queryset = queryset.filter(tipo=tipo)
+        
+        # Filtro por estado
+        estado = self.request.GET.get('estado')
+        if estado == 'activas':
+            queryset = queryset.filter(is_active=True)
+        elif estado == 'inactivas':
+            queryset = queryset.filter(is_active=False)
+        
+        return queryset.order_by('-valor')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        context['divisa'] = self.divisa
+        
+        # Estadísticas de la divisa
+        denoms = self.get_queryset()
+        context['estadisticas'] = {
+            'total': denoms.count(),
+            'billetes': denoms.filter(tipo='billete').count(),
+            'activas': denoms.filter(is_active=True).count(),
+            'inactivas': denoms.filter(is_active=False).count(),
+        }
+        
         return context
 
 class DenominacionCreateView(LoginRequiredMixin, PermissionRequiredMixin, View):
@@ -415,7 +481,9 @@ class DenominacionCreateView(LoginRequiredMixin, PermissionRequiredMixin, View):
     
     def post(self, request):
         formset = DenominacionBaseFormSet(request.POST, request.FILES)
-        
+        # Almacenar la divisa para redirección posterior
+        divisa_redireccion = None
+
         if formset.is_valid():
             count = 0
             errores = []
@@ -448,9 +516,13 @@ class DenominacionCreateView(LoginRequiredMixin, PermissionRequiredMixin, View):
                     messages.error(request, error)
             
             if count > 0:
+                # Redirigir a la vista de denominaciones de la divisa
+                return redirect('divisas:denominaciones_divisa', divisa_id=divisa_redireccion.id)
+            elif count > 0:
+                # Si no hay divisa específica, ir a lista general
                 return redirect('divisas:denominacion_list')
             else:
-                messages.warning(request, 'No se creó ninguna denominación.')
+                messages.warning(request, '⚠️ No se creó ninguna denominación.')
         
         context = {
             'formset': formset,
@@ -467,10 +539,23 @@ class DenominacionQuickCreateView(LoginRequiredMixin, PermissionRequiredMixin, V
     template_name = 'denominacion_quick_create.html'
 
     def get(self, request):
-        form = DenominacionQuickForm()
+        # NUEVO: Pre-seleccionar divisa si viene del parámetro URL
+        divisa_id = request.GET.get('divisa')
+        initial_data = {}
+        
+        if divisa_id:
+            try:
+                divisa = Divisa.objects.get(id=divisa_id, is_active=True)
+                initial_data['divisa'] = divisa
+            except Divisa.DoesNotExist:
+                pass
+        
+        form = DenominacionQuickForm(initial=initial_data)
+        
         context = {
             'form': form,
             'titulo': 'Creación Rápida de Denominaciones',
+            'divisa_preseleccionada': initial_data.get('divisa'),
         }
         return render(request, self.template_name, context)
     
@@ -531,8 +616,17 @@ class DenominacionQuickCreateView(LoginRequiredMixin, PermissionRequiredMixin, V
                     messages.warning(request, error)
             
             if count > 0:
-                return redirect('divisas:denominacion_list')
+                # SIEMPRE redirigir a la vista de denominaciones de la divisa
+                return redirect('divisas:denominaciones_divisa', divisa_id=divisa.id)
+            else:
+                messages.error(request, '❌ No se pudo crear ninguna denominación.')
         
+         # Si hay errores en el formulario, mostrarlos
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'Error en {field}: {error}')
+
         context = {
             'form': form,
             'titulo': 'Creación Rápida de Denominaciones',
@@ -546,6 +640,10 @@ class DenominacionUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Update
     template_name = 'denominacion_form.html'
     success_url = reverse_lazy('divisas:denominacion_list')
     permission_required = 'divisas.change_denominacion'
+
+    def get_success_url(self):
+        # Redirigir a la vista de denominaciones de la divisa
+        return reverse('divisas:denominaciones_divisa', kwargs={'divisa_id': self.object.divisa.id})
     
     def form_valid(self, form):
         messages.success(self.request, f'Denominación actualizada exitosamente.')
@@ -564,44 +662,18 @@ class DenominacionDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
     
     def post(self, request, pk):
         denominacion = get_object_or_404(Denominacion, pk=pk)
+        divisa_id = denominacion.divisa.id  # Guardar ID de divisa antes del toggle
         denominacion.is_active = not denominacion.is_active
         denominacion.save()
         
         estado = "activada" if denominacion.is_active else "desactivada"
+        messages.success(
+            request, 
+            f'✅ Denominación {denominacion} {estado} exitosamente.'
+        )
         messages.success(request, f'Denominación {estado} correctamente.')
-        
-        return redirect('divisas:denominacion_list')
 
-
-class DenominacionesDivisaView(LoginRequiredMixin, PermissionRequiredMixin, View):
-    """Gestiona todas las denominaciones de una divisa específica"""
-    permission_required = 'divisas.change_denominacion'
-    template_name = 'divisas/denominaciones_divisa.html'
-    
-    def get(self, request, divisa_id):
-        divisa = get_object_or_404(Divisa, pk=divisa_id)
-        formset = DenominacionFormSet(instance=divisa)
-        
-        context = {
-            'divisa': divisa,
-            'formset': formset,
-        }
-        return render(request, self.template_name, context)
-    
-    def post(self, request, divisa_id):
-        divisa = get_object_or_404(Divisa, pk=divisa_id)
-        formset = DenominacionFormSet(request.POST, request.FILES, instance=divisa)
-        
-        if formset.is_valid():
-            formset.save()
-            messages.success(request, f'Denominaciones de {divisa.code} actualizadas correctamente.')
-            return redirect('divisas:lista')
-        
-        context = {
-            'divisa': divisa,
-            'formset': formset,
-        }
-        return render(request, self.template_name, context)
+        return redirect('divisas:denominaciones_divisa', divisa_id=divisa_id)
 
 
 @login_required
