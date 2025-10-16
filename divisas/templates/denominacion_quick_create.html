@@ -22,13 +22,13 @@
                 <div class="card-body p-4">
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
-                        <strong>Creación rápida:</strong> Ingrese varios valores separados por comas para crear múltiples denominaciones a la vez.
+                        <strong>Creación rápida:</strong> Ingrese varios valores de billetes separados por comas para crear múltiples denominaciones a la vez.
                     </div>
                     
                     <form method="post">
                         {% csrf_token %}
                         
-                        <!-- Divisa preseleccionada (solo lectura) -->
+                        <!-- Divisa preseleccionada -->
                         {% if divisa_preseleccionada %}
                         <div class="mb-4">
                             <label class="form-label fw-bold">Divisa Seleccionada</label>
@@ -54,11 +54,9 @@
                                     </div>
                                 </div>
                             </div>
-                            <!-- Campo oculto para enviar la divisa -->
                             <input type="hidden" name="divisa" value="{{ divisa_preseleccionada.id }}">
                         </div>
                         {% else %}
-                        <!-- Si no hay divisa preseleccionada, mostrar select normal -->
                         <div class="mb-3">
                             <label class="form-label fw-bold">{{ form.divisa.label }}</label>
                             {{ form.divisa }}
@@ -68,6 +66,7 @@
                         </div>
                         {% endif %}
                         
+                        <!-- Valores -->
                         <div class="mb-3">
                             <label class="form-label fw-bold">{{ form.valores.label }}</label>
                             {{ form.valores }}
@@ -77,16 +76,7 @@
                             {% endif %}
                         </div>
                         
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">{{ form.tipo.label }}</label>
-                                {{ form.tipo }}
-                                {% if form.tipo.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.tipo.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
+                        <!-- Estado activo -->
                         <div class="mb-4">
                             <div class="form-check">
                                 {{ form.is_active }}
@@ -116,50 +106,32 @@
                 </div>
             </div>
             
-            <!-- Ejemplo visual -->
+            <!-- Ejemplos -->
             <div class="card mt-4 border-0 bg-light">
                 <div class="card-body">
                     <h6 class="text-muted mb-3">
                         <i class="fas fa-lightbulb me-2"></i>
-                        Ejemplos de uso{% if divisa_preseleccionada %} para {{ divisa_preseleccionada.code }}{% endif %}:
+                        Ejemplos de billetes{% if divisa_preseleccionada %} para {{ divisa_preseleccionada.code }}{% endif %}:
                     </h6>
                     <ul class="mb-0">
                         {% if divisa_preseleccionada %}
                             {% if divisa_preseleccionada.code == 'USD' %}
-                            <li class="mb-2">
-                                <strong>Billetes comunes:</strong> <code>100, 50, 20, 10, 5, 1</code>
-                            </li>
+                            <li><strong>Billetes comunes:</strong> <code>100, 50, 20, 10, 5, 1</code></li>
                             {% elif divisa_preseleccionada.code == 'PYG' %}
-                            <li class="mb-2">
-                                <strong>Billetes:</strong> <code>100000, 50000, 20000, 10000, 5000, 2000</code>
-                            </li>
+                            <li><strong>Billetes:</strong> <code>100000, 50000, 20000, 10000, 5000, 2000</code></li>
                             {% elif divisa_preseleccionada.code == 'EUR' %}
-                            <li class="mb-2">
-                                <strong>Billetes:</strong> <code>500, 200, 100, 50, 20, 10, 5</code>
-                            </li>
+                            <li><strong>Billetes:</strong> <code>500, 200, 100, 50, 20, 10, 5</code></li>
                             {% elif divisa_preseleccionada.code == 'BRL' %}
-                            <li class="mb-2">
-                                <strong>Billetes:</strong> <code>200, 100, 50, 20, 10, 5, 2</code>
-                            </li>
+                            <li><strong>Billetes:</strong> <code>200, 100, 50, 20, 10, 5, 2</code></li>
                             {% elif divisa_preseleccionada.code == 'ARS' %}
-                            <li class="mb-2">
-                                <strong>Billetes:</strong> <code>1000, 500, 200, 100, 50, 20, 10</code>
-                            </li>
+                            <li><strong>Billetes:</strong> <code>1000, 500, 200, 100, 50, 20, 10</code></li>
                             {% else %}
-                            <li class="mb-2">
-                                <strong>Ejemplo genérico:</strong> <code>100, 50, 20, 10, 5, 1</code>
-                            </li>
+                            <li><strong>Ejemplo:</strong> <code>100, 50, 20, 10, 5, 1</code></li>
                             {% endif %}
                         {% else %}
-                            <li class="mb-2">
-                                <strong>USD:</strong> <code>100, 50, 20, 10, 5, 1</code>
-                            </li>
-                            <li class="mb-2">
-                                <strong>PYG:</strong> <code>100000, 50000, 20000, 10000, 5000, 2000</code>
-                            </li>
-                            <li>
-                                <strong>EUR:</strong> <code>500, 200, 100, 50, 20, 10, 5</code>
-                            </li>
+                            <li><strong>USD:</strong> <code>100, 50, 20, 10, 5, 1</code></li>
+                            <li><strong>PYG:</strong> <code>100000, 50000, 20000, 10000, 5000, 2000</code></li>
+                            <li><strong>EUR:</strong> <code>500, 200, 100, 50, 20, 10, 5</code></li>
                         {% endif %}
                     </ul>
                 </div>

@@ -137,29 +137,23 @@ class Migration(migrations.Migration):
         migrations.RunPython(crear_pyg, revertir_pyg),
     ]''''"""
 
-# ...existing code...
-
 class DenominacionForm(forms.ModelForm):
-    """Formulario para crear/editar denominaciones"""
+    """Formulario para crear/editar una denominación individual"""
     
     class Meta:
         model = Denominacion
-        fields = [
-            'divisa', 'valor', 'tipo', 'is_active', 
-            'orden', 'color', 'notas'
-        ]
+        fields = ['divisa', 'valor', 'is_active', 'orden', 'notas']
         widgets = {
             'divisa': forms.Select(attrs={
                 'class': 'form-select',
+                'required': True
             }),
             'valor': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'step': '0.01',
                 'min': '0.01',
-                'placeholder': 'Ej: 100, 50, 20, 10...'
-            }),
-            'tipo': forms.Select(attrs={
-                'class': 'form-select',
+                'placeholder': 'Ej: 100.00',
+                'required': True
             }),
             'is_active': forms.CheckboxInput(attrs={
                 'class': 'form-check-input',
@@ -167,26 +161,19 @@ class DenominacionForm(forms.ModelForm):
             'orden': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'min': '0',
-                'placeholder': 'Orden de visualización (menor = mayor prioridad)'
-            }),
-            'color': forms.TextInput(attrs={
-                'class': 'form-control',
-                'type': 'color',
-                'placeholder': '#28a745'
+                'placeholder': 'Dejar en blanco para calcular automáticamente'
             }),
             'notas': forms.Textarea(attrs={
                 'class': 'form-control',
-                'rows': 2,
-                'placeholder': 'Información adicional...'
+                'rows': 3,
+                'placeholder': 'Información adicional (opcional)'
             }),
         }
         labels = {
             'divisa': 'Divisa',
             'valor': 'Valor Nominal',
-            'tipo': 'Tipo',
             'is_active': '¿Disponible?',
             'orden': 'Orden',
-            'color': 'Color',
             'notas': 'Notas',
         }
     
@@ -201,7 +188,7 @@ class DenominacionForm(forms.ModelForm):
     
     def clean_valor(self):
         valor = self.cleaned_data.get('valor')
-        if valor <= 0:
+        if valor and valor <= 0:
             raise forms.ValidationError('El valor debe ser mayor a cero.')
         return valor
 
@@ -221,75 +208,81 @@ DenominacionFormSet = inlineformset_factory(
     form=DenominacionForm,
     extra=3,
     can_delete=True,
-    fields=['valor', 'tipo', 'is_active', 'orden', 'color', 'notas']
+    fields=['valor','is_active', 'orden', 'notas']
 )
 
 
 # Formulario simplificado para creación rápida masiva
 class DenominacionQuickForm(forms.Form):
-    """Formulario para crear denominaciones rápidamente con valores predefinidos"""
+    """Formulario para crear múltiples denominaciones rápidamente"""
     
     divisa = forms.ModelChoiceField(
         queryset=Divisa.objects.filter(is_active=True).order_by('code'),
         label='Divisa',
-        widget=forms.Select(attrs={'class': 'form-select'})
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+            'required': True
+        }),
+        empty_label='Seleccione una divisa'
     )
     
     valores = forms.CharField(
-        label='Valores (separados por comas)',
+        label='Valores de billetes',
         widget=forms.Textarea(attrs={
             'class': 'form-control',
-            'rows': 3,
-            'placeholder': 'Ejemplo: 100, 50, 20, 10, 5, 1'
+            'rows': 4,
+            'placeholder': 'Ingrese los valores separados por comas.\nEjemplo: 100, 50, 20, 10, 5, 1',
+            'required': True
         }),
-        help_text='Ingrese los valores separados por comas'
-    )
-    
-    tipo = forms.ChoiceField(
-        choices=[('billete', 'Billetes'), ('moneda', 'Monedas')],
-        initial='billete',
-        label='Tipo',
-        widget=forms.Select(attrs={'class': 'form-select'})
-    )
-    
-    color = forms.CharField(
-        initial='#6c757d',
-        label='Color',
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'type': 'color'
-        })
+        help_text='Separe múltiples valores con comas. Ejemplo: 100, 50, 20, 10'
     )
     
     is_active = forms.BooleanField(
+        label='Activar denominaciones',
         initial=True,
         required=False,
-        label='Activar todas',
-        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input'
+        })
     )
     
     def clean_valores(self):
+        """Valida y convierte los valores ingresados"""
         valores_str = self.cleaned_data.get('valores', '')
-        valores = []
         
-        for val in valores_str.split(','):
-            val = val.strip()
-            if val:
-                try:
-                    valor_decimal = Decimal(val)
-                    if valor_decimal <= 0:
-                        raise forms.ValidationError(f'El valor {val} debe ser mayor a cero.')
-                    valores.append(valor_decimal)
-                except (ValueError, InvalidOperation):
-                    raise forms.ValidationError(f'"{val}" no es un número válido.')
-        
-        if not valores:
+        if not valores_str.strip():
             raise forms.ValidationError('Debe ingresar al menos un valor.')
         
-        return valores
+        # Dividir por comas y limpiar
+        valores_lista = [v.strip() for v in valores_str.split(',') if v.strip()]
+        
+        if not valores_lista:
+            raise forms.ValidationError('Debe ingresar al menos un valor válido.')
+        
+        # Convertir a Decimal y validar
+        valores_decimales = []
+        errores = []
+        
+        for valor_str in valores_lista:
+            try:
+                valor_decimal = Decimal(valor_str)
+                if valor_decimal <= 0:
+                    errores.append(f'"{valor_str}" debe ser mayor a cero')
+                else:
+                    valores_decimales.append(valor_decimal)
+            except (InvalidOperation, ValueError):
+                errores.append(f'"{valor_str}" no es un número válido')
 
-
-# ...existing code...
+        if errores:
+            raise forms.ValidationError(errores)
+        
+        if not valores_decimales:
+            raise forms.ValidationError('No se encontraron valores válidos.')
+        
+        # Eliminar duplicados
+        valores_decimales = list(set(valores_decimales))
+        
+        return valores_decimales
 
 class DesgloseDenominacionForm(forms.ModelForm):
     """Formulario para registrar desglose de denominaciones en una transacción"""
@@ -327,7 +320,7 @@ DenominacionFormSet = inlineformset_factory(
     form=DenominacionForm,
     extra=1,
     can_delete=True,
-    fields=['valor', 'tipo', 'is_active', 'orden', 'color', 'notas']
+    fields=['valor', 'is_active', 'orden', 'notas']
 )
 
 

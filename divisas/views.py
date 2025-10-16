@@ -357,6 +357,110 @@ def visualizador_tasas_admin(request):
  
 # ==================== CRUD DE DENOMINACIONES ====================
 
+class DenominacionQuickCreateView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """Vista para crear denominaciones rápidamente desde una lista de valores"""
+    permission_required = 'divisas.add_denominacion'
+    template_name = 'denominacion_quick_create.html'
+
+    def get(self, request):
+        divisa_id = request.GET.get('divisa')
+        initial_data = {}
+        divisa_preseleccionada = None
+        
+        if divisa_id:
+            try:
+                divisa_preseleccionada = Divisa.objects.get(id=divisa_id, is_active=True)
+                initial_data['divisa'] = divisa_preseleccionada
+            except Divisa.DoesNotExist:
+                pass
+        
+        form = DenominacionQuickForm(initial=initial_data)
+        
+        context = {
+            'form': form,
+            'titulo': 'Creación Rápida de Denominaciones',
+            'divisa_preseleccionada': divisa_preseleccionada,
+        }
+        return render(request, self.template_name, context)
+    
+    def post(self, request):
+        form = DenominacionQuickForm(request.POST)
+        
+        divisa_preseleccionada = None
+        if 'divisa' in request.POST:
+            try:
+                divisa_preseleccionada = Divisa.objects.get(id=request.POST['divisa'])
+            except (Divisa.DoesNotExist, ValueError):
+                pass
+        
+        if form.is_valid():
+            divisa = form.cleaned_data['divisa']
+            valores = form.cleaned_data['valores']
+            is_active = form.cleaned_data['is_active']
+            
+            count = 0
+            errores = []
+            
+            for valor in valores:
+                try:
+                    # Verificar si ya existe (sin tipo)
+                    existe = Denominacion.objects.filter(
+                        divisa=divisa,
+                        valor=valor
+                    ).exists()
+                    
+                    if existe:
+                        errores.append(f'{divisa.code} {valor} ya existe')
+                        continue
+                    
+                    # Calcular orden
+                    BASE = 100000000
+                    valor_float = float(valor)
+                    
+                    if valor_float > 0:
+                        orden_calculado = max(1, BASE - int(valor_float * 100))
+                    else:
+                        orden_calculado = BASE
+                    
+                    # Crear denominación (sin color ni tipo)
+                    Denominacion.objects.create(
+                        divisa=divisa,
+                        valor=valor,
+                        is_active=is_active,
+                        orden=orden_calculado
+                    )
+                    count += 1
+                    
+                except Exception as e:
+                    errores.append(f'Error al crear {valor}: {str(e)}')
+            
+            if count > 0:
+                messages.success(
+                    request, 
+                    f'✅ {count} denominación(es) de {divisa.code} creada(s) exitosamente.'
+                )
+            
+            if errores:
+                for error in errores:
+                    messages.warning(request, f'⚠️ {error}')
+            
+            if count > 0:
+                return redirect('divisas:denominaciones_divisa', divisa_id=divisa.id)
+            else:
+                messages.error(request, '❌ No se pudo crear ninguna denominación.')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'Error en {field}: {error}')
+        
+        context = {
+            'form': form,
+            'titulo': 'Creación Rápida de Denominaciones',
+            'divisa_preseleccionada': divisa_preseleccionada,
+        }
+        return render(request, self.template_name, context)
+
+
 class DenominacionListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     """Lista todas las denominaciones con filtros"""
     model = Denominacion
@@ -368,15 +472,10 @@ class DenominacionListView(LoginRequiredMixin, PermissionRequiredMixin, ListView
     def get_queryset(self):
         queryset = Denominacion.objects.select_related('divisa').all()
         
-        # NUEVO: Filtro por divisa desde URL
+        # Filtro por divisa
         divisa_id = self.kwargs.get('divisa_id') or self.request.GET.get('divisa')
         if divisa_id:
             queryset = queryset.filter(divisa_id=divisa_id)
-        
-        # Filtro por tipo
-        tipo = self.request.GET.get('tipo')
-        if tipo in ['billete']:
-            queryset = queryset.filter(tipo=tipo)
         
         # Filtro por estado
         estado = self.request.GET.get('estado')
@@ -385,16 +484,13 @@ class DenominacionListView(LoginRequiredMixin, PermissionRequiredMixin, ListView
         elif estado == 'inactivas':
             queryset = queryset.filter(is_active=False)
         
-        # Ordenar por valor descendente (billetes más grandes primero)
         return queryset.order_by('-valor')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        # Lista de divisas para el filtro
         context['divisas'] = Divisa.objects.filter(is_active=True).order_by('code')
         
-        # NUEVO: Divisa seleccionada (si existe)
         divisa_id = self.kwargs.get('divisa_id') or self.request.GET.get('divisa')
         if divisa_id:
             try:
@@ -402,15 +498,13 @@ class DenominacionListView(LoginRequiredMixin, PermissionRequiredMixin, ListView
             except Divisa.DoesNotExist:
                 context['divisa_seleccionada'] = None
         
-        # Estadísticas
         denominaciones_qs = self.get_queryset()
         context['total_denominaciones'] = denominaciones_qs.count()
         context['denominaciones_activas'] = denominaciones_qs.filter(is_active=True).count()
         
-        # NUEVO: Estadísticas por divisa si hay filtro
         if divisa_id:
             context['estadisticas_divisa'] = {
-                'billetes': denominaciones_qs.filter(tipo='billete').count(),
+                'total': denominaciones_qs.count(),
                 'activas': denominaciones_qs.filter(is_active=True).count(),
                 'inactivas': denominaciones_qs.filter(is_active=False).count(),
             }
@@ -418,7 +512,6 @@ class DenominacionListView(LoginRequiredMixin, PermissionRequiredMixin, ListView
         return context
 
 
-# NUEVA vista para denominaciones de una divisa específica
 class DenominacionesDivisaView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     """Vista para mostrar denominaciones de una divisa específica"""
     model = Denominacion
@@ -429,13 +522,7 @@ class DenominacionesDivisaView(LoginRequiredMixin, PermissionRequiredMixin, List
     
     def get_queryset(self):
         self.divisa = get_object_or_404(Divisa, id=self.kwargs['divisa_id'])
-        
         queryset = Denominacion.objects.filter(divisa=self.divisa)
-        
-        # Filtro por tipo
-        tipo = self.request.GET.get('tipo')
-        if tipo in ['billete']:
-            queryset = queryset.filter(tipo=tipo)
         
         # Filtro por estado
         estado = self.request.GET.get('estado')
@@ -448,20 +535,17 @@ class DenominacionesDivisaView(LoginRequiredMixin, PermissionRequiredMixin, List
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
         context['divisa'] = self.divisa
         
-        # Estadísticas de la divisa
         denoms = self.get_queryset()
         context['estadisticas'] = {
             'total': denoms.count(),
-            'billetes': denoms.filter(tipo='billete').count(),
             'activas': denoms.filter(is_active=True).count(),
             'inactivas': denoms.filter(is_active=False).count(),
         }
         
         return context
-
+    
 class DenominacionCreateView(LoginRequiredMixin, PermissionRequiredMixin, View):
     """Crea múltiples denominaciones a la vez"""
     permission_required = 'divisas.add_denominacion'
@@ -531,107 +615,6 @@ class DenominacionCreateView(LoginRequiredMixin, PermissionRequiredMixin, View):
             'divisas': Divisa.objects.filter(is_active=True).order_by('code'),
         }
         return render(request, self.template_name, context)
-
-
-class DenominacionQuickCreateView(LoginRequiredMixin, PermissionRequiredMixin, View):
-    """Vista para crear denominaciones rápidamente desde una lista de valores"""
-    permission_required = 'divisas.add_denominacion'
-    template_name = 'denominacion_quick_create.html'
-
-    def get(self, request):
-        # NUEVO: Pre-seleccionar divisa si viene del parámetro URL
-        divisa_id = request.GET.get('divisa')
-        initial_data = {}
-        
-        if divisa_id:
-            try:
-                divisa = Divisa.objects.get(id=divisa_id, is_active=True)
-                initial_data['divisa'] = divisa
-            except Divisa.DoesNotExist:
-                pass
-        
-        form = DenominacionQuickForm(initial=initial_data)
-        
-        context = {
-            'form': form,
-            'titulo': 'Creación Rápida de Denominaciones',
-            'divisa_preseleccionada': initial_data.get('divisa'),
-        }
-        return render(request, self.template_name, context)
-    
-    def post(self, request):
-        form = DenominacionQuickForm(request.POST)
-        
-        if form.is_valid():
-            divisa = form.cleaned_data['divisa']
-            valores = form.cleaned_data['valores']
-            tipo = form.cleaned_data['tipo']
-            color = form.cleaned_data['color']
-            is_active = form.cleaned_data['is_active']
-            
-            count = 0
-            errores = []
-            
-            for valor in valores:
-                try:
-                    # Verificar si ya existe
-                    existe = Denominacion.objects.filter(
-                        divisa=divisa,
-                        valor=valor,
-                        tipo=tipo
-                    ).exists()
-                    
-                    if existe:
-                        errores.append(f'{divisa.code} {valor} ({tipo}) ya existe')
-                        continue
-                    
-                    # Calcular orden correctamente (siempre positivo)
-                    BASE = 100000000
-                    valor_float = float(valor)
-                    
-                    if valor_float > 0:
-                        orden_calculado = max(1, BASE - int(valor_float * 100))
-                    else:
-                        orden_calculado = BASE
-                    
-                    # Crear denominación CON orden explícito
-                    Denominacion.objects.create(
-                        divisa=divisa,
-                        valor=valor,
-                        tipo=tipo,
-                        color=color,
-                        is_active=is_active,
-                        orden=orden_calculado  # Pasar orden calculado
-                    )
-                    count += 1
-                    
-                except Exception as e:
-                    errores.append(f'Error al crear {valor}: {str(e)}')
-            
-            if count > 0:
-                messages.success(request, f'{count} denominación(es) creada(s) exitosamente.')
-            
-            if errores:
-                for error in errores:
-                    messages.warning(request, error)
-            
-            if count > 0:
-                # SIEMPRE redirigir a la vista de denominaciones de la divisa
-                return redirect('divisas:denominaciones_divisa', divisa_id=divisa.id)
-            else:
-                messages.error(request, '❌ No se pudo crear ninguna denominación.')
-        
-         # Si hay errores en el formulario, mostrarlos
-        else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f'Error en {field}: {error}')
-
-        context = {
-            'form': form,
-            'titulo': 'Creación Rápida de Denominaciones',
-        }
-        return render(request, self.template_name, context)
     
 class DenominacionUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     """Actualiza una denominación existente"""
@@ -684,7 +667,7 @@ def denominaciones_disponibles_json(request, divisa_id):
         divisa_id=divisa_id,
         is_active=True
     ).order_by('-valor').values(
-        'id', 'valor', 'tipo', 'color', 'valor_formateado'
+        'id', 'valor', 'valor_formateado'
     )
     
     return JsonResponse({

@@ -225,10 +225,6 @@ class Denominacion(models.Model):
     :type is_active: bool
     """
     
-    TIPO_CHOICES = [
-        ('billete', 'Billete'),
-    ]
-    
     divisa = models.ForeignKey(
         Divisa, 
         on_delete=models.CASCADE, 
@@ -240,12 +236,6 @@ class Denominacion(models.Model):
         max_digits=50,
         decimal_places=2,
         help_text='Valor del billete (ej: 100, 50, 20, etc.)'
-    )
-    tipo = models.CharField(
-        'Tipo',
-        max_length=10,
-        choices=TIPO_CHOICES,
-        default='billete'
     )
     is_active = models.BooleanField(
         'Activa',
@@ -259,13 +249,6 @@ class Denominacion(models.Model):
         blank=True,
         null=True
     )
-
-    color = models.CharField(
-        'Color de referencia',
-        max_length=7,
-        default="#000000",
-        help_text='Color hexadecimal para visualización (ej: #28a745)'
-    )
     notas = models.TextField(
         'Notas',
         blank=True,
@@ -278,15 +261,14 @@ class Denominacion(models.Model):
         verbose_name = 'Denominación'
         verbose_name_plural = 'Denominaciones'
         ordering = ['divisa', '-valor']  # Ordenar por divisa y valor descendente
-        unique_together = [['divisa', 'valor', 'tipo']]  # No duplicar denominaciones
+        unique_together = [['divisa', 'valor']]  # No duplicar denominaciones (sin tipo)
         indexes = [
             models.Index(fields=['divisa', 'is_active']),
             models.Index(fields=['divisa', 'valor']),
         ]
     
     def __str__(self):
-        tipo_str = self.get_tipo_display()
-        return f"{self.divisa.code} - {tipo_str} de {self.valor_formateado}"
+        return f"{self.divisa.code} - Billete de {self.valor_formateado}"
     
     @property
     def valor_formateado(self):
@@ -295,10 +277,6 @@ class Denominacion(models.Model):
             return f"₲{self.valor:,.0f}"
         else:
             return f"{self.divisa.simbolo}{self.valor:,.2f}" if self.divisa.simbolo else f"{self.valor:,.2f}"
-    
-    @property
-    def es_billete(self):
-        return self.tipo == 'billete'
     
     def save(self, *args, **kwargs):
         # Auto-asignar orden basado en el valor (billetes grandes primero)
@@ -316,8 +294,7 @@ class Denominacion(models.Model):
                 self.orden = BASE
                 
         super().save(*args, **kwargs)
-
-
+        
 class DesgloseDenominacion(models.Model):
     """
     Desglose de denominaciones para una transacción específica.

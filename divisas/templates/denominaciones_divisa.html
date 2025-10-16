@@ -6,17 +6,12 @@
 <style>
 .badge-divisa {
     color: white !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     font-weight: 600;
     padding: 0.5rem 0.75rem;
     border: 2px solid rgba(255, 255, 255, 0.3);
     font-size: 1rem;
-}
-
-.badge-divisa[style*="background-color: #f"] {
-    color: #212529 !important;
-    text-shadow: none;
-    border-color: rgba(0, 0, 0, 0.1);
 }
 
 .card-header-divisa {
@@ -45,12 +40,19 @@
 
 {% block content %}
 <div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'divisas:lista' %}">Divisas</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Denominaciones de {{ divisa.code }}</li>
+        </ol>
+    </nav>
+
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-header card-header-divisa text-white py-3">
             <div class="d-flex justify-content-between align-items-center">
                 <h4 class="mb-0">
                     <i class="fas fa-money-bill-wave me-2"></i>
-                    Denominaciones de {{ divisa.nombre }} ({{ divisa.code }})
+                    Billetes de {{ divisa.nombre }} ({{ divisa.code }})
                 </h4>
                 <div>
                     <a href="{% url 'divisas:lista' %}" class="btn btn-light btn-sm me-2">
@@ -78,22 +80,22 @@
                 </div>
                 <div class="col-md-9">
                     <div class="row">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <div class="stat-card">
                                 <div class="stat-number">{{ estadisticas.total }}</div>
-                                <div class="text-muted small">Total</div>
+                                <div class="text-muted small">Total Billetes</div>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <div class="stat-card" style="border-left-color: #28a745;">
-                                <div class="stat-number" style="color: #28a745;">{{ estadisticas.billetes }}</div>
-                                <div class="text-muted small">Billetes</div>
+                                <div class="stat-number" style="color: #28a745;">{{ estadisticas.activas }}</div>
+                                <div class="text-muted small">Activas</div>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="stat-card" style="border-left-color: #17a2b8;">
-                                <div class="stat-number" style="color: #17a2b8;">{{ estadisticas.activas }}</div>
-                                <div class="text-muted small">Activas</div>
+                        <div class="col-md-4">
+                            <div class="stat-card" style="border-left-color: #dc3545;">
+                                <div class="stat-number" style="color: #dc3545;">{{ estadisticas.inactivas }}</div>
+                                <div class="text-muted small">Inactivas</div>
                             </div>
                         </div>
                     </div>
@@ -102,20 +104,14 @@
 
             <!-- Filtros -->
             <form method="get" class="row g-3 mb-4">
-                <div class="col-md-4">
-                    <select name="tipo" class="form-select">
-                        <option value="">Todos los tipos</option>
-                        <option value="billete" {% if request.GET.tipo == 'billete' %}selected{% endif %}>Billetes</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <select name="estado" class="form-select">
                         <option value="">Todos los estados</option>
                         <option value="activas" {% if request.GET.estado == 'activas' %}selected{% endif %}>Solo activas</option>
                         <option value="inactivas" {% if request.GET.estado == 'inactivas' %}selected{% endif %}>Solo inactivas</option>
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <button type="submit" class="btn btn-primary w-100">
                         <i class="fas fa-search me-1"></i> Filtrar
                     </button>
@@ -128,30 +124,22 @@
                 <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th width="15%">Código</th>
-                            <th width="20%">Valor</th>
-                            <th width="15%">Tipo</th>
-                            <th width="15%" class="text-center">Estado</th>
-                            <th width="20%" class="text-center">Acciones</th>
+                            <th width="20%">Código</th>
+                            <th width="30%">Valor</th>
+                            <th width="20%" class="text-center">Estado</th>
+                            <th width="30%" class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for denom in denominaciones %}
                         <tr class="denominacion-row">
                             <td>
-                                <span class="badge badge-divisa" data-color="{{ denom.color }}">
+                                <span class="badge badge-divisa">
                                     {{ denom.divisa.code }}
                                 </span>
                             </td>
                             <td>
                                 <strong class="fs-5">{{ denom.valor_formateado }}</strong>
-                            </td>
-                            <td>
-                                {% if denom.es_billete %}
-                                    <span class="badge bg-success">
-                                        <i class="fas fa-money-bill me-1"></i> Billete
-                                    </span>
-                                {% endif %}
                             </td>
                             <td class="text-center">
                                 {% if denom.is_active %}
@@ -196,7 +184,7 @@
                 <ul class="pagination justify-content-center">
                     {% if page_obj.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">
                                 Anterior
                             </a>
                         </li>
@@ -210,7 +198,7 @@
                     
                     {% if page_obj.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">
                                 Siguiente
                             </a>
                         </li>
@@ -222,7 +210,7 @@
             {% else %}
             <div class="alert alert-info text-center" role="alert">
                 <i class="fas fa-info-circle me-2 fs-3"></i>
-                <h5 class="mt-3">No hay denominaciones registradas para {{ divisa.code }}</h5>
+                <h5 class="mt-3">No hay billetes registrados para {{ divisa.code }}</h5>
                 <p class="mb-0">Aún no se han creado denominaciones para esta divisa.</p>
                 {% if perms.divisas.add_denominacion %}
                 <a href="{% url 'divisas:denominacion_quick_create' %}?divisa={{ divisa.id }}" class="btn btn-primary mt-3">

@@ -11,8 +11,8 @@ class DivisaAdmin(admin.ModelAdmin):
 
 @admin.register(Denominacion)
 class DenominacionAdmin(admin.ModelAdmin):
-    list_display = ['divisa', 'valor', 'tipo', 'is_active', 'creado']
-    list_filter = ['divisa', 'tipo', 'is_active']
+    list_display = ['divisa', 'valor', 'is_active', 'creado']
+    list_filter = ['divisa', 'is_active']
     search_fields = ['divisa__code', 'valor']
     ordering = ['divisa', '-valor']
 
