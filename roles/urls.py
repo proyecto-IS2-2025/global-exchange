@@ -2,18 +2,7 @@
 URLs para la gestión de roles y permisos.
 """
 from django.urls import path
-from .views import (
-    GroupListView,
-    GroupDetailView,
-    GroupCreateView,
-    GroupUpdateView,
-    GroupDeleteView,
-    GroupDetailPermissionsView,
-    GroupDetailUsersView,
-    SearchPermissionsView,
-    PermissionMatrixView,
-    GroupToggleStatusView,
-)
+from .views import *
 
 urlpatterns = [
     # ═══════════════════════════════════════════════════════════════
@@ -53,4 +42,7 @@ urlpatterns = [
          PermissionMatrixView.as_view(), 
          name='permission_matrix'),
     path('groups/<int:pk>/toggle-status/', GroupToggleStatusView.as_view(), name='group_toggle_status'),
+
+
+     path('api/search_users/', search_users, name='search_users'),
 ]

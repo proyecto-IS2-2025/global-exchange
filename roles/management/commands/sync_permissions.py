@@ -13,14 +13,15 @@ from .permissions_defs.divisas import PERMISOS_DIVISAS
 from .permissions_defs.transacciones import PERMISOS_TRANSACCIONES
 from .permissions_defs.medios_pago import PERMISOS_MEDIOS_PAGO
 from .permissions_defs.usuarios import PERMISOS_USUARIOS
-
+from .permissions_defs.mfa import PERMISOS_MFA  
 # ✅ COMBINAR TODOS LOS PERMISOS
 TODOS_LOS_PERMISOS = (
     PERMISOS_CLIENTES +
     PERMISOS_DIVISAS +
     PERMISOS_TRANSACCIONES +
     PERMISOS_MEDIOS_PAGO +
-    PERMISOS_USUARIOS
+    PERMISOS_USUARIOS +
+    PERMISOS_MFA
 )
 
 

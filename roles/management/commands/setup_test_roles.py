@@ -137,6 +137,12 @@ class Command(BaseCommand):
             'delete_customuser',
             
             # ═══════════════════════════════════════════════════════
+            # MFA (SOLO ADMIN)
+            # ═══════════════════════════════════════════════════════
+            'view_mfa_config',      # ✅ AGREGADO
+            'manage_mfa_config',    # ✅ AGREGADO
+            
+            # ═══════════════════════════════════════════════════════
             # CLIENTES
             # ═══════════════════════════════════════════════════════
             'view_all_clientes',
@@ -264,6 +270,7 @@ class Command(BaseCommand):
             # TRANSACCIONES
             # ═══════════════════════════════════════════════════════
             'view_transacciones_asignadas',
+            'view_transacciones_globales',
             'manage_estados_transacciones',
             'view_historial_transacciones',
             'view_transaccion',

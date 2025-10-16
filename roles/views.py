@@ -650,3 +650,24 @@ def bad_request_view(request, exception=None):
     }
     
     return render(request, '400.html', context, status=400)
+
+
+def search_users(request):
+    """
+    Vista para buscar usuarios por nombre de usuario o email.
+
+    Devuelve una lista de usuarios en formato JSON.
+    Esta vista es utilizada por las llamadas AJAX.
+
+    :param request: Objeto de solicitud HTTP con el parámetro GET 'q'.
+    :type request: :class:`~django.http.HttpRequest`
+    :return: Un objeto de respuesta JSON con una lista de usuarios.
+    :rtype: :class:`~django.http.JsonResponse`
+    """
+    query = request.GET.get('q', '')
+    if query:
+        # Busca usuarios que coincidan con la consulta en el email
+        users = User.objects.filter(email__icontains=query).distinct()
+        data = [{'id': u.id, 'email': u.email, 'username': u.username} for u in users]
+        return JsonResponse(data, safe=False)
+    return JsonResponse([], safe=False)

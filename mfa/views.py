@@ -8,7 +8,8 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .utils import generate_and_send_otp, check_otp_validity
 from .models import MFAConfig
-
+from roles.decorators import require_permission
+from django.utils.decorators import method_decorator
 User = get_user_model()
 
 # ----------------------------------------------------------------------
@@ -21,7 +22,8 @@ def is_admin(user):
 # Vista de Configuración MFA (Solo Admins)
 # ----------------------------------------------------------------------
 @login_required
-@user_passes_test(is_admin)
+#@user_passes_test(is_admin)
+@require_permission("mfa.view_mfa_config", check_client_assignment=False)
 def mfa_config_view(request):
     """Vista para configurar el MFA (activar/desactivar)."""
     config = MFAConfig.get_config()
