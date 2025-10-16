@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-success text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-bolt me-2"></i>
+                            {{ titulo }}
+                        </h4>
+                        <a href="{% url 'divisas:denominacion_create' %}" class="btn btn-light btn-sm">
+                            <i class="fas fa-list me-1"></i> Creación Manual
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-body p-4">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Creación rápida:</strong> Ingrese varios valores separados por comas para crear múltiples denominaciones a la vez.
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{{ form.divisa.label }}</label>
+                            {{ form.divisa }}
+                            {% if form.divisa.errors %}
+                                <div class="invalid-feedback d-block">{{ form.divisa.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{{ form.valores.label }}</label>
+                            {{ form.valores }}
+                            <small class="form-text text-muted">{{ form.valores.help_text }}</small>
+                            {% if form.valores.errors %}
+                                <div class="invalid-feedback d-block">{{ form.valores.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.tipo.label }}</label>
+                                {{ form.tipo }}
+                                {% if form.tipo.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.tipo.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.color.label }}</label>
+                                {{ form.color }}
+                                {% if form.color.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.color.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="form-check">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    {{ form.is_active.label }}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            <a href="{% url 'divisas:denominacion_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-magic me-2"></i> Crear Denominaciones
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Ejemplo visual -->
+            <div class="card mt-4 border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="text-muted mb-3">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        Ejemplos de uso:
+                    </h6>
+                    <ul class="mb-0">
+                        <li class="mb-2">
+                            <strong>USD:</strong> <code>100, 50, 20, 10, 5, 1</code>
+                        </li>
+                        <li class="mb-2">
+                            <strong>PYG:</strong> <code>100000, 50000, 20000, 10000, 5000, 2000</code>
+                        </li>
+                        <li>
+                            <strong>EUR:</strong> <code>500, 200, 100, 50, 20, 10, 5</code>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

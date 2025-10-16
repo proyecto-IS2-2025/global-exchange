@@ -5,7 +5,7 @@ from django.views.generic import ListView, CreateView, UpdateView, View, FormVie
 from django.urls import reverse_lazy, reverse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
-from .models import Divisa, TasaCambio, CotizacionSegmento
+from .models import Divisa, TasaCambio, CotizacionSegmento,  Denominacion, DesgloseDenominacion
 from clientes.models import Cliente, AsignacionCliente, Descuento, Segmento, ClienteMedioDePago
 from .forms import DivisaForm, TasaCambioForm
 from django.db.models import Max
@@ -22,6 +22,13 @@ from clientes.views import get_medio_acreditacion_seleccionado, get_medio_pago_s
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 import logging
 from django.contrib import messages
+from .forms import DenominacionForm, DenominacionFormSet, DenominacionQuickForm
+from django.forms import inlineformset_factory, formset_factory
+
+from transacciones.models import Transaccion
+from divisas.models import DesgloseDenominacion
+from divisas.forms import DesgloseDenominacionForm
+from .forms import DenominacionForm, DenominacionFormSet, DenominacionBaseFormSet, DenominacionQuickForm    
 
 
 """
@@ -347,3 +354,393 @@ def visualizador_tasas_admin(request):
         'divisas_data': divisas_data,
         'is_admin_view': True
     })
+ 
+# ==================== CRUD DE DENOMINACIONES ====================
+
+class DenominacionListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    """Lista todas las denominaciones por divisa"""
+    model = Denominacion
+    template_name = 'denominacion_list.html'
+    context_object_name = 'denominaciones'
+    permission_required = 'divisas.view_denominacion'
+    paginate_by = 50
+    
+    def get_queryset(self):
+        queryset = Denominacion.objects.select_related('divisa').order_by(
+            'divisa__code', '-valor'
+        )
+        
+        # Filtro por divisa
+        divisa_id = self.request.GET.get('divisa')
+        if divisa_id:
+            queryset = queryset.filter(divisa_id=divisa_id)
+        
+        # Filtro por tipo
+        tipo = self.request.GET.get('tipo')
+        if tipo in ['billete', 'moneda']:
+            queryset = queryset.filter(tipo=tipo)
+        
+        # Filtro por estado
+        estado = self.request.GET.get('estado')
+        if estado == 'activas':
+            queryset = queryset.filter(is_active=True)
+        elif estado == 'inactivas':
+            queryset = queryset.filter(is_active=False)
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['divisas'] = Divisa.objects.filter(is_active=True).order_by('code')
+        context['total_denominaciones'] = Denominacion.objects.count()
+        context['denominaciones_activas'] = Denominacion.objects.filter(is_active=True).count()
+        return context
+
+class DenominacionCreateView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """Crea múltiples denominaciones a la vez"""
+    permission_required = 'divisas.add_denominacion'
+    template_name = 'denominacion_create_multiple.html'
+    
+    def get(self, request):
+        # Crear formset vacío
+        formset = DenominacionBaseFormSet()
+        
+        context = {
+            'formset': formset,
+            'titulo': 'Crear Denominaciones',
+            'boton_texto': 'Guardar Denominaciones',
+            'divisas': Divisa.objects.filter(is_active=True).order_by('code'),
+        }
+        return render(request, self.template_name, context)
+    
+    def post(self, request):
+        formset = DenominacionBaseFormSet(request.POST, request.FILES)
+        
+        if formset.is_valid():
+            count = 0
+            errores = []
+            
+            for form in formset:
+                if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
+                    try:
+                        denominacion = form.save(commit=False)
+                        
+                        # Calcular orden si no está definido o es 0
+                        if not denominacion.orden or denominacion.orden == 0:
+                            BASE = 100000000
+                            valor_float = float(denominacion.valor) if denominacion.valor else 0
+                            
+                            if valor_float > 0:
+                                denominacion.orden = max(1, BASE - int(valor_float * 100))
+                            else:
+                                denominacion.orden = BASE
+                        
+                        denominacion.save()
+                        count += 1
+                    except Exception as e:
+                        errores.append(f'Error al guardar denominación: {str(e)}')
+            
+            if count > 0:
+                messages.success(request, f'{count} denominación(es) creada(s) exitosamente.')
+            
+            if errores:
+                for error in errores:
+                    messages.error(request, error)
+            
+            if count > 0:
+                return redirect('divisas:denominacion_list')
+            else:
+                messages.warning(request, 'No se creó ninguna denominación.')
+        
+        context = {
+            'formset': formset,
+            'titulo': 'Crear Denominaciones',
+            'boton_texto': 'Guardar Denominaciones',
+            'divisas': Divisa.objects.filter(is_active=True).order_by('code'),
+        }
+        return render(request, self.template_name, context)
+
+
+class DenominacionQuickCreateView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """Vista para crear denominaciones rápidamente desde una lista de valores"""
+    permission_required = 'divisas.add_denominacion'
+    template_name = 'denominacion_quick_create.html'
+
+    def get(self, request):
+        form = DenominacionQuickForm()
+        context = {
+            'form': form,
+            'titulo': 'Creación Rápida de Denominaciones',
+        }
+        return render(request, self.template_name, context)
+    
+    def post(self, request):
+        form = DenominacionQuickForm(request.POST)
+        
+        if form.is_valid():
+            divisa = form.cleaned_data['divisa']
+            valores = form.cleaned_data['valores']
+            tipo = form.cleaned_data['tipo']
+            color = form.cleaned_data['color']
+            is_active = form.cleaned_data['is_active']
+            
+            count = 0
+            errores = []
+            
+            for valor in valores:
+                try:
+                    # Verificar si ya existe
+                    existe = Denominacion.objects.filter(
+                        divisa=divisa,
+                        valor=valor,
+                        tipo=tipo
+                    ).exists()
+                    
+                    if existe:
+                        errores.append(f'{divisa.code} {valor} ({tipo}) ya existe')
+                        continue
+                    
+                    # Calcular orden correctamente (siempre positivo)
+                    BASE = 100000000
+                    valor_float = float(valor)
+                    
+                    if valor_float > 0:
+                        orden_calculado = max(1, BASE - int(valor_float * 100))
+                    else:
+                        orden_calculado = BASE
+                    
+                    # Crear denominación CON orden explícito
+                    Denominacion.objects.create(
+                        divisa=divisa,
+                        valor=valor,
+                        tipo=tipo,
+                        color=color,
+                        is_active=is_active,
+                        orden=orden_calculado  # Pasar orden calculado
+                    )
+                    count += 1
+                    
+                except Exception as e:
+                    errores.append(f'Error al crear {valor}: {str(e)}')
+            
+            if count > 0:
+                messages.success(request, f'{count} denominación(es) creada(s) exitosamente.')
+            
+            if errores:
+                for error in errores:
+                    messages.warning(request, error)
+            
+            if count > 0:
+                return redirect('divisas:denominacion_list')
+        
+        context = {
+            'form': form,
+            'titulo': 'Creación Rápida de Denominaciones',
+        }
+        return render(request, self.template_name, context)
+    
+class DenominacionUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    """Actualiza una denominación existente"""
+    model = Denominacion
+    form_class = DenominacionForm
+    template_name = 'denominacion_form.html'
+    success_url = reverse_lazy('divisas:denominacion_list')
+    permission_required = 'divisas.change_denominacion'
+    
+    def form_valid(self, form):
+        messages.success(self.request, f'Denominación actualizada exitosamente.')
+        return super().form_valid(form)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = f'Editar Denominación: {self.object}'
+        context['boton_texto'] = 'Guardar Cambios'
+        return context
+
+
+class DenominacionDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """Desactiva/activa una denominación"""
+    permission_required = 'divisas.delete_denominacion'
+    
+    def post(self, request, pk):
+        denominacion = get_object_or_404(Denominacion, pk=pk)
+        denominacion.is_active = not denominacion.is_active
+        denominacion.save()
+        
+        estado = "activada" if denominacion.is_active else "desactivada"
+        messages.success(request, f'Denominación {estado} correctamente.')
+        
+        return redirect('divisas:denominacion_list')
+
+
+class DenominacionesDivisaView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """Gestiona todas las denominaciones de una divisa específica"""
+    permission_required = 'divisas.change_denominacion'
+    template_name = 'divisas/denominaciones_divisa.html'
+    
+    def get(self, request, divisa_id):
+        divisa = get_object_or_404(Divisa, pk=divisa_id)
+        formset = DenominacionFormSet(instance=divisa)
+        
+        context = {
+            'divisa': divisa,
+            'formset': formset,
+        }
+        return render(request, self.template_name, context)
+    
+    def post(self, request, divisa_id):
+        divisa = get_object_or_404(Divisa, pk=divisa_id)
+        formset = DenominacionFormSet(request.POST, request.FILES, instance=divisa)
+        
+        if formset.is_valid():
+            formset.save()
+            messages.success(request, f'Denominaciones de {divisa.code} actualizadas correctamente.')
+            return redirect('divisas:lista')
+        
+        context = {
+            'divisa': divisa,
+            'formset': formset,
+        }
+        return render(request, self.template_name, context)
+
+
+@login_required
+@user_passes_test(lambda u: u.has_perm('divisas.view_denominacion'))
+def denominaciones_disponibles_json(request, divisa_id):
+    """API para obtener denominaciones disponibles de una divisa (JSON)"""
+    denominaciones = Denominacion.objects.filter(
+        divisa_id=divisa_id,
+        is_active=True
+    ).order_by('-valor').values(
+        'id', 'valor', 'tipo', 'color', 'valor_formateado'
+    )
+    
+    return JsonResponse({
+        'denominaciones': list(denominaciones)
+    })
+
+
+# ==================== CALCULADORA DE DENOMINACIONES ====================
+
+class CalculadoraDenominacionesView(LoginRequiredMixin, TemplateView):
+    """Vista para calcular el desglose óptimo de denominaciones"""
+    template_name = 'divisas/calculadora_denominaciones.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['divisas'] = Divisa.objects.filter(is_active=True).order_by('code')
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        divisa_id = request.POST.get('divisa_id')
+        monto_str = request.POST.get('monto', '0')
+        
+        try:
+            monto = Decimal(monto_str)
+            divisa = get_object_or_404(Divisa, pk=divisa_id, is_active=True)
+            
+            # Obtener denominaciones activas ordenadas de mayor a menor
+            denominaciones = Denominacion.objects.filter(
+                divisa=divisa,
+                is_active=True
+            ).order_by('-valor')
+            
+            # Calcular desglose óptimo (algoritmo greedy)
+            desglose = []
+            restante = monto
+            
+            for denom in denominaciones:
+                if restante <= 0:
+                    break
+                
+                cantidad = int(restante / denom.valor)
+                if cantidad > 0:
+                    desglose.append({
+                        'denominacion': denom,
+                        'cantidad': cantidad,
+                        'subtotal': denom.valor * cantidad
+                    })
+                    restante -= denom.valor * cantidad
+            
+            # Si hay restante, significa que no se puede dar cambio exacto
+            cambio_exacto = (restante == 0)
+            
+            context = self.get_context_data()
+            context.update({
+                'divisa_seleccionada': divisa,
+                'monto_solicitado': monto,
+                'desglose': desglose,
+                'total_entregado': sum(d['subtotal'] for d in desglose),
+                'restante': restante,
+                'cambio_exacto': cambio_exacto,
+            })
+            
+            if not cambio_exacto:
+                messages.warning(
+                    request,
+                    f'No se puede dar cambio exacto. Faltante: {divisa.simbolo}{restante:,.2f}'
+                )
+            
+            return render(request, self.template_name, context)
+            
+        except (ValueError, InvalidOperation):
+            messages.error(request, 'Monto inválido.')
+            return redirect('divisas:calculadora_denominaciones')
+        
+class TransaccionDesgloseDenominacionesView(LoginRequiredMixin, View):
+    """Vista para agregar desglose de denominaciones a una transacción"""
+    
+    def get(self, request, numero_transaccion):
+        transaccion = get_object_or_404(Transaccion, numero_transaccion=numero_transaccion)
+        
+        # Crear formset dinámicamente
+        DesgloseDenominacionFormSet = inlineformset_factory(
+            Transaccion,
+            DesgloseDenominacion,
+            form=DesgloseDenominacionForm,
+            extra=3,
+            can_delete=True,
+            fields=['denominacion', 'cantidad']
+        )
+        
+        formset = DesgloseDenominacionFormSet(
+            instance=transaccion,
+            form_kwargs={'divisa': transaccion.divisa_destino}
+        )
+        
+        context = {
+            'transaccion': transaccion,
+            'formset': formset,
+        }
+        
+        return render(request, 'transacciones/desglose_denominaciones.html', context)
+    
+    def post(self, request, numero_transaccion):
+        transaccion = get_object_or_404(Transaccion, numero_transaccion=numero_transaccion)
+        
+        DesgloseDenominacionFormSet = inlineformset_factory(
+            Transaccion,
+            DesgloseDenominacion,
+            form=DesgloseDenominacionForm,
+            extra=3,
+            can_delete=True,
+            fields=['denominacion', 'cantidad']
+        )
+        
+        formset = DesgloseDenominacionFormSet(
+            request.POST,
+            instance=transaccion,
+            form_kwargs={'divisa': transaccion.divisa_destino}
+        )
+        
+        if formset.is_valid():
+            formset.save()
+            messages.success(request, 'Desglose de denominaciones guardado correctamente.')
+            return redirect('transacciones:detalle', numero_transaccion=numero_transaccion)
+        
+        context = {
+            'transaccion': transaccion,
+            'formset': formset,
+        }
+        
+        return render(request, 'transacciones/desglose_denominaciones.html', context)

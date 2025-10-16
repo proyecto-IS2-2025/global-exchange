@@ -1,6 +1,10 @@
 #divisas
+from decimal import Decimal, InvalidOperation, InvalidOperation
 from django import forms
-from .models import Divisa, TasaCambio
+from .models import Divisa, TasaCambio, Denominacion, DesgloseDenominacion
+# Formset para crear múltiples denominaciones a la vez
+from django.forms import formset_factory, inlineformset_factory
+
 """
 Formularios para la gestión de divisas y tasas de cambio.
 
@@ -132,3 +136,214 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunPython(crear_pyg, revertir_pyg),
     ]''''"""
+
+# ...existing code...
+
+class DenominacionForm(forms.ModelForm):
+    """Formulario para crear/editar denominaciones"""
+    
+    class Meta:
+        model = Denominacion
+        fields = [
+            'divisa', 'valor', 'tipo', 'is_active', 
+            'orden', 'color', 'notas'
+        ]
+        widgets = {
+            'divisa': forms.Select(attrs={
+                'class': 'form-select',
+            }),
+            'valor': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0.01',
+                'placeholder': 'Ej: 100, 50, 20, 10...'
+            }),
+            'tipo': forms.Select(attrs={
+                'class': 'form-select',
+            }),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+            }),
+            'orden': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0',
+                'placeholder': 'Orden de visualización (menor = mayor prioridad)'
+            }),
+            'color': forms.TextInput(attrs={
+                'class': 'form-control',
+                'type': 'color',
+                'placeholder': '#28a745'
+            }),
+            'notas': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 2,
+                'placeholder': 'Información adicional...'
+            }),
+        }
+        labels = {
+            'divisa': 'Divisa',
+            'valor': 'Valor Nominal',
+            'tipo': 'Tipo',
+            'is_active': '¿Disponible?',
+            'orden': 'Orden',
+            'color': 'Color',
+            'notas': 'Notas',
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Filtrar solo divisas activas
+        self.fields['divisa'].queryset = Divisa.objects.filter(is_active=True).order_by('code')
+        
+        # Hacer campos opcionales
+        self.fields['orden'].required = False
+        self.fields['notas'].required = False
+    
+    def clean_valor(self):
+        valor = self.cleaned_data.get('valor')
+        if valor <= 0:
+            raise forms.ValidationError('El valor debe ser mayor a cero.')
+        return valor
+
+# BaseFormSet para denominaciones nuevas (sin instancia de Divisa)
+DenominacionBaseFormSet = formset_factory(
+    DenominacionForm,
+    extra=5,  # 5 formularios vacíos por defecto
+    can_delete=True,
+    max_num=20,  # Máximo 20 denominaciones a la vez
+    validate_max=True
+)
+
+# InlineFormSet para editar denominaciones existentes de una divisa
+DenominacionFormSet = inlineformset_factory(
+    Divisa,
+    Denominacion,
+    form=DenominacionForm,
+    extra=3,
+    can_delete=True,
+    fields=['valor', 'tipo', 'is_active', 'orden', 'color', 'notas']
+)
+
+
+# Formulario simplificado para creación rápida masiva
+class DenominacionQuickForm(forms.Form):
+    """Formulario para crear denominaciones rápidamente con valores predefinidos"""
+    
+    divisa = forms.ModelChoiceField(
+        queryset=Divisa.objects.filter(is_active=True).order_by('code'),
+        label='Divisa',
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    
+    valores = forms.CharField(
+        label='Valores (separados por comas)',
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 3,
+            'placeholder': 'Ejemplo: 100, 50, 20, 10, 5, 1'
+        }),
+        help_text='Ingrese los valores separados por comas'
+    )
+    
+    tipo = forms.ChoiceField(
+        choices=[('billete', 'Billetes'), ('moneda', 'Monedas')],
+        initial='billete',
+        label='Tipo',
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    
+    color = forms.CharField(
+        initial='#6c757d',
+        label='Color',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'type': 'color'
+        })
+    )
+    
+    is_active = forms.BooleanField(
+        initial=True,
+        required=False,
+        label='Activar todas',
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+    
+    def clean_valores(self):
+        valores_str = self.cleaned_data.get('valores', '')
+        valores = []
+        
+        for val in valores_str.split(','):
+            val = val.strip()
+            if val:
+                try:
+                    valor_decimal = Decimal(val)
+                    if valor_decimal <= 0:
+                        raise forms.ValidationError(f'El valor {val} debe ser mayor a cero.')
+                    valores.append(valor_decimal)
+                except (ValueError, InvalidOperation):
+                    raise forms.ValidationError(f'"{val}" no es un número válido.')
+        
+        if not valores:
+            raise forms.ValidationError('Debe ingresar al menos un valor.')
+        
+        return valores
+
+
+# ...existing code...
+
+class DesgloseDenominacionForm(forms.ModelForm):
+    """Formulario para registrar desglose de denominaciones en una transacción"""
+    
+    class Meta:
+        model = DesgloseDenominacion
+        fields = ['denominacion', 'cantidad']
+        widgets = {
+            'denominacion': forms.Select(attrs={
+                'class': 'form-select',
+            }),
+            'cantidad': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '1',
+                'value': '1',
+            }),
+        }
+    
+    def __init__(self, *args, divisa=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if divisa:
+            # Filtrar denominaciones por divisa y activas
+            self.fields['denominacion'].queryset = Denominacion.objects.filter(
+                divisa=divisa,
+                is_active=True
+            ).order_by('-valor')
+
+
+# Formset para gestión masiva de denominaciones
+from django.forms import inlineformset_factory
+
+DenominacionFormSet = inlineformset_factory(
+    Divisa,
+    Denominacion,
+    form=DenominacionForm,
+    extra=1,
+    can_delete=True,
+    fields=['valor', 'tipo', 'is_active', 'orden', 'color', 'notas']
+)
+
+
+# IMPORTANTE: NO crear el DesgloseDenominacionFormSet aquí
+# porque causaría importación circular.
+# En su lugar, créalo dinámicamente cuando lo necesites en las vistas:
+#
+# from django.forms import inlineformset_factory
+# from transacciones.models import Transaccion
+# from divisas.models import DesgloseDenominacion
+# 
+# DesgloseDenominacionFormSet = inlineformset_factory(
+#     Transaccion,
+#     DesgloseDenominacion,
+#     form=DesgloseDenominacionForm,
+#     extra=3,
+#     can_delete=True,
+#     fields=['denominacion', 'cantidad']
+# )

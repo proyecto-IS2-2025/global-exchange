@@ -209,3 +209,166 @@ class TasaCambio(models.Model):
 
     def __str__(self):
         return f"{self.divisa.code} - {self.fecha}: {self.precio_base} (Compra:{self.comision_compra}, Venta:{self.comision_venta})"
+
+class Denominacion(models.Model):
+    """
+    Representa las denominaciones (billetes/monedas) disponibles para una divisa.
+    
+    Por ejemplo, para USD: 1, 5, 10, 20, 50, 100
+    Para PYG: 2000, 5000, 10000, 20000, 50000, 100000
+    
+    :param divisa: Divisa a la que pertenece esta denominación.
+    :type divisa: Divisa
+    :param valor: Valor nominal del billete/moneda.
+    :type valor: Decimal
+    :param tipo: Tipo de denominación (billete o moneda).
+    :type tipo: str
+    :param is_active: Indica si la denominación está disponible.
+    :type is_active: bool
+    """
+    
+    TIPO_CHOICES = [
+        ('billete', 'Billete'),
+        ('moneda', 'Moneda'),
+    ]
+    
+    divisa = models.ForeignKey(
+        Divisa, 
+        on_delete=models.CASCADE, 
+        related_name='denominaciones',
+        verbose_name='Divisa'
+    )
+    valor = models.DecimalField(
+        'Valor nominal',
+        max_digits=50,
+        decimal_places=2,
+        help_text='Valor del billete o moneda (ej: 100, 50, 20, etc.)'
+    )
+    tipo = models.CharField(
+        'Tipo',
+        max_length=10,
+        choices=TIPO_CHOICES,
+        default='billete'
+    )
+    is_active = models.BooleanField(
+        'Activa',
+        default=True,
+        help_text='Indica si esta denominación está disponible para entrega'
+    )
+    orden = models.PositiveIntegerField(
+        'Orden',
+        default=0,
+        help_text='Orden de visualización (se calcula automáticamente según el valor)',
+        blank=True,
+        null=True
+    )
+
+    color = models.CharField(
+        'Color de referencia',
+        max_length=7,
+        default="#000000",
+        help_text='Color hexadecimal para visualización (ej: #28a745)'
+    )
+    notas = models.TextField(
+        'Notas',
+        blank=True,
+        help_text='Información adicional sobre esta denominación'
+    )
+    creado = models.DateTimeField(auto_now_add=True)
+    actualizado = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Denominación'
+        verbose_name_plural = 'Denominaciones'
+        ordering = ['divisa', '-valor']  # Ordenar por divisa y valor descendente
+        unique_together = [['divisa', 'valor', 'tipo']]  # No duplicar denominaciones
+        indexes = [
+            models.Index(fields=['divisa', 'is_active']),
+            models.Index(fields=['divisa', 'valor']),
+        ]
+    
+    def __str__(self):
+        tipo_str = self.get_tipo_display()
+        return f"{self.divisa.code} - {tipo_str} de {self.valor_formateado}"
+    
+    @property
+    def valor_formateado(self):
+        """Retorna el valor formateado según los decimales de la divisa"""
+        if self.divisa.code == 'PYG':
+            return f"₲{self.valor:,.0f}"
+        else:
+            return f"{self.divisa.simbolo}{self.valor:,.2f}" if self.divisa.simbolo else f"{self.valor:,.2f}"
+    
+    @property
+    def es_billete(self):
+        return self.tipo == 'billete'
+    
+    @property
+    def es_moneda(self):
+        return self.tipo == 'moneda'
+    
+    def save(self, *args, **kwargs):
+        # Auto-asignar orden basado en el valor (billetes grandes primero)
+        if self.orden is None or self.orden == 0:
+            valor_float = float(self.valor) if self.valor else 0
+            
+            # Billetes más grandes = orden más bajo (se muestran primero)
+            # Usar 100,000,000 como base para soportar valores hasta 1,000,000
+            BASE = 100000000
+            
+            if valor_float > 0:
+                # Multiplicar por 100 para mantener precisión con decimales
+                self.orden = max(1, BASE - int(valor_float * 100))
+            else:
+                self.orden = BASE
+                
+        super().save(*args, **kwargs)
+
+
+class DesgloseDenominacion(models.Model):
+    """
+    Desglose de denominaciones para una transacción específica.
+    
+    Registra qué billetes/monedas se entregaron en una operación.
+    
+    :param transaccion: Transacción relacionada.
+    :type transaccion: transacciones.Transaccion
+    :param denominacion: Denominación entregada.
+    :type denominacion: Denominacion
+    :param cantidad: Cantidad de billetes/monedas.
+    :type cantidad: int
+    """
+    
+    # Importación lazy para evitar dependencias circulares
+    transaccion = models.ForeignKey(
+        'transacciones.Transaccion',
+        on_delete=models.CASCADE,
+        related_name='desglose_denominaciones',
+        verbose_name='Transacción'
+    )
+    denominacion = models.ForeignKey(
+        Denominacion,
+        on_delete=models.PROTECT,
+        related_name='usos',
+        verbose_name='Denominación'
+    )
+    cantidad = models.PositiveIntegerField(
+        'Cantidad',
+        default=1,
+        help_text='Cantidad de billetes/monedas de esta denominación'
+    )
+    creado = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'Desglose de denominación'
+        verbose_name_plural = 'Desgloses de denominaciones'
+        ordering = ['-denominacion__valor']
+        unique_together = [['transaccion', 'denominacion']]
+    
+    def __str__(self):
+        return f"{self.cantidad}x {self.denominacion.valor_formateado}"
+    
+    @property
+    def subtotal(self):
+        """Calcula el subtotal de esta línea de desglose"""
+        return self.denominacion.valor * self.cantidad
