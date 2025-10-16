@@ -203,62 +203,13 @@ class CustomUserDeleteView(DeleteView):
 # ═══════════════════════════════════════════════════════════════════
 
 @login_required
-def perfil_usuario(request):
+def perfil_usuario_view(request):
     """
     👤 Perfil del usuario autenticado
     
-    Permite que cualquier usuario vea y edite su propio perfil.
-    Los campos editables se limitan según el rol del usuario.
+    ✅ NO pasa contexto - Django automáticamente aplica los context processors
+    que inyectan: cliente_activo, tipo_usuario, permisos_clave, etc.
     """
-    user = request.user
-    
-    # Solo el usuario puede editar su propio perfil (no staff general)
-    puede_editar = True  # Siempre puede editar su propio perfil
-    
-    if request.method == 'POST' and puede_editar:
-        form = CustomUserChangeForm(request.POST, instance=user)
-        
-        # Validar que no se autoasigne permisos
-        if 'is_staff' in form.changed_data and not user.is_superuser:
-            messages.error(
-                request,
-                "❌ No puedes modificar tu estado de staff"
-            )
-            return redirect('users:perfil_usuario')
-        
-        if form.is_valid():
-            form.save()
-            messages.success(request, "✅ Perfil actualizado correctamente")
-            return redirect('users:perfil_usuario')
-        else:
-            messages.error(request, "❌ Error al actualizar perfil")
-    else:
-        form = CustomUserChangeForm(instance=user)
-    
-    # Información del rol
-    grupo = user.groups.first().name if user.groups.exists() else "Sin grupo"
-    
-    # Cliente activo desde la sesión
-    cliente_activo = None
-    cliente_id = request.session.get("cliente_activo_id")
-    if cliente_id:
-        from clientes.models import Cliente
-        try:
-            cliente_activo = Cliente.objects.get(id=cliente_id)
-        except Cliente.DoesNotExist:
-            cliente_activo = None
-    
-    context = {
-        "form": form,
-        "puede_editar": puede_editar,
-        "user": user,
-        "grupo": grupo,
-        "cliente_activo": cliente_activo,
-        # Estadísticas adicionales
-        "es_admin": user.groups.filter(name='admin').exists(),
-        "es_operador": user.groups.filter(name='operador').exists(),
-        "es_cliente": user.groups.filter(name='cliente').exists(),
-    }
-    
-    return render(request, "perfil_usuario.html", context)
+    # ✅ IMPORTANTE: NO pasar contexto para que los context processors funcionen
+    return render(request, 'perfil_usuario.html')
 

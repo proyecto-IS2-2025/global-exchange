@@ -5,62 +5,99 @@
 {% block content %}
 <div class="container mt-5">
 
-  {# Logo inicial para usuarios no admin/operador #}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {# LOGO Y BIENVENIDA (Solo para NO staff)                        #}
+  {# ═══════════════════════════════════════════════════════════════ #}
   {% if not usuario_es_staff %}
-    <h1 class="h3 text-center">Bienvenido a Global Exchange</h1>
-    
-    {% if usuario_es_registrado %}
-      {# Usuario registrado SIN clientes asignados #}
-      <div class="alert alert-info text-center mt-4">
-        <i class="fas fa-info-circle me-2"></i>
-        Tu cuenta está en espera de aprobación. Un administrador debe asignarte clientes para que puedas realizar operaciones.
-      </div>
-    {% else %}
-      <p class="text-center">Usa el menú superior para navegar.</p>
-    {% endif %}
+    <div class="text-center mb-5">
+      
+      <h1 class="h3">Bienvenido a Global Exchange</h1>
+      
+      {% if usuario_es_registrado %}
+        {# ⏳ Usuario registrado sin clientes #}
+        <div class="alert alert-info mt-4 shadow-sm">
+          <i class="fas fa-info-circle me-2"></i>
+          <strong>Tu cuenta está en revisión.</strong>
+          <br>
+          Un administrador debe asignarte clientes para que puedas realizar operaciones.
+        </div>
+      {% else %}
+        <p class="text-muted mt-3">Explora nuestras opciones en el menú superior</p>
+      {% endif %}
+    </div>
     
     <hr class="my-5">
   {% endif %}
 
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {# CONTENIDO DINÁMICO SEGÚN TIPO DE USUARIO                       #}
+  {# ═══════════════════════════════════════════════════════════════ #}
   {% if user.is_authenticated %}
     
-    {# Menú dinámico según tipo de usuario #}
+    {# ✅ STAFF: Menú administrativo (dev, administrador, operador, etc.) #}
     {% if usuario_es_staff %}
-      {# ✅ Admin/Operador → Panel de gestión #}
-      {% include "menus/menu_staff.html" %}
+      <div class="mb-4">
+        <h2 class="h4 text-center mb-4">
+          <i class="fas fa-cog me-2"></i>
+          Panel de {{ tipo_usuario }}
+        </h2>
+        {% include "menus/menu_staff.html" %}
+      </div>
       
+    {# ✅ CLIENTE: Operador de cuenta con clientes asignados #}
     {% elif usuario_es_cliente %}
-      {# ✅ Operador de Cuenta CON clientes → Realizar operaciones #}
-      {% include "menus/menu_cliente.html" %}
+      <div class="mb-4">
       
+        {% include "menus/menu_cliente.html" %}
+      </div>
+      
+    {# ⚠️ REGISTRADO: Usuario sin permisos ni clientes #}
     {% elif usuario_es_registrado %}
-      {# ⚠️ Usuario registrado SIN clientes → Mensaje de espera #}
-      <div class="card shadow-sm">
-        <div class="card-body text-center py-5">
-          <i class="fas fa-hourglass-half fa-3x text-warning mb-3"></i>
-          <h3 class="card-title">Cuenta en Revisión</h3>
-          <p class="card-text text-muted">
-            Tu cuenta ha sido creada exitosamente. Estamos revisando tu solicitud y pronto un administrador te asignará los clientes correspondientes.
-          </p>
-          <hr class="my-4">
-          <p class="text-muted mb-0">
-            <i class="fas fa-envelope me-2"></i>
-            Recibirás un correo cuando tu cuenta esté lista para operar.
-          </p>
+      <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+          <div class="card shadow-sm border-warning">
+            <div class="card-body text-center py-5">
+              <i class="fas fa-hourglass-half fa-3x text-warning mb-3"></i>
+              <h3 class="card-title">Cuenta en Revisión</h3>
+              <p class="card-text text-muted">
+                Tu cuenta ha sido creada exitosamente. Estamos revisando tu solicitud 
+                y pronto un administrador te asignará los clientes correspondientes.
+              </p>
+              <hr class="my-4">
+              <div class="d-flex justify-content-center gap-3">
+                <p class="text-muted mb-0">
+                  <i class="fas fa-envelope me-2"></i>
+                  Recibirás un correo cuando tu cuenta esté lista
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     {% endif %}
     
   {% else %}
-    <!-- Usuarios no autenticados -->
-    {% include "partials/visualizador.html" %}
-    {% include "simulador/simulador_conversion.html" %}
+    {# ═══════════════════════════════════════════════════════════════ #}
+    {# USUARIOS NO AUTENTICADOS (Anónimos)                            #}
+    {# ═══════════════════════════════════════════════════════════════ #}
+    <div class="mb-5">
+    
+      {% include "partials/visualizador.html" %}
+    </div>
+    
+    <div class="mt-5">
+    
+      {% include "simulador/simulador_conversion.html" %}
+    </div>
   {% endif %}
 
 </div>
 
-{# Estilos del botón (mantener) #}
+{# ═══════════════════════════════════════════════════════════════ #}
+{# ESTILOS GLOBALES                                                #}
+{# ═══════════════════════════════════════════════════════════════ #}
 <style>
+  /* Botón de operación con animación */
   .btn-operacion {
     position: relative;
     display: inline-block;
@@ -75,10 +112,16 @@
     animation: pulse-glow 3s ease-in-out infinite;
   }
   
+  .btn-operacion:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(0, 123, 255, 0.4);
+  }
+  
   .btn-operacion:active {
     transform: translateY(-1px);
     box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
   }
+  
   .btn-operacion-content {
     display: inline-flex;
     align-items: center;
@@ -91,14 +134,68 @@
     font-size: 1.2rem;
   }
 
-  .btn-text { transition: transform 0.3s ease; }
-  .btn-operacion:hover .btn-text { transform: translateX(5px); }
-  .btn-operacion .fa-arrow-right { transition: transform 0.3s ease; }
-  .btn-operacion:hover .fa-arrow-right { transform: translateX(5px); }
+  .btn-text,
+  .btn-operacion .fa-arrow-right {
+    transition: transform 0.3s ease;
+  }
+  
+  .btn-operacion:hover .btn-text,
+  .btn-operacion:hover .fa-arrow-right {
+    transform: translateX(5px);
+  }
+  
   @keyframes pulse-glow {
-    0% { box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3); }
+    0%, 100% { box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3); }
     50% { box-shadow: 0 8px 30px rgba(0, 123, 255, 0.5); }
-    100% { box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3); }
+  }
+</style>
+
+<style>
+  /* Hover effect mejorado para cards */
+  .opcion_admin {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    background: white;
+  }
+  
+  .opcion_admin:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+  }
+  
+  /* Animación de entrada para las cards */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .opcion_admin {
+    animation: fadeInUp 0.5s ease forwards;
+  }
+  
+  /* Delay progresivo para cada card */
+  .row > .col:nth-child(1) .opcion_admin { animation-delay: 0.1s; }
+  .row > .col:nth-child(2) .opcion_admin { animation-delay: 0.2s; }
+  .row > .col:nth-child(3) .opcion_admin { animation-delay: 0.3s; }
+  .row > .col:nth-child(4) .opcion_admin { animation-delay: 0.4s; }
+  .row > .col:nth-child(5) .opcion_admin { animation-delay: 0.5s; }
+  .row > .col:nth-child(6) .opcion_admin { animation-delay: 0.6s; }
+  
+  /* Responsive: apilar en móviles */
+  @media (max-width: 576px) {
+    .opcion_admin {
+      padding: 2rem 1rem !important;
+    }
+    
+    .opcion_admin .display-3 {
+      font-size: 2rem !important;
+    }
   }
 </style>
 {% endblock %}

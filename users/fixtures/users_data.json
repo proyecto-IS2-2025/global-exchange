@@ -5,7 +5,7 @@
     "fields": {
       "password": "pbkdf2_sha256$1000000$jIRXr1HvZbtMX6eBxEowBv$VbkJvB8clLm/rzDzpBG1tWVBVikY9xz0RV/lLoJxDQM=",
       "last_login": null,
-      "is_superuser": true,
+      "is_superuser": false,
       "username": "admin",
       "first_name": "Admin",
       "last_name": "Principal",
@@ -13,9 +13,9 @@
       "is_staff": true,
       "is_active": true,
       "date_joined": "2025-09-15T10:00:00Z",
-      "is_cambista": false,
+      "is_cambista": true,
       "ultimo_cliente_id": null,
-      "groups": [1],
+      "groups": [7],
       "user_permissions": []
     }
   },

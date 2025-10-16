@@ -1,160 +1,215 @@
-{# Menu para staff - Basado en permisos con diseño de botones de develop #}
+{# ═══════════════════════════════════════════════════════════════════ #}
+{# MENÚ STAFF - Dinámico basado en permisos                           #}
+{# Se muestra automáticamente según los permisos del usuario          #}
+{# ═══════════════════════════════════════════════════════════════════ #}
 
-<div class="row row-cols-2 row-cols-md-4 g-4 mt-4 justify-content-center">
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mt-2">
   
-  {# VER CLIENTES #}
-  {% if perms.clientes.view_all_clientes or perms.clientes.view_assigned_clientes %}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {# CLIENTES                                                        #}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {% if permisos_clave.puede_ver_todos_clientes or permisos_clave.puede_ver_clientes_asignados %}
   <div class="col">
-    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-      <div class="display-3 mb-3">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-sm">
+      <div class="display-3 mb-3 text-primary">
         <i class="fas fa-users"></i>
       </div>
       <h6 class="fw-bold">Ver Clientes</h6>
+      <p class="small text-muted mb-0">Gestión de clientes</p>
       <a href="{% url 'clientes:lista_clientes' %}" class="stretched-link"></a>
     </div>
   </div>
   {% endif %}
   
-  {# ASIGNAR CLIENTES #}
-  {% if perms.clientes.manage_cliente_assignment %}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {# ASIGNAR CLIENTES                                                #}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {% if permisos_clave.puede_asignar_clientes %}
   <div class="col">
-    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-      <div class="display-3 mb-3">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-sm">
+      <div class="display-3 mb-3 text-success">
         <i class="fas fa-user-friends"></i>
       </div>
       <h6 class="fw-bold">Asignar Clientes</h6>
+      <p class="small text-muted mb-0">A operadores</p>
       <a href="{% url 'clientes:asociar_clientes_usuarios' %}" class="stretched-link"></a>
     </div>
   </div>
   {% endif %}
   
-  {# ROLES #}
-  {% if user.is_superuser %}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {# ROLES (Solo superusuario)                                       #}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {% if es_superusuario %}
   <div class="col">
-    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-      <div class="display-3 mb-3">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-sm">
+      <div class="display-3 mb-3 text-danger">
         <i class="fas fa-shield-alt"></i>
       </div>
       <h6 class="fw-bold">Roles</h6>
+      <p class="small text-muted mb-0">Gestión de permisos</p>
       <a href="{% url 'group_list' %}" class="stretched-link"></a>
     </div>
   </div>
   {% endif %}
   
-  {# MEDIOS DE PAGO #}
-  {% if perms.medios_pago.manage_catalogo_medios_pago %}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {# MEDIOS DE PAGO                                                  #}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {% if permisos_clave.puede_gestionar_medios_pago %}
   <div class="col">
-    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-      <div class="display-3 mb-3">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-sm">
+      <div class="display-3 mb-3 text-info">
         <i class="fas fa-credit-card"></i>
       </div>
       <h6 class="fw-bold">Medios de Pago</h6>
+      <p class="small text-muted mb-0">Catálogo completo</p>
       <a href="{% url 'medios_pago:lista' %}" class="stretched-link"></a>
     </div>
   </div>
   {% endif %}
   
-  {# DIVISAS #}
-  {% if perms.divisas.view_divisa %}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {# DIVISAS                                                         #}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {% if permisos_clave.puede_ver_divisas %}
   <div class="col">
-    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-      <div class="display-3 mb-3">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-sm">
+      <div class="display-3 mb-3 text-warning">
         <i class="fas fa-coins"></i>
       </div>
       <h6 class="fw-bold">Divisas</h6>
+      <p class="small text-muted mb-0">Monedas disponibles</p>
       <a href="{% url 'divisas:lista' %}" class="stretched-link"></a>
     </div>
   </div>
   {% endif %}
   
-  {# TASAS DE CAMBIO #}
-  {% if perms.divisas.manage_cotizaciones_segmento %}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {# TASAS DE CAMBIO                                                 #}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {% if permisos_clave.puede_gestionar_cotizaciones %}
   <div class="col">
-    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-      <div class="display-3 mb-3">
-        <i class="fas fa-rocket"></i>
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-sm">
+      <div class="display-3 mb-3 text-primary">
+        <i class="fas fa-chart-line"></i>
       </div>
-      <h6 class="fw-bold">Visualizador Tasas</h6>
+      <h6 class="fw-bold">Tasas de Cambio</h6>
+      <p class="small text-muted mb-0">Cotizaciones por segmento</p>
       <a href="{% url 'divisas:visualizador_tasas_admin' %}" class="stretched-link"></a>
     </div>
   </div>
   {% endif %}
   
-  {# HISTORIAL or perms.transacciones.view_transacciones_asignadas#}
-  {% if perms.transacciones.view_transacciones_globales  %}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {# HISTORIAL DE TRANSACCIONES                                     #}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {% if permisos_clave.puede_ver_transacciones_globales or permisos_clave.puede_ver_transacciones_asignadas %}
   <div class="col">
-    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-      <div class="display-3 mb-3">
-        <i class="fas fa-arrows-rotate"></i>
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-sm">
+      <div class="display-3 mb-3 text-success">
+        <i class="fas fa-clock-rotate-left"></i>
       </div>
-      <h6 class="fw-bold">Historial Transacciones</h6>
+      <h6 class="fw-bold">Historial</h6>
+      <p class="small text-muted mb-0">Transacciones realizadas</p>
       <a href="{% url 'transacciones:historial_admin' %}" class="stretched-link"></a>
     </div>
   </div>
   {% endif %}
   
-  {# LÍMITES #}
-  {% if perms.clientes.view_limites_operacion %}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {# LÍMITES OPERACIONALES                                           #}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {% if permisos_clave.puede_ver_limites %}
   <div class="col">
-    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-      <div class="display-3 mb-3">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-sm">
+      <div class="display-3 mb-3 text-danger">
         <i class="fas fa-gauge-high"></i>
       </div>
       <h6 class="fw-bold">Límites</h6>
+      <p class="small text-muted mb-0">Diarios y mensuales</p>
       <a href="{% url 'clientes:panel_limites' %}" class="stretched-link"></a>
     </div>
   </div>
   {% endif %}
   
-  {# DESCUENTOS #}
-  {% if perms.clientes.view_descuentos_segmento or perms.clientes.manage_descuentos_segmento %}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {# DESCUENTOS POR SEGMENTO                                         #}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {% if permisos_clave.puede_ver_descuentos %}
   <div class="col">
-    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-      <div class="display-3 mb-3">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-sm">
+      <div class="display-3 mb-3 text-info">
         <i class="fas fa-percent"></i>
       </div>
       <h6 class="fw-bold">Descuentos</h6>
+      <p class="small text-muted mb-0">Por segmento de cliente</p>
       <a href="{% url 'clientes:lista_descuentos' %}" class="stretched-link"></a>
     </div>
   </div>
   {% endif %}
 
-  {# CONFIGURACIÓN MFA #}
-  {% if perms.mfa.view_mfa_config %}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {# CONFIGURACIÓN MFA                                               #}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {% if permisos_clave.puede_ver_config_mfa %}
   <div class="col">
-    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4">
-      <div class="display-3 mb-3">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-sm">
+      <div class="display-3 mb-3 text-warning">
         <i class="fas fa-shield-halved"></i>
       </div>
-      <h6 class="fw-bold">Configuración MFA</h6>
+      <h6 class="fw-bold">MFA</h6>
+      <p class="small text-muted mb-0">Autenticación multifactor</p>
       <a href="{% url 'mfa:config' %}" class="stretched-link"></a>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {# USUARIOS (Solo para gestores de usuarios)                      #}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {% if permisos_clave.puede_gestionar_usuarios %}
+  <div class="col">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-sm">
+      <div class="display-3 mb-3 text-secondary">
+        <i class="fas fa-user-cog"></i>
+      </div>
+      <h6 class="fw-bold">Usuarios</h6>
+      <p class="small text-muted mb-0">Gestión de cuentas</p>
+      <a href="{% url 'users:user_list' %}" class="stretched-link"></a>
     </div>
   </div>
   {% endif %}
 
 </div>
 
-{# MENSAJE SI NO HAY PERMISOS #}
-{# Nota: He actualizado la condición para que no dependa del botón de permisos que fue eliminado #}
-{% if not perms.clientes.view_all_clientes and not perms.clientes.view_assigned_clientes and not perms.divisas.view_divisa and not perms.transacciones.view_transacciones_asignadas and not perms.clientes.view_limites_operacion and not perms.clientes.manage_descuentos and not perms.medios_pago.manage_catalogo_medios_pago and not perms.divisas.manage_cotizaciones_segmento and not perms.clientes.manage_cliente_assignment and not user.is_superuser %}
-<div class="alert alert-warning mt-5 text-center shadow-sm" role="alert">
-  <div class="mb-3">
-    <i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
-  </div>
-  <h5 class="alert-heading">
-    <strong>Sin permisos asignados</strong>
-  </h5>
-  <p class="mb-3">
-    Tu cuenta de staff aún no tiene permisos configurados para acceder a las funcionalidades del sistema.
-  </p>
-  <hr>
-  <div class="d-flex justify-content-center gap-3 mt-3">
-    <a href="mailto:admin@casadecambios.com" class="btn btn-warning btn-sm">
-      <i class="fas fa-envelope me-2"></i>Contactar administrador
-    </a>
-    <a href="{% url 'inicio' %}" class="btn btn-outline-secondary btn-sm">
-      <i class="fas fa-home me-2"></i>Volver al inicio
-    </a>
+{# ═══════════════════════════════════════════════════════════════ #}
+{# MENSAJE SI NO HAY PERMISOS (Dinámico)                          #}
+{# ═══════════════════════════════════════════════════════════════ #}
+{% if not permisos_clave.puede_ver_todos_clientes and not permisos_clave.puede_ver_clientes_asignados and not permisos_clave.puede_ver_divisas and not permisos_clave.puede_ver_transacciones_asignadas and not permisos_clave.puede_ver_limites and not permisos_clave.puede_ver_descuentos and not permisos_clave.puede_gestionar_medios_pago and not permisos_clave.puede_gestionar_cotizaciones and not permisos_clave.puede_asignar_clientes and not es_superusuario and not permisos_clave.puede_ver_config_mfa %}
+<div class="row justify-content-center mt-5">
+  <div class="col-md-8 col-lg-6">
+    <div class="alert alert-warning shadow-sm border-warning" role="alert">
+      <div class="text-center mb-3">
+        <i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
+      </div>
+      <h5 class="alert-heading text-center">
+        <strong>Sin Permisos Asignados</strong>
+      </h5>
+      <p class="text-center mb-3">
+        Tu cuenta de <strong>{{ tipo_usuario }}</strong> aún no tiene permisos configurados 
+        para acceder a las funcionalidades del sistema.
+      </p>
+      <hr>
+      <div class="d-flex flex-column flex-sm-row justify-content-center gap-3 mt-3">
+        <a href="mailto:admin@globalexchange.com" class="btn btn-warning">
+          <i class="fas fa-envelope me-2"></i>Contactar Administrador
+        </a>
+        <a href="{% url 'inicio' %}" class="btn btn-outline-secondary">
+          <i class="fas fa-home me-2"></i>Volver al Inicio
+        </a>
+      </div>
+    </div>
   </div>
 </div>
 {% endif %}

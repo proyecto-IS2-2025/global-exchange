@@ -31,11 +31,12 @@ class Command(BaseCommand):
         self._ensure_role_status()
         
         with transaction.atomic():
-            self._configure_admin(verbose)
+            self._configure_dev(verbose)
             self._configure_operador(verbose)
             self._configure_cliente(verbose)
             self._configure_usuario_registrado(verbose)
             self._configure_observador(verbose)
+            self._configure_administrador(verbose)
         
         self.stdout.write('')
         self.stdout.write(self.style.SUCCESS('=' * 60))
@@ -120,8 +121,8 @@ class Command(BaseCommand):
             )
         )
 
-    def _configure_admin(self, verbose):
-        """Configurar permisos para ADMINISTRADOR"""
+    def _configure_dev(self, verbose):
+        """Configurar permisos para DESARROLLADOR"""
         codenames = [
             # ═══════════════════════════════════════════════════════
             # USUARIOS
@@ -246,8 +247,122 @@ class Command(BaseCommand):
             'delete_group',
             'view_permission',
         ]
-        
-        self._assign_permissions('admin', codenames, verbose)
+
+        self._assign_permissions('dev', codenames, verbose)
+
+    def _configure_administrador(self, verbose):
+        """Configurar permisos para ADMINISTRADOR"""
+        codenames = [
+            # ═══════════════════════════════════════════════════════
+            # USUARIOS
+            # ═══════════════════════════════════════════════════════
+            'manage_usuarios',
+            'view_all_usuarios',
+            'manage_usuario_roles',
+            'activate_deactivate_usuarios',
+            'reset_usuario_password',
+            'view_customuser',
+            'add_customuser',
+            'change_customuser',
+            'delete_customuser',
+            
+            # ═══════════════════════════════════════════════════════
+            # MFA (SOLO ADMIN)
+            # ═══════════════════════════════════════════════════════
+            'view_mfa_config',      # ✅ AGREGADO
+            'manage_mfa_config',    # ✅ AGREGADO
+            
+            # ═══════════════════════════════════════════════════════
+            # CLIENTES
+            # ═══════════════════════════════════════════════════════
+            'view_all_clientes',
+            'view_assigned_clientes',
+            'manage_cliente_assignment',
+            'manage_limites_operacion',
+            'view_limites_operacion',
+            'admin_manage_limites',
+            'manage_medios_pago',
+            'view_medios_pago',
+            'export_clientes',
+            'view_descuentos_segmento',
+            'manage_descuentos_segmento',
+            'view_historial_descuentos',
+            'view_cliente',
+            'add_cliente',
+            'change_cliente',
+            'delete_cliente',
+            'view_asignacioncliente',
+            'add_asignacioncliente',
+            'change_asignacioncliente',
+            'delete_asignacioncliente',
+            'view_clientemediodepago',
+            'add_clientemediodepago',
+            'change_clientemediodepago',
+            'delete_clientemediodepago',
+            'view_segmento',
+            'add_segmento',
+            'change_segmento',
+            'delete_segmento',
+            'view_descuento',
+            'add_descuento',
+            'change_descuento',
+            'delete_descuento',
+            'view_historialdescuentos',
+            'view_historialclientemediodepago',
+            'view_limitediario',
+            'add_limitediario',
+            'change_limitediario',
+            'delete_limitediario',
+            'view_limitemensual',
+            'add_limitemensual',
+            'change_limitemensual',
+            'delete_limitemensual',
+            
+            
+            # ═══════════════════════════════════════════════════════
+            # DIVISAS
+            # ═══════════════════════════════════════════════════════
+            'view_cotizaciones_segmento',
+            'manage_cotizaciones_segmento',
+            'realizar_operacion',
+            'manage_divisas',
+            'view_divisas',
+            'manage_tasas_cambio',
+            'view_tasas_cambio',
+            'view_divisa',
+            'add_divisa',
+            'change_divisa',
+            'delete_divisa',
+            'view_tasacambio',
+            'add_tasacambio',
+            'change_tasacambio',
+            'delete_tasacambio',
+            'view_cotizacionsegmento',
+            'add_cotizacionsegmento',
+            'change_cotizacionsegmento',
+            'delete_cotizacionsegmento',
+            
+            # ═══════════════════════════════════════════════════════
+            # MEDIOS DE PAGO
+            # ═══════════════════════════════════════════════════════
+            'view_catalogo_medios_pago',
+            'manage_catalogo_medios_pago',
+            'view_mediodepago',
+            'add_mediodepago',
+            'change_mediodepago',
+            'delete_mediodepago',
+            
+            # ═══════════════════════════════════════════════════════
+            # ROLES Y GRUPOS
+            # ═══════════════════════════════════════════════════════
+            'view_group',
+            'add_group',
+            'change_group',
+            'delete_group',
+            'view_permission',
+        ]
+
+        self._assign_permissions('administrador', codenames, verbose)
 
     def _configure_operador(self, verbose):
         """Configurar permisos para OPERADOR"""
