@@ -1,4 +1,5 @@
 #operacion_divisas
+from time import timezone
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import ListView, CreateView, UpdateView, View, FormView, TemplateView
 from django.urls import reverse_lazy, reverse
@@ -26,6 +27,10 @@ from divisas.views import redondear
 # MFA para compra
 from mfa.utils import generate_and_send_otp, check_otp_validity
 from mfa.models import MFAConfig
+from transacciones.services import (
+    calcular_conversion_ajustada,
+    formatear_denominaciones
+)
 
 
 
@@ -831,3 +836,333 @@ def compra_mfa_resend_view(request):
 
 def seleccionar_operacion_view(request):
     return render(request, "operaciones/seleccionar_operacion.html")
+
+
+@login_required
+def calcular_compra(request):
+    """
+    Vista para calcular el monto de una compra de divisas CON AJUSTE A DENOMINACIONES
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        divisa_code = data.get('divisa')
+        monto_guaranies = Decimal(str(data.get('monto', 0)))
+        
+        if not divisa_code or monto_guaranies <= 0:
+            return JsonResponse({
+                'success': False,
+                'error': 'Datos inválidos'
+            }, status=400)
+        
+        # Obtener divisas
+        try:
+            divisa = Divisa.objects.get(code=divisa_code, is_active=True)
+            guarani = Divisa.objects.get(code='PYG', is_active=True)
+        except Divisa.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Divisa no encontrada'
+            }, status=404)
+        
+        # Obtener tasa de cambio
+        usuario = request.user
+        cliente = None
+        descuento = None
+        segmento = None
+        
+        if hasattr(usuario, 'cliente_profile'):
+            cliente = usuario.cliente_profile
+            try:
+                asignacion = AsignacionCliente.objects.select_related('segmento').get(
+                    cliente=cliente,
+                    fecha_inicio__lte=timezone.now(),
+                    fecha_fin__gte=timezone.now()
+                )
+                segmento = asignacion.segmento
+            except AsignacionCliente.DoesNotExist:
+                pass
+            
+            try:
+                descuento = Descuento.objects.get(
+                    cliente=cliente,
+                    divisa=divisa,
+                    is_active=True,
+                    fecha_inicio__lte=timezone.now(),
+                    fecha_fin__gte=timezone.now()
+                )
+            except Descuento.DoesNotExist:
+                pass
+        
+        # Obtener tasa de cambio
+        try:
+            tasa_obj = TasaCambio.objects.filter(
+                divisa=divisa,
+                fecha_hora_registro__lte=timezone.now()
+            ).order_by('-fecha_hora_registro').first()
+            
+            if not tasa_obj:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'No hay tasa de cambio disponible para {divisa.nombre}'
+                }, status=404)
+            
+            # Aplicar segmento o descuento
+            if segmento:
+                try:
+                    cotizacion = CotizacionSegmento.objects.get(
+                        tasa_cambio=tasa_obj,
+                        segmento=segmento
+                    )
+                    tasa_cambio = cotizacion.cotizacion_venta
+                except CotizacionSegmento.DoesNotExist:
+                    tasa_cambio = tasa_obj.venta
+            elif descuento:
+                tasa_base = tasa_obj.venta
+                ajuste = tasa_base * (descuento.porcentaje_descuento / Decimal('100'))
+                tasa_cambio = tasa_base - ajuste
+            else:
+                tasa_cambio = tasa_obj.venta
+                
+        except Exception as e:
+            logger.error(f"Error al obtener tasa: {e}", exc_info=True)
+            return JsonResponse({
+                'success': False,
+                'error': 'Error al obtener tasa de cambio'
+            }, status=500)
+        
+        # ===================================================================
+        # NUEVO: Usar cálculo con ajuste a denominaciones
+        # ===================================================================
+        resultado_conv = calcular_conversion_ajustada(
+            monto_entrada=monto_guaranies,
+            divisa_entrada=guarani,
+            divisa_salida=divisa,
+            tasa_cambio=tasa_cambio,
+            tipo_operacion='compra'
+        )
+        
+        # Obtener valores ajustados
+        monto_divisa = resultado_conv['monto_ajustado']
+        monto_guaranies_ajustado = resultado_conv['monto_entrada_ajustado']
+        tasa_efectiva = resultado_conv['tasa_efectiva']
+        denominaciones = formatear_denominaciones(resultado_conv['denominaciones'])
+        fue_ajustado = resultado_conv['fue_ajustado']
+        
+        logger.info(f"[COMPRA] Gs.{monto_guaranies} → {monto_divisa} {divisa.code}")
+        if fue_ajustado:
+            logger.info(f"[COMPRA] AJUSTADO: Gs.{monto_guaranies_ajustado} (tasa efectiva: {tasa_efectiva})")
+        
+        # Guardar en sesión
+        request.session['operacion'] = {
+            'tipo': 'compra',
+            'divisa': divisa.code,
+            'divisa_nombre': divisa.nombre,
+            'monto_guaranies': str(monto_guaranies_ajustado),
+            'monto_divisa': str(monto_divisa),
+            'tasa_cambio': str(tasa_efectiva),
+            'tasa_original': str(tasa_cambio),
+            'fue_ajustado': fue_ajustado,
+            'denominaciones': denominaciones,
+        }
+        
+        # Preparar respuesta
+        compra_resultado = {
+            'monto_guaranies': float(monto_guaranies_ajustado),
+            'monto_divisa': float(monto_divisa),
+            'tasa_cambio': float(tasa_efectiva),
+            'tasa_original': float(tasa_cambio),
+            'fue_ajustado': fue_ajustado,
+            'denominaciones': denominaciones,
+            'mensaje_ajuste': (
+                f'El monto fue ajustado a {monto_divisa} {divisa.code} '
+                f'para poder entregarse con billetes disponibles.'
+            ) if fue_ajustado else None,
+        }
+        
+        request.session['compra_resultado'] = compra_resultado
+        request.session.modified = True
+        
+        return JsonResponse({
+            'success': True,
+            'data': compra_resultado
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'JSON inválido'
+        }, status=400)
+    except Exception as e:
+        logger.error(f"Error en calcular_compra: {e}", exc_info=True)
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@login_required
+def calcular_venta(request):
+    """
+    Vista para calcular el monto de una venta de divisas CON AJUSTE A DENOMINACIONES
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        divisa_code = data.get('divisa')
+        monto_divisa = Decimal(str(data.get('monto', 0)))
+        
+        if not divisa_code or monto_divisa <= 0:
+            return JsonResponse({
+                'success': False,
+                'error': 'Datos inválidos'
+            }, status=400)
+        
+        # Obtener divisas
+        try:
+            divisa = Divisa.objects.get(code=divisa_code, is_active=True)
+            guarani = Divisa.objects.get(code='PYG', is_active=True)
+        except Divisa.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Divisa no encontrada'
+            }, status=404)
+        
+        # Obtener tasa de cambio
+        usuario = request.user
+        cliente = None
+        descuento = None
+        segmento = None
+        
+        if hasattr(usuario, 'cliente_profile'):
+            cliente = usuario.cliente_profile
+            try:
+                asignacion = AsignacionCliente.objects.select_related('segmento').get(
+                    cliente=cliente,
+                    fecha_inicio__lte=timezone.now(),
+                    fecha_fin__gte=timezone.now()
+                )
+                segmento = asignacion.segmento
+            except AsignacionCliente.DoesNotExist:
+                pass
+            
+            try:
+                descuento = Descuento.objects.get(
+                    cliente=cliente,
+                    divisa=divisa,
+                    is_active=True,
+                    fecha_inicio__lte=timezone.now(),
+                    fecha_fin__gte=timezone.now()
+                )
+            except Descuento.DoesNotExist:
+                pass
+        
+        # Obtener tasa de cambio (para venta usamos tasa de compra)
+        try:
+            tasa_obj = TasaCambio.objects.filter(
+                divisa=divisa,
+                fecha_hora_registro__lte=timezone.now()
+            ).order_by('-fecha_hora_registro').first()
+            
+            if not tasa_obj:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'No hay tasa de cambio disponible para {divisa.nombre}'
+                }, status=404)
+            
+            # Aplicar segmento o descuento (tasa de COMPRA para el sistema)
+            if segmento:
+                try:
+                    cotizacion = CotizacionSegmento.objects.get(
+                        tasa_cambio=tasa_obj,
+                        segmento=segmento
+                    )
+                    tasa_cambio = cotizacion.cotizacion_compra
+                except CotizacionSegmento.DoesNotExist:
+                    tasa_cambio = tasa_obj.compra
+            elif descuento:
+                tasa_base = tasa_obj.compra
+                ajuste = tasa_base * (descuento.porcentaje_descuento / Decimal('100'))
+                tasa_cambio = tasa_base + ajuste  # En venta se suma para dar más al cliente
+            else:
+                tasa_cambio = tasa_obj.compra
+                
+        except Exception as e:
+            logger.error(f"Error al obtener tasa: {e}", exc_info=True)
+            return JsonResponse({
+                'success': False,
+                'error': 'Error al obtener tasa de cambio'
+            }, status=500)
+        
+        # ===================================================================
+        # NUEVO: Usar cálculo con ajuste a denominaciones
+        # ===================================================================
+        resultado_conv = calcular_conversion_ajustada(
+            monto_entrada=monto_divisa,
+            divisa_entrada=divisa,
+            divisa_salida=guarani,
+            tasa_cambio=tasa_cambio,
+            tipo_operacion='venta'
+        )
+        
+        # Obtener valores ajustados
+        monto_guaranies = resultado_conv['monto_ajustado']
+        monto_divisa_ajustado = resultado_conv['monto_entrada_ajustado']
+        tasa_efectiva = resultado_conv['tasa_efectiva']
+        denominaciones = formatear_denominaciones(resultado_conv['denominaciones'])
+        fue_ajustado = resultado_conv['fue_ajustado']
+        
+        logger.info(f"[VENTA] {monto_divisa} {divisa.code} → Gs.{monto_guaranies}")
+        if fue_ajustado:
+            logger.info(f"[VENTA] AJUSTADO: {monto_divisa_ajustado} {divisa.code} (tasa efectiva: {tasa_efectiva})")
+        
+        # Guardar en sesión
+        request.session['operacion'] = {
+            'tipo': 'venta',
+            'divisa': divisa.code,
+            'divisa_nombre': divisa.nombre,
+            'monto_divisa': str(monto_divisa_ajustado),
+            'monto_guaranies': str(monto_guaranies),
+            'tasa_cambio': str(tasa_efectiva),
+            'tasa_original': str(tasa_cambio),
+            'fue_ajustado': fue_ajustado,
+            'denominaciones': denominaciones,
+        }
+        
+        # Preparar respuesta
+        venta_resultado = {
+            'monto_divisa': float(monto_divisa_ajustado),
+            'monto_guaranies': float(monto_guaranies),
+            'tasa_cambio': float(tasa_efectiva),
+            'tasa_original': float(tasa_cambio),
+            'fue_ajustado': fue_ajustado,
+            'denominaciones': denominaciones,
+            'mensaje_ajuste': (
+                f'El monto fue ajustado: debe entregar {monto_divisa_ajustado} {divisa.code} '
+                f'en billetes completos para recibir {monto_guaranies} PYG.'
+            ) if fue_ajustado else None,
+        }
+        
+        request.session['venta_resultado'] = venta_resultado
+        request.session.modified = True
+        
+        return JsonResponse({
+            'success': True,
+            'data': venta_resultado
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'JSON inválido'
+        }, status=400)
+    except Exception as e:
+        logger.error(f"Error en calcular_venta: {e}", exc_info=True)
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)

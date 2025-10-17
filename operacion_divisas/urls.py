@@ -23,5 +23,8 @@ urlpatterns = [
     path('compra/mfa/resend/', views.compra_mfa_resend_view, name='compra_mfa_resend'),
 
     #Seleccionar operación
-    path("operacion/", views.seleccionar_operacion_view, name="seleccionar_operacion"),    
+    path("operacion/", views.seleccionar_operacion_view, name="seleccionar_operacion"),  
+    # URLs para cálculo de conversión
+    path('calcular/compra/', views.calcular_compra, name='calcular_compra'),
+    path('calcular/venta/', views.calcular_venta, name='calcular_venta'),
 ]
