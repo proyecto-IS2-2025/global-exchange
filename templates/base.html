@@ -71,7 +71,7 @@
                     Bienvenido, <strong>{{ user.username }}</strong>
                 </span>
             </li>
-              {% if not grupo_admin %}
+              {% if not usuario_es_staff %}
                 {% include "partials/notificaciones_dropdown.html" %}
               {% endif %}
             <!-- Botón Cerrar Sesión -->
@@ -114,9 +114,9 @@
     </div>
   </nav>
 
-  <!-- ═════════════════════════════════════════════════════════════ -->
+
   <!-- MENSAJES DJANGO -->
-  <!-- ═════════════════════════════════════════════════════════════ -->
+
   {% if messages %}
     <div class="container mt-3">
       {% for message in messages %}
@@ -128,26 +128,22 @@
     </div>
   {% endif %}
 
-  <!-- ═════════════════════════════════════════════════════════════ -->
+
   <!-- CONTENIDO PRINCIPAL -->
-  <!-- ═════════════════════════════════════════════════════════════ -->
+
   <main class="container py-4">
     {% block content %}{% endblock %}
   </main>
 
-  <!-- ═════════════════════════════════════════════════════════════ -->
+
   <!-- FOOTER -->
-  <!-- ═════════════════════════════════════════════════════════════ -->
+
   <footer class="border-top py-3 bg-white">
     <div class="container text-center text-muted small">
       © {{ now|default:""|date:"Y" }} Global Exchange
     </div>
   </footer>
 
-  <!-- ═════════════════════════════════════════════════════════════ -->
-  <!-- SCRIPTS -->
-  <!-- ═════════════════════════════════════════════════════════════ -->
-  <!-- Bootstrap JS (CDN) -->
   <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"

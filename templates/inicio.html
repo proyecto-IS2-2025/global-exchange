@@ -38,8 +38,7 @@
     {% if usuario_es_staff %}
       <div class="mb-4">
         <h2 class="h4 text-center mb-4">
-          <i class="fas fa-cog me-2"></i>
-          Panel de {{ tipo_usuario }}
+          
         </h2>
         {% include "menus/menu_staff.html" %}
       </div>
@@ -150,52 +149,4 @@
   }
 </style>
 
-<style>
-  /* Hover effect mejorado para cards */
-  .opcion_admin {
-    transition: all 0.3s ease;
-    cursor: pointer;
-    background: white;
-  }
-  
-  .opcion_admin:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
-  }
-  
-  /* Animación de entrada para las cards */
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  .opcion_admin {
-    animation: fadeInUp 0.5s ease forwards;
-  }
-  
-  /* Delay progresivo para cada card */
-  .row > .col:nth-child(1) .opcion_admin { animation-delay: 0.1s; }
-  .row > .col:nth-child(2) .opcion_admin { animation-delay: 0.2s; }
-  .row > .col:nth-child(3) .opcion_admin { animation-delay: 0.3s; }
-  .row > .col:nth-child(4) .opcion_admin { animation-delay: 0.4s; }
-  .row > .col:nth-child(5) .opcion_admin { animation-delay: 0.5s; }
-  .row > .col:nth-child(6) .opcion_admin { animation-delay: 0.6s; }
-  
-  /* Responsive: apilar en móviles */
-  @media (max-width: 576px) {
-    .opcion_admin {
-      padding: 2rem 1rem !important;
-    }
-    
-    .opcion_admin .display-3 {
-      font-size: 2rem !important;
-    }
-  }
-</style>
 {% endblock %}

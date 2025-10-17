@@ -269,8 +269,9 @@ class Command(BaseCommand):
             # ═══════════════════════════════════════════════════════
             # MFA (SOLO ADMIN)
             # ═══════════════════════════════════════════════════════
-            'view_mfa_config',      # ✅ AGREGADO
-            'manage_mfa_config',    # ✅ AGREGADO
+            'view_mfa_config',     
+            'manage_mfa_config', 
+            'view_transacciones_globales',   
             
             # ═══════════════════════════════════════════════════════
             # CLIENTES
@@ -360,6 +361,20 @@ class Command(BaseCommand):
             'change_group',
             'delete_group',
             'view_permission',
+
+            # ═══════════════════════════════════════════════════════════════
+            # TRANSACCIONES  
+            # ═══════════════════════════════════════════════════════════════
+            'view_transacciones_globales',        
+            'view_transacciones_asignadas',
+            'manage_estados_transacciones',
+            'manage_reversiones_transacciones',
+            'view_historial_transacciones',
+            'export_transacciones',
+            'view_transaccion',
+            'add_transaccion',
+            'change_transaccion',
+            'view_historialtransaccion',
         ]
 
         self._assign_permissions('administrador', codenames, verbose)
