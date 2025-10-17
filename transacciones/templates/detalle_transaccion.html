@@ -57,18 +57,30 @@
                     <p class="mb-0 opacity-75">{{ transaccion.get_tipo_operacion_display }} - {{ transaccion.cliente.nombre_completo }}</p>
                 </div>
                 <div class="col-md-4 text-md-end">
-                    {% if transaccion.estado == 'pendiente' %}
-                        <span class="badge bg-warning status-badge">{{ transaccion.get_estado_display }}</span>
+                    {% if transaccion.estado == 'completado' %}
+                        <span class="badge bg-success status-badge">
+                            <i class="bi bi-check-circle-fill me-1"></i>{{ transaccion.get_estado_display }}
+                        </span>
                     {% elif transaccion.estado == 'pagada' %}
-                        <span class="badge bg-success status-badge">{{ transaccion.get_estado_display }}</span>
-                    {% elif transaccion.estado == 'completado' %}
-                        <span class="badge bg-success status-badge">{{ transaccion.get_estado_display }}</span>
+                        <span class="badge bg-success status-badge">
+                            <i class="bi bi-check-circle me-1"></i>{{ transaccion.get_estado_display }}
+                        </span>
+                    {% elif transaccion.estado == 'pendiente' %}
+                        <span class="badge bg-info status-badge">
+                            <i class="bi bi-clock-history me-1"></i>{{ transaccion.get_estado_display }}
+                        </span>
                     {% elif transaccion.estado == 'cancelada' %}
-                        <span class="badge bg-danger status-badge">{{ transaccion.get_estado_display }}</span>
+                        <span class="badge bg-danger status-badge">
+                            <i class="bi bi-x-circle me-1"></i>{{ transaccion.get_estado_display }}
+                        </span>
                     {% elif transaccion.estado == 'anulada' %}
-                        <span class="badge bg-dark status-badge">{{ transaccion.get_estado_display }}</span>
+                        <span class="badge bg-secondary status-badge">
+                            <i class="bi bi-slash-circle me-1"></i>{{ transaccion.get_estado_display }}
+                        </span>
                     {% elif transaccion.estado == 'a_retirar' %}
-                        <span class="badge bg-info status-badge">{{ transaccion.get_estado_display }}</span>
+                        <span class="badge bg-warning status-badge">
+                            <i class="bi bi-box-arrow-right me-1"></i>{{ transaccion.get_estado_display }}
+                        </span>
                     {% else %}
                         <span class="badge bg-secondary status-badge">{{ transaccion.get_estado_display }}</span>
                     {% endif %}
