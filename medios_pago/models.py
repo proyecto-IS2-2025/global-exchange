@@ -7,7 +7,8 @@ from django.conf import settings
 
 # Tipos de medios de pago - Mapeo técnico a etiquetas de usuario
 TIPO_MEDIO_CHOICES = [
-    ('stripe', 'Tarjeta de Crédito/Débito'),
+    ('stripe', 'Tarjeta de Crédito/Débito (Stripe)'),
+    ('tarjeta_local', 'Tarjeta de Crédito/Débito (Local)'),
     ('paypal', 'PayPal'),
     ('bank_local', 'Transferencia Bancaria Local'),
     ('bank_international', 'Transferencia Bancaria Internacional'),
@@ -19,6 +20,7 @@ TIPO_MEDIO_CHOICES = [
 # Mapeo de tipos de medios a procesadores de API
 API_MAPPING = {
     'stripe': 'StripeProcessor',
+    'tarjeta_local': 'TarjetaLocalProcessor',
     'paypal': 'PayPalProcessor', 
     'bank_local': 'BankLocalProcessor',
     'bank_international': 'BankInternationalProcessor',

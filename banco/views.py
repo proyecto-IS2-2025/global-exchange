@@ -199,10 +199,18 @@ def historial(request):
         Q(cuenta_destino__in=cuentas_usuario)
     )
 
-    # Pagos con tarjetas del usuario (incluye recargas a billetera)
-    pagos = PagoTarjeta.objects.filter(
+    # Pagos con tarjetas del usuario (ENVIADOS por el usuario)
+    pagos_enviados = PagoTarjeta.objects.filter(
         Q(tarjeta_debito__usuario=user) |
         Q(tarjeta_credito__usuario=user)
+    )
+    
+    # ✅ NUEVO: Pagos con tarjeta RECIBIDOS en las cuentas del usuario
+    pagos_recibidos_tarjeta = PagoTarjeta.objects.filter(
+        cuenta_destino__in=cuentas_usuario
+    ).exclude(
+        # Evitar duplicados: no incluir pagos que ya están en pagos_enviados
+        Q(tarjeta_debito__usuario=user) | Q(tarjeta_credito__usuario=user)
     )
 
     # ✅ NUEVO: Pagos recibidos desde billeteras a las cuentas del usuario
@@ -213,7 +221,7 @@ def historial(request):
 
     # Unificar todos los movimientos
     movimientos = sorted(
-        list(transferencias) + list(pagos) + list(pagos_billetera),
+        list(transferencias) + list(pagos_enviados) + list(pagos_recibidos_tarjeta) + list(pagos_billetera),
         key=lambda x: x.fecha,
         reverse=True
     )

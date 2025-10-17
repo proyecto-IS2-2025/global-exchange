@@ -253,11 +253,23 @@
                         {% else %}
                           <span class="text-success">+ ₲ <span class="monto-valor">{{ m.monto|floatformat:0 }}</span></span>
                         {% endif %}
+                      {% elif m.tarjeta_debito or m.tarjeta_credito %}
+                        {# PagoTarjeta - verificar si es enviado o recibido #}
+                        {% if m.tarjeta_debito and m.tarjeta_debito.usuario.id == user.id %}
+                          {# Pago ENVIADO con mi tarjeta de débito → Egreso #}
+                          <span class="text-danger">- ₲ <span class="monto-valor">{{ m.monto|floatformat:0 }}</span></span>
+                        {% elif m.tarjeta_credito and m.tarjeta_credito.usuario.id == user.id %}
+                          {# Pago ENVIADO con mi tarjeta de crédito → Egreso #}
+                          <span class="text-danger">- ₲ <span class="monto-valor">{{ m.monto|floatformat:0 }}</span></span>
+                        {% else %}
+                          {# Pago RECIBIDO en mi cuenta → Ingreso #}
+                          <span class="text-success">+ ₲ <span class="monto-valor">{{ m.monto|floatformat:0 }}</span></span>
+                        {% endif %}
                       {% elif m.cuenta_destino and m.billetera %}
                         {# PagoBilletera - siempre es ingreso #}
                         <span class="text-success">+ ₲ <span class="monto-valor">{{ m.monto|floatformat:0 }}</span></span>
                       {% else %}
-                        {# PagoTarjeta o RecargaBilletera - siempre es egreso #}
+                        {# Otros casos - por defecto egreso #}
                         <span class="text-danger">- ₲ <span class="monto-valor">{{ m.monto|floatformat:0 }}</span></span>
                       {% endif %}
                     </td>
@@ -271,10 +283,18 @@
                         {% endif %}
                       {% elif m.tarjeta_debito and not m.billetera %}
                         {# PagoTarjeta con débito #}
-                        Pago con Débito (****{{ m.tarjeta_debito.numero|slice:"-4:" }})
+                        {% if m.tarjeta_debito.usuario.id == user.id %}
+                          Pago con Débito (****{{ m.tarjeta_debito.numero|slice:"-4:" }})
+                        {% else %}
+                          Pago recibido de Débito (****{{ m.tarjeta_debito.numero|slice:"-4:" }})
+                        {% endif %}
                       {% elif m.tarjeta_credito %}
                         {# PagoTarjeta con crédito #}
-                        Pago con Crédito (****{{ m.tarjeta_credito.numero|slice:"-4:" }})
+                        {% if m.tarjeta_credito.usuario.id == user.id %}
+                          Pago con Crédito (****{{ m.tarjeta_credito.numero|slice:"-4:" }})
+                        {% else %}
+                          Pago recibido de Crédito (****{{ m.tarjeta_credito.numero|slice:"-4:" }})
+                        {% endif %}
                       {% elif m.cuenta_destino and m.billetera %}
                         {# PagoBilletera #}
                         Pago recibido desde billetera {{ m.billetera.usuario.numero_celular }}

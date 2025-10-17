@@ -227,6 +227,16 @@ class PagoTarjeta(models.Model):
         blank=True,
         related_name="recargas_banco"
     )
+    
+    # ✅ NUEVO: Cuenta destino para rastrear dónde va el dinero
+    cuenta_destino = models.ForeignKey(
+        "Cuenta",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="pagos_recibidos_tarjeta",
+        help_text="Cuenta que recibe el pago (ej: cuenta empresa para compras)"
+    )
 
     def save(self, *args, **kwargs):
         """

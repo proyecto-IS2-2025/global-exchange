@@ -435,6 +435,242 @@ def realizar_transferencia_bancaria(entidad_src, numero_cuenta_src, entidad_dst,
         return {'ok': False, 'code': '96', 'message': 'Error interno del sistema'}
 
 
+def realizar_pago_tarjeta(medio_datos, monto, referencia=None):
+    """
+    Realiza un pago desde una tarjeta de débito/crédito a la cuenta bancaria de la empresa.
+    
+    Args:
+        medio_datos: Diccionario con información del medio de pago (debe contener datos de tarjeta)
+        monto: Monto a pagar en guaraníes
+        referencia: Referencia opcional para el pago
+        
+    Returns:
+        dict: {'ok': bool, 'code': str, 'message': str, 'comprobante': str}
+    """
+    try:
+        from banco.models import TarjetaDebito, TarjetaCredito, PagoTarjeta, Cuenta, EntidadBancaria
+    except ImportError as e:
+        logger.error(f"Error al importar modelos de banco: {e}")
+        return {'ok': False, 'code': '96', 'message': 'Módulo de banco no disponible'}
+    
+    try:
+        logger.info(f"[PAGO_TARJETA] Iniciando pago desde tarjeta por monto={monto}")
+        
+        # Extraer datos de la tarjeta desde medio_datos
+        datos_campos = medio_datos.get('datos_campos', {})
+        if not isinstance(datos_campos, dict):
+            logger.error(f"[PAGO_TARJETA] datos_campos no es un diccionario: {type(datos_campos)}")
+            return {'ok': False, 'code': '12', 'message': 'Datos de tarjeta incompletos'}
+        
+        logger.debug(f"[PAGO_TARJETA] datos_campos: {datos_campos}")
+        
+        # Extraer datos de la tarjeta
+        numero_tarjeta = None
+        mes_vencimiento = None
+        anho_vencimiento = None
+        cvv = None
+        entidad_nombre = None
+        
+        # Buscar número de tarjeta
+        for key, value in datos_campos.items():
+            key_normalized = _normalize_text(key)
+            
+            # Número de tarjeta
+            if numero_tarjeta is None:
+                if any(variant in key_normalized for variant in ['card_number', 'numero', 'tarjeta', 'card', 'numero de tarjeta']):
+                    numero_tarjeta = str(value).replace(' ', '').replace('-', '').strip()
+                    logger.debug(f"[PAGO_TARJETA] Número de tarjeta encontrado: {numero_tarjeta[-4:]}")
+            
+            # Mes de vencimiento
+            if mes_vencimiento is None:
+                if any(variant in key_normalized for variant in ['exp_month', 'mes', 'month', 'mes de vencimiento', 'mes vencimiento']):
+                    try:
+                        mes_vencimiento = int(str(value).strip())
+                        logger.debug(f"[PAGO_TARJETA] Mes de vencimiento: {mes_vencimiento}")
+                    except (ValueError, TypeError):
+                        pass
+            
+            # Año de vencimiento
+            if anho_vencimiento is None:
+                if any(variant in key_normalized for variant in ['exp_year', 'ano', 'year', 'anho', 'año', 'año de vencimiento', 'anho de vencimiento', 'año vencimiento', 'anho vencimiento']):
+                    try:
+                        anho_vencimiento = int(str(value).strip())
+                        logger.debug(f"[PAGO_TARJETA] Año de vencimiento: {anho_vencimiento}")
+                    except (ValueError, TypeError):
+                        pass
+            
+            # CVV/CVC
+            if cvv is None:
+                if any(variant in key_normalized for variant in ['cvc', 'cvv', 'codigo', 'codigo de seguridad', 'security code']):
+                    cvv = str(value).strip()
+                    logger.debug(f"[PAGO_TARJETA] CVV encontrado")
+            
+            # Entidad
+            if entidad_nombre is None:
+                if any(variant in key_normalized for variant in ['entidad', 'banco', 'bank', 'bank_name']):
+                    entidad_nombre = str(value).strip()
+                    logger.debug(f"[PAGO_TARJETA] Entidad encontrada: {entidad_nombre}")
+        
+        # Validar datos requeridos
+        if not numero_tarjeta:
+            logger.error(f"[PAGO_TARJETA] No se encontró número de tarjeta")
+            return {'ok': False, 'code': '12', 'message': 'No se encontró número de tarjeta'}
+        
+        if mes_vencimiento is None or anho_vencimiento is None:
+            logger.error(f"[PAGO_TARJETA] Faltan datos de vencimiento")
+            return {'ok': False, 'code': '12', 'message': 'Faltan datos de vencimiento de la tarjeta'}
+        
+        if not cvv:
+            logger.error(f"[PAGO_TARJETA] No se encontró CVV")
+            return {'ok': False, 'code': '12', 'message': 'No se encontró código de seguridad (CVV)'}
+        
+        logger.info(f"[PAGO_TARJETA] Buscando tarjeta: número=***{numero_tarjeta[-4:]}, vencimiento={mes_vencimiento}/{anho_vencimiento}")
+        
+        # Buscar tarjeta de débito o crédito que coincida
+        tarjeta_debito = None
+        tarjeta_credito = None
+        
+        # Intentar encontrar tarjeta de débito
+        try:
+            query_debito = TarjetaDebito.objects.filter(
+                numero=numero_tarjeta,
+                mes_vencimiento=mes_vencimiento,
+                anho_vencimiento=anho_vencimiento,
+                cvv=cvv
+            )
+            
+            # Si hay entidad, filtrar por ella
+            if entidad_nombre:
+                entidad = _get_entidad(entidad_nombre)
+                if entidad:
+                    query_debito = query_debito.filter(entidad=entidad)
+            
+            tarjeta_debito = query_debito.first()
+            
+            if tarjeta_debito:
+                logger.info(f"[PAGO_TARJETA] Tarjeta de débito encontrada: {tarjeta_debito}")
+        except Exception as e:
+            logger.debug(f"[PAGO_TARJETA] Error buscando tarjeta débito: {e}")
+        
+        # Si no se encontró débito, buscar crédito
+        if not tarjeta_debito:
+            try:
+                query_credito = TarjetaCredito.objects.filter(
+                    numero=numero_tarjeta,
+                    mes_vencimiento=mes_vencimiento,
+                    anho_vencimiento=anho_vencimiento,
+                    cvv=cvv
+                )
+                
+                # Si hay entidad, filtrar por ella
+                if entidad_nombre:
+                    entidad = _get_entidad(entidad_nombre)
+                    if entidad:
+                        query_credito = query_credito.filter(entidad=entidad)
+                
+                tarjeta_credito = query_credito.first()
+                
+                if tarjeta_credito:
+                    logger.info(f"[PAGO_TARJETA] Tarjeta de crédito encontrada: {tarjeta_credito}")
+            except Exception as e:
+                logger.debug(f"[PAGO_TARJETA] Error buscando tarjeta crédito: {e}")
+        
+        # Si no se encontró ninguna tarjeta
+        if not tarjeta_debito and not tarjeta_credito:
+            logger.error(f"[PAGO_TARJETA] No se encontró tarjeta con los datos proporcionados")
+            return {
+                'ok': False,
+                'code': '14',
+                'message': 'No se encontró tarjeta con los datos proporcionados. Verifique número, fecha de vencimiento y CVV.'
+            }
+        
+        # Verificar fondos disponibles
+        monto_decimal = Decimal(str(monto))
+        
+        if tarjeta_debito:
+            # Verificar saldo en cuenta asociada
+            if not tarjeta_debito.cuenta:
+                logger.error(f"[PAGO_TARJETA] Tarjeta de débito sin cuenta asociada")
+                return {'ok': False, 'code': '96', 'message': 'Tarjeta de débito sin cuenta asociada'}
+            
+            if tarjeta_debito.cuenta.saldo < monto_decimal:
+                logger.warning(f"[PAGO_TARJETA] Saldo insuficiente. Requerido: {monto_decimal}, Disponible: {tarjeta_debito.cuenta.saldo}")
+                return {
+                    'ok': False,
+                    'code': '51',
+                    'message': f'Saldo insuficiente en cuenta. Disponible: ₲{tarjeta_debito.cuenta.saldo:,.0f}'
+                }
+        
+        if tarjeta_credito:
+            # Verificar límite de crédito disponible
+            disponible = tarjeta_credito.disponible()
+            if disponible < monto_decimal:
+                logger.warning(f"[PAGO_TARJETA] Límite de crédito excedido. Requerido: {monto_decimal}, Disponible: {disponible}")
+                return {
+                    'ok': False,
+                    'code': '51',
+                    'message': f'Límite de crédito excedido. Disponible: ₲{disponible:,.0f}'
+                }
+        
+        # Obtener cuenta de la empresa (destino)
+        ent_emp, cta_emp = _get_cuenta_empresa()
+        if not ent_emp or not cta_emp:
+            logger.error(f"[PAGO_TARJETA] No se encontró cuenta de empresa")
+            return {'ok': False, 'code': '96', 'message': 'Error de configuración: cuenta de empresa no encontrada'}
+        
+        # Buscar la cuenta destino
+        cuenta_destino = Cuenta.objects.filter(
+            entidad=ent_emp,
+            numero_cuenta=cta_emp
+        ).first()
+        
+        if not cuenta_destino:
+            logger.error(f"[PAGO_TARJETA] Cuenta destino no encontrada: entidad={ent_emp}, cuenta={cta_emp}")
+            return {'ok': False, 'code': '14', 'message': 'Cuenta destino no encontrada'}
+        
+        tipo_tarjeta = "débito" if tarjeta_debito else "crédito"
+        tarjeta = tarjeta_debito or tarjeta_credito
+        logger.info(f"[PAGO_TARJETA] Procesando pago con tarjeta de {tipo_tarjeta}: {tarjeta} por ₲{monto_decimal:,.0f}")
+        
+        # Realizar el pago
+        # IMPORTANTE: PagoTarjeta.save() automáticamente:
+        # - Debita de la cuenta (si es débito) o consume crédito (si es crédito)
+        # - NO acredita a destino, hay que hacerlo manualmente
+        with transaction.atomic():
+            # Crear el pago (esto debita/consume crédito automáticamente)
+            if tarjeta_debito:
+                pago = PagoTarjeta.objects.create(
+                    tarjeta_debito=tarjeta_debito,
+                    monto=monto_decimal,
+                    cuenta_destino=cuenta_destino  # ✅ Guardar cuenta destino
+                )
+            else:
+                pago = PagoTarjeta.objects.create(
+                    tarjeta_credito=tarjeta_credito,
+                    monto=monto_decimal,
+                    cuenta_destino=cuenta_destino  # ✅ Guardar cuenta destino
+                )
+            
+            # Acreditar a cuenta empresa manualmente
+            cuenta_destino.saldo += monto_decimal
+            cuenta_destino.save(update_fields=['saldo'])
+            
+            comprobante = str(pago.comprobante)
+            logger.info(f"[PAGO_TARJETA] Pago exitoso. Comprobante: {comprobante}")
+            
+            return {
+                'ok': True,
+                'code': '00',
+                'message': f'Pago con tarjeta de {tipo_tarjeta} realizado con éxito',
+                'comprobante': comprobante,
+                'tipo_tarjeta': tipo_tarjeta
+            }
+            
+    except Exception as e:
+        logger.error(f"[PAGO_TARJETA] Error al procesar pago: {e}", exc_info=True)
+        return {'ok': False, 'code': '96', 'message': f'Error al procesar pago con tarjeta: {str(e)}'}
+
+
 def realizar_pago_billetera(medio_datos, monto, referencia=None):
     """
     Realiza un pago desde una billetera digital a la cuenta bancaria de la empresa.
@@ -886,6 +1122,23 @@ def crear_transaccion_desde_compra(request):
                 else:
                     logger.warning(f"[COMPRA] Pago billetera fallido: {resultado}")
                     messages.warning(request, f"No se pudo procesar el pago desde billetera: {resultado.get('message')} (código {resultado.get('code')})")
+            
+            # Verificar si es tarjeta de crédito/débito (pero NO Stripe)
+            elif ('tarjeta' in tipo_medio or 'crédito' in tipo_medio or 'débito' in tipo_medio) and 'stripe' not in tipo_medio:
+                logger.info(f"[COMPRA] Procesando pago con tarjeta de crédito/débito")
+                resultado = realizar_pago_tarjeta(
+                    medio_datos=medio_datos,
+                    monto=transaccion.monto_origen,
+                    referencia=transaccion.numero_transaccion
+                )
+                if resultado.get('ok'):
+                    tipo_tarjeta = resultado.get('tipo_tarjeta', 'tarjeta')
+                    transaccion.cambiar_estado('pagada', observacion=f'Pago automático con tarjeta de {tipo_tarjeta} recibido', usuario=request.user)
+                    messages.success(request, f"Pago exitoso con tarjeta de {tipo_tarjeta}. Comprobante: {resultado.get('comprobante')}")
+                else:
+                    logger.warning(f"[COMPRA] Pago con tarjeta fallido: {resultado}")
+                    messages.warning(request, f"No se pudo procesar el pago con tarjeta: {resultado.get('message')} (código {resultado.get('code')})")
+            
             else:
                 # Proceso normal con cuenta bancaria
                 ent_cli_hint, cta_cli = _extraer_cuenta_desde_medio(medio_datos)
