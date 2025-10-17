@@ -66,7 +66,7 @@
                             <i class="bi bi-check-circle me-1"></i>{{ transaccion.get_estado_display }}
                         </span>
                     {% elif transaccion.estado == 'pendiente' %}
-                        <span class="badge bg-info status-badge">
+                        <span class="badge bg-warning status-badge">
                             <i class="bi bi-clock-history me-1"></i>{{ transaccion.get_estado_display }}
                         </span>
                     {% elif transaccion.estado == 'cancelada' %}
@@ -78,7 +78,7 @@
                             <i class="bi bi-slash-circle me-1"></i>{{ transaccion.get_estado_display }}
                         </span>
                     {% elif transaccion.estado == 'a_retirar' %}
-                        <span class="badge bg-warning status-badge">
+                        <span class="badge bg-info status-badge">
                             <i class="bi bi-box-arrow-right me-1"></i>{{ transaccion.get_estado_display }}
                         </span>
                     {% else %}

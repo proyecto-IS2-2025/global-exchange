@@ -969,8 +969,8 @@ def crear_transaccion_desde_venta(request):
                     referencia=transaccion.numero_transaccion  # NUEVO: referencia para historial
                 )
                 if resultado.get('ok'):
-                    transaccion.cambiar_estado('completado', observacion='Acreditación automática realizada', usuario=request.user)
-                    messages.success(request, 'Transferencia realizada: operación completada.')
+                    transaccion.cambiar_estado('pendiente', observacion='Transferencia registrada, pendiente de confirmación', usuario=request.user)
+                    messages.success(request, 'Transferencia registrada: operación pendiente de confirmación.')
                 else:
                     logger.warning(f"[VENTA] Transferencia fallida: {resultado}")
                     messages.warning(request, f"No se pudo realizar la transferencia: {resultado.get('message')} (código {resultado.get('code')})")
