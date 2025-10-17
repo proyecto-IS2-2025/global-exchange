@@ -2,25 +2,25 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, View
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin  # ← MANTENER SOLO ESTE
 from django.db import transaction
 from django.contrib import messages
 from django.http import JsonResponse
-from django.views.decorators.http import require_POST, require_http_methods
 from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
-from django.core.exceptions import ValidationError
 import json
 
 from .models import MedioDePago, CampoMedioDePago, PaymentTemplate
 from .forms import MedioDePagoForm, create_campo_formset
+from roles.decorators import require_permission
 
 
-class MedioDePagoListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+@method_decorator(require_permission("medios_pago.view_catalogo_medios_pago", check_client_assignment=False), name="dispatch")
+class MedioDePagoListView(LoginRequiredMixin, ListView):  # ← ELIMINAR PermissionRequiredMixin
     """
+    🔐 PROTEGIDA: medios_pago.view_catalogo_medios_pago
+    
     Vista de listado para los Medios de Pago con filtros por estado.
     """
-    permission_required = 'medios_pago.view_mediodepago'
     model = MedioDePago
     template_name = 'medios_pago/lista.html'
     context_object_name = 'medios_pago'
@@ -62,11 +62,13 @@ class MedioDePagoListView(LoginRequiredMixin, PermissionRequiredMixin, ListView)
         return context
 
 
-class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+@method_decorator(require_permission("medios_pago.manage_catalogo_medios_pago", check_client_assignment=False), name="dispatch")
+class MedioDePagoCreateAdminView(LoginRequiredMixin, CreateView):  # ← ELIMINAR PermissionRequiredMixin
     """
+    🔐 PROTEGIDA: medios_pago.manage_catalogo_medios_pago
+    
     Vista para la creación de un nuevo Medio de Pago con templates dinámicos.
     """
-    permission_required = 'medios_pago.add_mediodepago'
     model = MedioDePago
     form_class = MedioDePagoForm
     template_name = 'medios_pago/form.html'
@@ -169,11 +171,13 @@ class MedioDePagoCreateAdminView(LoginRequiredMixin, PermissionRequiredMixin, Cr
         )
 
 
-class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+@method_decorator(require_permission("medios_pago.manage_catalogo_medios_pago", check_client_assignment=False), name="dispatch")
+class MedioDePagoUpdateView(LoginRequiredMixin, UpdateView):  # ← ELIMINAR PermissionRequiredMixin
     """
+    🔐 PROTEGIDA: medios_pago.manage_catalogo_medios_pago
+    
     Vista para la edición de un Medio de Pago existente.
     """
-    permission_required = 'medios_pago.change_mediodepago'
     model = MedioDePago
     form_class = MedioDePagoForm
     template_name = 'medios_pago/form.html'
@@ -238,12 +242,13 @@ class MedioDePagoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateV
         )
 
 
-class MedioDePagoToggleActivoView(LoginRequiredMixin, PermissionRequiredMixin, View):
+@method_decorator(require_permission("medios_pago.manage_catalogo_medios_pago", check_client_assignment=False), name="dispatch")
+class MedioDePagoToggleActivoView(LoginRequiredMixin, View):  # ← ELIMINAR PermissionRequiredMixin
     """
+    🔐 PROTEGIDA: medios_pago.manage_catalogo_medios_pago
+    
     Vista para activar o desactivar un medio de pago.
     """
-    permission_required = 'medios_pago.change_mediodepago'
-
     def post(self, request, pk):
         medio_de_pago = get_object_or_404(MedioDePago, pk=pk)
         estado_anterior = medio_de_pago.is_active
@@ -256,12 +261,13 @@ class MedioDePagoToggleActivoView(LoginRequiredMixin, PermissionRequiredMixin, V
         return redirect(f"{reverse_lazy('medios_pago:lista')}?estado={estado_filtro}")
 
 
-class MedioDePagoDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
+@method_decorator(require_permission("medios_pago.manage_catalogo_medios_pago", check_client_assignment=False), name="dispatch")
+class MedioDePagoDeleteView(LoginRequiredMixin, View):  # ← ELIMINAR PermissionRequiredMixin
     """
+    🔐 PROTEGIDA: medios_pago.manage_catalogo_medios_pago
+    
     Vista para eliminación real (no soft delete) de un medio de pago.
     """
-    permission_required = 'medios_pago.delete_mediodepago'
-
     def post(self, request, pk):
         medio_de_pago = get_object_or_404(MedioDePago, pk=pk)
         
@@ -280,12 +286,13 @@ class MedioDePagoDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
         return redirect('medios_pago:lista')
 
 
-class TemplateDataView(LoginRequiredMixin, PermissionRequiredMixin, View):
+@method_decorator(require_permission("medios_pago.view_catalogo_medios_pago", check_client_assignment=False), name="dispatch")
+class TemplateDataView(LoginRequiredMixin, View):  # ← ELIMINAR PermissionRequiredMixin
     """
+    🔐 PROTEGIDA: medios_pago.view_catalogo_medios_pago
+    
     Vista AJAX para obtener datos de un template específico.
     """
-    permission_required = 'medios_pago.view_mediodepago'
-
     def get(self, request, template_key):
         try:
             all_templates = PaymentTemplate.get_all_templates()
@@ -306,12 +313,13 @@ class TemplateDataView(LoginRequiredMixin, PermissionRequiredMixin, View):
             return JsonResponse({'error': str(e)}, status=500)
 
 
-class DeleteTemplateView(LoginRequiredMixin, PermissionRequiredMixin, View):
+@method_decorator(require_permission("medios_pago.manage_catalogo_medios_pago", check_client_assignment=False), name="dispatch")
+class DeleteTemplateView(LoginRequiredMixin, View):  # ← ELIMINAR PermissionRequiredMixin
     """
+    🔐 PROTEGIDA: medios_pago.manage_catalogo_medios_pago
+    
     Vista AJAX para eliminar un template personalizado.
     """
-    permission_required = 'medios_pago.delete_mediodepago'  # Usar el mismo permiso
-
     def post(self, request, template_key):
         try:
             # Verificar que sea un template personalizado
@@ -363,13 +371,13 @@ class DeleteTemplateView(LoginRequiredMixin, PermissionRequiredMixin, View):
             }, status=500)
 
 
-class TemplateListView(LoginRequiredMixin, PermissionRequiredMixin, View):
+@method_decorator(require_permission("medios_pago.view_catalogo_medios_pago", check_client_assignment=False), name="dispatch")
+class TemplateListView(LoginRequiredMixin, View): 
     """
+    🔐 PROTEGIDA: medios_pago.view_catalogo_medios_pago
+    
     Vista AJAX para obtener la lista actualizada de templates.
-    Útil para refrescar el selector después de crear/eliminar templates.
     """
-    permission_required = 'medios_pago.view_mediodepago'
-
     def get(self, request):
         try:
             all_templates = PaymentTemplate.get_all_templates()

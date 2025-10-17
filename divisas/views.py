@@ -1,6 +1,7 @@
 #divisas
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.views.generic import ListView, CreateView, UpdateView, View
 from django.views.generic import ListView, CreateView, UpdateView, View, FormView, TemplateView
 from django.urls import reverse_lazy, reverse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -11,16 +12,18 @@ from .forms import DivisaForm, TasaCambioForm
 from django.db.models import Max
 from django.db.models import OuterRef, Subquery
 from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+from django.contrib import messages
 #Visualización tasas inicio
 from divisas.services import ultimas_por_segmento
 from divisas.models import Divisa
 from simulador.views import calcular_simulacion_api
 from django.http import JsonResponse
-import json
-from django.test import RequestFactory
-from clientes.views import get_medio_acreditacion_seleccionado, get_medio_pago_seleccionado
+from decimal import Decimal, ROUND_HALF_UP
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+import json
 import logging
+from django.contrib import messages
 from django.contrib import messages
 from .forms import DenominacionForm, DenominacionFormSet, DenominacionQuickForm
 from django.forms import inlineformset_factory, formset_factory
@@ -29,6 +32,13 @@ from transacciones.models import Transaccion
 from divisas.models import DesgloseDenominacion
 from divisas.forms import DesgloseDenominacionForm
 from .forms import DenominacionForm, DenominacionFormSet, DenominacionBaseFormSet, DenominacionQuickForm    
+
+from .models import Divisa, TasaCambio, CotizacionSegmento
+from clientes.models import Cliente, Segmento
+from .forms import DivisaForm, TasaCambioForm
+from .services import ultimas_por_segmento
+from roles.decorators import require_permission  # ← AGREGAR ESTE IMPORT
+
 
 
 """
@@ -39,8 +49,10 @@ que permiten listar, crear, actualizar y visualizar divisas
 y sus tasas de cambio, incluyendo un visualizador para clientes
 y otro para administradores.
 """
+
+@method_decorator(require_permission("divisas.view_divisas", check_client_assignment=False), name="dispatch")
 class DivisaListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
-    permission_required = 'divisas.view_divisa'
+    permission_required = 'divisas.view_divisas'
     model = Divisa
     template_name = 'divisas/lista.html'
     context_object_name = 'divisas'
@@ -51,38 +63,35 @@ class DivisaListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         return Divisa.objects.all().order_by('-es_moneda_base', 'code')
 
 
-class DivisaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+@method_decorator(require_permission("divisas.manage_divisas", check_client_assignment=False), name="dispatch")
+class DivisaCreateView(LoginRequiredMixin, CreateView):  # ← ELIMINAR PermissionRequiredMixin
     """
-    Vista para crear una nueva divisa.
+    🔐 PROTEGIDA: divisas.manage_divisas
 
-    Requiere que el usuario esté autenticado y tenga el permiso `divisas.add_divisa`.
+    Vista para crear una nueva divisa.
     Asigna `is_active` a `False` por defecto al guardar la nueva divisa.
     """
-    permission_required = 'divisas.add_divisa'
     model = Divisa
     form_class = DivisaForm
     template_name = 'divisas/form.html'
     success_url = reverse_lazy('divisas:lista')
 
     def form_valid(self, form):
-        """
-        Maneja el guardado del formulario válido.
-
-        Establece `is_active` a `False` antes de guardar el objeto.
-        
-        :param form: El formulario de la divisa.
-        :type form: :class:`~divisas.forms.DivisaForm`
-        :return: Un objeto de respuesta HTTP.
-        :rtype: django.http.HttpResponse
-        """
         obj = form.save(commit=False)
         obj.is_active = False  # TODA nueva divisa nace deshabilitada
         obj.save()
+        messages.success(self.request, f"Divisa {obj.code} creada correctamente (deshabilitada).")
         return redirect(self.success_url)
 
 
-class DivisaUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
-    permission_required = 'divisas.change_divisa'
+@method_decorator(require_permission("divisas.manage_divisas", check_client_assignment=False), name="dispatch")
+class DivisaUpdateView(LoginRequiredMixin, UpdateView):  # ← ELIMINAR PermissionRequiredMixin
+    """
+    🔐 PROTEGIDA: divisas.manage_divisas
+
+    Vista para editar una divisa existente.
+    Bloquea la edición de la moneda base (PYG).
+    """
     model = Divisa
     form_class = DivisaForm
     template_name = 'divisas/form.html'
@@ -96,10 +105,14 @@ class DivisaUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
         return super().dispatch(request, *args, **kwargs)
 
 
-# Agregar protección a DivisaToggleActivaView
-class DivisaToggleActivaView(LoginRequiredMixin, PermissionRequiredMixin, View):
-    permission_required = 'divisas.change_divisa'
+@method_decorator(require_permission("divisas.manage_divisas", check_client_assignment=False), name="dispatch")
+class DivisaToggleActivaView(LoginRequiredMixin, View):  # ← ELIMINAR PermissionRequiredMixin
+    """
+    🔐 PROTEGIDA: divisas.manage_divisas
 
+    Vista para activar/desactivar una divisa.
+    Bloquea la desactivación de la moneda base (PYG).
+    """
     def post(self, request, pk):
         divisa = get_object_or_404(Divisa, pk=pk)
         
@@ -116,27 +129,17 @@ class DivisaToggleActivaView(LoginRequiredMixin, PermissionRequiredMixin, View):
         return redirect('divisas:lista')
 
 
-def redondear(valor, decimales=2):
-    try:
-        return Decimal(valor).quantize(
-            Decimal("1") if decimales == 0 else Decimal("0.01"),
-            rounding=ROUND_HALF_UP
-        )
-    except Exception:
-        return valor
+# ═══════════════════════════════════════════════════════════════════
+# VISTAS DE TASAS DE CAMBIO
+# ═══════════════════════════════════════════════════════════════════
 
-# ----------------------------
-# TASAS DE CAMBIO
-# ----------------------------
-class TasaCambioListView(LoginRequiredMixin, ListView):
+@method_decorator(require_permission("divisas.view_tasas_cambio", check_client_assignment=False), name="dispatch")
+class TasaCambioListView(LoginRequiredMixin, ListView):  # ← AGREGAR DECORADOR
     """
+    🔐 PROTEGIDA: divisas.view_tasas_cambio
+
     Vista de lista para las tasas de cambio de una divisa específica.
-
-    Requiere que el usuario esté autenticado y tenga el permiso `divisas.view_tasacambio`.
-    Muestra una tabla con las tasas de cambio históricas de una divisa.
-
-    :param divisa_id: ID de la divisa. Se pasa a través de la URL.
-    :type divisa_id: int
+    Muestra historial de tasas con filtros de fecha.
     """
     model = TasaCambio
     template_name = 'divisas/tasa_list.html'
@@ -144,12 +147,6 @@ class TasaCambioListView(LoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        """
-        Filtra el queryset para mostrar solo las tasas de la divisa especificada.
-
-        :return: El queryset filtrado de tasas de cambio.
-        :rtype: django.db.models.query.QuerySet
-        """
         divisa_id = self.kwargs['divisa_id']
         qs = TasaCambio.objects.filter(divisa_id=divisa_id).order_by('-fecha')
 
@@ -162,28 +159,25 @@ class TasaCambioListView(LoginRequiredMixin, ListView):
         return qs
 
     def get_context_data(self, **kwargs):
-        """
-        Agrega la divisa al contexto de la plantilla.
-        """
         ctx = super().get_context_data(**kwargs)
         ctx['divisa'] = get_object_or_404(Divisa, pk=self.kwargs['divisa_id'])
         return ctx
 
 
-class TasaCambioCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+@method_decorator(require_permission("divisas.manage_tasas_cambio", check_client_assignment=False), name="dispatch")
+class TasaCambioCreateView(LoginRequiredMixin, CreateView):  # ← ELIMINAR PermissionRequiredMixin
     """
-    Permite registrar una nueva tasa de cambio para una divisa.
+    🔐 PROTEGIDA: divisas.manage_tasas_cambio
 
-    Requiere autenticación y el permiso `divisas.add_tasacambio`.
+    Permite registrar una nueva tasa de cambio para una divisa.
     Prellena valores con la última tasa registrada.
+    Bloquea la creación de tasas para la moneda base (PYG).
     """
-    permission_required = 'divisas.add_tasacambio'
     model = TasaCambio
     form_class = TasaCambioForm
     template_name = 'divisas/tasa_form.html'
 
     def dispatch(self, request, *args, **kwargs):
-        """Bloquea la creación de tasas para la moneda base (PYG)"""
         divisa = get_object_or_404(Divisa, pk=self.kwargs['divisa_id'])
         if divisa.es_moneda_base:
             messages.error(request, "No se pueden registrar tasas de cambio para la moneda base del sistema.")
@@ -212,17 +206,19 @@ class TasaCambioCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateVi
         tasa.divisa = form.divisa
         tasa.creado_por = self.request.user
         tasa.save()
+        messages.success(self.request, f"Tasa de cambio registrada para {tasa.divisa.code}.")
         return redirect(self.get_success_url())
 
     def get_success_url(self):
-        # redirige al listado de tasas de la misma divisa
         return reverse('divisas:tasas', kwargs={'divisa_id': self.kwargs['divisa_id']})
 
 
-class TasaCambioAllListView(LoginRequiredMixin, ListView):
+@method_decorator(require_permission("divisas.view_tasas_cambio", check_client_assignment=False), name="dispatch")
+class TasaCambioAllListView(LoginRequiredMixin, ListView):  # ← AGREGAR DECORADOR
     """
-    Vista para ver todas las tasas de cambio de todas las divisas.
+    🔐 PROTEGIDA: divisas.view_tasas_cambio
 
+    Vista para ver todas las tasas de cambio de todas las divisas.
     Permite filtrar por divisa y rango de fechas.
     """
     model = TasaCambio
@@ -231,18 +227,7 @@ class TasaCambioAllListView(LoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        """
-        Filtra el queryset de tasas de cambio basado en los parámetros de la URL.
-
-        Los filtros disponibles son:
-        * `divisa`: ID o código de la divisa.
-        * `inicio`: Fecha de inicio del rango (formato YYYY-MM-DD).
-        * `fin`: Fecha de fin del rango (formato YYYY-MM-DD).
-
-        :return: El queryset filtrado de tasas de cambio.
-        :rtype: django.db.models.query.QuerySet
-        """
-        qs = TasaCambio.objects.select_related('divisa').order_by('fecha')
+        qs = TasaCambio.objects.select_related('divisa').order_by('-fecha')
 
         divisa_param = self.request.GET.get('divisa')
         ini = self.request.GET.get('inicio')
@@ -263,25 +248,26 @@ class TasaCambioAllListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['divisas'] = Divisa.objects.order_by('code')
-        # Mantener valores del filtro en el form
         ctx['f_divisa'] = self.request.GET.get('divisa', '')
         ctx['f_inicio'] = self.request.GET.get('inicio', '')
         ctx['f_fin'] = self.request.GET.get('fin', '')
         return ctx
 
 
+# ═══════════════════════════════════════════════════════════════════
+# VISUALIZADORES DE COTIZACIONES
+# ═══════════════════════════════════════════════════════════════════
 
-
-
+@login_required
+@require_permission("divisas.view_cotizaciones_segmento", check_client_assignment=False)
 def visualizador_tasas(request):
     """
+    🔐 PROTEGIDA: divisas.view_cotizaciones_segmento
+    
     Muestra las tasas de cambio actuales filtradas por el cliente activo en la sesión.
     Si no hay cliente activo, usa el segmento 'general'.
     Solo muestra divisas que tienen cotizaciones para el segmento activo.
     """
-    from clientes.models import Cliente, Segmento
-    from .services import ultimas_por_segmento
-
     segmento_activo = None
 
     # 1. Detectar cliente activo en la sesión
@@ -324,20 +310,18 @@ def visualizador_tasas(request):
         "segmento_activo": segmento_activo
     })
 
-#Para administradores
-from django.contrib.auth.decorators import user_passes_test
 
-def is_admin_or_staff(user):
-    return user.is_authenticated and (user.is_staff or user.is_superuser)
-
-@user_passes_test(is_admin_or_staff)
+@login_required
+@require_permission("divisas.view_cotizaciones_segmento", check_client_assignment=False)
 def visualizador_tasas_admin(request):
     """
+    🔐 PROTEGIDA: divisas.view_cotizaciones_segmento
+
     Vista administrativa que muestra todas las cotizaciones de todos los segmentos.
-    Solo accesible para staff y superusuarios.
-    """
-    from .services import ultimas_por_segmento
+    Solo accesible para usuarios con permiso de gestión de cotizaciones.
     
+    NOTA: Reemplaza @user_passes_test(is_admin_or_staff) por permiso granular.
+    """
     divisas_activas = Divisa.objects.filter(is_active=True).order_by('code')
     divisas_data = []
     
@@ -354,12 +338,34 @@ def visualizador_tasas_admin(request):
         'divisas_data': divisas_data,
         'is_admin_view': True
     })
+
+
+# ═══════════════════════════════════════════════════════════════════
+# FUNCIONES AUXILIARES
+# ═══════════════════════════════════════════════════════════════════
+
+def redondear(valor, decimales=2):
+    """
+    Redondea un valor decimal con la cantidad de decimales especificada.
+    """
+    try:
+        return Decimal(valor).quantize(
+            Decimal("1") if decimales == 0 else Decimal("0.01"),
+            rounding=ROUND_HALF_UP
+        )
+    except Exception:
+        return valor
  
 # ==================== CRUD DE DENOMINACIONES ====================
 
-class DenominacionQuickCreateView(LoginRequiredMixin, PermissionRequiredMixin, View):
-    """Vista para crear denominaciones rápidamente desde una lista de valores"""
-    permission_required = 'divisas.add_denominacion'
+@method_decorator(require_permission("divisas.manage_denominaciones"), name="dispatch")
+class DenominacionQuickCreateView(LoginRequiredMixin, View):  # ← Sin PermissionRequiredMixin
+    """
+    🔒 PROTEGIDA: divisas.manage_denominaciones
+    Vista para crear denominaciones rápidamente desde una lista de valores
+    """
+    template_name = 'denominacion_quick_create.html'
+    permission_required = 'divisas.manage_denominaciones'
     template_name = 'denominacion_quick_create.html'
 
     def get(self, request):
@@ -461,12 +467,16 @@ class DenominacionQuickCreateView(LoginRequiredMixin, PermissionRequiredMixin, V
         return render(request, self.template_name, context)
 
 
-class DenominacionListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
-    """Lista todas las denominaciones con filtros"""
+@method_decorator(require_permission("divisas.view_denominaciones"), name="dispatch")
+class DenominacionListView(LoginRequiredMixin, ListView):  # ← Sin PermissionRequiredMixin
+    """
+    🔒 PROTEGIDA: divisas.view_denominaciones
+    Lista todas las denominaciones con filtros
+    """
     model = Denominacion
     template_name = 'denominacion_list.html'
     context_object_name = 'denominaciones'
-    permission_required = 'divisas.view_denominacion'
+    permission_required = 'divisas.view_denominaciones'
     paginate_by = 50
     
     def get_queryset(self):
@@ -511,13 +521,13 @@ class DenominacionListView(LoginRequiredMixin, PermissionRequiredMixin, ListView
         
         return context
 
-
+@method_decorator(require_permission("divisas.view_denominaciones"), name="dispatch")
 class DenominacionesDivisaView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     """Vista para mostrar denominaciones de una divisa específica"""
     model = Denominacion
     template_name = 'denominaciones_divisa.html'
     context_object_name = 'denominaciones'
-    permission_required = 'divisas.view_denominacion'
+    permission_required = 'divisas.view_denominaciones'
     paginate_by = 50
     
     def get_queryset(self):
@@ -545,10 +555,11 @@ class DenominacionesDivisaView(LoginRequiredMixin, PermissionRequiredMixin, List
         }
         
         return context
-    
+
+@method_decorator(require_permission("divisas.manage_denominaciones"), name="dispatch")
 class DenominacionCreateView(LoginRequiredMixin, PermissionRequiredMixin, View):
     """Crea múltiples denominaciones a la vez"""
-    permission_required = 'divisas.add_denominacion'
+    permission_required = 'divisas.manage_denominaciones'
     template_name = 'denominacion_create_multiple.html'
     
     def get(self, request):
@@ -616,13 +627,17 @@ class DenominacionCreateView(LoginRequiredMixin, PermissionRequiredMixin, View):
         }
         return render(request, self.template_name, context)
     
-class DenominacionUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
-    """Actualiza una denominación existente"""
+@method_decorator(require_permission("divisas.manage_denominaciones"), name="dispatch")
+class DenominacionUpdateView(LoginRequiredMixin, UpdateView):  # ← Sin PermissionRequiredMixin
+    """
+    🔒 PROTEGIDA: divisas.manage_denominaciones
+    Actualiza una denominación existente
+    """
     model = Denominacion
     form_class = DenominacionForm
     template_name = 'denominacion_form.html'
     success_url = reverse_lazy('divisas:denominacion_list')
-    permission_required = 'divisas.change_denominacion'
+    permission_required = 'divisas.manage_denominaciones'
 
     def get_success_url(self):
         # Redirigir a la vista de denominaciones de la divisa
@@ -639,9 +654,13 @@ class DenominacionUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Update
         return context
 
 
-class DenominacionDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
-    """Desactiva/activa una denominación"""
-    permission_required = 'divisas.delete_denominacion'
+@method_decorator(require_permission("divisas.manage_denominaciones"), name="dispatch")
+class DenominacionDeleteView(LoginRequiredMixin, View):  # ← Sin PermissionRequiredMixin
+    """
+    🔒 PROTEGIDA: divisas.manage_denominaciones
+    Desactiva/activa una denominación
+    """
+    permission_required = 'divisas.manage_denominaciones'
     
     def post(self, request, pk):
         denominacion = get_object_or_404(Denominacion, pk=pk)
@@ -660,9 +679,12 @@ class DenominacionDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
 
 
 @login_required
-@user_passes_test(lambda u: u.has_perm('divisas.view_denominacion'))
+@require_permission("divisas.view_denominaciones")  # ← Cambié manage por view
 def denominaciones_disponibles_json(request, divisa_id):
-    """API para obtener denominaciones disponibles de una divisa (JSON)"""
+    """
+    🔒 PROTEGIDA: divisas.view_denominaciones
+    API para obtener denominaciones disponibles de una divisa (JSON)
+    """
     denominaciones = Denominacion.objects.filter(
         divisa_id=divisa_id,
         is_active=True

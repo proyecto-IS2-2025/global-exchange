@@ -1,15 +1,48 @@
+"""
+URLs para la gestión de roles y permisos.
+"""
 from django.urls import path
-from . import views
+from .views import *
 
 urlpatterns = [
-    path('groups/', views.group_list, name='group_list'),
-    path('groups/add/', views.group_create, name='group_create'),
-    path('groups/<int:pk>/edit/', views.group_update, name='group_update'),
-    path('groups/<int:pk>/delete/', views.group_delete, name='group_delete'),
-    path('groups/<int:pk>/permissions/', views.group_detail_permissions, name='group_detail_permissions'),
-    path('groups/<int:pk>/users/', views.group_detail_users, name='group_detail_users'), # Nueva URL
-    path('api/search_permissions/', views.search_permissions, name='search_permissions'),
-    path('api/search_users/', views.search_users, name='search_users'), # Nueva URL
-    path('permissions/create/', views.permission_create, name='permission_create'),
-    path('roles/<int:pk>/toggle_status/', views.group_toggle_status, name='group_toggle_status'),
+    # ═══════════════════════════════════════════════════════════════
+    # GESTIÓN DE GRUPOS/ROLES
+    # ═══════════════════════════════════════════════════════════════
+    path('groups/', GroupListView.as_view(), name='group_list'),
+    path('groups/create/', GroupCreateView.as_view(), name='group_create'),
+    path('groups/<int:pk>/', GroupDetailView.as_view(), name='group_detail'),
+    path('groups/<int:pk>/edit/', GroupUpdateView.as_view(), name='group_update'),
+    path('groups/<int:pk>/delete/', GroupDeleteView.as_view(), name='group_delete'),
+    
+    # ═══════════════════════════════════════════════════════════════
+    # GESTIÓN DE PERMISOS
+    # ═══════════════════════════════════════════════════════════════
+    path('groups/<int:pk>/permissions/', 
+         GroupDetailPermissionsView.as_view(), 
+         name='group_detail_permissions'),
+    
+    # ═══════════════════════════════════════════════════════════════
+    # GESTIÓN DE USUARIOS
+    # ═══════════════════════════════════════════════════════════════
+    path('groups/<int:pk>/users/', 
+         GroupDetailUsersView.as_view(), 
+         name='group_detail_users'),
+    
+    # ═══════════════════════════════════════════════════════════════
+    # API DE BÚSQUEDA
+    # ═══════════════════════════════════════════════════════════════
+    path('api/permissions/search/', 
+         SearchPermissionsView.as_view(), 
+         name='search_permissions'),
+    
+    # ═══════════════════════════════════════════════════════════════
+    # MATRIZ DE PERMISOS
+    # ═══════════════════════════════════════════════════════════════
+    path('permissions/matrix/', 
+         PermissionMatrixView.as_view(), 
+         name='permission_matrix'),
+    path('groups/<int:pk>/toggle-status/', GroupToggleStatusView.as_view(), name='group_toggle_status'),
+
+
+     path('api/search_users/', search_users, name='search_users'),
 ]

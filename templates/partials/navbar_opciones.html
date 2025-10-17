@@ -1,61 +1,42 @@
 <ul class="dropdown-menu dropdown-menu-end">
-  <li><a class="dropdown-item" href="{% url 'contacto' %}">Contacto</a></li>
+  <li>
+    <a class="dropdown-item" href="{% url 'contacto' %}">
+      <i class="fas fa-envelope me-2"></i> Contacto
+    </a>
+  </li>
 
-{% if user.is_authenticated %}
+  {% if user.is_authenticated %}
 
-  {% if grupo_usuario == "admin" %}
-      <a class="dropdown-item fw-bold text-success" href="{% url 'group_list' %}">
-        Ver roles
-      </a>
-    </li>
-    <li>
-      <a class="dropdown-item fw-bold text-success" href="{% url 'permission_create' %}">
-        Crear permisos
-      </a>
-    </li>
-
-  {% elif grupo_usuario == "operador" %}
+    {% if cliente_activo %}
+      <li><hr class="dropdown-divider"></li>
+      <li>
+        <a class="dropdown-item fw-bold text-secondary" href="{% url 'users:perfil_usuario' %}">
+          Mi perfil
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item fw-bold text-secondary" href="{% url 'clientes:seleccionar_cliente' %}">
+          Seleccionar Cliente
+        </a>
+      </li> 
+      <li>
+        <a class="dropdown-item fw-bold text-secondary" href="{% url 'notificaciones:gestion_notificaciones' %}">
+          Configurar notificaciones
+        </a>
+      </li>   
+    {% endif %} 
+    
+    {% else %}
     <li><hr class="dropdown-divider"></li>
     <li>
-      <a class="dropdown-item fw-bold text-black text-info" href="#">
-        Ver clientes
-      </a>
-    </li>
-
-  {% elif grupo_usuario == "cliente" %}
-    <li><hr class="dropdown-divider"></li>
-    <li>
-      <a class="dropdown-item fw-bold text-secondary" href="{% url 'users:perfil_usuario' %}">
-        Mi perfil
+      <a class="dropdown-item" href="{% url 'login' %}">
+        <i class="fas fa-sign-in-alt me-2"></i> Iniciar sesión
       </a>
     </li>
     <li>
-      <a class="dropdown-item fw-bold text-secondary" href="{% url 'clientes:seleccionar_cliente' %}">
-        Seleccionar Cliente
-      </a>
-    </li>
-    <li>
-      <a class="dropdown-item fw-bold text-secondary"  href="{% url 'notificaciones:gestion_notificaciones' %}">
-        Configurar notificaciones
-      </a>
-    </li>
-  {% else %}
-    <li><hr class="dropdown-divider"></li>
-    <li>
-      <a class="dropdown-item fw-bold text-secondary" href="{% url 'users:perfil_usuario' %}">
-        Mi perfil
-      </a>
-    </li>
-    <li>
-      <a class="dropdown-item fw-bold text-secondary" href="{% url 'clientes:medios_pago_cliente' %}">
-        <i class="fas fa-credit-card me-2"></i>Medios de Pago
-      </a>
-    </li>
-    <li>
-      <a class="dropdown-item fw-bold text-secondary" href="{% url 'clientes:seleccionar_cliente' %}">
-        Seleccionar Cliente
+      <a class="dropdown-item" href="{% url 'registro' %}">
+        <i class="fas fa-user-plus me-2"></i> Registrarse
       </a>
     </li>
   {% endif %}
-{% endif %}
 </ul>

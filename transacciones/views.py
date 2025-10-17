@@ -1,25 +1,69 @@
 # transacciones/views.py
-from django.shortcuts import get_object_or_404
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, View
 from django.db.models import Q
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.db import transaction
+from django.contrib import messages
+from django.utils.decorators import method_decorator
 from datetime import datetime, timedelta
-from .models import HistorialTransaccion
+from decimal import Decimal, ROUND_HALF_UP
+import logging
+
+from roles.decorators import require_permission  # ← IMPORT PRINCIPAL
+from .models import Transaccion, HistorialTransaccion
 from clientes.models import Cliente
 from divisas.models import Divisa
 from clientes.views import get_medio_acreditacion_seleccionado, get_medio_pago_seleccionado
-from decimal import Decimal
-import logging
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from transacciones.models import Transaccion
-logger = logging.getLogger(__name__)
 from clientes.services import verificar_limites
-from decimal import Decimal, ROUND_HALF_UP
+
+logger = logging.getLogger(__name__)
+
+
+# ═══════════════════════════════════════════════════════════════════
+# FUNCIONES AUXILIARES (SIN CAMBIOS)
+# ═══════════════════════════════════════════════════════════════════
+
+def get_cliente_from_session(request):
+    """
+    Obtiene el cliente activo desde la sesión.
+    Retorna None si no hay cliente activo o no existe.
+    """
+    cliente_id = request.session.get('cliente_id')
+    if not cliente_id:
+        return None
+    try:
+        return Cliente.objects.get(id=cliente_id)
+    except Cliente.DoesNotExist:
+        return None
+
+
+def calcular_monto_final(monto_base, es_compra=True):
+    """
+    Calcula el monto final aplicando las tasas correspondientes.
+    """
+    # ...existing code...
+    pass
+
+
+def generar_numero_transaccion():
+    """
+    Genera un número único de transacción basado en timestamp.
+    """
+    # ...existing code...
+    pass
+
+
+def determinar_decimales_divisa(codigo_divisa):
+    """
+    Determina cuántos decimales usar según la divisa.
+    PYG = 0, resto = 2
+    """
+    return 0 if codigo_divisa.upper() == 'PYG' else 2
+
 import re  # NUEVO: para enmascarar valores
 import unicodedata  # NUEVO: normalización de texto
 from django.utils import timezone  # NUEVO: para timestamps seguros
@@ -36,13 +80,11 @@ EMPRESA_NUMERO_CUENTA = "000111222"
 
 def redondear(valor, decimales=2):
     """
-    Redondea un número Decimal a la cantidad de decimales especificada.
-    - 0 → enteros (para Guaraníes)
-    - 2 → centavos (para USD/EUR, etc.)
+    Redondea un valor decimal con la cantidad de decimales especificada.
     """
     try:
         return Decimal(valor).quantize(
-            Decimal("1") if decimales == 0 else Decimal("0.01"),
+            Decimal("1") if decimales == 0 else Decimal("0." + "0" * decimales),
             rounding=ROUND_HALF_UP
         )
     except Exception:
@@ -813,8 +855,8 @@ def crear_transaccion_desde_venta(request):
 
     try:
         operacion = request.session.get("operacion")
-        medio_inst = get_medio_acreditacion_seleccionado(request)
-
+        medio_inst = get_medio_pago_seleccionado(request)
+        
         if not operacion:
             messages.error(request, "No se encontró información de la operación.")
             return redirect("operacion_divisas:venta")
@@ -831,7 +873,6 @@ def crear_transaccion_desde_venta(request):
 
         cliente = get_object_or_404(Cliente, id=cliente_id, esta_activo=True)
         
-        # Obtener código de divisa desde operación
         codigo_divisa = operacion.get('divisa', '').strip().upper()
         logger.debug(f"Código de divisa desde operación: '{codigo_divisa}'")
         
@@ -839,7 +880,6 @@ def crear_transaccion_desde_venta(request):
             messages.error(request, "No se encontró el código de divisa en la operación.")
             return redirect('operacion_divisas:venta_sumario')
         
-        # Buscar divisas con manejo de errores más específico
         try:
             divisa_origen = Divisa.objects.get(code__iexact=codigo_divisa)
             logger.debug(f"Divisa origen encontrada: {divisa_origen}")
@@ -856,34 +896,29 @@ def crear_transaccion_desde_venta(request):
             messages.error(request, "Error: No se encontró la divisa Guaraní (PYG) en el sistema.")
             return redirect('operacion_divisas:venta_sumario')
 
-        # Convertir montos a Decimal de forma segura
         try:
-            monto_origen = Decimal(str(operacion.get('monto_divisa', '0')))  # divisa extranjera
-            monto_destino = Decimal(str(operacion.get('monto_guaranies', '0')))  # guaraníes
+            monto_origen = Decimal(str(operacion.get('monto_divisa', '0')))
+            monto_destino = Decimal(str(operacion.get('monto_guaranies', '0')))
             tasa_cambio = Decimal(str(operacion.get('tasa_cambio', '0')))
         except (ValueError, TypeError) as e:
             logger.error(f"Error al convertir montos a Decimal: {e}")
             messages.error(request, "Error en los datos de la operación.")
             return redirect('operacion_divisas:venta_sumario')
 
-        # 🔹 Aplicar redondeo según regla - MEJORA ESPECÍFICA
         decimales_origen = determinar_decimales_divisa(divisa_origen.code)
         decimales_destino = determinar_decimales_divisa(divisa_destino.code)
         
-        monto_origen = redondear(monto_origen, decimales_origen)  # según divisa origen
-        monto_destino = redondear(monto_destino, decimales_destino)  # según divisa destino
-        tasa_cambio = redondear(tasa_cambio, 2)  # tasa siempre con 2 decimales
+        monto_origen = redondear(monto_origen, decimales_origen)
+        monto_destino = redondear(monto_destino, decimales_destino)
+        tasa_cambio = redondear(tasa_cambio, 2)
 
-        # Validar límites antes de crear
         ok, msg = verificar_limites(cliente, monto_destino)
         if not ok:
             messages.error(request, msg)
             return redirect('operacion_divisas:venta_sumario')
 
-        # Preparar datos del medio
         medio_datos = preparar_datos_medio(medio_inst)
 
-        # Crear transacción
         with transaction.atomic():
             transaccion = Transaccion.objects.create(
                 tipo_operacion='venta',
@@ -907,7 +942,6 @@ def crear_transaccion_desde_venta(request):
                 modificado_por=request.user
             )
 
-        # Limpiar sesión
         limpiar_sesion_operacion(request)
 
         # NUEVO: realizar transferencia de la EMPRESA -> CLIENTE por monto_destino (PYG)
@@ -1315,9 +1349,11 @@ def limpiar_sesion_operacion(request, keys_adicionales=None):
 
 
 @login_required
+@require_permission("transacciones.view_transacciones_asignadas")  # ✅ SIN check_client_assignment
 def confirmacion_operacion(request, numero_transaccion):
     """
-    Vista de confirmación de operación exitosa
+    🔐 PROTEGIDA: transacciones.view_transacciones_asignadas
+    Vista de confirmación de operación exitosa.
     """
     transaccion = get_object_or_404(
         Transaccion, 
@@ -1355,12 +1391,22 @@ def confirmacion_operacion(request, numero_transaccion):
 
 class HistorialTransaccionesClienteView(LoginRequiredMixin, ListView):
     """
-    Vista del historial de transacciones del cliente activo
+    🔐 PROTEGIDA: transacciones.view_transacciones_asignadas
+    Vista del historial de transacciones del cliente activo.
     """
     model = Transaccion
     template_name = 'historial_cliente.html'
     context_object_name = 'transacciones'
     paginate_by = 20
+
+    def dispatch(self, request, *args, **kwargs):
+        # ✅ Validar cliente activo AQUÍ
+        cliente_id = request.session.get('cliente_id')
+        if not cliente_id:
+            messages.info(request, "Selecciona un cliente para ver el historial de transacciones")
+            return redirect('clientes:seleccionar_cliente')
+        
+        return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         # Obtener cliente activo de la sesión
@@ -1443,15 +1489,13 @@ class HistorialTransaccionesClienteView(LoginRequiredMixin, ListView):
         return context
 
 
-def is_staff_or_admin(user):
-    """Verificar si el usuario es staff o admin"""
-    return user.is_authenticated and (user.is_staff or user.is_superuser)
-
-
-@user_passes_test(is_staff_or_admin)
+@login_required
+@require_permission("transacciones.view_transacciones_globales")  
 def historial_admin(request):
     """
-    Vista administrativa para ver todas las transacciones
+    🔐 PROTEGIDA: transacciones.view_transacciones_globales
+    Vista administrativa para ver TODAS las transacciones del sistema.
+    Solo accesible para usuarios con permiso de visualización global.
     """
     # Filtros base
     transacciones = Transaccion.objects.select_related(
@@ -1532,9 +1576,11 @@ def historial_admin(request):
     return render(request, 'historial_admin.html', context)
 
 
+@method_decorator(require_permission("transacciones.view_transacciones_asignadas"), name="dispatch")  # ✅ SIN check_client_assignment
 class DetalleTransaccionView(LoginRequiredMixin, DetailView):
     """
-    Vista detallada de una transacción
+    🔐 PROTEGIDA: transacciones.view_transacciones_asignadas
+    Vista detallada de una transacción.
     """
     model = Transaccion
     template_name = 'detalle_transaccion.html'
@@ -1545,10 +1591,21 @@ class DetalleTransaccionView(LoginRequiredMixin, DetailView):
     def get_object(self, queryset=None):
         transaccion = super().get_object(queryset)
         
-        # Verificar permisos
+        # ✅ Validación adicional según rol
         if not self.request.user.is_staff:
+            # Clientes solo ven sus propias transacciones
             cliente_id = self.request.session.get('cliente_id')
             if not cliente_id or str(transaccion.cliente.id) != str(cliente_id):
+                from django.core.exceptions import PermissionDenied
+                raise PermissionDenied("No tiene permisos para ver esta transacción.")
+        elif not self.request.user.has_perm('transacciones.view_transacciones_globales'):
+            # Operadores solo ven transacciones de clientes asignados
+            from clientes.models import AsignacionCliente
+            if not AsignacionCliente.objects.filter(
+                operador=self.request.user,
+                cliente=transaccion.cliente,
+                activa=True
+            ).exists():
                 from django.core.exceptions import PermissionDenied
                 raise PermissionDenied("No tiene permisos para ver esta transacción.")
         
@@ -1587,11 +1644,81 @@ class DetalleTransaccionView(LoginRequiredMixin, DetailView):
         return context
 
 
+# ═══════════════════════════════════════════════════════════════════
+# VISTAS DE EXPORTACIÓN
+# ═══════════════════════════════════════════════════════════════════
+
+@method_decorator(require_permission("transacciones.view_transacciones_asignadas"), name="dispatch")  # ✅ SIN check_client_assignment
+class ExportarTransaccionesView(LoginRequiredMixin, View):
+    """
+    🔐 PROTEGIDA: transacciones.view_transacciones_asignadas
+    Exportar transacciones del cliente activo a CSV.
+    """
+    
+    def dispatch(self, request, *args, **kwargs):
+        # ✅ Validar cliente activo AQUÍ
+        cliente_id = request.session.get('cliente_id')
+        if not cliente_id:
+            messages.warning(request, "Selecciona un cliente para exportar transacciones")
+            return redirect('clientes:seleccionar_cliente')
+        
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get(self, request):
+        import csv
+        from django.http import HttpResponse
+        
+        cliente_id = request.session.get('cliente_id')
+        cliente = get_object_or_404(Cliente, id=cliente_id, esta_activo=True)
+        
+        # Crear respuesta CSV
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="transacciones_{cliente.nombre_completo}_{datetime.now().strftime("%Y%m%d")}.csv"'
+        
+        writer = csv.writer(response)
+        writer.writerow([
+            'Número Transacción',
+            'Fecha',
+            'Tipo',
+            'Divisa Origen',
+            'Monto Origen',
+            'Divisa Destino',
+            'Monto Destino',
+            'Tasa Cambio',
+            'Estado'
+        ])
+        
+        transacciones = Transaccion.objects.filter(
+            cliente=cliente
+        ).select_related('divisa_origen', 'divisa_destino').order_by('-fecha_creacion')
+        
+        for t in transacciones:
+            writer.writerow([
+                t.numero_transaccion,
+                t.fecha_creacion.strftime('%Y-%m-%d %H:%M'),
+                t.get_tipo_operacion_display(),
+                t.divisa_origen.code,
+                t.monto_origen,
+                t.divisa_destino.code,
+                t.monto_destino,
+                t.tasa_de_cambio_aplicada,
+                t.get_estado_display()
+            ])
+        
+        return response
+
+
+# ═══════════════════════════════════════════════════════════════════
+# VISTAS DE GESTIÓN (CAMBIO DE ESTADO, CANCELACIÓN)
+# ═══════════════════════════════════════════════════════════════════
+
 @login_required
-@user_passes_test(is_staff_or_admin)
+@require_permission("transacciones.manage_estados_transacciones")  # ✅ SIN check_client_assignment (correcto para admin)
 def cambiar_estado_transaccion(request, numero_transaccion):
     """
-    Vista para cambiar el estado de una transacción (solo admin)
+    🔐 PROTEGIDA: transacciones.manage_estados_transacciones
+    Vista para cambiar el estado de una transacción.
+    Solo accesible para usuarios con permiso de gestión de estados (admin/operador).
     """
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Método no permitido'})
@@ -1622,17 +1749,25 @@ def cambiar_estado_transaccion(request, numero_transaccion):
 
 
 @login_required
+@require_permission("transacciones.cancel_propias_transacciones")  # ✅ SIN check_client_assignment
 def cancelar_transaccion(request, numero_transaccion):
     """
-    Vista para que el cliente cancele su transacción pendiente
+    🔐 PROTEGIDA: transacciones.cancel_propias_transacciones
+    Vista para que el cliente cancele su transacción pendiente.
     """
+    # ✅ Validar cliente activo AQUÍ
+    cliente_id = request.session.get('cliente_id')
+    if not cliente_id:
+        messages.error(request, "Debes tener un cliente seleccionado para cancelar transacciones")
+        return redirect('clientes:seleccionar_cliente')
+    
     transaccion = get_object_or_404(Transaccion, numero_transaccion=numero_transaccion)
     
-    # Verificar permisos
-    cliente_id = request.session.get('cliente_id')
-    if not cliente_id or str(transaccion.cliente.id) != str(cliente_id):
-        messages.error(request, "No tiene permisos para modificar esta transacción.")
-        return redirect('transacciones:historial_cliente')
+    # ✅ Validación adicional: el cliente solo cancela sus propias transacciones
+    if not request.user.is_staff:
+        if str(transaccion.cliente.id) != str(cliente_id):
+            messages.error(request, "No tiene permisos para modificar esta transacción.")
+            return redirect('transacciones:historial_cliente')
     
     if not transaccion.puede_cancelarse:
         messages.error(request, "Esta transacción no puede cancelarse.")

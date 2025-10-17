@@ -20,6 +20,7 @@ from .descuento import (
     HistorialDescuentoListView,
 )
 from .limite import (
+    panel_limites,
     lista_limites_diarios,
     crear_limite_diario,
     LimiteDiarioUpdateView,
@@ -60,6 +61,7 @@ __all__ = [
     'HistorialDescuentoListView',
     
     # Límites
+    'panel_limites',
     'lista_limites_diarios',
     'crear_limite_diario',
     'LimiteDiarioUpdateView',

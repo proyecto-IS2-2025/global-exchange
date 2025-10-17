@@ -2,6 +2,7 @@ import os
 import django
 import psycopg2
 from django.conf import settings
+from django.core.management.base import BaseCommand
 
 # 1. Configura la variable de entorno
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "casa_de_cambios.settings")
