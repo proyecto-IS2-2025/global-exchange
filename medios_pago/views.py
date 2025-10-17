@@ -372,7 +372,7 @@ class DeleteTemplateView(LoginRequiredMixin, View):  # ← ELIMINAR PermissionRe
 
 
 @method_decorator(require_permission("medios_pago.view_catalogo_medios_pago", check_client_assignment=False), name="dispatch")
-class TemplateListView(LoginRequiredMixin, View):  # ← ELIMINAR PermissionRequiredMixin
+class TemplateListView(LoginRequiredMixin, View): 
     """
     🔐 PROTEGIDA: medios_pago.view_catalogo_medios_pago
     

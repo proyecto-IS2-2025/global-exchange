@@ -1,6 +1,6 @@
 """
 Comando para asignar permisos a los roles existentes del sistema.
-✅ VERSIÓN LIMPIA - Solo permisos personalizados custom.
+✅ VERSIÓN ACTUALIZADA - Incluye permisos de la app 'roles'.
 """
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group, Permission
@@ -9,7 +9,7 @@ from roles.models import RoleStatus
 
 
 class Command(BaseCommand):
-    help = 'Asigna permisos custom a los roles del sistema'
+    help = 'Asigna permisos custom a los roles del sistema (INCLUYE app roles)'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -23,7 +23,7 @@ class Command(BaseCommand):
         
         self.stdout.write(self.style.HTTP_INFO('=' * 60))
         self.stdout.write(self.style.HTTP_INFO('  CONFIGURACIÓN DE PERMISOS POR ROL'))
-        self.stdout.write(self.style.HTTP_INFO('  ✅ SOLO PERMISOS CUSTOM'))
+        self.stdout.write(self.style.HTTP_INFO('  ✅ SOLO PERMISOS CUSTOM (incluyendo app roles)'))
         self.stdout.write(self.style.HTTP_INFO('=' * 60))
         self.stdout.write('')
         
@@ -37,6 +37,7 @@ class Command(BaseCommand):
             self._configure_cliente(verbose)
             self._configure_usuario_registrado(verbose)
             self._configure_observador(verbose)
+            self._configure_usuario_no_registrado(verbose)  # ← NUEVO
         
         self.stdout.write('')
         self.stdout.write(self.style.SUCCESS('=' * 60))
@@ -100,7 +101,7 @@ class Command(BaseCommand):
             group = Group.objects.get(name=group_name)
         except Group.DoesNotExist:
             self.stdout.write(
-                self.style.ERROR(f"❌ Grupo '{group_name}' no existe")
+                self.style.ERROR(f"❌ Grupo '{group_name}' no existe. Créalo primero con: python manage.py loaddata groups.json")
             )
             return
         
@@ -119,7 +120,7 @@ class Command(BaseCommand):
 
     def _configure_dev(self, verbose):
         """
-        ✅ DESARROLLADOR - Acceso total a permisos custom
+        ✅ DESARROLLADOR - Acceso total a TODOS los permisos custom
         """
         codenames = [
             # ═══════════════════════════════════════════════════════════════
@@ -138,7 +139,20 @@ class Command(BaseCommand):
             'manage_mfa_config',
             
             # ═══════════════════════════════════════════════════════════════
-            # CLIENTES (13 custom)
+            # ROLES (9 custom) ← NUEVO
+            # ═══════════════════════════════════════════════════════════════
+            'view_roles_list',
+            'view_role_details',
+            'view_permission_matrix',
+            'view_group_users',
+            'manage_group_users',
+            'view_group_permissions',
+            'manage_group_permissions',
+            'manage_roles',
+            'manage_role_status',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # CLIENTES (12 custom)
             # ═══════════════════════════════════════════════════════════════
             'view_all_clientes',
             'view_assigned_clientes',
@@ -181,13 +195,13 @@ class Command(BaseCommand):
             'view_catalogo_medios_pago',
             'manage_catalogo_medios_pago',
         ]
-        # Total: 35 permisos custom
+        # Total: 44 permisos custom (35 anteriores + 9 de roles)
         
         self._assign_permissions('dev', codenames, verbose)
 
     def _configure_administrador(self, verbose):
         """
-        ✅ ADMINISTRADOR - Casi todos los permisos custom (excepto algunos críticos)
+        ✅ ADMINISTRADOR - Gestión completa excepto reversiones críticas
         """
         codenames = [
             # ═══════════════════════════════════════════════════════════════
@@ -206,7 +220,20 @@ class Command(BaseCommand):
             'manage_mfa_config',
             
             # ═══════════════════════════════════════════════════════════════
-            # CLIENTES (13 custom)
+            # ROLES (9 custom) ← NUEVO - TODOS los permisos de roles
+            # ═══════════════════════════════════════════════════════════════
+            'view_roles_list',
+            'view_role_details',
+            'view_permission_matrix',
+            'view_group_users',
+            'manage_group_users',
+            'view_group_permissions',
+            'manage_group_permissions',
+            'manage_roles',
+            'manage_role_status',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # CLIENTES (12 custom)
             # ═══════════════════════════════════════════════════════════════
             'view_all_clientes',
             'view_assigned_clientes',
@@ -227,7 +254,7 @@ class Command(BaseCommand):
             'view_transacciones_globales',
             'view_transacciones_asignadas',
             'manage_estados_transacciones',
-            # 'manage_reversiones_transacciones',  # Solo dev
+            # 'manage_reversiones_transacciones',  # ❌ Solo dev
             'view_historial_transacciones',
             'export_transacciones',
             
@@ -248,17 +275,23 @@ class Command(BaseCommand):
             'view_catalogo_medios_pago',
             'manage_catalogo_medios_pago',
         ]
-        # Total: ~34 permisos custom
+        # Total: 43 permisos custom (34 anteriores + 9 de roles)
         
         self._assign_permissions('administrador', codenames, verbose)
 
     def _configure_operador(self, verbose):
         """
-        ✅ OPERADOR - Permisos operativos (sin gestión administrativa)
+        ✅ OPERADOR - Permisos operativos + visualización de roles
         """
         codenames = [
             # ═══════════════════════════════════════════════════════════════
-            # CLIENTES (5 custom - solo lectura)
+            # ROLES (2 custom) ← NUEVO - Solo visualización
+            # ═══════════════════════════════════════════════════════════════
+            'view_roles_list',
+            'view_role_details',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # CLIENTES (4 custom - solo lectura)
             # ═══════════════════════════════════════════════════════════════
             'view_assigned_clientes',
             'view_limites_operacion',
@@ -274,7 +307,7 @@ class Command(BaseCommand):
             'view_historial_transacciones',
             
             # ═══════════════════════════════════════════════════════════════
-            # DIVISAS (4 custom)
+            # DIVISAS (5 custom)
             # ═══════════════════════════════════════════════════════════════
             'realizar_operacion',
             'view_cotizaciones_segmento',
@@ -287,13 +320,13 @@ class Command(BaseCommand):
             # ═══════════════════════════════════════════════════════════════
             'view_catalogo_medios_pago',
         ]
-        # Total: ~14 permisos custom
+        # Total: 16 permisos custom (14 anteriores + 2 de roles)
         
         self._assign_permissions('operador', codenames, verbose)
 
     def _configure_cliente(self, verbose):
         """
-        ✅ CLIENTE (Operador de Cuenta) - Operaciones propias
+        ✅ CLIENTE (Operador de Cuenta) - Operaciones propias, sin acceso a roles
         """
         codenames = [
             # ═══════════════════════════════════════════════════════════════
@@ -328,13 +361,13 @@ class Command(BaseCommand):
             # ═══════════════════════════════════════════════════════════════
             'view_assigned_clientes',
         ]
-        # Total: ~8 permisos custom
+        # Total: 8 permisos custom (sin cambios, no necesita acceso a roles)
         
         self._assign_permissions('cliente', codenames, verbose)
 
     def _configure_usuario_registrado(self, verbose):
         """
-        ✅ USUARIO REGISTRADO - Solo consulta pública
+        ✅ USUARIO REGISTRADO - Solo consulta pública, sin acceso a roles
         """
         codenames = [
             # ═══════════════════════════════════════════════════════════════
@@ -342,15 +375,24 @@ class Command(BaseCommand):
             # ═══════════════════════════════════════════════════════════════
             'view_cotizaciones_segmento',
         ]
-        # Total: 1 permiso custom
+        # Total: 1 permiso custom (sin cambios)
         
         self._assign_permissions('usuario_registrado', codenames, verbose)
 
     def _configure_observador(self, verbose):
         """
-        ✅ OBSERVADOR - Solo lectura (auditoría)
+        ✅ OBSERVADOR - Solo lectura (auditoría) + visualización completa de roles
         """
         codenames = [
+            # ═══════════════════════════════════════════════════════════════
+            # ROLES (5 custom) ← NUEVO - Visualización completa para auditoría
+            # ═══════════════════════════════════════════════════════════════
+            'view_roles_list',
+            'view_role_details',
+            'view_permission_matrix',
+            'view_group_users',
+            'view_group_permissions',
+            
             # ═══════════════════════════════════════════════════════════════
             # CLIENTES (4 custom - lectura)
             # ═══════════════════════════════════════════════════════════════
@@ -383,6 +425,15 @@ class Command(BaseCommand):
             # ═══════════════════════════════════════════════════════════════
             'view_all_usuarios',
         ]
-        # Total: ~12 permisos custom
+        # Total: 17 permisos custom (12 anteriores + 5 de roles)
         
         self._assign_permissions('observador', codenames, verbose)
+
+    def _configure_usuario_no_registrado(self, verbose):
+        """
+        ✅ USUARIO NO REGISTRADO - Sin acceso (placeholder)
+        """
+        codenames = []
+        # Total: 0 permisos (sin acceso)
+        
+        self._assign_permissions('usuario_no_registrado', codenames, verbose)

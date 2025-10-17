@@ -12,6 +12,7 @@ from .permissions_defs.transacciones import PERMISOS_TRANSACCIONES
 from .permissions_defs.medios_pago import PERMISOS_MEDIOS_PAGO
 from .permissions_defs.usuarios import PERMISOS_USUARIOS
 from .permissions_defs.mfa import PERMISOS_MFA  
+from .permissions_defs.roles import PERMISOS_ROLES
 
 # ✅ COMBINAR TODOS LOS PERMISOS (Asumo que la estructura es una lista de diccionarios)
 TODOS_LOS_PERMISOS = (
@@ -20,7 +21,8 @@ TODOS_LOS_PERMISOS = (
     PERMISOS_TRANSACCIONES +
     PERMISOS_MEDIOS_PAGO +
     PERMISOS_USUARIOS +
-    PERMISOS_MFA
+    PERMISOS_MFA + 
+    PERMISOS_ROLES
 )
 
 

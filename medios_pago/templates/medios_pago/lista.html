@@ -243,9 +243,11 @@
                 {% if estado_filtro == 'todos' %}
                     <h5>No hay medios de cobro registrados</h5>
                     <p class="text-muted">Comienza creando tu primer medio de pago.</p>
+                    {% if perms.medios_pago.manage_catalogo_medios_pago %}
                     <a href="{% url 'medios_pago:crear_admin' %}" class="btn btn-success">
                         <i class="fas fa-plus me-2"></i>Crear Primer Medio
                     </a>
+                    {% endif %}
                 {% elif estado_filtro == 'activos' %}
                     <h5>No hay medios de cobro activos</h5>
                     <p class="text-muted">Todos los medios estÃ¡n desactivados o no hay medios registrados.</p>
