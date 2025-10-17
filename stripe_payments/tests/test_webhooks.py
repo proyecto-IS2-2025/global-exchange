@@ -38,7 +38,7 @@ class StripeWebhookTest(TestCase):
     @patch('stripe.Webhook.construct_event')
     def test_webhook_invalid_signature(self, mock_construct):
         """Test: Firma inválida"""
-        mock_construct.side_effect = stripe.error.SignatureVerificationError(
+        mock_construct.side_effect = stripe.SignatureVerificationError(
             message='Invalid signature',
             sig_header='invalid'
         )

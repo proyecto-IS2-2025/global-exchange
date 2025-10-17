@@ -78,31 +78,31 @@ class StripePaymentProcessor:
             logger.info(f"Payment Intent creado exitosamente: {payment_intent.id}")
             return True, payment_intent, None
             
-        except stripe.error.CardError as e:
+        except stripe.CardError as e:
             # Errores de tarjeta (tarjeta declinada, fondos insuficientes, etc.)
             error_msg = e.user_message or str(e)
             logger.error(f"Error de tarjeta en Stripe: {error_msg}")
             return False, None, error_msg
             
-        except stripe.error.InvalidRequestError as e:
+        except stripe.InvalidRequestError as e:
             # Parámetros inválidos
             error_msg = f"Parámetros inválidos: {str(e)}"
             logger.error(f"Error de request en Stripe: {error_msg}")
             return False, None, error_msg
             
-        except stripe.error.AuthenticationError as e:
+        except stripe.AuthenticationError as e:
             # Error de autenticación con Stripe
             error_msg = "Error de autenticación con Stripe"
             logger.error(f"Error de autenticación en Stripe: {str(e)}")
             return False, None, error_msg
             
-        except stripe.error.APIConnectionError as e:
+        except stripe.APIConnectionError as e:
             # Error de conexión con la API
             error_msg = "Error de conexión con Stripe. Intente nuevamente."
             logger.error(f"Error de conexión con Stripe: {str(e)}")
             return False, None, error_msg
             
-        except stripe.error.StripeError as e:
+        except stripe.StripeError as e:
             # Otros errores de Stripe
             error_msg = f"Error en Stripe: {str(e)}"
             logger.error(f"Error general de Stripe: {error_msg}")
@@ -192,12 +192,12 @@ class StripePaymentProcessor:
             else:
                 return False, payment_intent, f"El pago no pudo completarse. Estado: {payment_intent.status}"
                 
-        except stripe.error.CardError as e:
+        except stripe.CardError as e:
             error_msg = e.user_message or str(e)
             logger.error(f"Error de tarjeta al confirmar: {error_msg}")
             return False, None, error_msg
             
-        except stripe.error.StripeError as e:
+        except stripe.StripeError as e:
             error_msg = f"Error en Stripe: {str(e)}"
             logger.error(f"Error de Stripe al confirmar: {error_msg}")
             return False, None, error_msg

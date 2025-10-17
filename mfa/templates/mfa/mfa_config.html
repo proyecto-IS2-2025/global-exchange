@@ -10,8 +10,7 @@
             <!-- Breadcrumb -->
             <nav aria-label="breadcrumb" class="mb-4">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{% url 'inicio' %}">Inicio</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Configuración MFA</li>
+                    
                 </ol>
             </nav>
 
@@ -70,9 +69,11 @@
                                         </div>
                                     </div>
                                 </div>
+                                
                                 <div class="col-md-4 text-md-end mt-3 mt-md-0">
                                     <form method="post" class="d-inline">
                                         {% csrf_token %}
+                                        {% if perms.mfa.manage_mfa_config%}
                                         <input type="hidden" name="action" value="toggle_login">
                                         {% if config.mfa_login_enabled %}
                                             <button type="submit" class="btn btn-outline-danger btn-lg">
@@ -83,8 +84,10 @@
                                                 <i class="fas fa-toggle-off me-2"></i> Activar
                                             </button>
                                         {% endif %}
+                                        {% endif %}
                                     </form>
                                 </div>
+                        
                             </div>
                         </div>
                     </div>
@@ -119,6 +122,7 @@
                                 <div class="col-md-4 text-md-end mt-3 mt-md-0">
                                     <form method="post" class="d-inline">
                                         {% csrf_token %}
+                                        {% if perms.mfa.manage_mfa_config %}
                                         <input type="hidden" name="action" value="toggle_compra">
                                         {% if config.mfa_compra_enabled %}
                                             <button type="submit" class="btn btn-outline-danger btn-lg">
@@ -128,6 +132,7 @@
                                             <button type="submit" class="btn btn-success btn-lg">
                                                 <i class="fas fa-toggle-off me-2"></i> Activar
                                             </button>
+                                        {% endif %}
                                         {% endif %}
                                     </form>
                                 </div>

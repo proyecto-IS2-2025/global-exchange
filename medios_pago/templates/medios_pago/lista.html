@@ -3,9 +3,6 @@
 {% load humanize %}
 
 {% block content %}
-<a href="{% url 'inicio' %}" class="btn btn-secondary">
-    <i class="fas fa-arrow-left me-1"></i> Volver 
-</a>
 <h1 class="h3 mb-4 text-center">Medios de Cobro</h1>
 
 <!-- Header con filtros y acciones -->
@@ -66,12 +63,14 @@
             </ul>
         </div>
         
+        {% if perms.medios_pago.manage_catalogo_medios_pago %}
         <!-- Acciones principales -->
         <div class="btn-group">
             <a href="{% url 'medios_pago:crear_admin' %}" class="btn btn-success">
                 <i class="fas fa-plus me-2"></i>Nuevo Medio
             </a>
         </div>
+        {% endif %}
     </div>
 </div>
 
@@ -116,7 +115,7 @@
                         <i class="fas fa-tag me-2"></i>Tipo
                     </th>
                     <th scope="col">
-                        <i class="fas fa-percentage me-2"></i>ComisiÃ³n (%)
+                        <i class="fas fa-percentage me-2"></i>Comisión (%)
                     </th>
                     <th scope="col">
                         <i class="fas fa-toggle-on me-2"></i>Estado
@@ -170,15 +169,16 @@
                         </span>
                     </td>
                     <td class="text-center">
+                        {% if perms.medios_pago.manage_catalogo_medios_pago %}
                         <div class="btn-group" role="group">
-                            <!-- BotÃ³n editar -->
+                            <!-- Botón editar -->
                             <a href="{% url 'medios_pago:editar' medio.pk %}" 
                                class="btn btn-sm btn-outline-primary" 
                                title="Editar medio de pago">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            
-                            <!-- BotÃ³n toggle activo/inactivo -->
+
+                            <!-- Botón toggle activo/inactivo -->
                             <form action="{% url 'medios_pago:toggle' medio.pk %}?estado={{ estado_filtro }}" 
                                   method="post" class="d-inline">
                                 {% csrf_token %}
@@ -189,6 +189,7 @@
                                 </button>
                             </form>
                         </div>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
@@ -196,9 +197,9 @@
         </table>
     </div>
     
-    <!-- PaginaciÃ³n -->
+    <!-- Paginación -->
     {% if is_paginated %}
-        <nav aria-label="NavegaciÃ³n de pÃ¡ginas" class="mt-4">
+        <nav aria-label="Navegación de páginas" class="mt-4">
             <ul class="pagination justify-content-center">
                 {% if page_obj.has_previous %}
                     <li class="page-item">
@@ -244,9 +245,11 @@
                 {% if estado_filtro == 'todos' %}
                     <h5>No hay medios de cobro registrados</h5>
                     <p class="text-muted">Comienza creando tu primer medio de pago.</p>
+                    {% if perms.medios_pago.manage_catalogo_medios_pago %}
                     <a href="{% url 'medios_pago:crear_admin' %}" class="btn btn-success">
                         <i class="fas fa-plus me-2"></i>Crear Primer Medio
                     </a>
+                    {% endif %}
                 {% elif estado_filtro == 'activos' %}
                     <h5>No hay medios de cobro activos</h5>
                     <p class="text-muted">Todos los medios estÃ¡n desactivados o no hay medios registrados.</p>
@@ -283,12 +286,12 @@
             </div>
             <div class="modal-body">
                 <div class="alert alert-warning">
-                    <strong>Â¡AtenciÃ³n!</strong> Esta acciÃ³n eliminarÃ¡ permanentemente el medio de pago.
+                    <strong>¡Atención!</strong> Esta acción eliminará permanentemente el medio de pago.
                 </div>
-                <p>Â¿EstÃ¡s seguro de que deseas eliminar el medio de pago <strong id="medio-name"></strong>?</p>
+                <p>¿Estás seguro de que deseas eliminar el medio de pago <strong id="medio-name"></strong>?</p>
                 <p class="text-muted small">
                     <i class="fas fa-info-circle me-1"></i>
-                    Esta acciÃ³n no se puede deshacer. Todos los datos asociados se perderÃ¡n.
+                    Esta acción no se puede deshacer. Todos los datos asociados se perderán.
                 </p>
             </div>
             <div class="modal-footer">

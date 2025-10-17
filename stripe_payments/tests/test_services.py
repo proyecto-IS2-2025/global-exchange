@@ -14,6 +14,7 @@ from stripe_payments.services import (
 )
 from stripe_payments.models import StripeTransaction
 import stripe
+from stripe_payments.models import StripeTransaction
 
 User = get_user_model()
 
@@ -89,7 +90,7 @@ class StripePaymentProcessorTest(TestCase):
     @patch('stripe.PaymentIntent.create')
     def test_create_payment_intent_card_error(self, mock_create):
         """Test: Manejar error de tarjeta"""
-        mock_create.side_effect = stripe.error.CardError(
+        mock_create.side_effect = stripe.CardError(
             message='Tarjeta declinada',
             param='card',
             code='card_declined'
@@ -107,7 +108,7 @@ class StripePaymentProcessorTest(TestCase):
     @patch('stripe.PaymentIntent.create')
     def test_create_payment_intent_authentication_error(self, mock_create):
         """Test: Manejar error de autenticación"""
-        mock_create.side_effect = stripe.error.AuthenticationError(
+        mock_create.side_effect = stripe.AuthenticationError(
             message='Invalid API Key'
         )
         
@@ -239,7 +240,7 @@ class StripePaymentProcessorTest(TestCase):
     @patch('stripe.PaymentIntent.confirm')
     def test_confirm_payment_card_error(self, mock_confirm):
         """Test: Error de tarjeta al confirmar"""
-        mock_confirm.side_effect = stripe.error.CardError(
+        mock_confirm.side_effect = stripe.CardError(
             message='Tarjeta declinada',
             param='card',
             code='card_declined'

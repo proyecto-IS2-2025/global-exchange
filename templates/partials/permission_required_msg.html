@@ -1,0 +1,129 @@
+{% load roles_tags %}
+
+{% if not tiene_permiso %}
+<div class="card border-warning shadow-sm">
+    <div class="card-header bg-warning bg-opacity-10 border-warning">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-shield-lock-fill text-warning me-2" style="font-size: 1.5rem;"></i>
+            <h5 class="mb-0">
+                {% if user.is_staff %}
+                    Permiso Insuficiente
+                {% else %}
+                    Acceso Restringido
+                {% endif %}
+            </h5>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        {% if user.is_staff %}
+            {# ============================== #}
+            {# VISTA PARA STAFF (DETALLADA)   #}
+            {# ============================== #}
+            <p class="card-text mb-3">
+                No tienes el permiso necesario para <strong>{{ message|default:"acceder a esta funcionalidad" }}</strong>.
+            </p>
+            
+            {% if permission_codename %}
+            <div class="alert alert-dark mb-3" role="alert">
+                <div class="d-flex align-items-start">
+                    <i class="bi bi-code-slash me-2 mt-1"></i>
+                    <div>
+                        <small class="d-block text-muted mb-1">
+                            <strong>Permiso técnico requerido:</strong>
+                        </small>
+                        <code class="text-danger fs-6">{{ permission_codename }}</code>
+                        
+                        {# ✅ Ayuda contextual según el permiso #}
+                        {% if 'view_all' in permission_codename or 'globales' in permission_codename %}
+                        <small class="d-block text-muted mt-2">
+                            <i class="bi bi-lightbulb"></i> 
+                            Este es un permiso de <strong>nivel administrativo</strong>. 
+                            Solo roles con acceso global pueden tenerlo.
+                        </small>
+                        {% elif 'assigned' in permission_codename or 'asignadas' in permission_codename %}
+                        <small class="d-block text-muted mt-2">
+                            <i class="bi bi-lightbulb"></i> 
+                            Este permiso se asigna típicamente al grupo <strong>Operador</strong>.
+                        </small>
+                        {% elif 'manage' in permission_codename %}
+                        <small class="d-block text-muted mt-2">
+                            <i class="bi bi-lightbulb"></i> 
+                            Este es un permiso de <strong>gestión avanzada</strong>. 
+                            Requiere rol de Administrador.
+                        </small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {# Acciones sugeridas para staff #}
+            <div class="card bg-light border-0">
+                <div class="card-body py-2">
+                    <h6 class="card-title mb-2">
+                        <i class="bi bi-wrench me-1"></i> Soluciones posibles:
+                    </h6>
+                    <ul class="mb-0 small">
+                        <li class="mb-1">
+                            <strong>Si eres administrador:</strong> 
+                            Ve a <a href="{% url 'admin:index' %}" target="_blank">Panel Admin</a> 
+                            → Grupos → [Tu grupo] → Permisos
+                        </li>
+                        <li class="mb-1">
+                            <strong>Si eres operador:</strong> 
+                            Solicita al administrador que agregue el permiso a tu grupo
+                        </li>
+                        <li>
+                            <strong>Verificar tu rol:</strong> 
+                            Actualmente estás en el grupo <strong>{{ user.groups.first.name|default:"Sin grupo asignado" }}</strong>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+        {% else %}
+            {# ============================== #}
+            {# VISTA PARA CLIENTE (GENÉRICA)  #}
+            {# ============================== #}
+            <div class="text-center py-3">
+                <i class="bi bi-lock-fill text-muted mb-3" style="font-size: 3rem;"></i>
+                <p class="lead mb-3">
+                    Esta funcionalidad no está disponible para tu tipo de cuenta.
+                </p>
+                <p class="text-muted mb-0">
+                    Si necesitas acceso a esta área, por favor contacta con tu ejecutivo de cuenta o con el soporte técnico.
+                </p>
+            </div>
+            
+            <div class="alert alert-info d-flex align-items-center mt-3 mb-0" role="alert">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <small>
+                    <strong>Nota:</strong> Los permisos de acceso son configurados por el administrador del sistema según tu perfil de usuario.
+                </small>
+            </div>
+        {% endif %}
+    </div>
+    
+    {# Footer con botones de acción #}
+    <div class="card-footer bg-transparent border-warning">
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="{% url 'inicio' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Volver al inicio
+            </a>
+            
+            {% if user.is_staff %}
+                <a href="mailto:admin@casadecambios.com?subject=Solicitud de permiso: {{ permission_codename }}" 
+                   class="btn btn-outline-warning btn-sm">
+                    <i class="bi bi-envelope me-1"></i> Solicitar permiso
+                </a>
+            {% else %}
+                <a href="mailto:soporte@casadecambios.com?subject=Consulta sobre acceso" 
+                   class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-headset me-1"></i> Contactar soporte
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}

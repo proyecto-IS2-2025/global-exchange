@@ -29,15 +29,15 @@
                 </form>
             </div>
         </div>
-        
+
+        {% if perms.divisas.manage_denominaciones %}
         <div class="d-flex justify-content-between mb-3">
-            <a href="{% url 'divisas:lista' %}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Volver
-            </a>
+            
             <a href="{% url 'divisas:tasa_nueva' divisa.id %}" class="btn btn-success">
                 <i class="fas fa-plus-circle me-2"></i>Añadir Nueva Tasa
             </a>
         </div>
+        {% endif %}
         
         <div class="table-responsive">
             <table class="table table-striped table-hover">
