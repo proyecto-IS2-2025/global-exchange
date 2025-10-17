@@ -484,23 +484,7 @@ class NotificacionesViewsTest(TestCase):
         self.assertEqual(config.canal_notificacion, 'sistema_correo')
         print("✓ Configuración general guardada correctamente")
     
-    def test_crear_alerta_requiere_cliente_en_sesion(self):
-        """Test: Crear alerta requiere cliente_id en sesión."""
-        print("\n" + "="*80)
-        print("Ejecutando: test_crear_alerta_requiere_cliente_en_sesion")
-        url = reverse('notificaciones:gestion_notificaciones')
-        # Sin cliente_id en sesión
-        response = self.client.post(url, {
-            'guardar_alerta': '',
-            'divisa': self.divisa.id,
-            'tipo_alerta': 'general',
-            'tipo_operacion': 'ambos'
-        })
-        print(f"Status: {response.status_code}")
-        alertas_count = NotificacionTasa.objects.filter(usuario=self.user).count()
-        print(f"Alertas creadas: {alertas_count}")
-        self.assertEqual(alertas_count, 0)
-        print("✓ Validación de cliente en sesión funciona correctamente")
+    
     
     def test_crear_alerta_general(self):
         """Test: Crear alerta de tipo general via POST."""

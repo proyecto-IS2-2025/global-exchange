@@ -121,6 +121,43 @@ class VentaDivisaView(LoginRequiredMixin, FormView):
     template_name = "operaciones/venta/venta.html"
     form_class = VentaDivisaForm
 
+    def get(self, request, *args, **kwargs):
+        """Manejar peticiones AJAX para calcular conversión"""
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            try:
+                divisa_id = request.GET.get('divisa_id')
+                monto = request.GET.get('monto')
+                
+                if not divisa_id or not monto:
+                    return JsonResponse({'success': False, 'error': 'Datos incompletos'})
+                
+                divisa = Divisa.objects.get(id=divisa_id)
+                
+                payload = {
+                    "tipo_operacion": "venta",
+                    "monto": str(monto),
+                    "moneda": divisa.code
+                }
+                
+                rf = RequestFactory()
+                post_req = rf.post(
+                    '/simulador/calcular/',
+                    data=json.dumps(payload),
+                    content_type='application/json'
+                )
+                post_req.session = request.session
+                post_req.user = request.user
+                
+                resp = calcular_simulacion_api(post_req)
+                data = json.loads(resp.content)
+                
+                return JsonResponse(data)
+                
+            except Exception as e:
+                return JsonResponse({'success': False, 'error': str(e)})
+        
+        return super().get(request, *args, **kwargs)
+
     def form_valid(self, form):
         divisa = form.cleaned_data['divisa']
         monto = form.cleaned_data['monto']
@@ -330,6 +367,43 @@ class CompraDivisaView(LoginRequiredMixin, FormView):
     """
     template_name = "operaciones/compra/compra.html"
     form_class = CompraDivisaForm
+
+    def get(self, request, *args, **kwargs):
+        """Manejar peticiones AJAX para calcular conversión"""
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            try:
+                divisa_id = request.GET.get('divisa_id')
+                monto = request.GET.get('monto')
+                
+                if not divisa_id or not monto:
+                    return JsonResponse({'success': False, 'error': 'Datos incompletos'})
+                
+                divisa = Divisa.objects.get(id=divisa_id)
+                
+                payload = {
+                    "tipo_operacion": "compra",
+                    "monto": str(monto),
+                    "moneda": divisa.code
+                }
+                
+                rf = RequestFactory()
+                post_req = rf.post(
+                    '/simulador/calcular/',
+                    data=json.dumps(payload),
+                    content_type='application/json'
+                )
+                post_req.session = request.session
+                post_req.user = request.user
+                
+                resp = calcular_simulacion_api(post_req)
+                data = json.loads(resp.content)
+                
+                return JsonResponse(data)
+                
+            except Exception as e:
+                return JsonResponse({'success': False, 'error': str(e)})
+        
+        return super().get(request, *args, **kwargs)
 
     def form_valid(self, form):
         divisa = form.cleaned_data['divisa']
@@ -555,6 +629,180 @@ def compra_mfa_verify_view(request):
         messages.error(request, "Debes iniciar sesión.")
         return redirect('login')
     
+
+    def post(self, request, *args, **kwargs):
+        """Procesar confirmación de pago"""
+        logger.info(f"\n{'='*60}")
+        logger.info(f"POST EN SUMARIO COMPRA - INICIANDO CONFIRMACIÓN DE PAGO")
+        logger.info(f"{'='*60}")
+        
+        operacion = request.session.get("operacion")
+        medio_pago = get_medio_pago_seleccionado(request)
+        
+        logger.info(f"Operación: {operacion}")
+        logger.info(f"Medio pago tipo: {type(medio_pago)}")
+        logger.info(f"Medio pago: {medio_pago}")
+        
+        if not operacion or not medio_pago:
+            logger.error("❌ No hay operación o medio de pago")
+            messages.error(request, "No hay operación o medio de pago seleccionado.")
+            return redirect("operacion_divisas:compra")
+        
+        # Verificar si el medio de pago es Stripe
+        logger.info(f"\n🔍 Verificando si el medio de pago es Stripe...")
+        es_stripe = self._es_medio_stripe(medio_pago, request)
+        logger.info(f"Resultado: es_stripe = {es_stripe}\n")
+        
+        if es_stripe:
+            logger.info(f"➡️ REDIRIGIENDO A PROCESAMIENTO STRIPE")
+            # Procesar pago con Stripe
+            return self._procesar_pago_stripe(request, operacion, medio_pago)
+        else:
+            logger.info(f"➡️ REDIRIGIENDO A PROCESAMIENTO NORMAL (BANCO)")
+            # Procesar pago normal (sin Stripe)
+            return self._procesar_pago_normal(request, operacion, medio_pago)
+    
+    def _es_medio_stripe(self, medio_pago, request):
+        """Verifica si el medio de pago debe procesarse con Stripe"""
+        try:
+            from clientes.models import ClienteMedioDePago
+            
+            logger.info(f"🔍 VERIFICANDO SI ES STRIPE...")
+            logger.info(f"Tipo de medio_pago: {type(medio_pago)}")
+            
+            # Si medio_pago es un dict, obtener el objeto real
+            if isinstance(medio_pago, dict):
+                medio_id = medio_pago.get('id')
+                logger.info(f"Es dict, ID: {medio_id}")
+                if medio_id:
+                    medio_obj = ClienteMedioDePago.objects.select_related('medio_de_pago').get(id=medio_id)
+                else:
+                    logger.warning("Dict sin ID, retornando False")
+                    return False
+            else:
+                medio_obj = medio_pago
+                logger.info(f"Es objeto ClienteMedioDePago")
+            
+            logger.info(f"Medio de pago: {medio_obj.medio_de_pago.nombre}")
+            logger.info(f"Tipo medio: {medio_obj.medio_de_pago.tipo_medio}")
+            logger.info(f"Datos campos: {medio_obj.datos_campos}")
+            
+            # MÉTODO 1: Verificar por tipo_medio
+            if medio_obj.medio_de_pago.tipo_medio == 'stripe':
+                logger.info(f"✅ DETECTADO COMO STRIPE por tipo_medio='stripe'")
+                return True
+            
+            # MÉTODO 2: Verificar campo Entidad en datos_campos
+            if 'Entidad' in medio_obj.datos_campos:
+                entidad = str(medio_obj.datos_campos.get('Entidad', '')).lower()
+                logger.info(f"Campo 'Entidad' encontrado: '{entidad}'")
+                if 'stripe' in entidad:
+                    logger.info(f"✅ DETECTADO COMO STRIPE por campo Entidad='{entidad}'")
+                    return True
+            
+            # MÉTODO 3: Buscar en cualquier campo que contenga "stripe"
+            for campo_nombre, valor in medio_obj.datos_campos.items():
+                if 'stripe' in str(valor).lower():
+                    logger.info(f"✅ DETECTADO COMO STRIPE por campo '{campo_nombre}' = '{valor}'")
+                    return True
+            
+            logger.warning(f"❌ NO ES STRIPE - retornando False")
+            return False
+            
+        except Exception as e:
+            logger.error(f"❌ Error al verificar si es Stripe: {e}", exc_info=True)
+            return False
+    
+    def _procesar_pago_stripe(self, request, operacion, medio_pago):
+        """Procesa el pago usando Stripe"""
+        try:
+            from stripe_payments.services import process_stripe_payment
+            from clientes.models import ClienteMedioDePago
+            
+            logger.info(f"=== PROCESANDO PAGO CON STRIPE ===")
+            logger.info(f"Tipo de medio_pago recibido: {type(medio_pago)}")
+            
+            # Si medio_pago es un dict, obtener el objeto real
+            if isinstance(medio_pago, dict):
+                medio_id = medio_pago.get('id')
+                if medio_id:
+                    logger.info(f"Obteniendo ClienteMedioDePago con ID: {medio_id}")
+                    medio_pago_obj = ClienteMedioDePago.objects.select_related('medio_de_pago').get(id=medio_id)
+                else:
+                    logger.error("medio_pago es un dict sin ID")
+                    messages.error(request, 'Error: No se pudo identificar el medio de pago')
+                    return redirect('operacion_divisas:compra_sumario')
+            else:
+                medio_pago_obj = medio_pago
+            
+            logger.info(f"Medio de pago: {medio_pago_obj.medio_de_pago.nombre}")
+            logger.info(f"Datos campos disponibles: {list(medio_pago_obj.datos_campos.keys())}")
+            
+            # Obtener IP del cliente
+            client_ip = self._get_client_ip(request)
+            
+            # Procesar el pago
+            logger.info(f"Llamando a process_stripe_payment...")
+            success, transaction, error = process_stripe_payment(
+                cliente=request.user,
+                medio_pago_data=medio_pago_obj,  # Pasar el objeto, no el dict
+                operacion_data=operacion,
+                client_ip=client_ip
+            )
+            
+            if success:
+                logger.info(f"✅ Pago exitoso - Transaction ID: {transaction.id}")
+                
+                # Limpiar sesión
+                request.session.pop('operacion', None)
+                request.session.pop('medio_pago_seleccionado', None)
+                request.session.pop('compra_resultado', None)
+                request.session.modified = True
+                
+                messages.success(
+                    request,
+                    f'¡Pago procesado exitosamente con Stripe! ID de transacción: {transaction.payment_intent_id}'
+                )
+                
+                # Redirigir a página de éxito con el ID de transacción
+                return redirect('stripe_payments:transaction_detail', transaction_id=transaction.id)
+            else:
+                logger.error(f"❌ Pago fallido: {error}")
+                messages.error(
+                    request,
+                    f'Error al procesar el pago con Stripe: {error}'
+                )
+                return redirect('operacion_divisas:compra_sumario')
+                
+        except Exception as e:
+            logger.error(f"Error al procesar pago con Stripe: {e}", exc_info=True)
+            messages.error(
+                request,
+                f'Error inesperado al procesar el pago: {str(e)}'
+            )
+            return redirect('operacion_divisas:compra_sumario')
+    
+    def _procesar_pago_normal(self, request, operacion, medio_pago):
+        """Procesa el pago sin Stripe (método tradicional) - llama directamente a crear transacción"""
+        logger.info(f"=== PROCESANDO PAGO NORMAL (BANCO) ===")
+        logger.info(f"Llamando a crear_transaccion_desde_compra para procesamiento bancario")
+        
+        # Importar la vista de transacciones y llamarla directamente
+        from transacciones.views import crear_transaccion_desde_compra
+        
+        # Llamar directamente a la vista (que espera POST)
+        return crear_transaccion_desde_compra(request)
+    
+    def _get_client_ip(self, request):
+        """Obtiene la IP del cliente"""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
+    
+
     # Verificar que hay una compra pendiente de MFA
     mfa_compra_pending = request.session.get('mfa_compra_pending')
     mfa_compra_user_id = request.session.get('mfa_compra_user_id')

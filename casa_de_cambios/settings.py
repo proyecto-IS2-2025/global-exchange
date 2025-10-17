@@ -4,6 +4,7 @@ Configuración de Django para el proyecto Casa de Cambios.
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import stripe
 
 # ═════════════════════════════════════════════════════════════════════
 # CONFIGURACIÓN BASE
@@ -64,6 +65,7 @@ INSTALLED_APPS = [
     'mfa', 
     'autenticacion',
     'interfaz',
+    'stripe_payments',
 ]
 
 # ═════════════════════════════════════════════════════════════════════
@@ -233,6 +235,15 @@ LOGS_DIR.mkdir(exist_ok=True)  # ← AGREGAR ESTA LÍNEA
 
 
 AUTH_USER_MODEL = 'users.CustomUser'
+# Configuración de mensajes para Bootstrap 5
+from django.contrib.messages import constants as messages
+MESSAGE_TAGS = {
+    messages.DEBUG: 'debug',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'success',
+    messages.WARNING: 'warning',
+    messages.ERROR: 'danger',  # Bootstrap usa 'danger' en lugar de 'error'
+}
 
 DEBUG = True
 LOGGING = {
@@ -280,3 +291,8 @@ LOGGING = {
 # ═════════════════════════════════════════════════════════════════════
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+STRIPE_PUBLISHABLE_KEY = "pk_test_51SCTnvFayINu5q7y2Xs9rtuAXlKXFESkR2jtUI6yrPVRkbn2mA5lJ3QOMGYcSVVn4V3BbjfJnUHuu1gYxfZspNDz00hJkOST0s"
+STRIPE_SECRET_KEY = "sk_test_51SCTnvFayINu5q7yTXQJO2Old7r5bI35yOYD43Zvas0j0ZXr66aFt4cpy73ZKn61iUPcmGlNkxaZ1ib0XUVYoc8O00cfCofmn1"
+STRIPE_WEBHOOK_SECRET = "whsec_32b4e065fe19a60910470282b157b2536e644e0d6fdf5a01cebcdbee92334f8d"
+stripe.api_key = STRIPE_SECRET_KEY

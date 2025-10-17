@@ -76,13 +76,17 @@
       {% with campos=medio.campos|default:medio_ses.campos %}
       {% if campos %}
         <h6>Datos del medio</h6>
-        <table class="table table-sm">
+        <table class="table table-sm table-bordered">
           <tbody>
             {% for c in campos %}
               <tr>
-                <th scope="row">{{ c.etiqueta }}</th>
-                <td>
-                  {% if c.valor_enmascarado %}
+                <th scope="row" class="bg-light" style="width: 40%;">{{ c.etiqueta }}</th>
+                <td class="fw-semibold">
+                  {# Mostrar sin censura: Entidad, RUC, Titular, Nombre, Documento #}
+                  {% if "entidad" in c.etiqueta|lower or "ruc" in c.etiqueta|lower or "titular" in c.etiqueta|lower or "nombre" in c.etiqueta|lower or "documento" in c.etiqueta|lower %}
+                    {{ c.valor|default:"-" }}
+                  {# Mostrar con censura: Número de cuenta, tarjeta, CVV, etc #}
+                  {% elif c.valor_enmascarado %}
                     {{ c.valor_enmascarado }}
                   {% elif c.valor %}
                     {{ c.valor }}

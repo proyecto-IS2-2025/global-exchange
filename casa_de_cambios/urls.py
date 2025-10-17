@@ -28,6 +28,7 @@ urlpatterns = [
 
     path('mfa/', include('mfa.urls')),
     path('divisas/operacion/', include('operacion_divisas.urls', namespace='operacion_divisas')),
+    path('stripe/', include('stripe_payments.urls', namespace='stripe_payments')),
 ]
 
 # Handler personalizado para error 403

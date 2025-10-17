@@ -113,7 +113,8 @@ reset-db:
 	poetry run python manage.py loaddata users_data.json
 	poetry run python manage.py loaddata clientes_data.json
 	poetry run python manage.py loaddata divisas_data.json
-	
+	poetry run python manage.py loaddata bancos_data.json
+
 	@echo "Configurando roles de prueba..."
 	poetry run python manage.py sync_permissions
 	poetry run python manage.py setup_test_roles --verbose
@@ -121,6 +122,14 @@ reset-db:
 	poetry run python manage.py create_dev_user
 	
 	@echo "Base de datos reiniciada y datos cargados."
+
+migraWin:
+	@echo "Realizando migraciones en Windows..."
+	poetry run python manage.py makemigrations
+	poetry run python manage.py migrate
+	@echo "Migraciones realizadas en Windows."
+
+
 
 sync:
 	@echo "Sincronizando repositorio local con el remoto..."

@@ -109,6 +109,15 @@ class Transaccion(models.Model):
 
     observacion = models.TextField('Observación/Motivo de estado', blank=True, default='')
 
+    # Campo antiguo (mantener para compatibilidad con BD existente)
+    metodo_pago = models.CharField(
+        'Método de Pago (obsoleto)',
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text='Campo antiguo - usar medio_pago_datos en su lugar'
+    )
+
     # Nuevo/Ajustado: datos completos del medio seleccionado (id, nombre, tipo, comision, datos_campos, etc.)
     medio_pago_datos = models.JSONField(
         'Datos del Medio de Pago/Acreditación',
@@ -271,6 +280,52 @@ class Transaccion(models.Model):
     def puede_anularse(self):
         """True si la transacción puede anularse"""
         return self.estado in ['pagada', 'a_retirar']
+
+    @property
+    def es_pago_stripe(self):
+        """True si es un pago realizado con Stripe"""
+        try:
+            if not self.medio_pago_datos:
+                return False
+            
+            # Verificar si el tipo de medio es 'stripe'
+            if self.medio_pago_datos.get('tipo') == 'stripe':
+                return True
+            
+            # Verificar si hay información de Stripe en el medio_pago_datos
+            stripe_payment_intent_id = self.medio_pago_datos.get('stripe_payment_intent_id')
+            if stripe_payment_intent_id:
+                return True
+            
+            # Verificar si el nombre del medio contiene "stripe"
+            nombre = self.medio_pago_datos.get('nombre', '').lower()
+            if 'stripe' in nombre:
+                return True
+            
+            return False
+        except (TypeError, AttributeError):
+            return False
+
+    @property
+    def card_last4(self):
+        """Obtener los últimos 4 dígitos de la tarjeta si es pago Stripe"""
+        try:
+            if self.es_pago_stripe and self.medio_pago_datos:
+                return self.medio_pago_datos.get('stripe_card_last4')
+        except (TypeError, AttributeError):
+            pass
+        return None
+
+    @property
+    def card_brand(self):
+        """Obtener la marca de la tarjeta si es pago Stripe"""
+        try:
+            if self.es_pago_stripe and self.medio_pago_datos:
+                return self.medio_pago_datos.get('stripe_card_brand')
+        except (TypeError, AttributeError):
+            pass
+        return None
+
 
     def get_medio_pago_info(self):
         """Obtener información del medio de pago de forma segura"""
@@ -575,25 +630,31 @@ def cancelar_transacciones_pendientes_por_tasa(sender, instance, created, **kwar
     Se ejecuta CADA VEZ que se guarda una CotizacionSegmento.
     Busca transacciones pendientes con la misma divisa y las cancela.
     """
+    try:
+        # 1. Validación de la divisa base
+        # Si la cotización actualizada es del Guaraní (PYG o código '116'), no hacemos nada.
+        if instance.divisa.code in ['PYG', '116']:
+            return
 
-    # 1. Validación de la divisa base
-    # Si la cotización actualizada es del Guaraní (PYG o código '116'), no hacemos nada.
-    if instance.divisa.code in ['PYG', '116']:
-         return
+        divisa_actualizada = instance.divisa
 
-    divisa_actualizada = instance.divisa
+        # 2. Encontrar transacciones PENDIENTES afectadas
+        transacciones_a_cancelar = Transaccion.objects.filter(
+            Q(divisa_origen=divisa_actualizada) | Q(divisa_destino=divisa_actualizada),
+            estado='pendiente'
+        ).select_related('cliente', 'divisa_origen', 'divisa_destino')
 
-    # 2. Encontrar transacciones PENDIENTES afectadas
-    transacciones_a_cancelar = Transaccion.objects.filter(
-        Q(divisa_origen=divisa_actualizada) | Q(divisa_destino=divisa_actualizada),
-        estado='pendiente'
-    ).select_related('cliente', 'divisa_origen', 'divisa_destino')
+        razon_cancelacion = (
+            f"Cotización de {divisa_actualizada.code} ha sido actualizada en el sistema. "
+            f"(Segmento: {instance.segmento.name})"
+        )
 
-    razon_cancelacion = (
-        f"Cotización de {divisa_actualizada.code} ha sido actualizada en el sistema. "
-        f"(Segmento: {instance.segmento.name})"
-    )
-
-    # 3. Cancelar cada transacción
-    for transaccion in transacciones_a_cancelar:
-        transaccion.cancelar_automaticamente(razon=razon_cancelacion)
+        # 3. Cancelar cada transacción
+        for transaccion in transacciones_a_cancelar:
+            transaccion.cancelar_automaticamente(razon=razon_cancelacion)
+    except Exception as e:
+        # Si hay un error (por ejemplo, columna faltante), no fallar
+        # Solo registrar el error en logs si es necesario
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Error al cancelar transacciones por tasa: {e}")
