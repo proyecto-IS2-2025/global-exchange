@@ -2,6 +2,9 @@ from .models import NotificacionTasa, Notificacion
 from divisas.models import CotizacionSegmento
 from django.core.mail import send_mail
 from .models import ConfiguracionGeneral
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def evaluar_alertas(nueva_cotizacion: CotizacionSegmento):
@@ -9,12 +12,18 @@ def evaluar_alertas(nueva_cotizacion: CotizacionSegmento):
     Evalúa las alertas configuradas por los usuarios según la nueva cotización.
     Crea notificaciones con formato uniforme y mensajes claros.
     """
+    
+    logger.info(f"🔔 Evaluando alertas para: {nueva_cotizacion.divisa.code} - Segmento: {nueva_cotizacion.segmento}")
 
     reglas_activas = NotificacionTasa.objects.filter(
         divisa=nueva_cotizacion.divisa.code,
         activa=True,
         cliente_asociado__segmento=nueva_cotizacion.segmento
     )
+    
+    logger.info(f"📊 Reglas activas encontradas: {reglas_activas.count()}")
+    for regla in reglas_activas:
+        logger.info(f"  - Regla ID {regla.id}: {regla.usuario.username} - {regla.tipo_alerta} - {regla.cliente_asociado.nombre_completo}")
 
     for regla in reglas_activas:
         config = ConfiguracionGeneral.objects.filter(usuario=regla.usuario).first()
@@ -57,44 +66,50 @@ def evaluar_alertas(nueva_cotizacion: CotizacionSegmento):
                     f"El valor de {tipo_texto} del {regla.divisa} alcanzó Gs. {valor_actual_fmt} "
                     f"para el cliente {cliente_nombre} "
                 )
-        if canal in ["sistema_correo"]:
-            asunto = "📢 Nueva notificación de tasa de cambio"
-            # URL de destino (por ahora localhost)
-            url_notificaciones = "http://127.0.0.1:8000/"
-
-            # cuerpo del correo con botón HTML
-            cuerpo = f"""
-            <html>
-              <body style="font-family: Arial, sans-serif; color: #333;">
-                <p>Hola <strong>{regla.usuario.first_name or regla.usuario.username}</strong>,</p>
-                <p>{mensaje}</p>
-                <p>
-                  <a href="{url_notificaciones}" 
-                     style="background-color:#0d6efd; color:white; padding:10px 18px; 
-                            text-decoration:none; border-radius:6px; display:inline-block;">
-                     Ir a Global Exchange
-                  </a>
-                </p>
-                <p style="font-size:12px; color:#777;">Global Exchange ©</p>
-              </body>
-            </html>
-            """
-
-            # envío del correo
-            send_mail(
-                asunto,
-                "",  # cuerpo plano vacío
-                "glex.globalexchange@gmail.com",  # remitente
-                [regla.usuario.email],  # destinatario
-                fail_silently=True,
-                html_message=cuerpo,  # cuerpo HTML con botón
-            )
 
         # 🔹 Crear la notificación si corresponde
         if condicion_cumplida:
-            Notificacion.objects.create(
+            # Enviar correo si el canal está configurado para ello
+            if canal in ["sistema_correo"]:
+                try:
+                    asunto = "📢 Nueva notificación de tasa de cambio"
+                    url_notificaciones = "http://127.0.0.1:8000/notificaciones/"
+
+                    cuerpo = f"""
+                    <html>
+                      <body style="font-family: Arial, sans-serif; color: #333;">
+                        <p>Hola <strong>{regla.usuario.first_name or regla.usuario.username}</strong>,</p>
+                        <p>{mensaje}</p>
+                        <p>
+                          <a href="{url_notificaciones}" 
+                             style="background-color:#0d6efd; color:white; padding:10px 18px; 
+                                    text-decoration:none; border-radius:6px; display:inline-block;">
+                             Ver notificación
+                          </a>
+                        </p>
+                        <p style="font-size:12px; color:#777;">Global Exchange ©</p>
+                      </body>
+                    </html>
+                    """
+
+                    send_mail(
+                        asunto,
+                        mensaje,  # texto plano como fallback
+                        "glex.globalexchange@gmail.com",
+                        [regla.usuario.email],
+                        fail_silently=False,
+                        html_message=cuerpo,
+                    )
+                    logger.info(f"� Correo enviado a {regla.usuario.email}")
+                except Exception as e:
+                    logger.error(f"❌ Error al enviar correo a {regla.usuario.email}: {e}")
+
+            notif = Notificacion.objects.create(
                 usuario=regla.usuario,
                 alerta_base=regla,
                 mensaje=mensaje,
-                correo_enviado=True if canal in ["correo", "sistema_y_correo"] else False
+                correo_enviado=True if canal in ["correo", "sistema_correo"] else False
             )
+            logger.info(f"✅ Notificación creada ID {notif.id} para {regla.usuario.username}")
+        else:
+            logger.info(f"⏭️  Condición no cumplida para regla ID {regla.id}")
