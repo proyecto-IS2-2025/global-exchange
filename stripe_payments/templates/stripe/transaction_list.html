@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Historial de Transacciones Stripe{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-credit-card"></i> Historial de Transacciones Stripe</h2>
+            <p class="text-muted">Consulta el historial completo de tus pagos procesados con Stripe</p>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total</h5>
+                    <h2>{{ stats.total }}</h2>
+                    <small>Transacciones</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Exitosas</h5>
+                    <h2>{{ stats.succeeded }}</h2>
+                    <small>Procesadas</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Fallidas</h5>
+                    <h2>{{ stats.failed }}</h2>
+                    <small>No completadas</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Pendientes</h5>
+                    <h2>{{ stats.pending }}</h2>
+                    <small>En proceso</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-filter"></i> Filtros
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="status" class="form-label">Estado</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="succeeded" {% if current_filters.status == 'succeeded' %}selected{% endif %}>Exitosa</option>
+                        <option value="failed" {% if current_filters.status == 'failed' %}selected{% endif %}>Fallida</option>
+                        <option value="pending" {% if current_filters.status == 'pending' %}selected{% endif %}>Pendiente</option>
+                        <option value="processing" {% if current_filters.status == 'processing' %}selected{% endif %}>Procesando</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="type" class="form-label">Tipo</label>
+                    <select name="type" id="type" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="compra" {% if current_filters.type == 'compra' %}selected{% endif %}>Compra</option>
+                        <option value="venta" {% if current_filters.type == 'venta' %}selected{% endif %}>Venta</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-search"></i> Filtrar
+                    </button>
+                    <a href="{% url 'stripe_payments:transaction_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de transacciones -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-list"></i> Transacciones
+        </div>
+        <div class="card-body">
+            {% if transactions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>ID Transacción</th>
+                                <th>Tipo</th>
+                                <th>Divisa</th>
+                                <th>Monto</th>
+                                <th>Estado</th>
+                                <th>Tarjeta</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions %}
+                            <tr>
+                                <td>{{ transaction.created_at|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    <small class="text-muted font-monospace">
+                                        {{ transaction.payment_intent_id|truncatechars:20 }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">
+                                        {{ transaction.get_transaction_type_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if transaction.divisa_code %}
+                                        <strong>{{ transaction.divisa_code }}</strong>
+                                        {% if transaction.monto_divisa %}
+                                            <br><small>{{ transaction.monto_divisa|floatformat:2 }}</small>
+                                        {% endif %}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ transaction.get_amount_display }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge {{ transaction.get_status_badge_class }}">
+                                        {{ transaction.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if transaction.card_brand %}
+                                        <i class="fab fa-cc-{{ transaction.card_brand|lower }}"></i>
+                                        {{ transaction.card_brand }}
+                                        •••• {{ transaction.card_last4 }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'stripe_payments:transaction_detail' transaction.id %}" 
+                                       class="btn btn-sm btn-primary" 
+                                       title="Ver detalle">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if transaction.is_successful %}
+                                    <a href="{% url 'stripe_payments:transaction_receipt' transaction.id %}" 
+                                       class="btn btn-sm btn-success" 
+                                       title="Ver recibo"
+                                       target="_blank">
+                                        <i class="fas fa-receipt"></i>
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginación -->
+                {% if is_paginated %}
+                <nav aria-label="Paginación">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if current_filters.status %}&status={{ current_filters.status }}{% endif %}{% if current_filters.type %}&type={{ current_filters.type }}{% endif %}">Primera</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_filters.status %}&status={{ current_filters.status }}{% endif %}{% if current_filters.type %}&type={{ current_filters.type }}{% endif %}">Anterior</a>
+                        </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_filters.status %}&status={{ current_filters.status }}{% endif %}{% if current_filters.type %}&type={{ current_filters.type }}{% endif %}">Siguiente</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if current_filters.status %}&status={{ current_filters.status }}{% endif %}{% if current_filters.type %}&type={{ current_filters.type }}{% endif %}">Última</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle fa-3x mb-3"></i>
+                    <h5>No hay transacciones</h5>
+                    <p class="mb-0">Aún no has realizado ninguna transacción con Stripe.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

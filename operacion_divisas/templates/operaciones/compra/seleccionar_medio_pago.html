@@ -206,55 +206,109 @@ $('.btn-seleccionar-medio').on('click', function() {
     });
 });
 
+// Función para obtener el CSRF token de las cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 // Barra fija: continuar o cambiar selección
 document.addEventListener("DOMContentLoaded", function () {
   const continuarBtn = document.querySelector("#btn-continuar-operacion");
   const cambiarBtn = document.querySelector("#btn-cambiar-medio");
+  const csrftoken = getCookie('csrftoken');
 
   if (continuarBtn) {
     continuarBtn.addEventListener("click", function () {
       const medioId = continuarBtn.dataset.medioId;
+      const originalHtml = continuarBtn.innerHTML;
+      
+      continuarBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Procesando...';
+      continuarBtn.disabled = true;
+      
       fetch("", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
-          "X-CSRFToken": "{{ csrf_token }}",
+          "X-CSRFToken": csrftoken,
+          "Accept": "application/json",
+          "X-Requested-With": "XMLHttpRequest"
         },
         body: new URLSearchParams({
           accion: "seleccionar",
           medio_id: medioId,
         }),
       })
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          return res.json();
+        })
         .then((data) => {
           if (data.success && data.redirect_url) {
             window.location.href = data.redirect_url;
           } else {
             alert(data.error || "No se pudo continuar");
+            continuarBtn.innerHTML = originalHtml;
+            continuarBtn.disabled = false;
           }
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+          alert("Error de conexión al servidor");
+          continuarBtn.innerHTML = originalHtml;
+          continuarBtn.disabled = false;
         });
     });
   }
 
   if (cambiarBtn) {
     cambiarBtn.addEventListener("click", function () {
+      const originalHtml = cambiarBtn.innerHTML;
+      cambiarBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Limpiando...';
+      cambiarBtn.disabled = true;
+      
       fetch("", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
-          "X-CSRFToken": "{{ csrf_token }}",
+          "X-CSRFToken": csrftoken,
+          "Accept": "application/json",
+          "X-Requested-With": "XMLHttpRequest"
         },
         body: new URLSearchParams({
           accion: "limpiar",
         }),
       })
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          return res.json();
+        })
         .then((data) => {
           if (data.success && data.redirect_url) {
             window.location.href = data.redirect_url;
           } else {
             window.location.reload();
           }
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+          cambiarBtn.innerHTML = originalHtml;
+          cambiarBtn.disabled = false;
+          window.location.reload();
         });
     });
   }

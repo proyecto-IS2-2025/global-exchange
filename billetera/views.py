@@ -6,11 +6,11 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from .models import (
     UsuarioBilletera, Billetera, RecargaBilletera, 
-    TransferenciaBilletera, MovimientoBilletera
+    TransferenciaBilletera, MovimientoBilletera, PagoBilletera
 )
 from .forms import (
     RegistroUsuarioForm, CrearBilleteraForm, LoginForm,
-    RecargaBilleteraForm, TransferirFondosForm
+    RecargaBilleteraForm, TransferirFondosForm, PagarCuentaForm
 )
 from banco.models import EntidadBancaria
 
@@ -170,6 +170,40 @@ def transferir(request):
         form = TransferirFondosForm(billetera_origen=billetera)
     
     return render(request, 'billetera/transferir.html', {'form': form, 'billetera': billetera})
+
+
+def pagar(request):
+    """Vista para realizar pagos desde la billetera a cuentas bancarias"""
+    usuario_id = request.session.get('usuario_billetera_id')
+    if not usuario_id:
+        return redirect('billetera:login')
+    
+    usuario = get_object_or_404(UsuarioBilletera, id=usuario_id)
+    
+    try:
+        billetera = usuario.billetera
+    except Billetera.DoesNotExist:
+        messages.error(request, 'Debes crear una billetera primero.')
+        return redirect('billetera:crear_billetera')
+    
+    if request.method == 'POST':
+        form = PagarCuentaForm(data=request.POST, billetera_origen=billetera)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    pago = PagoBilletera.objects.create(
+                        billetera=billetera,
+                        cuenta_destino=form.cleaned_data['cuenta_destino'],
+                        monto=form.cleaned_data['monto']
+                    )
+                    messages.success(request, f'Pago exitoso. Comprobante: {pago.comprobante}')
+                    return redirect('billetera:dashboard')
+            except ValidationError as e:
+                messages.error(request, str(e))
+    else:
+        form = PagarCuentaForm(billetera_origen=billetera)
+    
+    return render(request, 'billetera/pagar.html', {'form': form, 'billetera': billetera})
 
 
 def historial(request):

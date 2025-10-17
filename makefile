@@ -111,3 +111,10 @@ reset-db:
 	poetry run python manage.py loaddata clientes_data.json
 	poetry run python manage.py loaddata divisas_data.json
 	@echo "Base de datos reiniciada y datos cargados."
+
+migraWin:
+	@echo "Realizando migraciones en Windows..."
+	poetry run python manage.py makemigrations
+	poetry run python manage.py migrate
+	@echo "Migraciones realizadas en Windows."
+

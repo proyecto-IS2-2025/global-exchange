@@ -206,44 +206,50 @@ class TarjetaCredito(models.Model):
 # --------- PAGOS ---------
 from django.core.exceptions import ValidationError
 
+# banco/models.py - Añadir este cambio al modelo PagoTarjeta existente
+
 class PagoTarjeta(models.Model):
     """
     Registra un pago realizado con tarjeta, que puede ser de débito o crédito.
-
-    Este modelo implementa la lógica de verificación de saldo/límite y la actualización
-    de saldos en el método :meth:`~banco.models.PagoTarjeta.save`.
-
-    :ivar tarjeta_debito: Tarjeta de débito usada para el pago (excluyente con :attr:`tarjeta_credito`).
-    :vartype tarjeta_debito: :class:`~banco.models.TarjetaDebito`
-    :ivar tarjeta_credito: Tarjeta de crédito usada para el pago (excluyente con :attr:`tarjeta_debito`).
-    :vartype tarjeta_credito: :class:`~banco.models.TarjetaCredito`
-    :ivar monto: Monto del pago.
-    :vartype monto: :class:`django.db.models.DecimalField`
-    :ivar comprobante: Identificador UUID único para el comprobante.
-    :vartype comprobante: :class:`uuid.UUID`
-    :ivar fecha: Fecha y hora en que se registró el pago.
-    :vartype fecha: :class:`datetime.datetime`
+    También puede registrar recargas a billeteras virtuales.
     """
     tarjeta_debito = models.ForeignKey("TarjetaDebito", on_delete=models.SET_NULL, null=True, blank=True)
     tarjeta_credito = models.ForeignKey("TarjetaCredito", on_delete=models.SET_NULL, null=True, blank=True)
     monto = models.DecimalField(max_digits=12, decimal_places=2)
     comprobante = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     fecha = models.DateTimeField(auto_now_add=True)
+    
+    # ✅ NUEVO: Campo para relacionar con billetera (opcional)
+    billetera = models.ForeignKey(
+        "billetera.Billetera",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="recargas_banco"
+    )
+    
+    # ✅ NUEVO: Cuenta destino para rastrear dónde va el dinero
+    cuenta_destino = models.ForeignKey(
+        "Cuenta",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="pagos_recibidos_tarjeta",
+        help_text="Cuenta que recibe el pago (ej: cuenta empresa para compras)"
+    )
 
     def save(self, *args, **kwargs):
         """
         Sobreescribe el método save para ejecutar la lógica de pago.
-
-        Realiza las siguientes validaciones y acciones antes de guardar:
-
-        1.  Valida que se use una sola tarjeta (débito O crédito).
-        2.  Si es débito: verifica saldo de la cuenta vinculada y lo decrementa.
-        3.  Si es crédito: verifica el límite disponible y aumenta el saldo usado.
-
-        :raises ValidationError: Si la selección de tarjeta es incorrecta, hay saldo insuficiente 
-                                 o el límite de crédito es excedido.
+        Si tiene billetera asociada, significa que es una recarga y NO debe descontar del saldo.
         """
-        # Validación de integridad
+        # ✅ Si es una recarga a billetera, saltamos la lógica de descuento
+        # porque ya se procesó en RecargaBilletera
+        if self.billetera:
+            super().save(*args, **kwargs)
+            return
+        
+        # Validación de integridad para pagos normales
         if not self.tarjeta_debito and not self.tarjeta_credito:
             raise ValidationError("Debe especificar una tarjeta de débito o crédito.")
         if self.tarjeta_debito and self.tarjeta_credito:
@@ -268,6 +274,8 @@ class PagoTarjeta(models.Model):
 
     def __str__(self):
         """Retorna el tipo de pago (débito/crédito) y el monto."""
+        if self.billetera:
+            return f"Recarga Billetera ₲{self.monto} ({self.tarjeta_debito.numero[-4:] if self.tarjeta_debito else ''})"
         if self.tarjeta_debito:
             return f"Pago Débito ₲{self.monto} ({self.tarjeta_debito.numero[-4:]})"
         elif self.tarjeta_credito:

@@ -909,8 +909,12 @@ class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
 
         if accion == 'seleccionar' and medio_id:
             try:
+                # Validar que sea de tipo Transferencia Bancaria Local
                 medio = ClienteMedioDePago.objects.select_related("medio_de_pago").get(
-                    id=medio_id, cliente=cliente, es_activo=True
+                    id=medio_id, 
+                    cliente=cliente, 
+                    es_activo=True,
+                    medio_de_pago__tipo_medio='bank_local'  # Solo Transferencia Bancaria Local
                 )
                 campos = []
                 for campo in medio.medio_de_pago.campos.all().order_by('orden', 'id'):
@@ -937,9 +941,11 @@ class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
                 messages.error(request, 'Medio de pago no encontrado')
                 return redirect('clientes:seleccionar_medio_acreditacion')
 
+        # Filtrar solo medios de Transferencia Bancaria Local para ventas
         medios_activos = ClienteMedioDePago.objects.filter(
             cliente=cliente,
-            es_activo=True
+            es_activo=True,
+            medio_de_pago__tipo_medio='bank_local'  # Solo Transferencia Bancaria Local
         ).select_related('medio_de_pago').prefetch_related(
             'medio_de_pago__campos'
         ).order_by('-es_principal', '-fecha_actualizacion')
@@ -979,8 +985,12 @@ class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
 
         if accion == 'seleccionar' and medio_id:
             try:
+                # Validar que sea de tipo Transferencia Bancaria Local
                 medio = ClienteMedioDePago.objects.select_related("medio_de_pago").get(
-                    id=medio_id, cliente=cliente, es_activo=True
+                    id=medio_id, 
+                    cliente=cliente, 
+                    es_activo=True,
+                    medio_de_pago__tipo_medio='bank_local'  # Solo Transferencia Bancaria Local
                 )
                 campos = []
                 for campo in medio.medio_de_pago.campos.all().order_by('orden', 'id'):
@@ -1014,8 +1024,9 @@ class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
                 messages.error(request, 'Medio de pago no encontrado')
                 return redirect('clientes:seleccionar_medio_acreditacion')
 
-        elif accion == 'cancelar':
+        elif accion == 'cancelar' or accion == 'limpiar':
             request.session.pop('medio_seleccionado', None)
+            request.session.modified = True
             if is_ajax:
                 return JsonResponse({'success': True, 'redirect_url': reverse('clientes:seleccionar_medio_acreditacion')})
             return redirect('clientes:seleccionar_medio_acreditacion')
@@ -1154,9 +1165,10 @@ class SeleccionarMedioPagoView(LoginRequiredMixin, View):
 
         elif accion == 'limpiar':
             request.session.pop('medio_pago_seleccionado', None)
+            request.session.modified = True
             if is_ajax:
-                return JsonResponse({'success': True, 'redirect_url': reverse('operacion_divisas:compra')})
-            return redirect('operacion_divisas:compra')
+                return JsonResponse({'success': True, 'redirect_url': reverse('clientes:seleccionar_medio_pago')})
+            return redirect('clientes:seleccionar_medio_pago')
 
         if is_ajax:
             return JsonResponse({'error': 'Acción no válida'}, status=400)
