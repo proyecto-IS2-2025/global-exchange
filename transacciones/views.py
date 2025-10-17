@@ -1108,8 +1108,66 @@ def crear_transaccion_desde_compra(request):
             
             logger.debug(f"[COMPRA] Tipo de medio: '{tipo_medio}'")
             
+            # IMPORTANTE: Verificar Stripe PRIMERO
+            # Los pagos con Stripe se procesan a través del servicio de Stripe
+            if tipo_medio == 'stripe' or 'stripe' in tipo_medio:
+                logger.info(f"[COMPRA] Medio de pago Stripe detectado - procesando con Stripe")
+                try:
+                    from stripe_payments.services import process_stripe_payment
+                    from clientes.models import ClienteMedioDePago
+                    
+                    # Obtener el objeto ClienteMedioDePago
+                    if isinstance(medio_datos, dict) and medio_datos.get('id'):
+                        medio_id = medio_datos.get('id')
+                        medio_obj = ClienteMedioDePago.objects.select_related('medio_de_pago').get(id=medio_id)
+                    else:
+                        logger.error("[COMPRA] No se pudo obtener el medio de pago para Stripe")
+                        messages.error(request, 'Error: No se pudo identificar el medio de pago Stripe')
+                        # Mantener transacción en pendiente
+                        messages.success(request, f'Transacción {transaccion.numero_transaccion} creada exitosamente.')
+                        return redirect('transacciones:confirmacion_operacion', numero_transaccion=transaccion.numero_transaccion)
+                    
+                    # Construir datos de operación desde la transacción creada
+                    operacion_data = {
+                        'tipo': transaccion.tipo_operacion,
+                        'divisa': transaccion.divisa_destino.code,
+                        'divisa_nombre': transaccion.divisa_destino.nombre,
+                        'monto_divisa': str(transaccion.monto_destino),
+                        'monto_guaranies': str(transaccion.monto_origen),
+                        'tasa_cambio': str(transaccion.tasa_de_cambio_aplicada),
+                    }
+                    
+                    logger.info(f"[COMPRA] Datos para Stripe: monto={operacion_data['monto_guaranies']} PYG, divisa={operacion_data['divisa']}")
+                    
+                    # Obtener IP del cliente
+                    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+                    client_ip = x_forwarded_for.split(',')[0] if x_forwarded_for else request.META.get('REMOTE_ADDR')
+                    
+                    # Procesar el pago con Stripe
+                    logger.info(f"[COMPRA] Llamando a process_stripe_payment...")
+                    success, stripe_transaction, error = process_stripe_payment(
+                        cliente=request.user,
+                        medio_pago_data=medio_obj,
+                        operacion_data=operacion_data,
+                        client_ip=client_ip
+                    )
+                    
+                    if success:
+                        logger.info(f"[COMPRA] ✅ Pago Stripe exitoso - Transaction ID: {stripe_transaction.id}")
+                        transaccion.cambiar_estado('pagada', observacion='Pago con Stripe procesado exitosamente', usuario=request.user)
+                        messages.success(request, f'¡Pago procesado exitosamente con Stripe! ID: {stripe_transaction.payment_intent_id}')
+                    else:
+                        logger.error(f"[COMPRA] ❌ Pago Stripe fallido: {error}")
+                        messages.error(request, f'Error al procesar el pago con Stripe: {error}')
+                        # Mantener transacción en pendiente
+                        
+                except Exception as e:
+                    logger.error(f"[COMPRA] Error al procesar pago con Stripe: {e}", exc_info=True)
+                    messages.error(request, f'Error inesperado al procesar el pago: {str(e)}')
+                    # Mantener transacción en pendiente
+            
             # Verificar si es billetera electrónica
-            if 'billetera' in tipo_medio or tipo_medio == 'billetera electrónica':
+            elif 'billetera' in tipo_medio or tipo_medio == 'billetera electrónica':
                 logger.info(f"[COMPRA] Procesando pago con billetera electrónica")
                 resultado = realizar_pago_billetera(
                     medio_datos=medio_datos,

@@ -101,8 +101,8 @@ delete-migrations:
 
 reset-db:
 	@echo "Reiniciando la base de datos..."
-	dropdb --username=django_user  --if-exists global_exchange --host=localhost
-	createdb --username=django_user --host=localhost global_exchange 
+	dropdb --username=postgres  --if-exists global_exchange --host=localhost
+	createdb --username=postgres --host=localhost global_exchange
 	poetry run python scripts/delete_migrations.py
 	poetry run python manage.py makemigrations	
 	poetry run python manage.py migrate

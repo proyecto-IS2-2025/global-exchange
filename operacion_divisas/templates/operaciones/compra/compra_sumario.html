@@ -39,7 +39,7 @@
                   {% if operacion.divisa == "PYG" %}
                     {{ operacion.monto_divisa|floatformat:0|intcomma }} {{ operacion.divisa }}
                   {% else %}
-                    {{ operacion.monto_divisa|floatformat:2 }} {{ operacion.divisa }}
+                    {{ operacion.monto_divisa|floatformat:2|intcomma }} {{ operacion.divisa }}
                   {% endif %}
                 </strong>
               </td>
@@ -107,14 +107,32 @@
         <i class="bi bi-arrow-left"></i> Volver
       </a>
       
+<<<<<<< HEAD
       <!-- Formulario para confirmar compra (ahora pasa por SumarioCompraView.post() para validar Stripe) -->
       <form method="post" action="" class="d-inline">
+=======
+      <!-- Formulario para iniciar verificación MFA -->
+      <form method="post" action="" class="d-inline" id="mfa-form">
+>>>>>>> develop
         {% csrf_token %}
-        <button type="submit" class="btn btn-success">
-          <i class="bi bi-check-circle"></i> Confirmar Compra
+        <button type="submit" class="btn btn-success" id="mfa-btn">
+          <i class="bi bi-shield-check me-2"></i> Continuar a Verificación
         </button>
       </form>
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('mfa-form');
+    const btn = document.getElementById('mfa-btn');
+    
+    form.addEventListener('submit', function(e) {
+        // Deshabilitar botón y mostrar spinner
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Enviando código de seguridad...';
+    });
+});
+</script>
 {% endblock %}

@@ -40,7 +40,9 @@ INSTALLED_APPS = [
     'transacciones',
     'banco',
     'billetera',
-    'mfa', 
+    'notificaciones',
+
+    'mfa',
     'autenticacion',
     'operacion_divisas',
     'stripe_payments',
@@ -72,6 +74,7 @@ TEMPLATES = [
                 'roles.context_processors.grupo_usuario',
                 'roles.context_processors.grupos_context',
                 'simulador.context_processors.simulador_context',
+                'notificaciones.context_processors.notificaciones_usuario',
             ],
         },
     },
@@ -168,6 +171,16 @@ LOGIN_REDIRECT_URL = '/'   # a dónde redirige tras login exitoso (puedes poner 
 
 
 AUTH_USER_MODEL = 'users.CustomUser'
+
+# Configuración de mensajes para Bootstrap 5
+from django.contrib.messages import constants as messages
+MESSAGE_TAGS = {
+    messages.DEBUG: 'debug',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'success',
+    messages.WARNING: 'warning',
+    messages.ERROR: 'danger',  # Bootstrap usa 'danger' en lugar de 'error'
+}
 
 DEBUG = True
 LOGGING = {
