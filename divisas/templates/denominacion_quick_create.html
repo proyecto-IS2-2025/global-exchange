@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-success text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-bolt me-2"></i>
+                            {{ titulo }}
+                        </h4>
+                        <a href="{% url 'divisas:denominacion_create' %}" class="btn btn-light btn-sm">
+                            <i class="fas fa-list me-1"></i> Creación Manual
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-body p-4">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Creación rápida:</strong> Ingrese varios valores de billetes separados por comas para crear múltiples denominaciones a la vez.
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Divisa preseleccionada -->
+                        {% if divisa_preseleccionada %}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Divisa Seleccionada</label>
+                            <div class="card bg-light border-2 border-primary">
+                                <div class="card-body py-3">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3">
+                                                <span class="badge bg-primary fs-4 px-3 py-2">
+                                                    {{ divisa_preseleccionada.simbolo }}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <h5 class="mb-0">{{ divisa_preseleccionada.nombre }}</h5>
+                                                <small class="text-muted">{{ divisa_preseleccionada.code }}</small>
+                                            </div>
+                                        </div>
+                                        <a href="{% url 'divisas:denominacion_quick_create' %}" 
+                                           class="btn btn-sm btn-outline-secondary"
+                                           title="Cambiar divisa">
+                                            <i class="fas fa-exchange-alt"></i> Cambiar
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="divisa" value="{{ divisa_preseleccionada.id }}">
+                        </div>
+                        {% else %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{{ form.divisa.label }}</label>
+                            {{ form.divisa }}
+                            {% if form.divisa.errors %}
+                                <div class="invalid-feedback d-block">{{ form.divisa.errors }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Valores -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{{ form.valores.label }}</label>
+                            {{ form.valores }}
+                            <small class="form-text text-muted">{{ form.valores.help_text }}</small>
+                            {% if form.valores.errors %}
+                                <div class="invalid-feedback d-block">{{ form.valores.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Estado activo -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    {{ form.is_active.label }}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            {% if divisa_preseleccionada %}
+                            <a href="{% url 'divisas:denominaciones_divisa' divisa_id=divisa_preseleccionada.id %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Volver a {{ divisa_preseleccionada.code }}
+                            </a>
+                            {% else %}
+                            <a href="{% url 'divisas:denominacion_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Cancelar
+                            </a>
+                            {% endif %}
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-magic me-2"></i> Crear Denominaciones
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Ejemplos -->
+            <div class="card mt-4 border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="text-muted mb-3">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        Ejemplos de billetes{% if divisa_preseleccionada %} para {{ divisa_preseleccionada.code }}{% endif %}:
+                    </h6>
+                    <ul class="mb-0">
+                        {% if divisa_preseleccionada %}
+                            {% if divisa_preseleccionada.code == 'USD' %}
+                            <li><strong>Billetes comunes:</strong> <code>100, 50, 20, 10, 5, 1</code></li>
+                            {% elif divisa_preseleccionada.code == 'PYG' %}
+                            <li><strong>Billetes:</strong> <code>100000, 50000, 20000, 10000, 5000, 2000</code></li>
+                            {% elif divisa_preseleccionada.code == 'EUR' %}
+                            <li><strong>Billetes:</strong> <code>500, 200, 100, 50, 20, 10, 5</code></li>
+                            {% elif divisa_preseleccionada.code == 'BRL' %}
+                            <li><strong>Billetes:</strong> <code>200, 100, 50, 20, 10, 5, 2</code></li>
+                            {% elif divisa_preseleccionada.code == 'ARS' %}
+                            <li><strong>Billetes:</strong> <code>1000, 500, 200, 100, 50, 20, 10</code></li>
+                            {% else %}
+                            <li><strong>Ejemplo:</strong> <code>100, 50, 20, 10, 5, 1</code></li>
+                            {% endif %}
+                        {% else %}
+                            <li><strong>USD:</strong> <code>100, 50, 20, 10, 5, 1</code></li>
+                            <li><strong>PYG:</strong> <code>100000, 50000, 20000, 10000, 5000, 2000</code></li>
+                            <li><strong>EUR:</strong> <code>500, 200, 100, 50, 20, 10, 5</code></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card.bg-light.border-primary {
+    transition: all 0.3s ease;
+}
+
+.card.bg-light.border-primary:hover {
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.badge.bg-primary.fs-4 {
+    font-size: 1.5rem !important;
+    min-width: 60px;
+    display: inline-block;
+    text-align: center;
+}
+</style>
+{% endblock %}
