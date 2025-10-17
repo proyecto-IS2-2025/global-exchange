@@ -855,7 +855,7 @@ def crear_transaccion_desde_venta(request):
 
     try:
         operacion = request.session.get("operacion")
-        medio_inst = get_medio_pago_seleccionado(request)
+        medio_inst = get_medio_acreditacion_seleccionado(request)
         
         if not operacion:
             messages.error(request, "No se encontró información de la operación.")
