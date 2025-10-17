@@ -124,34 +124,51 @@
     }
 
     .btn-modern {
-        padding: 0.625rem 1.25rem;
-        border-radius: 8px;
-        font-weight: 500;
-        font-size: 0.95rem;
-        transition: all 0.2s;
-        border: none;
+        padding: 0.625rem 1.25rem !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        transition: all 0.2s !important;
+        border: none !important;
+        background: #000000 !important;
+        background-color: #000000 !important;
+        color: white !important;
     }
 
     .btn-primary-modern {
-        background: var(--accent-blue);
-        color: white;
+        background: #000000 !important;
+        background-color: #000000 !important;
+        color: white !important;
+        border-color: #000000 !important;
     }
 
-    .btn-primary-modern:hover {
-        background: var(--accent-blue-hover);
+    .btn-primary-modern:hover,
+    .btn-primary-modern:focus,
+    .btn-primary-modern:active {
+        background: #1a1a1a !important;
+        background-color: #1a1a1a !important;
+        border-color: #1a1a1a !important;
         transform: translateY(-1px);
-        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+        color: white !important;
     }
 
     .btn-success-modern {
-        background: var(--accent-green);
-        color: white;
+        background: #000000 !important;
+        background-color: #000000 !important;
+        color: white !important;
+        border-color: #000000 !important;
     }
 
-    .btn-success-modern:hover {
-        background: #059669;
+    .btn-success-modern:hover,
+    .btn-success-modern:focus,
+    .btn-success-modern:active {
+        background: #1a1a1a !important;
+        background-color: #1a1a1a !important;
+        border-color: #1a1a1a !important;
         transform: translateY(-1px);
-        box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+        color: white !important;
     }
 
     .divider {
@@ -211,29 +228,49 @@
     }
 
     .action-btn {
-        width: 32px;
-        height: 32px;
-        border-radius: 6px;
+        width: 36px !important;
+        height: 36px !important;
+        border-radius: 6px !important;
         border: none !important;
         outline: none !important;
-        background: transparent;
-        color: var(--neutral-600);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        transition: none;
-        cursor: pointer;
-        padding: 0;
+        background: #000000 !important;
+        background-color: #000000 !important;
+        color: white !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.2s !important;
+        cursor: pointer !important;
+        padding: 0 !important;
+        font-size: 14px !important;
     }
 
-    .action-btn:hover {
-        background: transparent;
-        color: var(--neutral-800);
+    a.action-btn,
+    button.action-btn {
+        background: #000000 !important;
+        background-color: #000000 !important;
+        color: white !important;
     }
 
-    .action-btn:focus {
+    .action-btn:hover,
+    a.action-btn:hover,
+    button.action-btn:hover {
+        background: #1a1a1a !important;
+        background-color: #1a1a1a !important;
+        color: white !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+        text-decoration: none !important;
+    }
+
+    .action-btn:focus,
+    a.action-btn:focus,
+    button.action-btn:focus {
         outline: none !important;
-        box-shadow: none !important;
+        box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.2) !important;
+        background: #000000 !important;
+        background-color: #000000 !important;
+        color: white !important;
     }
 
     .empty-state {
@@ -312,7 +349,7 @@
                             </small>
                         </div>
 
-                        <button type="submit" class="btn btn-primary-modern btn-modern">
+                        <button type="submit" class="btn btn-primary-modern btn-modern" style="background: #000000 !important; background-color: #000000 !important; color: white !important; border: none !important; font-weight: 600 !important; padding: 0.625rem 1.25rem !important; border-radius: 8px !important;">
                             <i class="fas fa-save me-2"></i>
                             Guardar configuración
                         </button>
@@ -327,7 +364,7 @@
     <!-- ================= BOTÓN NUEVA ALERTA ================= -->
     <div class="row mb-4">
         <div class="col-12 text-center">
-            <button type="button" class="btn btn-success-modern btn-modern btn-lg" data-bs-toggle="modal" data-bs-target="#nuevaAlertaModal">
+            <button type="button" class="btn btn-success-modern btn-modern btn-lg" data-bs-toggle="modal" data-bs-target="#nuevaAlertaModal" style="background: #000000 !important; background-color: #000000 !important; color: white !important; border: none !important; font-weight: 600 !important; padding: 0.75rem 1.5rem !important; border-radius: 8px !important; font-size: 1.1rem !important;">
                 <i class="fas fa-plus-circle me-2"></i>
                 Agregar nueva notificación
             </button>
@@ -407,10 +444,10 @@
 
                     </div>
                     <div class="modal-footer" style="background: var(--neutral-50); border-top: 1px solid var(--neutral-200); border-radius: 0 0 12px 12px;">
-                        <button type="button" class="btn btn-secondary btn-modern" data-bs-dismiss="modal" style="background: var(--neutral-300); color: var(--neutral-700);">
+                        <button type="button" class="btn btn-secondary btn-modern" data-bs-dismiss="modal" style="background: #000000 !important; background-color: #000000 !important; color: white !important; font-weight: 600 !important; border: none !important; padding: 0.625rem 1.25rem !important; border-radius: 8px !important;">
                             Cancelar
                         </button>
-                        <button type="submit" class="btn btn-success-modern btn-modern">
+                        <button type="submit" class="btn btn-success-modern btn-modern" style="background: #000000 !important; background-color: #000000 !important; color: white !important; font-weight: 600 !important; border: none !important; padding: 0.625rem 1.25rem !important; border-radius: 8px !important;">
                             <i class="fas fa-save me-2"></i>
                             Guardar notificación
                         </button>
@@ -489,21 +526,24 @@
                                     {% if notificacion.tipo_alerta != 'transaccion_cancelada' %}
                                     <a href="{% url 'notificaciones:editar_notificacion' pk=notificacion.pk %}"
                                        class="action-btn edit"
-                                       title="Editar">
+                                       title="Editar"
+                                       style="width: 36px !important; height: 36px !important; background: #000000 !important; background-color: #000000 !important; color: white !important; border: none !important; border-radius: 6px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; text-decoration: none !important;">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     {% endif %}
 
                                     <a href="{% url 'notificaciones:toggle_notificacion' pk=notificacion.pk %}"
                                        class="action-btn {% if notificacion.activa %}pause{% else %}play{% endif %}"
-                                       title="{% if notificacion.activa %}Pausar{% else %}Activar{% endif %}">
+                                       title="{% if notificacion.activa %}Pausar{% else %}Activar{% endif %}"
+                                       style="width: 36px !important; height: 36px !important; background: #000000 !important; background-color: #000000 !important; color: white !important; border: none !important; border-radius: 6px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; text-decoration: none !important;">
                                         <i class="fas {% if notificacion.activa %}fa-pause{% else %}fa-play{% endif %}"></i>
                                     </a>
 
                                     <button type="button" 
                                             class="action-btn delete"
                                             onclick="document.getElementById('delete-form-{{ notificacion.pk }}').submit();"
-                                            title="Eliminar">
+                                            title="Eliminar"
+                                            style="width: 36px !important; height: 36px !important; background: #000000 !important; background-color: #000000 !important; color: white !important; border: none !important; border-radius: 6px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important;">
                                         <i class="fas fa-trash"></i>
                                     </button>
 
