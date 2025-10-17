@@ -33,11 +33,12 @@
     font-size: 1.1rem;
     font-weight: 600;
 }
-.status-pendiente { background-color: #ffc107; }
-.status-pagada { background-color: #28a745; }
-.status-cancelada { background-color: #dc3545; }
-.status-anulada { background-color: #6c757d; }
-.status-a_retirar { background-color: #17a2b8; }
+.status-pendiente { background-color: #0dcaf0; color: #000; } /* Info/Azul claro */
+.status-pagada { background-color: #28a745; color: #fff; } /* Verde - Pagada */
+.status-completado { background-color: #198754; color: #fff; } /* Verde oscuro - Completado */
+.status-cancelada { background-color: #dc3545; color: #fff; } /* Rojo */
+.status-anulada { background-color: #6c757d; color: #fff; } /* Gris */
+.status-a_retirar { background-color: #17a2b8; color: #fff; } /* Cyan */
 </style>
 {% endblock %}
 
@@ -84,13 +85,19 @@
     font-size: 1.2rem; 
 }
 
-.badge.status-pendiente { /* Usá el valor exacto de 'transaccion.estado' */
-    background-color: #ffc107; /* Amarillo */
+.badge.status-pendiente {
+    background-color: #0dcaf0; /* Info/Azul claro */
+    color: #000 !important; /* Texto negro para mejor contraste */
 }
 
 .badge.status-pagada {
-    background-color: #28a745; /* Verde */
-    color: white !important; /* Texto blanco para mejor contraste */
+    background-color: #28a745; /* Verde - Pagada */
+    color: white !important;
+}
+
+.badge.status-completado {
+    background-color: #198754; /* Verde oscuro - Completado */
+    color: white !important;
 }
 
 .badge.status-cancelada {
@@ -98,8 +105,13 @@
     color: white !important;
 }
 
-.badge.status-a_retirar {
+.badge.status-anulada {
     background-color: #6c757d; /* Gris */
+    color: white !important;
+}
+
+.badge.status-a_retirar {
+    background-color: #17a2b8; /* Cyan */
     color: white !important;
 }
 
