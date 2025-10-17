@@ -1014,8 +1014,9 @@ class SeleccionarMedioAcreditacionView(LoginRequiredMixin, View):
                 messages.error(request, 'Medio de pago no encontrado')
                 return redirect('clientes:seleccionar_medio_acreditacion')
 
-        elif accion == 'cancelar':
+        elif accion == 'cancelar' or accion == 'limpiar':
             request.session.pop('medio_seleccionado', None)
+            request.session.modified = True
             if is_ajax:
                 return JsonResponse({'success': True, 'redirect_url': reverse('clientes:seleccionar_medio_acreditacion')})
             return redirect('clientes:seleccionar_medio_acreditacion')
@@ -1154,9 +1155,10 @@ class SeleccionarMedioPagoView(LoginRequiredMixin, View):
 
         elif accion == 'limpiar':
             request.session.pop('medio_pago_seleccionado', None)
+            request.session.modified = True
             if is_ajax:
-                return JsonResponse({'success': True, 'redirect_url': reverse('operacion_divisas:compra')})
-            return redirect('operacion_divisas:compra')
+                return JsonResponse({'success': True, 'redirect_url': reverse('clientes:seleccionar_medio_pago')})
+            return redirect('clientes:seleccionar_medio_pago')
 
         if is_ajax:
             return JsonResponse({'error': 'Acción no válida'}, status=400)
