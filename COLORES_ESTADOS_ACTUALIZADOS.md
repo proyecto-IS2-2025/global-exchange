@@ -9,8 +9,8 @@ Se actualizaron los colores de los badges de estado en todas las plantillas rela
 |--------|-------|-----------------|-------|-----|
 | **Completado** | Verde oscuro 🟢 | `bg-success` | `check-circle-fill` | Operación finalizada exitosamente (pago automático) |
 | **Pagada** | Verde 🟢 | `bg-success` | `check-circle` | Pago procesado (Stripe) |
-| **Pendiente** | Azul claro 🔵 | `bg-info` | `clock-history` | Esperando procesamiento manual |
-| **A Retirar** | Amarillo 🟡 | `bg-warning` | `box-arrow-right` | Listo para retiro en terminal |
+| **Pendiente** | Amarillo � | `bg-warning` | `clock-history` | Esperando procesamiento manual |
+| **A Retirar** | Cyan � | `bg-info` | `box-arrow-right` | Listo para retiro en terminal |
 | **Cancelada** | Rojo 🔴 | `bg-danger` | `x-circle` | Operación cancelada por el cliente |
 | **Anulada** | Gris ⚫ | `bg-secondary` | `slash-circle` | Operación anulada por el sistema/admin |
 
@@ -35,7 +35,7 @@ Se actualizaron los colores de los badges de estado en todas las plantillas rela
 
 **CSS actualizado:**
 ```css
-.status-pendiente { background-color: #0dcaf0; color: #000; } /* Info/Azul claro */
+.status-pendiente { background-color: #ffc107; color: #000; } /* Amarillo - Pendiente */
 .status-pagada { background-color: #28a745; color: #fff; } /* Verde */
 .status-completado { background-color: #198754; color: #fff; } /* Verde oscuro */
 .status-cancelada { background-color: #dc3545; color: #fff; } /* Rojo */
@@ -66,11 +66,11 @@ Se actualizaron los colores de los badges de estado en todas las plantillas rela
 
 ### Flujo Manual - Pendiente
 1. Usuario confirma operación
-2. **Estado: Pendiente** (azul) 🔵
+2. **Estado: Pendiente** (amarillo) �
 3. Mensaje: "¡Operación Registrada!"
 4. Próximos pasos:
-   - Paso 1: Transacción Registrada (azul)
-   - Paso 2: Esperando Procesamiento (amarillo)
+   - Paso 1: Transacción Registrada (amarillo)
+   - Paso 2: Esperando Procesamiento (gris)
    - Paso 3: Confirmación (gris)
    - Paso 4: Acreditación/Retiro (gris)
 
@@ -80,8 +80,8 @@ Se actualizaron los colores de los badges de estado en todas las plantillas rela
 2. **Consistencia:** Mismo esquema de colores en todas las vistas
 3. **Diferenciación Clara:** 
    - Verde = Éxito/Completado
-   - Azul = En proceso/Información
-   - Amarillo = Acción requerida
+   - Amarillo = Pendiente/Esperando
+   - Cyan = Listo para acción
    - Rojo = Cancelado
    - Gris = Anulado
 4. **Mejor UX:** Iconos descriptivos complementan los colores
@@ -91,7 +91,7 @@ Se actualizaron los colores de los badges de estado en todas las plantillas rela
 
 - [ ] Verificar colores en confirmación de compra con Stripe (debe ser verde)
 - [ ] Verificar colores en confirmación de venta con acreditación automática (debe ser verde)
-- [ ] Verificar colores en operaciones pendientes (debe ser azul)
+- [ ] Verificar colores en operaciones pendientes (debe ser amarillo)
 - [ ] Verificar historial de cliente con diferentes estados
 - [ ] Verificar detalle de transacción con diferentes estados
 - [ ] Probar en diferentes navegadores (Chrome, Firefox, Edge)

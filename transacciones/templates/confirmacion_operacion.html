@@ -43,7 +43,7 @@
         <div class="col-lg-10">
             <!-- Encabezado de Éxito -->
             <div class="card border-0 shadow mb-4">
-                <div class="card-header {% if transaccion.estado == 'completado' or transaccion.estado == 'pagada' %}bg-success success-header{% else %}bg-info{% endif %} text-white py-4">
+                <div class="card-header bg-success success-header text-white py-4">
                     <div class="text-center">
                         <div class="success-icon">
                             {% if transaccion.estado == 'completado' or transaccion.estado == 'pagada' %}
@@ -111,7 +111,7 @@
                                                         <i class="bi bi-check-circle me-1"></i>{{ transaccion.get_estado_display }}
                                                     </span>
                                                 {% elif transaccion.estado == 'pendiente' %}
-                                                    <span class="badge bg-info fs-6">
+                                                    <span class="badge bg-warning fs-6">
                                                         <i class="bi bi-clock-history me-1"></i>{{ transaccion.get_estado_display }}
                                                     </span>
                                                 {% elif transaccion.estado == 'cancelada' %}
@@ -328,7 +328,7 @@
                                     <!-- Operación pendiente (flujo manual) -->
                                     <div class="mb-3">
                                         <div class="d-flex align-items-start">
-                                            <span class="badge bg-info rounded-pill me-2">1</span>
+                                            <span class="badge bg-warning rounded-pill me-2">1</span>
                                             <div>
                                                 <p class="mb-1 fw-bold">Transacción Registrada</p>
                                                 <p class="mb-0 small text-muted">Tu operación está en estado "Pendiente"</p>
@@ -338,7 +338,7 @@
                                     
                                     <div class="mb-3">
                                         <div class="d-flex align-items-start">
-                                            <span class="badge bg-warning rounded-pill me-2">2</span>
+                                            <span class="badge bg-secondary rounded-pill me-2">2</span>
                                             <div>
                                                 <p class="mb-1 fw-bold">Esperando Procesamiento</p>
                                                 <p class="mb-0 small text-muted">Nuestro equipo revisará tu solicitud</p>
