@@ -1,0 +1,488 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Reponer Denominaciones - {{ terminal.nombre }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .denom-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .denom-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    
+    .denom-card.selected {
+        border: 2px solid #28a745;
+        background-color: #f0fff4;
+    }
+    
+    .input-cantidad {
+        font-size: 1.2rem;
+        text-align: center;
+        font-weight: bold;
+    }
+    
+    .necesita-reposicion {
+        border-left: 4px solid #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-success text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">
+                                <i class="fas fa-plus-circle me-2"></i>
+                                Reposición de Denominaciones
+                            </h4>
+                            <p class="mb-0 mt-1 small opacity-75">
+                                <i class="fas fa-map-marker-alt me-1"></i>
+                                Terminal: <strong>{{ terminal.nombre }}</strong> ({{ terminal.codigo }})
+                            </p>
+                        </div>
+                        <div>
+                            <a href="{% url 'tauser:inventario_denominaciones' terminal_codigo=terminal.codigo %}" 
+                               class="btn btn-light">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Volver al Inventario
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instrucciones -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <h6 class="alert-heading">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Instrucciones para Reposición
+                </h6>
+                <hr>
+                <ul class="mb-0">
+                    <li>Ingrese la cantidad de billetes que está agregando para cada denominación</li>
+                    <li>Las denominaciones marcadas en <span class="text-danger">rojo</span> requieren reposición urgente</li>
+                    <li>Puede dejar en cero las denominaciones que no va a reponer</li>
+                    <li>Al finalizar, verifique el resumen antes de confirmar</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" id="form-reposicion">
+        {% csrf_token %}
+
+        <!-- Resumen rápido flotante -->
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
+            <div id="resumen-flotante" class="card shadow-lg d-none" style="min-width: 300px;">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-clipboard-check me-2"></i>
+                        Resumen de Reposición
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <small class="text-muted">Total billetes a agregar:</small>
+                        <h4 class="mb-0 text-success" id="total-billetes">0</h4>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Denominaciones:</small>
+                        <h5 class="mb-0 text-primary" id="total-denominaciones">0</h5>
+                    </div>
+                    <hr>
+                    <button type="button" 
+                            class="btn btn-success btn-sm w-100" 
+                            id="btn-ver-resumen"
+                            data-bs-toggle="modal" 
+                            data-bs-target="#resumenModal">
+                        <i class="fas fa-eye me-2"></i>
+                        Ver Resumen Completo
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Denominaciones por divisa -->
+        {% for divisa_code, divisa_data in denominaciones_por_divisa.items %}
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-light py-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-flag me-2"></i>
+                    {{ divisa_data.divisa.nombre }} ({{ divisa_code }})
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    {% for item in divisa_data.denominaciones %}
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <div class="card denom-card {% if item.necesita_reposicion %}necesita-reposicion{% endif %} h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h6 class="mb-0">{{ item.denominacion.nombre }}</h6>
+                                        <h4 class="text-primary mb-0">
+                                            {{ item.denominacion.valor_formateado }}
+                                        </h4>
+                                    </div>
+                                    <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                         style="width: 45px; height: 45px; font-size: 1.2rem; font-weight: bold;">
+                                        {{ item.denominacion.divisa.simbolo }}
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <small class="text-muted d-block">Inventario actual:</small>
+                                    <h5 class="mb-0 {% if item.necesita_reposicion %}text-danger{% else %}text-success{% endif %}">
+                                        {{ item.cantidad_actual }}
+                                        {% if item.inventario_actual %}
+                                        <small class="text-muted" style="font-size: 0.6em;">
+                                            / {{ item.inventario_actual.cantidad_minima }} mín.
+                                        </small>
+                                        {% endif %}
+                                    </h5>
+                                </div>
+
+                                {% if item.necesita_reposicion %}
+                                <div class="alert alert-danger mb-3 py-2" role="alert">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    <small><strong>Requiere reposición</strong></small>
+                                </div>
+                                {% endif %}
+
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <strong>Cantidad a agregar:</strong>
+                                    </label>
+                                    <div class="input-group">
+                                        <button class="btn btn-outline-danger btn-decrement" 
+                                                type="button"
+                                                data-input="reposicion_{{ item.denominacion.id }}">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                        <input type="number" 
+                                               class="form-control input-cantidad input-reposicion" 
+                                               name="reposicion_{{ item.denominacion.id }}" 
+                                               id="reposicion_{{ item.denominacion.id }}"
+                                               min="0" 
+                                               value="{% if item.necesita_reposicion %}50{% else %}0{% endif %}"
+                                               data-denom-id="{{ item.denominacion.id }}"
+                                               data-denom-nombre="{{ item.denominacion.nombre }}"
+                                               data-denom-valor="{{ item.denominacion.valor }}"
+                                               data-denom-simbolo="{{ item.denominacion.divisa.simbolo }}">
+                                        <button class="btn btn-outline-success btn-increment" 
+                                                type="button"
+                                                data-input="reposicion_{{ item.denominacion.id }}">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                    <small class="text-muted">
+                                        Nuevo total: <span class="nuevo-total fw-bold" id="nuevo_total_{{ item.denominacion.id }}">
+                                            {{ item.cantidad_actual }}
+                                        </span>
+                                    </small>
+                                </div>
+
+                                <!-- Botones rápidos -->
+                                <div class="btn-group btn-group-sm w-100" role="group">
+                                    <button type="button" class="btn btn-outline-secondary btn-quick" 
+                                            data-input="reposicion_{{ item.denominacion.id }}" 
+                                            data-value="10">
+                                        +10
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-quick" 
+                                            data-input="reposicion_{{ item.denominacion.id }}" 
+                                            data-value="50">
+                                        +50
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-quick" 
+                                            data-input="reposicion_{{ item.denominacion.id }}" 
+                                            data-value="100">
+                                        +100
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-warning" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            No hay denominaciones disponibles para reponer.
+        </div>
+        {% endfor %}
+
+        <!-- Botones de acción -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body text-center py-4">
+                <button type="button" 
+                        class="btn btn-success btn-lg me-3"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#resumenModal"
+                        id="btn-continuar">
+                    <i class="fas fa-arrow-right me-2"></i>
+                    Continuar y Ver Resumen
+                </button>
+                
+                <a href="{% url 'tauser:inventario_denominaciones' terminal_codigo=terminal.codigo %}" 
+                   class="btn btn-secondary btn-lg">
+                    <i class="fas fa-times me-2"></i>
+                    Cancelar
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Modal de resumen -->
+<div class="modal fade" id="resumenModal" tabindex="-1" aria-labelledby="resumenModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="resumenModalLabel">
+                    <i class="fas fa-clipboard-check me-2"></i>
+                    Resumen de Reposición
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Verifique que las cantidades sean correctas antes de confirmar.
+                </div>
+
+                <div id="resumen-content">
+                    <!-- Se llenará dinámicamente con JavaScript -->
+                </div>
+
+                <div class="card bg-light mt-3">
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <h3 class="text-primary mb-0" id="resumen-total-billetes">0</h3>
+                                <small class="text-muted">Total Billetes</small>
+                            </div>
+                            <div class="col-6">
+                                <h3 class="text-success mb-0" id="resumen-total-denominaciones">0</h3>
+                                <small class="text-muted">Denominaciones</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-edit me-2"></i>
+                    Modificar Cantidades
+                </button>
+                <button type="button" class="btn btn-success" id="btn-confirmar-reposicion">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Confirmar Reposición
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('form-reposicion');
+    const inputs = document.querySelectorAll('.input-reposicion');
+    const resumenFlotante = document.getElementById('resumen-flotante');
+    const totalBilletes = document.getElementById('total-billetes');
+    const totalDenominaciones = document.getElementById('total-denominaciones');
+
+    // Función para actualizar resumen
+    function actualizarResumen() {
+        let total = 0;
+        let count = 0;
+
+        inputs.forEach(input => {
+            const cantidad = parseInt(input.value) || 0;
+            if (cantidad > 0) {
+                total += cantidad;
+                count++;
+
+                // Actualizar card como seleccionada
+                const card = input.closest('.denom-card');
+                card.classList.add('selected');
+            } else {
+                const card = input.closest('.denom-card');
+                card.classList.remove('selected');
+            }
+
+            // Actualizar nuevo total
+            const inputId = input.id.replace('reposicion_', '');
+            const nuevoTotalSpan = document.getElementById('nuevo_total_' + inputId);
+            if (nuevoTotalSpan) {
+                const cantidadActual = parseInt(nuevoTotalSpan.textContent.split('/')[0]) || 0;
+                const nuevoTotal = cantidadActual + cantidad;
+                nuevoTotalSpan.textContent = nuevoTotal;
+            }
+        });
+
+        totalBilletes.textContent = total;
+        totalDenominaciones.textContent = count;
+
+        // Mostrar/ocultar resumen flotante
+        if (count > 0) {
+            resumenFlotante.classList.remove('d-none');
+        } else {
+            resumenFlotante.classList.add('d-none');
+        }
+    }
+
+    // Botones de incremento/decremento
+    document.querySelectorAll('.btn-increment').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const inputId = this.dataset.input;
+            const input = document.getElementById(inputId);
+            input.value = parseInt(input.value || 0) + 1;
+            actualizarResumen();
+        });
+    });
+
+    document.querySelectorAll('.btn-decrement').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const inputId = this.dataset.input;
+            const input = document.getElementById(inputId);
+            const newValue = parseInt(input.value || 0) - 1;
+            input.value = Math.max(0, newValue);
+            actualizarResumen();
+        });
+    });
+
+    // Botones rápidos
+    document.querySelectorAll('.btn-quick').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const inputId = this.dataset.input;
+            const value = parseInt(this.dataset.value);
+            const input = document.getElementById(inputId);
+            input.value = parseInt(input.value || 0) + value;
+            actualizarResumen();
+        });
+    });
+
+    // Escuchar cambios en inputs
+    inputs.forEach(input => {
+        input.addEventListener('input', actualizarResumen);
+        input.addEventListener('change', actualizarResumen);
+    });
+
+    // Generar resumen detallado en modal
+    document.getElementById('btn-ver-resumen').addEventListener('click', generarResumenDetallado);
+    document.getElementById('btn-continuar').addEventListener('click', generarResumenDetallado);
+
+    function generarResumenDetallado() {
+        const resumenContent = document.getElementById('resumen-content');
+        let html = '';
+        let totalBilletes = 0;
+        let totalDenom = 0;
+
+        // Agrupar por divisa
+        const porDivisa = {};
+
+        inputs.forEach(input => {
+            const cantidad = parseInt(input.value) || 0;
+            if (cantidad > 0) {
+                const nombre = input.dataset.denomNombre;
+                const valor = parseFloat(input.dataset.denomValor);
+                const simbolo = input.dataset.denomSimboolo;
+
+                const divisa = simbolo; // Simplificado
+                if (!porDivisa[divisa]) {
+                    porDivisa[divisa] = [];
+                }
+
+                porDivisa[divisa].push({
+                    nombre: nombre,
+                    valor: valor,
+                    cantidad: cantidad,
+                    simbolo: simbolo
+                });
+
+                totalBilletes += cantidad;
+                totalDenom++;
+            }
+        });
+
+        // Generar HTML
+        for (const [divisa, items] of Object.entries(porDivisa)) {
+            html += `
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <strong>${divisa}</strong>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Denominación</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+
+            items.forEach(item => {
+                const subtotal = item.valor * item.cantidad;
+                html += `
+                    <tr>
+                        <td><strong>${item.nombre}</strong></td>
+                        <td class="text-center"><span class="badge bg-success">${item.cantidad}</span></td>
+                        <td class="text-end">${item.simbolo}${subtotal.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        if (html === '') {
+            html = '<div class="alert alert-warning">No hay denominaciones seleccionadas para reponer.</div>';
+        }
+
+        resumenContent.innerHTML = html;
+        document.getElementById('resumen-total-billetes').textContent = totalBilletes;
+        document.getElementById('resumen-total-denominaciones').textContent = totalDenom;
+    }
+
+    // Confirmar reposición
+    document.getElementById('btn-confirmar-reposicion').addEventListener('click', function() {
+        if (confirm('¿Confirma que desea realizar esta reposición?')) {
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Procesando...';
+            form.submit();
+        }
+    });
+
+    // Calcular resumen inicial
+    actualizarResumen();
+});
+</script>
+{% endblock %}

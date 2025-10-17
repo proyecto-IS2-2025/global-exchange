@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Ingresar Billetes - {{ divisa.code }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-warning text-dark py-3">
+                    <h4 class="mb-0">
+                        <i class="fas fa-hand-holding-usd me-2"></i>
+                        Venta de Divisa
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Transacción #{{ transaccion.id }}</strong><br>
+                        Debe entregar <strong>{{ monto }} {{ divisa.simbolo }}</strong><br>
+                        Recibirá <strong>₲{{ transaccion.monto_destino|floatformat:0|intcomma }}</strong> por transferencia bancaria
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulario para ingresar denominaciones -->
+            <form method="post" id="form-denominaciones">
+                {% csrf_token %}
+                
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-money-bill-wave me-2"></i>
+                            Ingrese los Billetes que Entrega
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 50%;">Denominación</th>
+                                        <th class="text-center" style="width: 25%;">Cantidad</th>
+                                        <th class="text-end" style="width: 25%;">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="denominaciones-tbody">
+                                    {% for denom in denominaciones %}
+                                    <tr data-valor="{{ denom.valor }}" data-codigo="{{ denom.divisa.code }}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-warning text-dark rounded-circle me-3 d-flex align-items-center justify-content-center" 
+                                                     style="width: 50px; height: 50px; font-size: 1.2rem; font-weight: bold;">
+                                                    {{ denom.divisa.simbolo }}
+                                                </div>
+                                                <div>
+                                                    <strong>{{ denom.valor_formateado }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">{{ denom.nombre }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <input type="number" 
+                                                   name="denominacion_{{ denom.id }}" 
+                                                   id="denom_{{ denom.id }}"
+                                                   class="form-control form-control-lg text-center cantidad-input" 
+                                                   min="0" 
+                                                   value="0"
+                                                   data-denom-id="{{ denom.id }}"
+                                                   style="max-width: 150px; margin: 0 auto;">
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="subtotal-display h5 mb-0" 
+                                                  id="subtotal_{{ denom.id }}"
+                                                  data-valor="{{ denom.valor }}">
+                                                {{ denom.divisa.simbolo }}0.00
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <td colspan="2" class="text-end"><strong>TOTAL INGRESADO:</strong></td>
+                                        <td class="text-end">
+                                            <h5 class="mb-0" id="total-display">
+                                                <strong>{{ divisa.simbolo }}0.00</strong>
+                                            </h5>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" class="text-end"><strong>TOTAL REQUERIDO:</strong></td>
+                                        <td class="text-end">
+                                            <h5 class="mb-0 text-primary">
+                                                <strong>{{ monto }} {{ divisa.simbolo }}</strong>
+                                            </h5>
+                                        </td>
+                                    </tr>
+                                    <tr id="diferencia-row" class="d-none">
+                                        <td colspan="2" class="text-end"><strong>DIFERENCIA:</strong></td>
+                                        <td class="text-end">
+                                            <h5 class="mb-0" id="diferencia-display">
+                                                <strong>{{ divisa.simbolo }}0.00</strong>
+                                            </h5>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <!-- Indicador visual -->
+                        <div class="progress mt-3" style="height: 30px;">
+                            <div id="progress-bar" 
+                                 class="progress-bar" 
+                                 role="progressbar" 
+                                 style="width: 0%;" 
+                                 aria-valuenow="0" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                0%
+                            </div>
+                        </div>
+
+                        <!-- Mensaje de estado -->
+                        <div id="estado-mensaje" class="alert mt-3 d-none" role="alert"></div>
+                    </div>
+                </div>
+
+                <!-- Instrucciones -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+                        <h6 class="text-primary mb-3">
+                            <i class="fas fa-hand-point-right me-2"></i>
+                            Instrucciones:
+                        </h6>
+                        <ol class="mb-0">
+                            <li class="mb-2">Ingrese la cantidad de billetes de cada denominación</li>
+                            <li class="mb-2">Verifique que el total coincida con <strong>{{ monto }} {{ divisa.code }}</strong></li>
+                            <li class="mb-2">Presione "Continuar" para revisar el resumen</li>
+                            <li class="mb-2">Deposite los billetes en el receptor cuando se le indique</li>
+                            <li>Recibirá ₱{{ transaccion.monto_destino|floatformat:0|intcomma }} por transferencia bancaria</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body text-center py-4">
+                        <button type="submit" 
+                                id="btn-continuar" 
+                                class="btn btn-warning btn-lg me-3" 
+                                disabled>
+                            <i class="fas fa-arrow-right me-2"></i>
+                            Continuar
+                        </button>
+                        
+                        <a href="{% url 'tauser:menu_principal' terminal_codigo=terminal.codigo %}" 
+                           class="btn btn-secondary btn-lg">
+                            <i class="fas fa-times-circle me-2"></i>
+                            Cancelar
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const montoRequerido = parseFloat('{{ monto }}');
+    const divisa = '{{ divisa.code }}';
+    const simbolo = '{{ divisa.simbolo }}';
+    
+    const inputs = document.querySelectorAll('.cantidad-input');
+    const totalDisplay = document.getElementById('total-display');
+    const progressBar = document.getElementById('progress-bar');
+    const btnContinuar = document.getElementById('btn-continuar');
+    const estadoMensaje = document.getElementById('estado-mensaje');
+    const diferenciaRow = document.getElementById('diferencia-row');
+    const diferenciaDisplay = document.getElementById('diferencia-display');
+    
+    function calcularTotal() {
+        let total = 0;
+        let totalBilletes = 0;
+        
+        // Calcular subtotales
+        inputs.forEach(input => {
+            const cantidad = parseInt(input.value) || 0;
+            const valor = parseFloat(input.closest('tr').dataset.valor);
+            const subtotal = cantidad * valor;
+            
+            // Actualizar subtotal display
+            const subtotalDisplay = document.getElementById('subtotal_' + input.dataset.denomId);
+            if (subtotalDisplay) {
+                subtotalDisplay.textContent = `${simbolo}${subtotal.toFixed(2)}`;
+                
+                // Resaltar si tiene valor
+                if (cantidad > 0) {
+                    subtotalDisplay.classList.add('text-success', 'fw-bold');
+                } else {
+                    subtotalDisplay.classList.remove('text-success', 'fw-bold');
+                }
+            }
+            
+            total += subtotal;
+            totalBilletes += cantidad;
+        });
+        
+        // Actualizar total
+        totalDisplay.innerHTML = `<strong>${simbolo}${total.toFixed(2)}</strong>`;
+        
+        // Calcular progreso
+        const porcentaje = Math.min((total / montoRequerido) * 100, 100);
+        progressBar.style.width = porcentaje + '%';
+        progressBar.textContent = Math.round(porcentaje) + '%';
+        
+        // Cambiar color según estado
+        progressBar.classList.remove('bg-danger', 'bg-warning', 'bg-success');
+        
+        if (porcentaje < 50) {
+            progressBar.classList.add('bg-danger');
+        } else if (porcentaje < 100) {
+            progressBar.classList.add('bg-warning');
+        } else {
+            progressBar.classList.add('bg-success');
+        }
+        
+        // Mostrar mensaje de estado
+        estadoMensaje.classList.remove('d-none', 'alert-danger', 'alert-warning', 'alert-success');
+        
+        const diferencia = total - montoRequerido;
+        
+        if (total === 0) {
+            estadoMensaje.classList.add('d-none');
+            btnContinuar.disabled = true;
+            diferenciaRow.classList.add('d-none');
+        } else if (Math.abs(diferencia) < 0.01) {
+            // Correcto
+            estadoMensaje.classList.add('alert-success');
+            estadoMensaje.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>¡Correcto!</strong> El monto ingresado coincide. 
+                Total de billetes: <strong>${totalBilletes}</strong>
+            `;
+            btnContinuar.disabled = false;
+            diferenciaRow.classList.add('d-none');
+        } else if (diferencia < 0) {
+            // Falta dinero
+            estadoMensaje.classList.add('alert-warning');
+            estadoMensaje.innerHTML = `
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Falta dinero:</strong> Debe agregar ${simbolo}${Math.abs(diferencia).toFixed(2)} más
+            `;
+            btnContinuar.disabled = true;
+            diferenciaRow.classList.remove('d-none');
+            diferenciaDisplay.innerHTML = `<strong class="text-danger">${simbolo}${diferencia.toFixed(2)}</strong>`;
+        } else {
+            // Sobra dinero
+            estadoMensaje.classList.add('alert-danger');
+            estadoMensaje.innerHTML = `
+                <i class="fas fa-times-circle me-2"></i>
+                <strong>Sobra dinero:</strong> Debe quitar ${simbolo}${diferencia.toFixed(2)}
+            `;
+            btnContinuar.disabled = true;
+            diferenciaRow.classList.remove('d-none');
+            diferenciaDisplay.innerHTML = `<strong class="text-danger">+${simbolo}${diferencia.toFixed(2)}</strong>`;
+        }
+    }
+    
+    // Escuchar cambios en inputs
+    inputs.forEach(input => {
+        input.addEventListener('input', calcularTotal);
+        input.addEventListener('change', calcularTotal);
+    });
+    
+    // Botones rápidos para incrementar/decrementar
+    inputs.forEach(input => {
+        const container = input.parentElement;
+        
+        // Crear botones + y -
+        const btnMenos = document.createElement('button');
+        btnMenos.type = 'button';
+        btnMenos.className = 'btn btn-sm btn-outline-danger me-1';
+        btnMenos.innerHTML = '<i class="fas fa-minus"></i>';
+        btnMenos.onclick = function() {
+            const val = parseInt(input.value) || 0;
+            if (val > 0) {
+                input.value = val - 1;
+                calcularTotal();
+            }
+        };
+        
+        const btnMas = document.createElement('button');
+        btnMas.type = 'button';
+        btnMas.className = 'btn btn-sm btn-outline-success ms-1';
+        btnMas.innerHTML = '<i class="fas fa-plus"></i>';
+        btnMas.onclick = function() {
+            const val = parseInt(input.value) || 0;
+            input.value = val + 1;
+            calcularTotal();
+        };
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = 'd-flex justify-content-center align-items-center';
+        wrapper.appendChild(btnMenos);
+        wrapper.appendChild(input);
+        wrapper.appendChild(btnMas);
+        
+        container.innerHTML = '';
+        container.appendChild(wrapper);
+    });
+    
+    // Calcular inicial
+    calcularTotal();
+});
+</script>
+{% endblock %}

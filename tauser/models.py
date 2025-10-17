@@ -1,11 +1,11 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
-from divisas.models import Divisa
+from divisas.models import Divisa, Denominacion
 from transacciones.models import Transaccion
 from clientes.models import Cliente
 from decimal import Decimal
-
+from .services import calcular_desglose_optimo
 
 User = get_user_model()
 
@@ -40,7 +40,24 @@ class Terminal(models.Model):
             return inventario.cantidad >= monto
         except InventarioDivisaTerminal.DoesNotExist:
             return False
-
+        
+    def tiene_denominaciones_suficientes(self, divisa, monto_total):
+        """
+        Verifica si hay denominaciones suficientes para entregar el monto.
+        Retorna (bool, dict) donde dict contiene el desglose sugerido.
+        """
+        inventarios = InventarioDenominacionTerminal.objects.filter(
+            terminal=self,
+            denominacion__divisa=divisa,
+            denominacion__is_active=True,
+            cantidad__gt=0
+        ).select_related('denominacion').order_by('-denominacion__valor')
+        
+        if not inventarios.exists():
+            return False, {}
+        
+        resultado = calcular_desglose_optimo(inventarios, monto_total)
+        return resultado['posible'], resultado.get('desglose', {})
 
 class InventarioDivisaTerminal(models.Model):
     """Inventario (stock) de una divisa en una terminal específica."""
@@ -103,6 +120,135 @@ class InventarioDivisaTerminal(models.Model):
         self.cantidad += monto
         self.save()
 
+class InventarioDenominacionTerminal(models.Model):
+    """
+    Inventario de denominaciones (billetes) en una terminal.
+    
+    Permite gestionar cantidades específicas de cada billete.
+    """
+    terminal = models.ForeignKey(
+        Terminal,
+        on_delete=models.CASCADE,
+        related_name='inventario_denominaciones',
+        verbose_name='Terminal'
+    )
+    denominacion = models.ForeignKey(
+        Denominacion,
+        on_delete=models.PROTECT,
+        related_name='inventarios_terminal',
+        verbose_name='Denominación'
+    )
+    cantidad = models.PositiveIntegerField(
+        'Cantidad de billetes',
+        default=0,
+        help_text='Cantidad de billetes disponibles'
+    )
+    cantidad_minima = models.PositiveIntegerField(
+        'Cantidad mínima',
+        default=10,
+        help_text='Alerta cuando la cantidad sea menor a este valor'
+    )
+    ultima_reposicion = models.DateTimeField(
+        'Última reposición',
+        null=True,
+        blank=True
+    )
+    actualizado_por = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name='Actualizado por'
+    )
+    actualizado = models.DateTimeField(auto_now=True)
+    creado = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'Inventario de denominación'
+        verbose_name_plural = 'Inventarios de denominaciones'
+        unique_together = [['terminal', 'denominacion']]
+        ordering = ['terminal', '-denominacion__valor']
+        indexes = [
+            models.Index(fields=['terminal', 'denominacion']),
+            models.Index(fields=['cantidad']),
+        ]
+    
+    def __str__(self):
+        return f"{self.terminal.codigo} - {self.denominacion} (x{self.cantidad})"
+    
+    @property
+    def valor_total(self):
+        """Calcula el valor total de esta línea de inventario"""
+        return self.denominacion.valor * self.cantidad
+    
+    @property
+    def necesita_reposicion(self):
+        """Indica si necesita reposición"""
+        return self.cantidad < self.cantidad_minima
+    
+    def agregar(self, cantidad):
+        """Agrega billetes al inventario"""
+        self.cantidad += cantidad
+        self.save()
+    
+    def descontar(self, cantidad):
+        """Descuenta billetes del inventario"""
+        if cantidad > self.cantidad:
+            raise ValueError(
+                f"Inventario insuficiente. Disponible: {self.cantidad}, "
+                f"Solicitado: {cantidad}"
+            )
+        self.cantidad -= cantidad
+        self.save()
+
+class DesgloseDenominacionOperacion(models.Model):
+    """
+    Registra el desglose de denominaciones usado en una operación del TAUSER.
+    
+    Similar a DesgloseDenominacion pero para operaciones de terminal.
+    """
+    registro_operacion = models.ForeignKey(
+        'RegistroTransaccionTerminal',
+        on_delete=models.CASCADE,
+        related_name='desglose_denominaciones',
+        verbose_name='Operación'
+    )
+    denominacion = models.ForeignKey(
+        Denominacion,
+        on_delete=models.PROTECT,
+        related_name='usos_terminal',
+        verbose_name='Denominación'
+    )
+    cantidad = models.PositiveIntegerField(
+        'Cantidad',
+        default=1,
+        help_text='Cantidad de billetes entregados/recibidos'
+    )
+
+    tipo_movimiento = models.CharField(
+        'Tipo de movimiento',
+        max_length=10,
+        choices=[
+            ('ENTREGA', 'Entrega al cliente'),
+            ('RECEPCION', 'Recepción del cliente'),
+        ]
+    )
+    creado = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'Desglose de operación'
+        verbose_name_plural = 'Desgloses de operaciones'
+        ordering = ['-denominacion__valor']
+        unique_together = [['registro_operacion', 'denominacion']]
+    
+    def __str__(self):
+        accion = "Entregados" if self.tipo_movimiento == 'ENTREGA' else "Recibidos"
+        return f"{self.cantidad}x {self.denominacion.valor_formateado} ({accion})"
+    
+    @property
+    def subtotal(self):
+        """Calcula el subtotal de esta línea"""
+        return self.denominacion.valor * self.cantidad
 
 class PINTerminalCliente(models.Model):
     """PINs temporales generados para que los clientes accedan a la terminal"""

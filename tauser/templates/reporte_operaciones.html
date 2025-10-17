@@ -1,0 +1,466 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Reporte de Operaciones - {{ terminal.nombre }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-info text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Reporte de Operaciones
+                            </h4>
+                            <p class="mb-0 mt-1 small opacity-75">
+                                <i class="fas fa-map-marker-alt me-1"></i>
+                                Terminal: <strong>{{ terminal.nombre }}</strong> ({{ terminal.codigo }})
+                            </p>
+                        </div>
+                        <div>
+                            <a href="{% url 'tauser:inventario_denominaciones' terminal_codigo=terminal.codigo %}" 
+                               class="btn btn-light">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Volver
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Selector de período -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light">
+            <h6 class="mb-0">
+                <i class="fas fa-calendar-alt me-2"></i>
+                Período del Reporte
+            </h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="fecha_desde" class="form-label">Desde:</label>
+                    <input type="date" 
+                           name="fecha_desde" 
+                           id="fecha_desde" 
+                           class="form-control"
+                           value="{{ fecha_desde|date:'Y-m-d' }}">
+                </div>
+
+                <div class="col-md-4">
+                    <label for="fecha_hasta" class="form-label">Hasta:</label>
+                    <input type="date" 
+                           name="fecha_hasta" 
+                           id="fecha_hasta" 
+                           class="form-control"
+                           value="{{ fecha_hasta|date:'Y-m-d' }}">
+                </div>
+
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-sync-alt me-2"></i>
+                        Actualizar Reporte
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Mostrando datos desde {{ fecha_desde|date:"d/m/Y" }} hasta {{ fecha_hasta|date:"d/m/Y" }}
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas generales -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card border-primary shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-tasks text-primary fa-3x mb-2"></i>
+                    <h3 class="text-primary mb-0">{{ stats.total_operaciones }}</h3>
+                    <p class="text-muted mb-0">Total Operaciones</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card border-success shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle text-success fa-3x mb-2"></i>
+                    <h3 class="text-success mb-0">{{ stats.exitosas }}</h3>
+                    <p class="text-muted mb-0">Exitosas</p>
+                    <small class="text-muted">
+                        ({{ stats.exitosas|percentage:stats.total_operaciones }}%)
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card border-danger shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-times-circle text-danger fa-3x mb-2"></i>
+                    <h3 class="text-danger mb-0">{{ stats.fallidas }}</h3>
+                    <p class="text-muted mb-0">Fallidas</p>
+                    <small class="text-muted">
+                        ({{ stats.fallidas|percentage:stats.total_operaciones }}%)
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card border-info shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-users text-info fa-3x mb-2"></i>
+                    <h3 class="text-info mb-0">{{ stats.consultas }}</h3>
+                    <p class="text-muted mb-0">Consultas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Operaciones por tipo -->
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Distribución por Tipo de Operación
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h4 class="text-primary mb-0">{{ stats.retiros }}</h4>
+                            <small class="text-muted">Retiros</small>
+                        </div>
+                        <div class="col-4">
+                            <h4 class="text-warning mb-0">{{ stats.pagos }}</h4>
+                            <small class="text-muted">Pagos</small>
+                        </div>
+                        <div class="col-4">
+                            <h4 class="text-secondary mb-0">{{ stats.consultas }}</h4>
+                            <small class="text-muted">Consultas</small>
+                        </div>
+                    </div>
+                    <div class="chart-container mt-3">
+                        <canvas id="chartTipoOperacion"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Tasa de Éxito
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="progress mb-3" style="height: 30px;">
+                        {% widthratio stats.exitosas stats.total_operaciones 100 as porcentaje_exito %}
+                        <div class="progress-bar bg-success" 
+                             role="progressbar" 
+                             style="width: {{ porcentaje_exito }}%;"
+                             aria-valuenow="{{ porcentaje_exito }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                            {{ porcentaje_exito }}% Exitosas
+                        </div>
+                        {% widthratio stats.fallidas stats.total_operaciones 100 as porcentaje_fallidas %}
+                        <div class="progress-bar bg-danger" 
+                             role="progressbar" 
+                             style="width: {{ porcentaje_fallidas }}%;"
+                             aria-valuenow="{{ porcentaje_fallidas }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                            {{ porcentaje_fallidas }}% Fallidas
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chartExito"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Operaciones por divisa -->
+    {% if divisas_stats %}
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light">
+            <h6 class="mb-0">
+                <i class="fas fa-coins me-2"></i>
+                Operaciones por Divisa
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Divisa</th>
+                            <th class="text-center">Retiros</th>
+                            <th class="text-center">Pagos</th>
+                            <th class="text-end">Monto Retiros</th>
+                            <th class="text-end">Monto Pagos</th>
+                            <th class="text-end">Neto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for code, data in divisas_stats.items %}
+                        <tr>
+                            <td>
+                                <strong>{{ code }}</strong>
+                                <br>
+                                <small class="text-muted">{{ data.nombre }}</small>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-primary">{{ data.retiros }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-warning text-dark">{{ data.pagos }}</span>
+                            </td>
+                            <td class="text-end text-danger">
+                                -{{ data.monto_retiros|floatformat:2|intcomma }}
+                            </td>
+                            <td class="text-end text-success">
+                                +{{ data.monto_pagos|floatformat:2|intcomma }}
+                            </td>
+                            <td class="text-end">
+                                {% widthratio data.monto_pagos 1 1 as pagos_int %}
+                                {% widthratio data.monto_retiros 1 1 as retiros_int %}
+                                {% widthratio pagos_int 1 1 as neto_calc %}
+                                {% widthratio retiros_int 1 1 as neto_calc2 %}
+                                <strong class="{% if pagos_int > retiros_int %}text-success{% else %}text-danger{% endif %}">
+                                    {{ data.monto_pagos|add:"-"|add:data.monto_retiros|floatformat:2|intcomma }}
+                                </strong>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Registros recientes -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Últimas 20 Operaciones
+                </h6>
+                <a href="{% url 'tauser:historial_denominaciones' terminal_codigo=terminal.codigo %}" 
+                   class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-history me-1"></i>
+                    Ver Historial Completo
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Cliente</th>
+                            <th>Divisa</th>
+                            <th class="text-end">Monto</th>
+                            <th class="text-center">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reg in registros_recientes %}
+                        <tr>
+                            <td>
+                                <small>{{ reg.fecha|date:"d/m/Y H:i" }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-{% if reg.tipo_operacion == 'RETIRO' %}primary{% elif reg.tipo_operacion == 'PAGO' %}warning{% else %}secondary{% endif %}">
+                                    {{ reg.tipo_operacion }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if reg.cliente %}
+                                    {{ reg.cliente.nombre_completo|truncatewords:3 }}
+                                {% else %}
+                                    <em class="text-muted">N/A</em>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if reg.divisa %}
+                                    <strong>{{ reg.divisa.code }}</strong>
+                                {% else %}
+                                    <em class="text-muted">-</em>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if reg.monto_operacion %}
+                                    {{ reg.monto_operacion|floatformat:2|intcomma }}
+                                {% else %}
+                                    <em class="text-muted">-</em>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if reg.fue_exitoso %}
+                                    <i class="fas fa-check-circle text-success"></i>
+                                {% else %}
+                                    <i class="fas fa-times-circle text-danger"></i>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-3">
+                                No hay operaciones registradas en este período
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <button onclick="window.print()" class="btn btn-primary me-2">
+                        <i class="fas fa-print me-2"></i>
+                        Imprimir Reporte
+                    </button>
+                    <button onclick="exportarExcel()" class="btn btn-success me-2">
+                        <i class="fas fa-file-excel me-2"></i>
+                        Exportar a Excel
+                    </button>
+                    <a href="{% url 'tauser:reporte_denominaciones' terminal_codigo=terminal.codigo %}" 
+                       class="btn btn-info">
+                        <i class="fas fa-money-bill-wave me-2"></i>
+                        Ver Reporte de Denominaciones
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+// Gráfico de tipo de operación
+const ctxTipo = document.getElementById('chartTipoOperacion');
+if (ctxTipo) {
+    new Chart(ctxTipo, {
+        type: 'doughnut',
+        data: {
+            labels: ['Retiros', 'Pagos', 'Consultas', 'Otros'],
+            datasets: [{
+                data: [
+                    {{ stats.retiros }},
+                    {{ stats.pagos }},
+                    {{ stats.consultas }},
+                    {{ stats.total_operaciones|add:"-"|add:stats.retiros|add:"-"|add:stats.pagos|add:"-"|add:stats.consultas }}
+                ],
+                backgroundColor: [
+                    'rgba(13, 110, 253, 0.8)',
+                    'rgba(255, 193, 7, 0.8)',
+                    'rgba(108, 117, 125, 0.8)',
+                    'rgba(13, 202, 240, 0.8)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+// Gráfico de éxito
+const ctxExito = document.getElementById('chartExito');
+if (ctxExito) {
+    new Chart(ctxExito, {
+        type: 'bar',
+        data: {
+            labels: ['Exitosas', 'Fallidas'],
+            datasets: [{
+                label: 'Operaciones',
+                data: [{{ stats.exitosas }}, {{ stats.fallidas }}],
+                backgroundColor: [
+                    'rgba(25, 135, 84, 0.8)',
+                    'rgba(220, 53, 69, 0.8)'
+                ],
+                borderColor: [
+                    'rgb(25, 135, 84)',
+                    'rgb(220, 53, 69)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
+function exportarExcel() {
+    alert('Función de exportación a Excel en desarrollo');
+    // Implementar exportación a Excel
+}
+</script>
+{% endblock %}

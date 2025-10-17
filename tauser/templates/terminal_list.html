@@ -127,7 +127,7 @@
                                            title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="{% url 'tauser:toggle_terminal_activa' pk=terminal.pk %}" 
+                                        <a href="{% url 'tauser:terminal_toggle' pk=terminal.pk %}" 
                                            class="btn btn-sm btn-{% if terminal.is_activa %}danger{% else %}success{% endif %}"
                                            title="{% if terminal.is_activa %}Desactivar{% else %}Activar{% endif %}"
                                            onclick="return confirm('¿Está seguro?')">
