@@ -1,12 +1,13 @@
 #divisas
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import ListView, CreateView, UpdateView, View, FormView, TemplateView
 from django.urls import reverse_lazy, reverse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
-from .models import Divisa, TasaCambio, CotizacionSegmento
+from .models import Divisa, TasaCambio, CotizacionSegmento,  Denominacion, DesgloseDenominacion
 from clientes.models import Cliente, AsignacionCliente, Descuento, Segmento, ClienteMedioDePago
-from .forms import DivisaForm, TasaCambioForm, VentaDivisaForm
+from .forms import DivisaForm, TasaCambioForm
 from django.db.models import Max
 from django.db.models import OuterRef, Subquery
 from django.contrib.auth.decorators import login_required
@@ -18,8 +19,16 @@ from django.http import JsonResponse
 import json
 from django.test import RequestFactory
 from clientes.views import get_medio_acreditacion_seleccionado, get_medio_pago_seleccionado
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 import logging
+from django.contrib import messages
+from .forms import DenominacionForm, DenominacionFormSet, DenominacionQuickForm
+from django.forms import inlineformset_factory, formset_factory
+
+from transacciones.models import Transaccion
+from divisas.models import DesgloseDenominacion
+from divisas.forms import DesgloseDenominacionForm
+from .forms import DenominacionForm, DenominacionFormSet, DenominacionBaseFormSet, DenominacionQuickForm    
 
 
 """
@@ -31,17 +40,15 @@ y sus tasas de cambio, incluyendo un visualizador para clientes
 y otro para administradores.
 """
 class DivisaListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
-    """
-    Vista de lista para mostrar todas las divisas.
-
-    Requiere que el usuario esté autenticado y tenga el permiso `divisas.view_divisa`.
-    Muestra las divisas en una tabla paginada.
-    """
     permission_required = 'divisas.view_divisa'
     model = Divisa
     template_name = 'divisas/lista.html'
     context_object_name = 'divisas'
     paginate_by = 20
+    
+    def get_queryset(self):
+        # PYG siempre primero
+        return Divisa.objects.all().order_by('-es_moneda_base', 'code')
 
 
 class DivisaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
@@ -75,31 +82,48 @@ class DivisaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
 
 
 class DivisaUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
-    """
-    Vista para editar una divisa existente.
-    Requiere que el usuario esté autenticado y tenga el permiso 'divisas.change_divisa'
-    """
     permission_required = 'divisas.change_divisa'
     model = Divisa
     form_class = DivisaForm
     template_name = 'divisas/form.html'
     success_url = reverse_lazy('divisas:lista')
+    
+    def dispatch(self, request, *args, **kwargs):
+        divisa = self.get_object()
+        if divisa.es_moneda_base:
+            messages.error(request, "No se puede editar la moneda base del sistema.")
+            return redirect('divisas:lista')
+        return super().dispatch(request, *args, **kwargs)
 
 
+# Agregar protección a DivisaToggleActivaView
 class DivisaToggleActivaView(LoginRequiredMixin, PermissionRequiredMixin, View):
-    """
-    Alterna el estado de activación de una divisa.
-
-    Requiere autenticación y el permiso `divisas.change_divisa`.
-    """
     permission_required = 'divisas.change_divisa'
 
     def post(self, request, pk):
         divisa = get_object_or_404(Divisa, pk=pk)
+        
+        if divisa.es_moneda_base:
+            messages.error(request, "No se puede deshabilitar la moneda base del sistema.")
+            return redirect('divisas:lista')
+        
         divisa.is_active = not divisa.is_active
         divisa.save()
+        
+        estado = "habilitada" if divisa.is_active else "deshabilitada"
+        messages.success(request, f"Divisa {divisa.code} {estado} correctamente.")
+        
         return redirect('divisas:lista')
 
+
+def redondear(valor, decimales=2):
+    try:
+        return Decimal(valor).quantize(
+            Decimal("1") if decimales == 0 else Decimal("0.01"),
+            rounding=ROUND_HALF_UP
+        )
+    except Exception:
+        return valor
 
 # ----------------------------
 # TASAS DE CAMBIO
@@ -158,6 +182,13 @@ class TasaCambioCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateVi
     form_class = TasaCambioForm
     template_name = 'divisas/tasa_form.html'
 
+    def dispatch(self, request, *args, **kwargs):
+        """Bloquea la creación de tasas para la moneda base (PYG)"""
+        divisa = get_object_or_404(Divisa, pk=self.kwargs['divisa_id'])
+        if divisa.es_moneda_base:
+            messages.error(request, "No se pueden registrar tasas de cambio para la moneda base del sistema.")
+            return redirect('divisas:lista')
+        return super().dispatch(request, *args, **kwargs)
 
     def get_initial(self):
         initial = super().get_initial()
@@ -246,6 +277,7 @@ def visualizador_tasas(request):
     """
     Muestra las tasas de cambio actuales filtradas por el cliente activo en la sesión.
     Si no hay cliente activo, usa el segmento 'general'.
+    Solo muestra divisas que tienen cotizaciones para el segmento activo.
     """
     from clientes.models import Cliente, Segmento
     from .services import ultimas_por_segmento
@@ -280,10 +312,12 @@ def visualizador_tasas(request):
             if cot.segmento == segmento_activo
         ]
 
-        divisas_data.append({
-            "divisa": divisa,
-            "cotizaciones": cotizaciones_segmento
-        })
+        # 🔹 SOLO agregar si hay cotizaciones para este segmento
+        if cotizaciones_segmento:
+            divisas_data.append({
+                "divisa": divisa,
+                "cotizaciones": cotizaciones_segmento
+            })
 
     return render(request, "visualizador.html", {
         "divisas_data": divisas_data,
@@ -320,405 +354,448 @@ def visualizador_tasas_admin(request):
         'divisas_data': divisas_data,
         'is_admin_view': True
     })
+ 
+# ==================== CRUD DE DENOMINACIONES ====================
 
+class DenominacionQuickCreateView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """Vista para crear denominaciones rápidamente desde una lista de valores"""
+    permission_required = 'divisas.add_denominacion'
+    template_name = 'denominacion_quick_create.html'
 
-# --- VISTAS PARA VENTA USANDO LOGICA DEL SIMULADOR ---
-def decimal_to_str(data):
-    """
-    Convierte todos los Decimal en dict/list a str (recursivo).
-    """
-    if isinstance(data, dict):
-        return {k: decimal_to_str(v) for k, v in data.items()}
-    elif isinstance(data, list):
-        return [decimal_to_str(v) for v in data]
-    elif isinstance(data, Decimal):
-        return str(data)
-    return data
-
-
-class VentaDivisaView(LoginRequiredMixin, FormView):
-    template_name = "operaciones/venta.html"
-    form_class = VentaDivisaForm
-
-    def form_valid(self, form):
-        divisa = form.cleaned_data['divisa']
-        monto = form.cleaned_data['monto']
-
-        payload = {
-            "tipo_operacion": "venta",
-            "monto": str(monto),  # ya es str
-            "moneda": divisa.code
-        }
-
-        rf = RequestFactory()
-        post_req = rf.post(
-            '/simulador/calcular/',
-            data=json.dumps(payload),
-            content_type='application/json'
-        )
-        post_req.session = self.request.session
-        post_req.user = self.request.user
-
-        resp = calcular_simulacion_api(post_req)
-        try:
-            data = json.loads(resp.content)
-        except Exception:
-            form.add_error(None, "Error interno al comunicarse con el simulador.")
-            return self.form_invalid(form)
-
-        if not data.get("success"):
-            form.add_error(None, data.get("error", "Error en la simulación"))
-            return self.form_invalid(form)
-
-        # 🔹 Convertir Decimals antes de guardar
-        self.request.session['venta_resultado'] = decimal_to_str(data)
-        self.request.session.modified = True
-
-        return redirect('divisas:venta_confirmacion')
-
-
-class VentaConfirmacionView(LoginRequiredMixin, TemplateView):
-    template_name = "operaciones/venta_confirmacion.html"
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx['resultado'] = self.request.session.get('venta_resultado')
-        return ctx
-
-    def post(self, request, *args, **kwargs):
-        resultado = request.session.get("venta_resultado")
-        if not resultado:
-            messages.error(request, "No hay simulación para confirmar.")
-            return redirect("divisas:venta")
-
-        # 🔹 Guardar operación simplificada en sesión
-        operacion = {
-            "tipo": "venta",
-            "divisa": resultado.get("moneda_code"),
-            "divisa_nombre": resultado.get("moneda_nombre"),
-            "monto_divisa": resultado.get("monto_original"),
-            "monto_guaranies": resultado.get("monto_resultado"),
-            "tasa_cambio": resultado.get("tasa_aplicada"),
-            "comision": resultado.get("comision_aplicada"),
-        }
-        request.session["operacion"] = operacion
-        request.session.modified = True
-
-        return redirect("clientes:seleccionar_medio_acreditacion")
-
-class VentaMediosView(LoginRequiredMixin, TemplateView):
-    template_name = "operaciones/venta_medios.html"
-
-
-
-logger = logging.getLogger(__name__)
-
-class SumarioOperacionView(TemplateView):
-    template_name = "operaciones/venta_sumario.html"
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-
-        ctx["operacion"] = self.request.session.get("operacion")
-
-        medio_inst = get_medio_acreditacion_seleccionado(self.request)
-        medio_ctx = None
-
-        if medio_inst:
-            # Caso 1: instancia de ClienteMedioDePago
-            if hasattr(medio_inst, "medio_de_pago"):
-                medio_model = medio_inst.medio_de_pago
-                
-                # Determinar el tipo
-                tipo_label = "No definido"
-                try:
-                    if medio_model.tipo_medio:
-                        from medios_pago.models import TIPO_MEDIO_CHOICES
-                        tipo_dict = dict(TIPO_MEDIO_CHOICES)
-                        tipo_label = tipo_dict.get(medio_model.tipo_medio, f"Tipo desconocido: {medio_model.tipo_medio}")
-                    else:
-                        # Si no tiene tipo_medio, usar la lógica de inferencia
-                        api_info = medio_model.get_api_info()
-                        tipo_label = api_info.get("nombre_usuario", "No definido")
-                except Exception:
-                    tipo_label = "No definido"
-
-                # Comisión
-                try:
-                    com = Decimal(str(medio_model.comision_porcentaje))
-                    com_str = f"{com:.2f}%"
-                except Exception:
-                    com_str = str(medio_model.comision_porcentaje)
-
-                medio_ctx = {
-                    "id": medio_inst.id,
-                    "nombre": medio_model.nombre,
-                    "tipo": tipo_label,
-                    "comision": com_str,
-                }
-
-            # Caso 2: dict (el caso actual)
-            elif isinstance(medio_inst, dict):
-                # Obtener el objeto real desde la base de datos usando el ID
-                medio_id = medio_inst.get("id")
-                if medio_id:
-                    try:
-                        from clientes.models import ClienteMedioDePago
-                        medio_real = ClienteMedioDePago.objects.select_related('medio_de_pago').get(id=medio_id)
-                        medio_model = medio_real.medio_de_pago
-                        
-                        # Determinar el tipo usando el objeto real
-                        tipo_label = "No definido"
-                        try:
-                            if medio_model.tipo_medio:
-                                from medios_pago.models import TIPO_MEDIO_CHOICES
-                                tipo_dict = dict(TIPO_MEDIO_CHOICES)
-                                tipo_label = tipo_dict.get(medio_model.tipo_medio, f"Tipo desconocido: {medio_model.tipo_medio}")
-                            else:
-                                # Si no tiene tipo_medio, usar la lógica de inferencia
-                                api_info = medio_model.get_api_info()
-                                tipo_label = api_info.get("nombre_usuario", "No definido")
-                        except Exception:
-                            tipo_label = "No definido"
-                        
-                        # Usar la comisión del medio real
-                        try:
-                            com = Decimal(str(medio_model.comision_porcentaje))
-                            com_str = f"{com:.2f}%"
-                        except Exception:
-                            com_str = str(medio_model.comision_porcentaje)
-                        
-                        medio_ctx = {
-                            "id": medio_id,
-                            "nombre": medio_inst.get("nombre", medio_model.nombre),
-                            "tipo": tipo_label,
-                            "comision": com_str,
-                        }
-                        
-                    except Exception as e:
-                        # Fallback si no se puede obtener el objeto real
-                        logger.error(f"Error al obtener medio real: {e}")
-                        medio_ctx = {
-                            "id": medio_inst.get("id"),
-                            "nombre": medio_inst.get("nombre"),
-                            "tipo": "Error al determinar tipo",
-                            "comision": "No aplica" if medio_inst.get("comision") == "0.000" else f"{medio_inst.get('comision', '0')}%",
-                        }
-                else:
-                    # Si no hay ID, usar los datos del dict tal como están
-                    medio_ctx = {
-                        "id": medio_inst.get("id"),
-                        "nombre": medio_inst.get("nombre"),
-                        "tipo": medio_inst.get("tipo") or medio_inst.get("tipo_legible") or "No definido",
-                        "comision": "No aplica" if medio_inst.get("comision") == "0.000" else f"{medio_inst.get('comision', '0')}%",
-                    }
-
-        ctx["medio"] = medio_ctx
-        return ctx
-
-    def post(self, request, *args, **kwargs):
-        medio_id = request.POST.get("medio_id")
-        if not medio_id:
-            messages.error(request, "Debe seleccionar un medio de acreditación.")
-            return redirect("clientes:seleccionar_medio_acreditacion")
-
-        try:
-            from clientes.models import ClienteMedioDePago
-            medio = ClienteMedioDePago.objects.get(id=medio_id, cliente=request.user)
-
-            # Guardar en sesión como diccionario simple
-            request.session["medio"] = {
-                "nombre": medio.medio_de_pago.nombre,
-                "comision": str(medio.comision) if medio.comision else None,
-            }
-            request.session.modified = True
-
-            return redirect("divisas:venta_sumario")
-        except Exception as e:
-            messages.error(request, f"Error al procesar el medio de acreditación: {str(e)}")
-            return redirect("clientes:seleccionar_medio_acreditacion")
+    def get(self, request):
+        divisa_id = request.GET.get('divisa')
+        initial_data = {}
+        divisa_preseleccionada = None
         
+        if divisa_id:
+            try:
+                divisa_preseleccionada = Divisa.objects.get(id=divisa_id, is_active=True)
+                initial_data['divisa'] = divisa_preseleccionada
+            except Divisa.DoesNotExist:
+                pass
         
-def post(self, request, *args, **kwargs):
-    medio_id = request.POST.get("medio_id")
-    if not medio_id:
-        messages.error(request, "Debe seleccionar un medio de acreditación.")
-        return redirect("clientes:seleccionar_medio_acreditacion")
-
-    medio = ClienteMedioDePago.objects.get(id=medio_id, cliente=request.user)
-
-    # Guardar en sesión como diccionario simple
-    request.session["medio"] = {
-        "nombre": medio.medio_de_pago.nombre,
-        "comision": str(medio.comision) if medio.comision else None,
-    }
-    request.session.modified = True
-
-    return redirect("divisas:venta_sumario")
-
-
-# divisas/views.py
-
-from .forms import CompraDivisaForm
-
-class CompraDivisaView(LoginRequiredMixin, FormView):
-    template_name = "operaciones/compra.html"
-    form_class = CompraDivisaForm
-
-    def form_valid(self, form):
-        divisa = form.cleaned_data['divisa']
-        monto = form.cleaned_data['monto']
-
-        payload = {
-            "tipo_operacion": "compra",
-            "monto": str(monto),  # Monto en guaraníes
-            "moneda": divisa.code
-        }
-
-        rf = RequestFactory()
-        post_req = rf.post(
-            '/simulador/calcular/',
-            data=json.dumps(payload),
-            content_type='application/json'
-        )
-        post_req.session = self.request.session
-        post_req.user = self.request.user
-
-        resp = calcular_simulacion_api(post_req)
-        try:
-            data = json.loads(resp.content)
-        except Exception:
-            form.add_error(None, "Error interno al comunicarse con el simulador.")
-            return self.form_invalid(form)
-
-        if not data.get("success"):
-            form.add_error(None, data.get("error", "Error en la simulación"))
-            return self.form_invalid(form)
-
-        # Convertir Decimals antes de guardar
-        self.request.session['compra_resultado'] = decimal_to_str(data)
-        self.request.session.modified = True
-
-        return redirect('divisas:compra_confirmacion')
-
-
-class CompraConfirmacionView(LoginRequiredMixin, TemplateView):
-    template_name = "operaciones/compra_confirmacion.html"
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx['resultado'] = self.request.session.get('compra_resultado')
-        return ctx
-
-    def post(self, request, *args, **kwargs):
-        resultado = request.session.get("compra_resultado")
-        if not resultado:
-            messages.error(request, "No hay simulación para confirmar.")
-            return redirect("divisas:compra")
-
-        # Guardar operación simplificada en sesión
-        operacion = {
-            "tipo": "compra",
-            "divisa": resultado.get("moneda_code"),
-            "divisa_nombre": resultado.get("moneda_nombre"),
-            "monto_guaranies": resultado.get("monto_original"),  # Lo que paga en Gs.
-            "monto_divisa": resultado.get("monto_resultado"),    # Lo que recibe en divisa
-            "tasa_cambio": resultado.get("tasa_aplicada"),
-            "comision": resultado.get("comision_aplicada"),
-        }
-        request.session["operacion"] = operacion
-        request.session.modified = True
-
-        # Para compra vamos a seleccionar medio de PAGO (no acreditación)
-        return redirect("clientes:seleccionar_medio_pago")
-
-
-class SumarioCompraView(TemplateView):
-    template_name = "operaciones/compra_sumario.html"
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx["operacion"] = self.request.session.get("operacion")
+        form = DenominacionQuickForm(initial=initial_data)
         
-        # Para compra usamos medio de pago (no acreditación)
-        medio_inst = get_medio_pago_seleccionado(self.request)
-        medio_ctx = None
-
-        if medio_inst:
-            if hasattr(medio_inst, "medio_de_pago"):
-                medio_model = medio_inst.medio_de_pago
-                tipo_label = "No definido"
-                try:
-                    if medio_model.tipo_medio:
-                        from medios_pago.models import TIPO_MEDIO_CHOICES
-                        tipo_dict = dict(TIPO_MEDIO_CHOICES)
-                        tipo_label = tipo_dict.get(medio_model.tipo_medio, f"Tipo desconocido: {medio_model.tipo_medio}")
-                    else:
-                        api_info = medio_model.get_api_info()
-                        tipo_label = api_info.get("nombre_usuario", "No definido")
-                except Exception:
-                    tipo_label = "No definido"
-
-                try:
-                    com = Decimal(str(medio_model.comision_porcentaje))
-                    com_str = f"{com:.2f}%"
-                except Exception:
-                    com_str = str(medio_model.comision_porcentaje)
-
-                medio_ctx = {
-                    "id": medio_inst.id,
-                    "nombre": medio_model.nombre,
-                    "tipo": tipo_label,
-                    "comision": com_str,
-                }
-
-            elif isinstance(medio_inst, dict):
-                medio_id = medio_inst.get("id")
-                if medio_id:
-                    try:
-                        from clientes.models import ClienteMedioDePago
-                        medio_real = ClienteMedioDePago.objects.select_related('medio_de_pago').get(id=medio_id)
-                        medio_model = medio_real.medio_de_pago
-                        
-                        tipo_label = "No definido"
-                        try:
-                            if medio_model.tipo_medio:
-                                from medios_pago.models import TIPO_MEDIO_CHOICES
-                                tipo_dict = dict(TIPO_MEDIO_CHOICES)
-                                tipo_label = tipo_dict.get(medio_model.tipo_medio, f"Tipo desconocido: {medio_model.tipo_medio}")
-                            else:
-                                api_info = medio_model.get_api_info()
-                                tipo_label = api_info.get("nombre_usuario", "No definido")
-                        except Exception:
-                            tipo_label = "No definido"
-                        
-                        try:
-                            com = Decimal(str(medio_model.comision_porcentaje))
-                            com_str = f"{com:.2f}%"
-                        except Exception:
-                            com_str = str(medio_model.comision_porcentaje)
-                        
-                        medio_ctx = {
-                            "id": medio_id,
-                            "nombre": medio_inst.get("nombre", medio_model.nombre),
-                            "tipo": tipo_label,
-                            "comision": com_str,
-                        }
-                        
-                    except Exception as e:
-                        logger.error(f"Error al obtener medio real: {e}")
-                        medio_ctx = {
-                            "id": medio_inst.get("id"),
-                            "nombre": medio_inst.get("nombre"),
-                            "tipo": "Error al determinar tipo",
-                            "comision": "No aplica" if medio_inst.get("comision") == "0.000" else f"{medio_inst.get('comision', '0')}%",
-                        }
-
-        ctx["medio"] = medio_ctx
-        return ctx
+        context = {
+            'form': form,
+            'titulo': 'Creación Rápida de Denominaciones',
+            'divisa_preseleccionada': divisa_preseleccionada,
+        }
+        return render(request, self.template_name, context)
     
+    def post(self, request):
+        form = DenominacionQuickForm(request.POST)
+        
+        divisa_preseleccionada = None
+        if 'divisa' in request.POST:
+            try:
+                divisa_preseleccionada = Divisa.objects.get(id=request.POST['divisa'])
+            except (Divisa.DoesNotExist, ValueError):
+                pass
+        
+        if form.is_valid():
+            divisa = form.cleaned_data['divisa']
+            valores = form.cleaned_data['valores']
+            is_active = form.cleaned_data['is_active']
+            
+            count = 0
+            errores = []
+            
+            for valor in valores:
+                try:
+                    # Verificar si ya existe (sin tipo)
+                    existe = Denominacion.objects.filter(
+                        divisa=divisa,
+                        valor=valor
+                    ).exists()
+                    
+                    if existe:
+                        errores.append(f'{divisa.code} {valor} ya existe')
+                        continue
+                    
+                    # Calcular orden
+                    BASE = 100000000
+                    valor_float = float(valor)
+                    
+                    if valor_float > 0:
+                        orden_calculado = max(1, BASE - int(valor_float * 100))
+                    else:
+                        orden_calculado = BASE
+                    
+                    # Crear denominación (sin color ni tipo)
+                    Denominacion.objects.create(
+                        divisa=divisa,
+                        valor=valor,
+                        is_active=is_active,
+                        orden=orden_calculado
+                    )
+                    count += 1
+                    
+                except Exception as e:
+                    errores.append(f'Error al crear {valor}: {str(e)}')
+            
+            if count > 0:
+                messages.success(
+                    request, 
+                    f'✅ {count} denominación(es) de {divisa.code} creada(s) exitosamente.'
+                )
+            
+            if errores:
+                for error in errores:
+                    messages.warning(request, f'⚠️ {error}')
+            
+            if count > 0:
+                return redirect('divisas:denominaciones_divisa', divisa_id=divisa.id)
+            else:
+                messages.error(request, '❌ No se pudo crear ninguna denominación.')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'Error en {field}: {error}')
+        
+        context = {
+            'form': form,
+            'titulo': 'Creación Rápida de Denominaciones',
+            'divisa_preseleccionada': divisa_preseleccionada,
+        }
+        return render(request, self.template_name, context)
 
-from django.shortcuts import render
 
-def seleccionar_operacion_view(request):
-    return render(request, "operaciones/seleccionar_operacion.html")
+class DenominacionListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    """Lista todas las denominaciones con filtros"""
+    model = Denominacion
+    template_name = 'denominacion_list.html'
+    context_object_name = 'denominaciones'
+    permission_required = 'divisas.view_denominacion'
+    paginate_by = 50
+    
+    def get_queryset(self):
+        queryset = Denominacion.objects.select_related('divisa').all()
+        
+        # Filtro por divisa
+        divisa_id = self.kwargs.get('divisa_id') or self.request.GET.get('divisa')
+        if divisa_id:
+            queryset = queryset.filter(divisa_id=divisa_id)
+        
+        # Filtro por estado
+        estado = self.request.GET.get('estado')
+        if estado == 'activas':
+            queryset = queryset.filter(is_active=True)
+        elif estado == 'inactivas':
+            queryset = queryset.filter(is_active=False)
+        
+        return queryset.order_by('-valor')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        context['divisas'] = Divisa.objects.filter(is_active=True).order_by('code')
+        
+        divisa_id = self.kwargs.get('divisa_id') or self.request.GET.get('divisa')
+        if divisa_id:
+            try:
+                context['divisa_seleccionada'] = Divisa.objects.get(id=divisa_id)
+            except Divisa.DoesNotExist:
+                context['divisa_seleccionada'] = None
+        
+        denominaciones_qs = self.get_queryset()
+        context['total_denominaciones'] = denominaciones_qs.count()
+        context['denominaciones_activas'] = denominaciones_qs.filter(is_active=True).count()
+        
+        if divisa_id:
+            context['estadisticas_divisa'] = {
+                'total': denominaciones_qs.count(),
+                'activas': denominaciones_qs.filter(is_active=True).count(),
+                'inactivas': denominaciones_qs.filter(is_active=False).count(),
+            }
+        
+        return context
+
+
+class DenominacionesDivisaView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    """Vista para mostrar denominaciones de una divisa específica"""
+    model = Denominacion
+    template_name = 'denominaciones_divisa.html'
+    context_object_name = 'denominaciones'
+    permission_required = 'divisas.view_denominacion'
+    paginate_by = 50
+    
+    def get_queryset(self):
+        self.divisa = get_object_or_404(Divisa, id=self.kwargs['divisa_id'])
+        queryset = Denominacion.objects.filter(divisa=self.divisa)
+        
+        # Filtro por estado
+        estado = self.request.GET.get('estado')
+        if estado == 'activas':
+            queryset = queryset.filter(is_active=True)
+        elif estado == 'inactivas':
+            queryset = queryset.filter(is_active=False)
+        
+        return queryset.order_by('-valor')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['divisa'] = self.divisa
+        
+        denoms = self.get_queryset()
+        context['estadisticas'] = {
+            'total': denoms.count(),
+            'activas': denoms.filter(is_active=True).count(),
+            'inactivas': denoms.filter(is_active=False).count(),
+        }
+        
+        return context
+    
+class DenominacionCreateView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """Crea múltiples denominaciones a la vez"""
+    permission_required = 'divisas.add_denominacion'
+    template_name = 'denominacion_create_multiple.html'
+    
+    def get(self, request):
+        # Crear formset vacío
+        formset = DenominacionBaseFormSet()
+        
+        context = {
+            'formset': formset,
+            'titulo': 'Crear Denominaciones',
+            'boton_texto': 'Guardar Denominaciones',
+            'divisas': Divisa.objects.filter(is_active=True).order_by('code'),
+        }
+        return render(request, self.template_name, context)
+    
+    def post(self, request):
+        formset = DenominacionBaseFormSet(request.POST, request.FILES)
+        # Almacenar la divisa para redirección posterior
+        divisa_redireccion = None
+
+        if formset.is_valid():
+            count = 0
+            errores = []
+            
+            for form in formset:
+                if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
+                    try:
+                        denominacion = form.save(commit=False)
+                        
+                        # Calcular orden si no está definido o es 0
+                        if not denominacion.orden or denominacion.orden == 0:
+                            BASE = 100000000
+                            valor_float = float(denominacion.valor) if denominacion.valor else 0
+                            
+                            if valor_float > 0:
+                                denominacion.orden = max(1, BASE - int(valor_float * 100))
+                            else:
+                                denominacion.orden = BASE
+                        
+                        denominacion.save()
+                        count += 1
+                    except Exception as e:
+                        errores.append(f'Error al guardar denominación: {str(e)}')
+            
+            if count > 0:
+                messages.success(request, f'{count} denominación(es) creada(s) exitosamente.')
+            
+            if errores:
+                for error in errores:
+                    messages.error(request, error)
+            
+            if count > 0:
+                # Redirigir a la vista de denominaciones de la divisa
+                return redirect('divisas:denominaciones_divisa', divisa_id=divisa_redireccion.id)
+            elif count > 0:
+                # Si no hay divisa específica, ir a lista general
+                return redirect('divisas:denominacion_list')
+            else:
+                messages.warning(request, '⚠️ No se creó ninguna denominación.')
+        
+        context = {
+            'formset': formset,
+            'titulo': 'Crear Denominaciones',
+            'boton_texto': 'Guardar Denominaciones',
+            'divisas': Divisa.objects.filter(is_active=True).order_by('code'),
+        }
+        return render(request, self.template_name, context)
+    
+class DenominacionUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    """Actualiza una denominación existente"""
+    model = Denominacion
+    form_class = DenominacionForm
+    template_name = 'denominacion_form.html'
+    success_url = reverse_lazy('divisas:denominacion_list')
+    permission_required = 'divisas.change_denominacion'
+
+    def get_success_url(self):
+        # Redirigir a la vista de denominaciones de la divisa
+        return reverse('divisas:denominaciones_divisa', kwargs={'divisa_id': self.object.divisa.id})
+    
+    def form_valid(self, form):
+        messages.success(self.request, f'Denominación actualizada exitosamente.')
+        return super().form_valid(form)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = f'Editar Denominación: {self.object}'
+        context['boton_texto'] = 'Guardar Cambios'
+        return context
+
+
+class DenominacionDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """Desactiva/activa una denominación"""
+    permission_required = 'divisas.delete_denominacion'
+    
+    def post(self, request, pk):
+        denominacion = get_object_or_404(Denominacion, pk=pk)
+        divisa_id = denominacion.divisa.id  # Guardar ID de divisa antes del toggle
+        denominacion.is_active = not denominacion.is_active
+        denominacion.save()
+        
+        estado = "activada" if denominacion.is_active else "desactivada"
+        messages.success(
+            request, 
+            f'✅ Denominación {denominacion} {estado} exitosamente.'
+        )
+        messages.success(request, f'Denominación {estado} correctamente.')
+
+        return redirect('divisas:denominaciones_divisa', divisa_id=divisa_id)
+
+
+@login_required
+@user_passes_test(lambda u: u.has_perm('divisas.view_denominacion'))
+def denominaciones_disponibles_json(request, divisa_id):
+    """API para obtener denominaciones disponibles de una divisa (JSON)"""
+    denominaciones = Denominacion.objects.filter(
+        divisa_id=divisa_id,
+        is_active=True
+    ).order_by('-valor').values(
+        'id', 'valor', 'valor_formateado'
+    )
+    
+    return JsonResponse({
+        'denominaciones': list(denominaciones)
+    })
+
+
+# ==================== CALCULADORA DE DENOMINACIONES ====================
+
+class CalculadoraDenominacionesView(LoginRequiredMixin, TemplateView):
+    """Vista para calcular el desglose óptimo de denominaciones"""
+    template_name = 'divisas/calculadora_denominaciones.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['divisas'] = Divisa.objects.filter(is_active=True).order_by('code')
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        divisa_id = request.POST.get('divisa_id')
+        monto_str = request.POST.get('monto', '0')
+        
+        try:
+            monto = Decimal(monto_str)
+            divisa = get_object_or_404(Divisa, pk=divisa_id, is_active=True)
+            
+            # Obtener denominaciones activas ordenadas de mayor a menor
+            denominaciones = Denominacion.objects.filter(
+                divisa=divisa,
+                is_active=True
+            ).order_by('-valor')
+            
+            # Calcular desglose óptimo (algoritmo greedy)
+            desglose = []
+            restante = monto
+            
+            for denom in denominaciones:
+                if restante <= 0:
+                    break
+                
+                cantidad = int(restante / denom.valor)
+                if cantidad > 0:
+                    desglose.append({
+                        'denominacion': denom,
+                        'cantidad': cantidad,
+                        'subtotal': denom.valor * cantidad
+                    })
+                    restante -= denom.valor * cantidad
+            
+            # Si hay restante, significa que no se puede dar cambio exacto
+            cambio_exacto = (restante == 0)
+            
+            context = self.get_context_data()
+            context.update({
+                'divisa_seleccionada': divisa,
+                'monto_solicitado': monto,
+                'desglose': desglose,
+                'total_entregado': sum(d['subtotal'] for d in desglose),
+                'restante': restante,
+                'cambio_exacto': cambio_exacto,
+            })
+            
+            if not cambio_exacto:
+                messages.warning(
+                    request,
+                    f'No se puede dar cambio exacto. Faltante: {divisa.simbolo}{restante:,.2f}'
+                )
+            
+            return render(request, self.template_name, context)
+            
+        except (ValueError, InvalidOperation):
+            messages.error(request, 'Monto inválido.')
+            return redirect('divisas:calculadora_denominaciones')
+        
+class TransaccionDesgloseDenominacionesView(LoginRequiredMixin, View):
+    """Vista para agregar desglose de denominaciones a una transacción"""
+    
+    def get(self, request, numero_transaccion):
+        transaccion = get_object_or_404(Transaccion, numero_transaccion=numero_transaccion)
+        
+        # Crear formset dinámicamente
+        DesgloseDenominacionFormSet = inlineformset_factory(
+            Transaccion,
+            DesgloseDenominacion,
+            form=DesgloseDenominacionForm,
+            extra=3,
+            can_delete=True,
+            fields=['denominacion', 'cantidad']
+        )
+        
+        formset = DesgloseDenominacionFormSet(
+            instance=transaccion,
+            form_kwargs={'divisa': transaccion.divisa_destino}
+        )
+        
+        context = {
+            'transaccion': transaccion,
+            'formset': formset,
+        }
+        
+        return render(request, 'transacciones/desglose_denominaciones.html', context)
+    
+    def post(self, request, numero_transaccion):
+        transaccion = get_object_or_404(Transaccion, numero_transaccion=numero_transaccion)
+        
+        DesgloseDenominacionFormSet = inlineformset_factory(
+            Transaccion,
+            DesgloseDenominacion,
+            form=DesgloseDenominacionForm,
+            extra=3,
+            can_delete=True,
+            fields=['denominacion', 'cantidad']
+        )
+        
+        formset = DesgloseDenominacionFormSet(
+            request.POST,
+            instance=transaccion,
+            form_kwargs={'divisa': transaccion.divisa_destino}
+        )
+        
+        if formset.is_valid():
+            formset.save()
+            messages.success(request, 'Desglose de denominaciones guardado correctamente.')
+            return redirect('transacciones:detalle', numero_transaccion=numero_transaccion)
+        
+        context = {
+            'transaccion': transaccion,
+            'formset': formset,
+        }
+        
+        return render(request, 'transacciones/desglose_denominaciones.html', context)

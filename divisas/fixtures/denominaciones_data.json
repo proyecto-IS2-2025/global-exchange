@@ -1,0 +1,704 @@
+[
+  {
+    "model": "divisas.denominacion",
+    "pk": 1,
+    "fields": {
+      "divisa": 0,
+      "valor": "100000.00000000",
+      "is_active": true,
+      "orden": 1,
+      "notas": "Billete de 100 mil guaraníes",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 2,
+    "fields": {
+      "divisa": 0,
+      "valor": "50000.00000000",
+      "is_active": true,
+      "orden": 2,
+      "notas": "Billete de 50 mil guaraníes",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 3,
+    "fields": {
+      "divisa": 0,
+      "valor": "20000.00000000",
+      "is_active": true,
+      "orden": 3,
+      "notas": "Billete de 20 mil guaraníes",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 4,
+    "fields": {
+      "divisa": 0,
+      "valor": "10000.00000000",
+      "is_active": true,
+      "orden": 4,
+      "notas": "Billete de 10 mil guaraníes",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 5,
+    "fields": {
+      "divisa": 0,
+      "valor": "5000.00000000",
+      "is_active": true,
+      "orden": 5,
+      "notas": "Billete de 5 mil guaraníes",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 7,
+    "fields": {
+      "divisa": 1,
+      "valor": "100.00000000",
+      "is_active": true,
+      "orden": 1,
+      "notas": "Billete de 100 dólares",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 8,
+    "fields": {
+      "divisa": 1,
+      "valor": "50.00000000",
+      "is_active": true,
+      "orden": 2,
+      "notas": "Billete de 50 dólares",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 9,
+    "fields": {
+      "divisa": 1,
+      "valor": "20.00000000",
+      "is_active": true,
+      "orden": 3,
+      "notas": "Billete de 20 dólares",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 10,
+    "fields": {
+      "divisa": 1,
+      "valor": "10.00000000",
+      "is_active": true,
+      "orden": 4,
+      "notas": "Billete de 10 dólares",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 11,
+    "fields": {
+      "divisa": 1,
+      "valor": "5.00000000",
+      "is_active": true,
+      "orden": 5,
+      "notas": "Billete de 5 dólares",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 12,
+    "fields": {
+      "divisa": 1,
+      "valor": "1.00000000",
+      "is_active": true,
+      "orden": 6,
+      "notas": "Billete de 1 dólar",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 13,
+    "fields": {
+      "divisa": 2,
+      "valor": "500.00000000",
+      "is_active": true,
+      "orden": 1,
+      "notas": "Billete de 500 euros",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 14,
+    "fields": {
+      "divisa": 2,
+      "valor": "200.00000000",
+      "is_active": true,
+      "orden": 2,
+      "notas": "Billete de 200 euros",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 15,
+    "fields": {
+      "divisa": 2,
+      "valor": "100.00000000",
+      "is_active": true,
+      "orden": 3,
+      "notas": "Billete de 100 euros",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 16,
+    "fields": {
+      "divisa": 2,
+      "valor": "50.00000000",
+      "is_active": true,
+      "orden": 4,
+      "notas": "Billete de 50 euros",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 17,
+    "fields": {
+      "divisa": 2,
+      "valor": "20.00000000",
+      "is_active": true,
+      "orden": 5,
+      "notas": "Billete de 20 euros",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 18,
+    "fields": {
+      "divisa": 2,
+      "valor": "10.00000000",
+      "is_active": true,
+      "orden": 6,
+      "notas": "Billete de 10 euros",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 19,
+    "fields": {
+      "divisa": 2,
+      "valor": "5.00000000",
+      "is_active": true,
+      "orden": 7,
+      "notas": "Billete de 5 euros",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 20,
+    "fields": {
+      "divisa": 3,
+      "valor": "50.00000000",
+      "is_active": true,
+      "orden": 1,
+      "notas": "Billete de 50 libras",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 21,
+    "fields": {
+      "divisa": 3,
+      "valor": "20.00000000",
+      "is_active": true,
+      "orden": 2,
+      "notas": "Billete de 20 libras",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 22,
+    "fields": {
+      "divisa": 3,
+      "valor": "10.00000000",
+      "is_active": true,
+      "orden": 3,
+      "notas": "Billete de 10 libras",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 23,
+    "fields": {
+      "divisa": 3,
+      "valor": "5.00000000",
+      "is_active": true,
+      "orden": 4,
+      "notas": "Billete de 5 libras",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 24,
+    "fields": {
+      "divisa": 4,
+      "valor": "10000.00000000",
+      "is_active": true,
+      "orden": 1,
+      "notas": "Billete de 10,000 yenes",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 25,
+    "fields": {
+      "divisa": 4,
+      "valor": "5000.00000000",
+      "is_active": true,
+      "orden": 2,
+      "notas": "Billete de 5,000 yenes",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 26,
+    "fields": {
+      "divisa": 4,
+      "valor": "2000.00000000",
+      "is_active": true,
+      "orden": 3,
+      "notas": "Billete de 2,000 yenes",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 27,
+    "fields": {
+      "divisa": 4,
+      "valor": "1000.00000000",
+      "is_active": true,
+      "orden": 4,
+      "notas": "Billete de 1,000 yenes",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 28,
+    "fields": {
+      "divisa": 5,
+      "valor": "100.00000000",
+      "is_active": true,
+      "orden": 1,
+      "notas": "Billete de 100 dólares canadienses",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 29,
+    "fields": {
+      "divisa": 5,
+      "valor": "50.00000000",
+      "is_active": true,
+      "orden": 2,
+      "notas": "Billete de 50 dólares canadienses",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 30,
+    "fields": {
+      "divisa": 5,
+      "valor": "20.00000000",
+      "is_active": true,
+      "orden": 3,
+      "notas": "Billete de 20 dólares canadienses",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 31,
+    "fields": {
+      "divisa": 5,
+      "valor": "10.00000000",
+      "is_active": true,
+      "orden": 4,
+      "notas": "Billete de 10 dólares canadienses",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 32,
+    "fields": {
+      "divisa": 5,
+      "valor": "5.00000000",
+      "is_active": true,
+      "orden": 5,
+      "notas": "Billete de 5 dólares canadienses",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 33,
+    "fields": {
+      "divisa": 6,
+      "valor": "100.00000000",
+      "is_active": true,
+      "orden": 1,
+      "notas": "Billete de 100 dólares australianos",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 34,
+    "fields": {
+      "divisa": 6,
+      "valor": "50.00000000",
+      "is_active": true,
+      "orden": 2,
+      "notas": "Billete de 50 dólares australianos",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 35,
+    "fields": {
+      "divisa": 6,
+      "valor": "20.00000000",
+      "is_active": true,
+      "orden": 3,
+      "notas": "Billete de 20 dólares australianos",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 36,
+    "fields": {
+      "divisa": 6,
+      "valor": "10.00000000",
+      "is_active": true,
+      "orden": 4,
+      "notas": "Billete de 10 dólares australianos",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 37,
+    "fields": {
+      "divisa": 6,
+      "valor": "5.00000000",
+      "is_active": true,
+      "orden": 5,
+      "notas": "Billete de 5 dólares australianos",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 38,
+    "fields": {
+      "divisa": 7,
+      "valor": "1000.00000000",
+      "is_active": true,
+      "orden": 1,
+      "notas": "Billete de 1,000 francos suizos",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 39,
+    "fields": {
+      "divisa": 7,
+      "valor": "200.00000000",
+      "is_active": true,
+      "orden": 2,
+      "notas": "Billete de 200 francos suizos",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 40,
+    "fields": {
+      "divisa": 7,
+      "valor": "100.00000000",
+      "is_active": true,
+      "orden": 3,
+      "notas": "Billete de 100 francos suizos",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 41,
+    "fields": {
+      "divisa": 7,
+      "valor": "50.00000000",
+      "is_active": true,
+      "orden": 4,
+      "notas": "Billete de 50 francos suizos",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 42,
+    "fields": {
+      "divisa": 7,
+      "valor": "20.00000000",
+      "is_active": true,
+      "orden": 5,
+      "notas": "Billete de 20 francos suizos",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 43,
+    "fields": {
+      "divisa": 7,
+      "valor": "10.00000000",
+      "is_active": true,
+      "orden": 6,
+      "notas": "Billete de 10 francos suizos",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 44,
+    "fields": {
+      "divisa": 8,
+      "valor": "100.00000000",
+      "is_active": true,
+      "orden": 1,
+      "notas": "Billete de 100 yuanes",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 45,
+    "fields": {
+      "divisa": 8,
+      "valor": "50.00000000",
+      "is_active": true,
+      "orden": 2,
+      "notas": "Billete de 50 yuanes",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 46,
+    "fields": {
+      "divisa": 8,
+      "valor": "20.00000000",
+      "is_active": true,
+      "orden": 3,
+      "notas": "Billete de 20 yuanes",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 47,
+    "fields": {
+      "divisa": 8,
+      "valor": "10.00000000",
+      "is_active": true,
+      "orden": 4,
+      "notas": "Billete de 10 yuanes",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 48,
+    "fields": {
+      "divisa": 8,
+      "valor": "5.00000000",
+      "is_active": true,
+      "orden": 5,
+      "notas": "Billete de 5 yuanes",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 49,
+    "fields": {
+      "divisa": 8,
+      "valor": "1.00000000",
+      "is_active": true,
+      "orden": 6,
+      "notas": "Billete de 1 yuan",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 50,
+    "fields": {
+      "divisa": 9,
+      "valor": "1000.00000000",
+      "is_active": true,
+      "orden": 1,
+      "notas": "Billete de 1,000 pesos mexicanos",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 51,
+    "fields": {
+      "divisa": 9,
+      "valor": "500.00000000",
+      "is_active": true,
+      "orden": 2,
+      "notas": "Billete de 500 pesos mexicanos",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 52,
+    "fields": {
+      "divisa": 9,
+      "valor": "200.00000000",
+      "is_active": true,
+      "orden": 3,
+      "notas": "Billete de 200 pesos mexicanos",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 53,
+    "fields": {
+      "divisa": 9,
+      "valor": "100.00000000",
+      "is_active": true,
+      "orden": 4,
+      "notas": "Billete de 100 pesos mexicanos",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 54,
+    "fields": {
+      "divisa": 9,
+      "valor": "50.00000000",
+      "is_active": true,
+      "orden": 5,
+      "notas": "Billete de 50 pesos mexicanos",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "divisas.denominacion",
+    "pk": 55,
+    "fields": {
+      "divisa": 9,
+      "valor": "20.00000000",
+      "is_active": true,
+      "orden": 6,
+      "notas": "Billete de 20 pesos mexicanos",
+      "creado": "2025-09-15T12:00:00Z",
+      "actualizado": "2025-09-15T12:00:00Z"
+    }
+  }
+]

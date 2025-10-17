@@ -2,7 +2,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from .models import UsuarioBilletera, Billetera, RecargaBilletera, TransferenciaBilletera
-from banco.models import EntidadBancaria, TarjetaDebito
+from banco.models import EntidadBancaria, TarjetaDebito, Cuenta
 from decimal import Decimal
 
 
@@ -167,6 +167,53 @@ class TransferirFondosForm(forms.Form):
                 raise ValidationError("No existe un usuario con ese número de celular.")
             except Billetera.DoesNotExist:
                 raise ValidationError("El usuario no tiene billetera en la entidad seleccionada.")
+
+        if self.billetera_origen and monto and self.billetera_origen.saldo < monto:
+            raise ValidationError(f"Saldo insuficiente. Saldo disponible: ₲{self.billetera_origen.saldo}")
+        
+        return cleaned_data
+
+
+class PagarCuentaForm(forms.Form):
+    """Formulario para pagar a una cuenta bancaria desde la billetera"""
+    entidad_destino = forms.ModelChoiceField(
+        queryset=EntidadBancaria.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label="Banco de destino"
+    )
+    numero_cuenta_destino = forms.CharField(
+        max_length=20,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ejemplo: 1234567890'}),
+        label="Número de cuenta"
+    )
+    monto = forms.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        min_value=Decimal('1000.00'),
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '50000.00'}),
+        label="Monto a pagar"
+    )
+
+    def __init__(self, billetera_origen=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.billetera_origen = billetera_origen
+
+    def clean(self):
+        cleaned_data = super().clean()
+        entidad_destino = cleaned_data.get('entidad_destino')
+        numero_cuenta_destino = cleaned_data.get('numero_cuenta_destino')
+        monto = cleaned_data.get('monto')
+
+        if entidad_destino and numero_cuenta_destino:
+            try:
+                cuenta_destino = Cuenta.objects.get(
+                    entidad=entidad_destino,
+                    numero_cuenta=numero_cuenta_destino
+                )
+                cleaned_data['cuenta_destino'] = cuenta_destino
+                
+            except Cuenta.DoesNotExist:
+                raise ValidationError("La cuenta de destino no existe.")
 
         if self.billetera_origen and monto and self.billetera_origen.saldo < monto:
             raise ValidationError(f"Saldo insuficiente. Saldo disponible: ₲{self.billetera_origen.saldo}")

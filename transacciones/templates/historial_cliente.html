@@ -1,8 +1,11 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}Mi Historial de Transacciones{% endblock %}
 
 {% block extra_head %}
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 <style>
 .stats-card {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -30,16 +33,89 @@
     font-size: 1.1rem;
     font-weight: 600;
 }
-.status-pendiente { background-color: #ffc107; }
-.status-pagada { background-color: #28a745; }
-.status-cancelada { background-color: #dc3545; }
-.status-anulada { background-color: #6c757d; }
-.status-a_retirar { background-color: #17a2b8; }
+.status-pendiente { background-color: #0dcaf0; color: #000; } /* Info/Azul claro */
+.status-pagada { background-color: #28a745; color: #fff; } /* Verde - Pagada */
+.status-completado { background-color: #198754; color: #fff; } /* Verde oscuro - Completado */
+.status-cancelada { background-color: #dc3545; color: #fff; } /* Rojo */
+.status-anulada { background-color: #6c757d; color: #fff; } /* Gris */
+.status-a_retirar { background-color: #17a2b8; color: #fff; } /* Cyan */
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
+    <a href="{% url 'users:perfil_usuario' %}"
+   class="btn d-inline-flex align-items-center btn-premium">
+    <i class="fas fa-arrow-left me-2" aria-hidden="true"></i>
+    Volver al perfil
+</a>
+
+<style>
+/* Estilos para el botón mejorado (Premium Look) */
+
+/* Mover los estilos inline a una clase para mejor manejo */
+.btn-premium {
+    /* Estilos base */
+    color: #ffffff !important;
+    border: none;
+    padding: 0.75rem 1.5rem; /* Aumentar el padding */
+    border-radius: 50px; /* Bordes muy redondeados (Pill shape) */
+    font-weight: 600; /* Fuente seminegrita */
+    box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3); /* Sombra suave */
+    background: linear-gradient(90deg, #0d6efd, #0056b3); /* Gradiente de azul */
+    transition: all 0.3s ease; /* Transición suave */
+    text-decoration: none; /* Asegura que no haya subrayado en el link */
+}
+
+.btn-premium:hover {
+    /* Efecto al pasar el mouse */
+    background: linear-gradient(90deg, #0056b3, #003a75); /* Oscurecer el gradiente */
+    box-shadow: 0 6px 15px rgba(13, 110, 253, 0.5); /* Aumentar la sombra */
+    transform: translateY(-2px); /* Pequeño levantamiento */
+}
+
+.btn-premium:active {
+    /* Efecto al hacer clic */
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(13, 110, 253, 0.3);
+}
+
+/* Ajuste del tamaño del icono de Font Awesome */
+.btn-premium .fas {
+    font-size: 1.2rem; 
+}
+
+.badge.status-pendiente {
+    background-color: #0dcaf0; /* Info/Azul claro */
+    color: #000 !important; /* Texto negro para mejor contraste */
+}
+
+.badge.status-pagada {
+    background-color: #28a745; /* Verde - Pagada */
+    color: white !important;
+}
+
+.badge.status-completado {
+    background-color: #198754; /* Verde oscuro - Completado */
+    color: white !important;
+}
+
+.badge.status-cancelada {
+    background-color: #dc3545; /* Rojo */
+    color: white !important;
+}
+
+.badge.status-anulada {
+    background-color: #6c757d; /* Gris */
+    color: white !important;
+}
+
+.badge.status-a_retirar {
+    background-color: #17a2b8; /* Cyan */
+    color: white !important;
+}
+
+</style>
     <!-- Encabezado -->
     <div class="row mb-4">
         <div class="col-12">
@@ -49,11 +125,6 @@
                     {% if cliente_activo %}
                         <p class="text-muted mb-0">{{ cliente_activo.nombre_completo }} - {{ cliente_activo.cedula }}</p>
                     {% endif %}
-                </div>
-                <div>
-                    <a href="{% url 'inicio' %}" class="btn btn-outline-primary">
-                        <i class="bi bi-house me-2"></i>Inicio
-                    </a>
                 </div>
             </div>
         </div>
@@ -187,7 +258,12 @@
                                     <div class="row text-center">
                                         <div class="col-5">
                                             <div class="border rounded p-2">
-                                                <div class="amount-highlight text-truncate">{{ transaccion.monto_origen }}</div>
+                                                <div class="amount-highlight text-truncate">    {% if transaccion.divisa_origen.code == 'PYG' %}
+        {{ transaccion.monto_origen|floatformat:0|intcomma }}
+    {% else %}
+        {{ transaccion.monto_origen|floatformat:2|intcomma }}
+    {% endif %}
+</div>
                                                 <small class="text-muted">{{ transaccion.divisa_origen.code }}</small>
                                             </div>
                                         </div>
@@ -196,7 +272,12 @@
                                         </div>
                                         <div class="col-5">
                                             <div class="border rounded p-2">
-                                                <div class="amount-highlight text-truncate">{{ transaccion.monto_destino }}</div>
+                                                <div class="amount-highlight text-truncate">    {% if transaccion.divisa_destino.code == 'PYG' %}
+        {{ transaccion.monto_destino|floatformat:0|intcomma }}
+    {% else %}
+        {{ transaccion.monto_destino|floatformat:2|intcomma }}
+    {% endif %}
+</div>
                                                 <small class="text-muted">{{ transaccion.divisa_destino.code }}</small>
                                             </div>
                                         </div>
@@ -207,7 +288,7 @@
                                 <div class="text-center mb-3">
                                     <small class="text-muted">
                                         <i class="bi bi-calculator me-1"></i>
-                                        Tasa: {{ transaccion.tasa_de_cambio_aplicada }}
+                                        Tasa: Gs. {{ transaccion.tasa_de_cambio_aplicada|floatformat:0|intcomma }}
                                     </small>
                                 </div>
 
@@ -217,7 +298,24 @@
                                     <small class="text-muted d-block">
                                         {% if transaccion.es_compra %}Medio de pago:{% else %}Medio de acreditación:{% endif %}
                                     </small>
-                                    <small class="fw-bold">{{ transaccion.medio_pago_datos.nombre|truncatechars:25 }}</small>
+                                    <div class="d-flex align-items-center gap-2">
+                                        {% if transaccion.es_pago_stripe %}
+                                            <i class="bi bi-credit-card text-primary"></i>
+                                            <span class="badge bg-primary">
+                                                <i class="bi bi-stripe"></i> Stripe
+                                            </span>
+                                        {% endif %}
+                                        <small class="fw-bold">{{ transaccion.medio_pago_datos.nombre|truncatechars:25 }}</small>
+                                    </div>
+                                    {% if transaccion.es_pago_stripe and transaccion.card_last4 %}
+                                        <small class="text-muted">
+                                            <i class="bi bi-credit-card-2-front"></i> 
+                                            **** **** **** {{ transaccion.card_last4 }}
+                                            {% if transaccion.card_brand %}
+                                                <span class="badge bg-secondary">{{ transaccion.card_brand|upper }}</span>
+                                            {% endif %}
+                                        </small>
+                                    {% endif %}
                                 </div>
                                 {% endif %}
                             </div>

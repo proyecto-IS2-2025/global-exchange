@@ -2,7 +2,7 @@
 from django.contrib import admin
 from .models import (
     UsuarioBilletera, Billetera, MovimientoBilletera, 
-    RecargaBilletera, TransferenciaBilletera
+    RecargaBilletera, TransferenciaBilletera, PagoBilletera
 )
 
 
@@ -143,6 +143,40 @@ class TransferenciaBilleteraAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False  # Las transferencias se crean desde la interfaz web
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(PagoBilletera)
+class PagoBilleteraAdmin(admin.ModelAdmin):
+    list_display = ['billetera', 'cuenta_destino', 'monto', 'exitoso', 'fecha', 'comprobante']
+    search_fields = [
+        'billetera__usuario__numero_celular',
+        'cuenta_destino__numero_cuenta',
+        'comprobante'
+    ]
+    list_filter = ['exitoso', 'fecha', 'cuenta_destino__entidad']
+    readonly_fields = ['comprobante', 'fecha', 'exitoso']
+
+    fieldsets = (
+        ('Información del Pago', {
+            'fields': ('billetera', 'cuenta_destino', 'monto')
+        }),
+        ('Estado', {
+            'fields': ('exitoso',)
+        }),
+        ('Metadata', {
+            'fields': ('comprobante', 'fecha'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def has_add_permission(self, request):
+        return False  # Los pagos se crean desde la interfaz web
 
     def has_change_permission(self, request, obj=None):
         return False

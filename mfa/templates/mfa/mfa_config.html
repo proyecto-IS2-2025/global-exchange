@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Configuración MFA{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'inicio' %}">Inicio</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Configuración MFA</li>
+                </ol>
+            </nav>
+
+            <!-- Card principal -->
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-primary text-white py-4 rounded-top-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-shield-halved display-5 me-3"></i>
+                        <div>
+                            <h2 class="mb-0 h3 fw-bold">Configuración de Autenticación Multifactor (MFA)</h2>
+                            <p class="mb-0 opacity-75">Gestiona la seguridad de tu sistema</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <!-- Información -->
+                    <div class="alert alert-info border-0 mb-4">
+                        <div class="d-flex">
+                            <i class="fas fa-info-circle me-3 mt-1 fs-4"></i>
+                            <div>
+                                <strong>¿Qué es MFA?</strong>
+                                <p class="mb-0 mt-2">
+                                    La Autenticación Multifactor (MFA) añade una capa extra de seguridad al requerir un código de verificación 
+                                    de 6 dígitos enviado por email, además de la contraseña. Puedes activar o desactivar MFA para diferentes 
+                                    operaciones del sistema.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configuración MFA Login -->
+                    <div class="card mb-4 border-2">
+                        <div class="card-body p-4">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <div class="d-flex align-items-start">
+                                        <div class="me-3">
+                                            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                                                <i class="fas fa-user-lock text-primary fs-3"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-2">
+                                                MFA en Inicio de Sesión
+                                                {% if config.mfa_login_enabled %}
+                                                    <span class="badge bg-success ms-2">ACTIVO</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary ms-2">INACTIVO</span>
+                                                {% endif %}
+                                            </h5>
+                                            <p class="text-muted mb-0">
+                                                Requiere verificación por código OTP cada vez que un usuario inicia sesión en el sistema.
+                                                Recomendado para máxima seguridad.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                                    <form method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="toggle_login">
+                                        {% if config.mfa_login_enabled %}
+                                            <button type="submit" class="btn btn-outline-danger btn-lg">
+                                                <i class="fas fa-toggle-on me-2"></i> Desactivar
+                                            </button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-success btn-lg">
+                                                <i class="fas fa-toggle-off me-2"></i> Activar
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configuración MFA Compra -->
+                    <div class="card border-2">
+                        <div class="card-body p-4">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <div class="d-flex align-items-start">
+                                        <div class="me-3">
+                                            <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                                                <i class="fas fa-shopping-cart text-success fs-3"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-2">
+                                                MFA en Confirmación de Compra
+                                                {% if config.mfa_compra_enabled %}
+                                                    <span class="badge bg-success ms-2">ACTIVO</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary ms-2">INACTIVO</span>
+                                                {% endif %}
+                                            </h5>
+                                            <p class="text-muted mb-0">
+                                                Requiere verificación por código OTP antes de confirmar una transacción de compra de divisas.
+                                                Protege transacciones financieras importantes.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                                    <form method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="toggle_compra">
+                                        {% if config.mfa_compra_enabled %}
+                                            <button type="submit" class="btn btn-outline-danger btn-lg">
+                                                <i class="fas fa-toggle-on me-2"></i> Desactivar
+                                            </button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-success btn-lg">
+                                                <i class="fas fa-toggle-off me-2"></i> Activar
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información adicional -->
+                    {% if config.updated_by %}
+                    <div class="mt-4 pt-3 border-top text-center text-muted small">
+                        <i class="fas fa-clock me-1"></i>
+                        Última modificación: {{ config.updated_at|date:"d/m/Y H:i" }}
+                        por {{ config.updated_by.get_full_name|default:config.updated_by.username }}
+                    </div>
+                    {% endif %}
+
+                </div>
+
+                <div class="card-footer bg-light py-3 rounded-bottom-4">
+                    <div class="text-center">
+                        <a href="{% url 'inicio' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i> Volver al Inicio
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advertencia de seguridad -->
+            <div class="alert alert-warning mt-4 border-0">
+                <div class="d-flex">
+                    <i class="fas fa-exclamation-triangle me-3 mt-1 fs-4"></i>
+                    <div>
+                        <strong>Advertencia de Seguridad</strong>
+                        <p class="mb-0 mt-2">
+                            Desactivar el MFA reduce significativamente la seguridad del sistema. Solo desactívalo si es 
+                            absolutamente necesario y por períodos cortos. Mantener el MFA activo protege contra accesos no autorizados.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+.btn {
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}

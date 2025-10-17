@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import stripe
 
 # Carga las variables de entorno desde el archivo .env
 # La ruta se resuelve para encontrar el .env en el directorio raíz del proyecto
@@ -37,6 +38,12 @@ INSTALLED_APPS = [
     'transacciones',
     'banco',
     'billetera',
+    'notificaciones',
+
+    'mfa',
+    'autenticacion',
+    'operacion_divisas',
+    'stripe_payments',
 ]
 
 MIDDLEWARE = [
@@ -65,6 +72,7 @@ TEMPLATES = [
                 'roles.context_processors.grupo_usuario',
                 'roles.context_processors.grupos_context',
                 'simulador.context_processors.simulador_context',
+                'notificaciones.context_processors.notificaciones_usuario',
             ],
         },
     },
@@ -155,6 +163,16 @@ LOGIN_REDIRECT_URL = '/'   # a dónde redirige tras login exitoso (puedes poner 
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
+# Configuración de mensajes para Bootstrap 5
+from django.contrib.messages import constants as messages
+MESSAGE_TAGS = {
+    messages.DEBUG: 'debug',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'success',
+    messages.WARNING: 'warning',
+    messages.ERROR: 'danger',  # Bootstrap usa 'danger' en lugar de 'error'
+}
+
 DEBUG = True
 LOGGING = {
     'version': 1,
@@ -173,3 +191,9 @@ LOGGING = {
 
 TIME_ZONE = 'America/Asuncion'
 USE_TZ = True
+
+
+STRIPE_PUBLISHABLE_KEY = "pk_test_51SCTnvFayINu5q7y2Xs9rtuAXlKXFESkR2jtUI6yrPVRkbn2mA5lJ3QOMGYcSVVn4V3BbjfJnUHuu1gYxfZspNDz00hJkOST0s"
+STRIPE_SECRET_KEY = "sk_test_51SCTnvFayINu5q7yTXQJO2Old7r5bI35yOYD43Zvas0j0ZXr66aFt4cpy73ZKn61iUPcmGlNkxaZ1ib0XUVYoc8O00cfCofmn1"
+STRIPE_WEBHOOK_SECRET = "whsec_32b4e065fe19a60910470282b157b2536e644e0d6fdf5a01cebcdbee92334f8d"
+stripe.api_key = STRIPE_SECRET_KEY

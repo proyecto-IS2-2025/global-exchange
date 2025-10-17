@@ -115,6 +115,44 @@ test-simulador:
 	python manage.py test simulador
 	@echo "Pruebas de simulador completadas."
 
+cargar-datos:
+	@echo "Cargando datos iniciales..."
+	python manage.py loaddata roles_data.json
+	python manage.py loaddata users_data.json
+	python manage.py loaddata clientes_data.json
+	python manage.py loaddata divisas_data.json
+	python manage.py loaddata medios_data.json
+	@echo "Datos iniciales cargados."
+
+loaddata:
+	@echo "Cargando datos iniciales..."
+	poetry run python manage.py loaddata roles_data.json
+	poetry run python manage.py loaddata users_data.json
+	poetry run python manage.py loaddata clientes_data.json
+	poetry run python manage.py loaddata divisas_data.json
+	poetry run python manage.py loaddata medios_data.json
+	@echo "Datos iniciales cargados."
+
+run:
+	@echo "Ejecutando el servidor de desarrollo con recarga automática..."
+	poetry run python manage.py runserver 
+	@echo "Servidor detenido."
+
+db-init:
+	@echo "Inicializando la base de datos..."
+	poetry run python manage.py makemigrations
+	poetry run python manage.py migrate
+	poetry run python manage.py loaddata roles_data.json
+	poetry run python manage.py loaddata users_data.json
+	poetry run python manage.py loaddata clientes_data.json
+	poetry run python manage.py loaddata divisas_data.json
+	@echo "Datos cargados."
+
+test-medios-acreditacion:
+	@echo "Ejecutando pruebas de medios de acreditación..."
+	poetry run python manage.py test clientes.tests_medios_acreditacion
+	@echo "Pruebas completadas."
+
 delete-migrations:
 	@echo "Eliminando archivos de migraciones..."
 	find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
@@ -147,3 +185,24 @@ help:
 	@echo "tests                    Ejecuta los tests de la app."
 	@echo ""
 #Fin del archivo make
+
+
+reset-db:
+	@echo "Reiniciando la base de datos..."
+	dropdb --username=postgres  --if-exists global_exchange --host=localhost
+	createdb --username=postgres --host=localhost global_exchange
+	poetry run python scripts/delete_migrations.py
+	poetry run python manage.py makemigrations	
+	poetry run python manage.py migrate
+	poetry run python manage.py loaddata roles_data.json
+	poetry run python manage.py loaddata users_data.json
+	poetry run python manage.py loaddata clientes_data.json
+	poetry run python manage.py loaddata divisas_data.json
+	@echo "Base de datos reiniciada y datos cargados."
+
+migraWin:
+	@echo "Realizando migraciones en Windows..."
+	poetry run python manage.py makemigrations
+	poetry run python manage.py migrate
+	@echo "Migraciones realizadas en Windows."
+

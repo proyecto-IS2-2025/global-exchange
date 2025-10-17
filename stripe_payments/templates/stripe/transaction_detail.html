@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Detalle de Transacción - {{ transaction.payment_intent_id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-file-invoice"></i> Detalle de Transacción</h2>
+                <a href="{% url 'stripe_payments:transaction_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver al historial
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estado de la transacción -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-{% if transaction.is_successful %}success{% elif transaction.is_failed %}danger{% else %}warning{% endif %}">
+                <div class="card-body text-center">
+                    {% if transaction.is_successful %}
+                        <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                        <h3 class="text-success">¡Pago Exitoso!</h3>
+                    {% elif transaction.is_failed %}
+                        <i class="fas fa-times-circle fa-4x text-danger mb-3"></i>
+                        <h3 class="text-danger">Pago Fallido</h3>
+                        {% if transaction.error_message %}
+                        <div class="alert alert-danger mt-3">
+                            <strong>Error:</strong> {{ transaction.error_message }}
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <i class="fas fa-clock fa-4x text-warning mb-3"></i>
+                        <h3 class="text-warning">Pago Pendiente</h3>
+                    {% endif %}
+                    <p class="lead mb-0">{{ transaction.get_amount_display }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Información de la transacción -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-info-circle"></i> Información de la Transacción
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">ID de Pago:</dt>
+                        <dd class="col-sm-7">
+                            <small class="font-monospace">{{ transaction.payment_intent_id }}</small>
+                        </dd>
+
+                        {% if transaction.charge_id %}
+                        <dt class="col-sm-5">ID de Cargo:</dt>
+                        <dd class="col-sm-7">
+                            <small class="font-monospace">{{ transaction.charge_id }}</small>
+                        </dd>
+                        {% endif %}
+
+                        <dt class="col-sm-5">Estado:</dt>
+                        <dd class="col-sm-7">
+                            <span class="badge {{ transaction.get_status_badge_class }}">
+                                {{ transaction.get_status_display }}
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-5">Tipo:</dt>
+                        <dd class="col-sm-7">
+                            <span class="badge bg-info">
+                                {{ transaction.get_transaction_type_display }}
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-5">Fecha:</dt>
+                        <dd class="col-sm-7">{{ transaction.created_at|date:"d/m/Y H:i:s" }}</dd>
+
+                        {% if transaction.updated_at != transaction.created_at %}
+                        <dt class="col-sm-5">Última actualización:</dt>
+                        <dd class="col-sm-7">{{ transaction.updated_at|date:"d/m/Y H:i:s" }}</dd>
+                        {% endif %}
+
+                        {% if transaction.client_ip %}
+                        <dt class="col-sm-5">IP del cliente:</dt>
+                        <dd class="col-sm-7"><code>{{ transaction.client_ip }}</code></dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información de pago -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <i class="fas fa-dollar-sign"></i> Información de Pago
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Monto:</dt>
+                        <dd class="col-sm-7">
+                            <strong class="h4">{{ transaction.get_amount_display }}</strong>
+                        </dd>
+
+                        <dt class="col-sm-5">Moneda:</dt>
+                        <dd class="col-sm-7">{{ transaction.currency }}</dd>
+
+                        {% if transaction.divisa_code %}
+                        <dt class="col-sm-5">Divisa operada:</dt>
+                        <dd class="col-sm-7">
+                            <strong>{{ transaction.divisa_code }}</strong>
+                        </dd>
+                        {% endif %}
+
+                        {% if transaction.monto_divisa %}
+                        <dt class="col-sm-5">Monto en divisa:</dt>
+                        <dd class="col-sm-7">
+                            {{ transaction.monto_divisa|floatformat:2 }} {{ transaction.divisa_code }}
+                        </dd>
+                        {% endif %}
+
+                        {% if transaction.tasa_cambio %}
+                        <dt class="col-sm-5">Tasa de cambio:</dt>
+                        <dd class="col-sm-7">
+                            {{ transaction.tasa_cambio|floatformat:6 }}
+                        </dd>
+                        {% endif %}
+
+                        {% if transaction.card_brand %}
+                        <dt class="col-sm-5">Tarjeta:</dt>
+                        <dd class="col-sm-7">
+                            <i class="fab fa-cc-{{ transaction.card_brand|lower }}"></i>
+                            {{ transaction.card_brand }} •••• {{ transaction.card_last4 }}
+                        </dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metadatos (si existen) -->
+    {% if transaction.metadata %}
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-tags"></i> Información Adicional
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        {% for key, value in transaction.metadata.items %}
+                        <dt class="col-sm-3">{{ key|title }}:</dt>
+                        <dd class="col-sm-9">{{ value }}</dd>
+                        {% endfor %}
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Acciones -->
+    {% if transaction.is_successful %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <a href="{% url 'stripe_payments:transaction_receipt' transaction.id %}" 
+                       class="btn btn-success btn-lg" 
+                       target="_blank">
+                        <i class="fas fa-receipt"></i> Ver Recibo
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

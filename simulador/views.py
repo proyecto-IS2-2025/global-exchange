@@ -4,9 +4,9 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 import json
-from decimal import Decimal
+from decimal import Decimal, ROUND_UP, ROUND_DOWN
 from divisas.models import Divisa, TasaCambio, CotizacionSegmento
-from clientes.models import AsignacionCliente, Segmento, Cliente  # ### CAMBIO: import Cliente
+from clientes.models import AsignacionCliente, Segmento, Cliente
 from django.db.models import ObjectDoesNotExist
 from .context_processors import simulador_context as get_simulador_context
 from django.core.serializers.json import DjangoJSONEncoder
@@ -44,7 +44,8 @@ def calcular_simulacion_api(request):
        o, por defecto, el segmento 'general'.
     4. Obtiene la cotización de la divisa más reciente para el segmento del cliente.
     5. Realiza el cálculo de la conversión y la comisión ajustada según el tipo de operación.
-    6. Formatea el resultado en un diccionario JSON y lo devuelve como respuesta.
+    6. Redondea el resultado a 2 decimales favoreciendo siempre a la empresa.
+    7. Formatea el resultado en un diccionario JSON y lo devuelve como respuesta.
 
     :param request: El objeto HttpRequest con datos JSON en el cuerpo.
     :type request: django.http.HttpRequest
@@ -143,10 +144,14 @@ def calcular_simulacion_api(request):
         if tipo_operacion == 'compra':  # Cliente compra divisa (negocio vende)
             tasa_aplicada = cotizacion.valor_venta_unit
             resultado = monto / tasa_aplicada  # Monto en Gs → Divisa extranjera
+            # Redondear hacia ABAJO para que el cliente reciba menos (empresa gana)
+            resultado = resultado.quantize(Decimal('0.01'), rounding=ROUND_DOWN)
             comision_aplicada = cotizacion.comision_venta_ajustada
         else:  # venta - Cliente vende divisa (negocio compra)
             tasa_aplicada = cotizacion.valor_compra_unit
             resultado = monto * tasa_aplicada  # Divisa extranjera → Gs
+            # Redondear hacia ABAJO para que el cliente reciba menos (empresa gana)
+            resultado = resultado.quantize(Decimal('0.01'), rounding=ROUND_DOWN)
             comision_aplicada = cotizacion.comision_compra_ajustada
 
         # 6. Formatear y devolver la respuesta JSON usando DjangoJSONEncoder

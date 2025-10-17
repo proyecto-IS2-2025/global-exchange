@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Resumen de la Compra{% endblock %}
+{% load humanize %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">Resumen de la Compra</h4>
+    </div>
+    <div class="card-body">
+      
+      <!-- Operación -->
+      <h5 class="mb-3">Detalles de la Operación</h5>
+      {% if operacion %}
+        <table class="table table-sm">
+          <tbody>
+            <tr>
+              <th scope="row">Tipo de operación</th>
+              <td class="text-capitalize">{{ operacion.tipo|default:"-" }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Divisa</th>
+              <td>{{ operacion.divisa }} - {{ operacion.divisa_nombre }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Monto a pagar (Gs.)</th>
+              <td>{{ operacion.monto_guaranies|floatformat:0|intcomma }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Tasa de cambio aplicada</th>
+              <td>{{ operacion.tasa_cambio|floatformat:0|intcomma }}</td>
+            </tr>
+            <tr class="table-success">
+              <th scope="row">Monto a recibir</th>
+              <td>
+                <strong>
+                  {% if operacion.divisa == "PYG" %}
+                    {{ operacion.monto_divisa|floatformat:0|intcomma }} {{ operacion.divisa }}
+                  {% else %}
+                    {{ operacion.monto_divisa|floatformat:2|intcomma }} {{ operacion.divisa }}
+                  {% endif %}
+                </strong>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      {% else %}
+        <p class="text-muted">No se encontraron datos de la operación.</p>
+      {% endif %}
+
+      <hr>
+
+      <!-- Medio de pago -->
+      <h5 class="mb-3">Medio de Pago</h5>
+      {% with medio_ses=request.session.medio_pago_seleccionado %}
+      {% with nombre=medio.nombre|default:medio_ses.nombre comision=medio.comision|default:medio_ses.comision tipo=medio.tipo|default:medio_ses.tipo %}
+      <table class="table table-sm">
+        <tbody>
+          <tr>
+            <th scope="row">Medio</th>
+            <td>{{ nombre|default:"-" }}</td>
+          </tr>
+          <tr>
+            <th scope="row">Tipo</th>
+            <td>{{ tipo|default:"-" }}</td>
+          </tr>
+          <tr>
+            <th scope="row">Comisión</th>
+            <td>
+              {% if comision %}{{ comision }}{% else %}<span class="text-muted">No aplica</span>{% endif %}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      {% with campos=medio.campos|default:medio_ses.campos %}
+      {% if campos %}
+        <h6>Datos del medio</h6>
+        <table class="table table-sm table-bordered">
+          <tbody>
+            {% for c in campos %}
+              <tr>
+                <th scope="row" class="bg-light" style="width: 40%;">{{ c.etiqueta }}</th>
+                <td class="fw-semibold">
+                  {# Mostrar sin censura: Entidad, RUC, Titular, Nombre, Documento #}
+                  {% if "entidad" in c.etiqueta|lower or "ruc" in c.etiqueta|lower or "titular" in c.etiqueta|lower or "nombre" in c.etiqueta|lower or "documento" in c.etiqueta|lower %}
+                    {{ c.valor|default:"-" }}
+                  {# Mostrar con censura: Número de cuenta, tarjeta, CVV, etc #}
+                  {% elif c.valor_enmascarado %}
+                    {{ c.valor_enmascarado }}
+                  {% elif c.valor %}
+                    {{ c.valor }}
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+      {% endwith %}
+      {% endwith %}
+      {% endwith %}
+
+    </div>
+    <div class="card-footer text-end">
+      <a href="{% url 'clientes:seleccionar_medio_pago' %}" class="btn btn-outline-secondary me-2">
+        <i class="bi bi-arrow-left"></i> Volver
+      </a>
+      
+
+      <!-- Formulario para confirmar compra (ahora pasa por SumarioCompraView.post() para validar Stripe) -->
+      <form method="post" action="" class="d-inline">
+
+      <!-- Formulario para iniciar verificación MFA -->
+      <form method="post" action="" class="d-inline" id="mfa-form">
+
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success" id="mfa-btn">
+          <i class="bi bi-shield-check me-2"></i> Continuar a Verificación
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('mfa-form');
+    const btn = document.getElementById('mfa-btn');
+    
+    form.addEventListener('submit', function(e) {
+        // Deshabilitar botón y mostrar spinner
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Enviando código de seguridad...';
+    });
+});
+</script>
+{% endblock %}

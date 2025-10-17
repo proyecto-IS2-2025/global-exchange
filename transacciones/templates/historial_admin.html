@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}Panel Administrativo - Historial de Transacciones{% endblock %}
 
@@ -48,6 +49,9 @@
 
 {% block content %}
 <div class="container-fluid mt-4">
+    <a href="{% url 'inicio' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Volver 
+    </a>
     <!-- Header Administrativo -->
     <div class="row mb-4">
         <div class="col-12">
@@ -62,10 +66,7 @@
                             <p class="mb-0 text-white">Gestión completa de todas las transacciones del sistema</p>
                         </div>
                         <div>
-                            <a href="{% url 'inicio' %}" class="btn btn-light me-2">
-                                <i class="bi bi-house me-1"></i>Inicio
-                            </a>
-                            <button class="btn btn-outline-light" onclick="window.print()">
+                            <button class="btn btn-light" onclick="window.print()">
                                 <i class="bi bi-printer me-1"></i>Imprimir
                             </button>
                         </div>
@@ -214,10 +215,10 @@
                                         <label class="form-label">&nbsp;</label>
                                         <div class="d-grid gap-1">
                                             <button type="submit" class="btn btn-primary">
-                                                <i class="bi bi-search"></i>
+                                                <i class="fas fa-filter me-2"></i>Filtrar
                                             </button>
                                             <a href="{% url 'transacciones:historial_admin' %}" class="btn btn-outline-secondary btn-sm">
-                                                <i class="bi bi-x"></i>
+                                                <i class="fas fa-undo me-2"></i>Limpiar
                                             </a>
                                         </div>
                                     </div>
@@ -309,14 +310,24 @@
                                                 <i class="bi bi-arrow-right mx-1"></i>
                                                 <span class="badge bg-light text-dark">{{ transaccion.divisa_destino.code }}</span>
                                             </div>
-                                            <small class="text-muted d-block">Tasa: {{ transaccion.tasa_de_cambio_aplicada }}</small>
+                                            <small class="text-muted d-block">Tasa: Gs. {{ transaccion.tasa_de_cambio_aplicada|floatformat:0|intcomma }}</small>
                                         </td>
                                         <td>
                                             <div class="small">
-                                                <strong>{{ transaccion.monto_origen }} {{ transaccion.divisa_origen.code }}</strong>
+                                                <strong>    {% if transaccion.divisa_origen.code == 'PYG' %}
+        {{ transaccion.monto_origen|floatformat:0|intcomma }}
+    {% else %}
+        {{ transaccion.monto_origen|floatformat:2|intcomma }}
+    {% endif %}
+    {{ transaccion.divisa_origen.code }}</strong>
                                             </div>
                                             <div class="small text-success">
-                                                <strong>{{ transaccion.monto_destino }} {{ transaccion.divisa_destino.code }}</strong>
+                                                <strong>    {% if transaccion.divisa_destino.code == 'PYG' %}
+        {{ transaccion.monto_destino|floatformat:0|intcomma }}
+    {% else %}
+        {{ transaccion.monto_destino|floatformat:2|intcomma }}
+    {% endif %}
+    {{ transaccion.divisa_destino.code }}</strong>
                                             </div>
                                         </td>
                                         <td>
@@ -334,15 +345,8 @@
                                             <div class="btn-group btn-group-sm">
                                                 <a href="{% url 'transacciones:detalle' numero_transaccion=transaccion.numero_transaccion %}" 
                                                    class="btn btn-outline-primary btn-sm" title="Ver Detalle">
-                                                    <i class="bi bi-eye"></i>
+                                                    <i class="fas fa-envelope"></i> Ver Detalle
                                                 </a>
-                                                {% if transaccion.estado != 'cancelada' and transaccion.estado != 'anulada' %}
-                                                    <button class="btn btn-outline-warning btn-sm" 
-                                                            title="Cambiar Estado"
-                                                            onclick="showChangeStateModal('{{ transaccion.numero_transaccion }}', '{{ transaccion.get_estado_display }}')">
-                                                        <i class="bi bi-arrow-repeat"></i>
-                                                    </button>
-                                                {% endif %}
                                             </div>
                                         </td>
                                     </tr>

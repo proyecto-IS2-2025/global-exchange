@@ -9,8 +9,8 @@ categorización por segmentos.
 """
 
 from django.db import models
-from users.models import CustomUser
 from django.core.validators import MinValueValidator, MaxValueValidator
+from decimal import Decimal
 
 from django.db import models
 from users.models import CustomUser
@@ -245,12 +245,31 @@ class ClienteMedioDePago(models.Model):
 
     @property
     def campos_completos(self):
-        """Verificar si todos los campos requeridos están completos"""
-        try:
-            self.clean()
-            return True
-        except ValidationError:
+        """
+        Verifica si todos los campos requeridos del medio de pago están presentes y tienen
+        un valor no vacío en self.datos_campos (JSONField).
+        """
+        if not self.medio_de_pago:
             return False
+            
+        # Obtener los nombres amigables de los campos requeridos para ESTE medio de pago.
+        # CORRECCIÓN: Reemplazar el nombre de la relación incorrecto por 'campos'
+        campos_requeridos = self.medio_de_pago.campos.filter( 
+            is_required=True
+        ).values_list('nombre_campo', flat=True)
+        
+        # Si no hay campos requeridos, se considera completo
+        if not campos_requeridos:
+            return True
+
+        # Verificar cada nombre de campo requerido en los datos del cliente
+        for nombre_campo in campos_requeridos:
+            # 🔴 CORRECCIÓN: Verifica existencia y que el valor no esté vacío (e.g., '', None)
+            valor = self.datos_campos.get(nombre_campo)
+            if not valor: 
+                return False
+
+        return True
 
 class HistorialClienteMedioDePago(models.Model):
     """
@@ -290,9 +309,15 @@ class HistorialClienteMedioDePago(models.Model):
 
 
 
+# --- Límite Diario: Monto con validación de valor mínimo ---
 class LimiteDiario(models.Model):
     fecha = models.DateField(unique=True,help_text="Fecha a la que aplica el límite")
-    monto = models.DecimalField(max_digits=20, decimal_places=2)
+    monto = models.DecimalField(
+        max_digits=20, 
+        decimal_places=2,
+        # ✅ Validación para montos mayores o iguales a cero.
+        validators=[MinValueValidator(Decimal('0.00'))]
+    )
     inicio_vigencia = models.DateTimeField(help_text="Fecha y hora en que entra en vigencia el límite")
 
     creado = models.DateTimeField(auto_now_add=True)
@@ -305,9 +330,15 @@ class LimiteDiario(models.Model):
         return f"Límite Diario {self.fecha}: {self.monto}"
 
 
+# --- Límite Mensual: Monto con validación de valor mínimo ---
 class LimiteMensual(models.Model):
     mes = models.DateField( unique=True,help_text="Se guarda como el primer día del mes")
-    monto = models.DecimalField(max_digits=15, decimal_places=2)
+    monto = models.DecimalField(
+        max_digits=15, 
+        decimal_places=2,
+        # ✅ Validación para montos mayores o iguales a cero.
+        validators=[MinValueValidator(Decimal('0.00'))]
+    )
     inicio_vigencia = models.DateTimeField()
     creado = models.DateTimeField(auto_now_add=True)
     actualizado = models.DateTimeField(auto_now=True)
