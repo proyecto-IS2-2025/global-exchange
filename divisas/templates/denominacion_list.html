@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block extra_head %}
+<style>
+.badge-divisa {
+    color: rgb(0, 0, 0) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    font-weight: 600;
+    padding: 0.5rem 0.75rem;
+    border: 2px solid rgba(5, 4, 4, 0.3);
+}
+
+/* Ajuste de contraste automático basado en luminosidad */
+.badge-divisa[style*="background-color: #f"] {
+    color: #212529 !important;
+    text-shadow: none;
+    border-color: rgba(0, 0, 0, 0.1);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-primary text-white py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-money-bill-wave me-2"></i>
+                    Gestión de Denominaciones
+                </h4>
+                {% if perms.divisas.add_denominacion %}
+                <a href="{% url 'divisas:denominacion_quick_create' %}" class="btn btn-success">
+                    <i class="fas fa-plus me-1"></i> Nueva Denominación
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <!-- Filtros -->
+            <form method="get" class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <select name="divisa" class="form-select">
+                        <option value="">Todas las divisas</option>
+                        {% for divisa in divisas %}
+                            <option value="{{ divisa.id }}" {% if request.GET.divisa == divisa.id|stringformat:"s" %}selected{% endif %}>
+                                {{ divisa.code }} - {{ divisa.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="tipo" class="form-select">
+                        <option value="">Todos los tipos</option>
+                        <option value="billete" {% if request.GET.tipo == 'billete' %}selected{% endif %}>Billetes</option>
+                        <option value="moneda" {% if request.GET.tipo == 'moneda' %}selected{% endif %}>Monedas</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="estado" class="form-select">
+                        <option value="">Todos los estados</option>
+                        <option value="activas" {% if request.GET.estado == 'activas' %}selected{% endif %}>Solo activas</option>
+                        <option value="inactivas" {% if request.GET.estado == 'inactivas' %}selected{% endif %}>Solo inactivas</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-1"></i> Filtrar
+                    </button>
+                </div>
+            </form>
+
+            <!-- Tabla -->
+            {% if denominaciones %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Divisa</th>
+                            <th>Valor</th>
+                            <th>Tipo</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for denom in denominaciones %}
+                        <tr>
+                            <td>
+                                <span class="badge badge-divisa" data-color="{{ denom.color }}">
+                                    {{ denom.divisa.code }}
+                                </span>
+                            </td>
+                            <td>
+                                <strong>{{ denom.valor_formateado }}</strong>
+                            </td>
+                            <td>
+                                {% if denom.es_billete %}
+                                    <i class="fas fa-money-bill text-success me-1"></i> Billete
+                                {% else %}
+                                    <i class="fas fa-coins text-warning me-1"></i> Moneda
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if denom.is_active %}
+                                    <span class="badge bg-success">Activa</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactiva</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    {% if perms.divisas.change_denominacion %}
+                                    <a href="{% url 'divisas:denominacion_form' pk=denom.pk %}" 
+                                       class="btn btn-sm btn-warning" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form method="post" action="{% url 'divisas:denominacion_toggle' pk=denom.pk %}" 
+                                          style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" 
+                                                class="btn btn-sm btn-{% if denom.is_active %}danger{% else %}success{% endif %}"
+                                                title="{% if denom.is_active %}Desactivar{% else %}Activar{% endif %}">
+                                            <i class="fas fa-power-off"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-warning" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                No se encontraron denominaciones.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Ajustar contraste de texto automáticamente según luminosidad del color de fondo
+    const badges = document.querySelectorAll('.badge-divisa');
+    
+    badges.forEach(badge => {
+        const bgColor = badge.dataset.color || '#6c757d';
+        
+        // Convertir hex a RGB
+        const hex = bgColor.replace('#', '');
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        
+        // Calcular luminosidad (fórmula estándar)
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        
+        // Si el fondo es claro, usar texto oscuro
+        if (luminance > 0.5) {
+            badge.style.color = '#212529';
+            badge.style.textShadow = 'none';
+            badge.style.borderColor = 'rgba(0, 0, 0, 0.1)';
+        } else {
+            badge.style.color = 'white';
+            badge.style.textShadow = '0 1px 2px rgba(0, 0, 0, 0.3)';
+            badge.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+        }
+    });
+});
+</script>
+{% endblock %}
