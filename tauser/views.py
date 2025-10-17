@@ -11,6 +11,8 @@ from django.db import models
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.crypto import get_random_string
 import logging
+from django.views.decorators.http import require_http_methods
+from .models import Terminal, PinAcceso
 
 from .models import (
     Terminal, 
@@ -30,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 class TerminalInicioView(View):
     """Pantalla de inicio de la terminal: Ingreso de PIN"""
-    template_name = 'tauser/inicio.html'
+    template_name = 'inicio_tauser.html'
     
     def get(self, request, terminal_codigo):
         """Muestra la pantalla de ingreso de PIN"""
@@ -48,7 +50,7 @@ class TerminalInicioView(View):
         
         if not pin:
             messages.error(request, "Debe ingresar un PIN.")
-            return redirect('tauser:inicio', terminal_codigo=terminal_codigo)
+            return redirect('tauser:0990', terminal_codigo=terminal_codigo)
         
         try:
             # Buscar PIN válido
@@ -90,7 +92,7 @@ class TerminalInicioView(View):
 
 class TransaccionesClienteView(View):
     """Muestra las transacciones pendientes del cliente"""
-    template_name = 'tauser/transacciones_cliente.html'
+    template_name = 'transacciones_cliente.html'
 
     def get(self, request, terminal_codigo, cliente_id):
         terminal = get_object_or_404(Terminal, codigo=terminal_codigo, is_activa=True)
@@ -351,7 +353,7 @@ class CerrarSesionTerminalView(View):
 class TerminalListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     """Lista todas las terminales del sistema"""
     model = Terminal
-    template_name = 'tauser/terminal_list.html'
+    template_name = 'terminal_list.html'
     context_object_name = 'terminales'
     permission_required = 'tauser.view_terminal'
     paginate_by = 20
@@ -387,7 +389,7 @@ class TerminalCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView
     """Crea una nueva terminal"""
     model = Terminal
     form_class = TerminalForm
-    template_name = 'tauser/terminal_form.html'
+    template_name = 'terminal_form.html'
     success_url = reverse_lazy('tauser:terminal_list')
     permission_required = 'tauser.add_terminal'
 
@@ -406,7 +408,7 @@ class TerminalUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView
     """Actualiza una terminal existente"""
     model = Terminal
     form_class = TerminalForm
-    template_name = 'tauser/terminal_form.html'
+    template_name = 'terminal_form.html'
     success_url = reverse_lazy('tauser:terminal_list')
     permission_required = 'tauser.change_terminal'
 
@@ -424,7 +426,7 @@ class TerminalUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView
 class TerminalDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     """Elimina una terminal (soft delete - marca como inactiva)"""
     model = Terminal
-    template_name = 'tauser/terminal_confirm_delete.html'
+    template_name = 'terminal_confirm_delete.html'
     success_url = reverse_lazy('tauser:terminal_list')
     permission_required = 'tauser.delete_terminal'
 
@@ -440,7 +442,7 @@ class TerminalDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView
 class TerminalDetailView(LoginRequiredMixin, PermissionRequiredMixin, View):
     """Detalle de una terminal con su inventario"""
     permission_required = 'tauser.view_terminal'
-    template_name = 'tauser/terminal_detail.html'
+    template_name = 'terminal_detail.html'
 
     def get(self, request, pk):
         terminal = get_object_or_404(Terminal.objects.prefetch_related('inventario__divisa'), pk=pk)
@@ -482,7 +484,7 @@ class TerminalDetailView(LoginRequiredMixin, PermissionRequiredMixin, View):
 class InventarioTerminalView(LoginRequiredMixin, PermissionRequiredMixin, View):
     """Gestiona el inventario de divisas de una terminal"""
     permission_required = 'tauser.change_inventariodivisaterminal'
-    template_name = 'tauser/inventario_terminal.html'
+    template_name = 'inventario_terminal.html'
 
     def get(self, request, terminal_pk):
         terminal = get_object_or_404(Terminal, pk=terminal_pk)
@@ -594,5 +596,135 @@ def generar_pin_cliente(request, cliente_id):
     context = {
         'cliente': cliente,
     }
+
+    return render(request, 'generar_pin.html', context)
+
+def es_cliente(user):
+    """Verifica si el usuario pertenece al grupo 'cliente'"""
+    return user.is_authenticated and user.groups.filter(name='cliente').exists()
+
+
+@login_required
+@user_passes_test(es_cliente, login_url='inicio')
+def lista_terminales(request):
+    """
+    Vista para mostrar la lista de terminales activos disponibles.
+    Solo accesible para usuarios del grupo 'cliente'.
+    """
+    terminales = Terminal.objects.filter(is_active=True).order_by('orden', 'nombre')
     
-    return render(request, 'tauser/generar_pin.html', context)
+    context = {
+        'terminales': terminales,
+        'titulo': 'Seleccionar Terminal TAUSER'
+    }
+    
+    return render(request, 'tauser/lista_terminales.html', context)
+
+
+@login_required
+@user_passes_test(es_cliente, login_url='inicio')
+def seleccionar_terminal(request, terminal_codigo):
+    """
+    Vista para seleccionar un terminal y mostrar la pantalla de ingreso de PIN.
+    """
+    terminal = get_object_or_404(Terminal, codigo=terminal_codigo, is_active=True)
+    
+    # Guardar el terminal seleccionado en la sesión
+    request.session['terminal_codigo'] = terminal.codigo
+    request.session['terminal_nombre'] = terminal.nombre
+    
+    # Redirigir a la vista de inicio del terminal
+    return redirect('tauser:inicio_tauser', terminal_codigo=terminal.codigo)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def inicio_tauser(request, terminal_codigo):
+    """
+    Vista principal del terminal TAUSER donde se ingresa el PIN.
+    """
+    terminal = get_object_or_404(Terminal, codigo=terminal_codigo, is_active=True)
+    
+    if request.method == 'POST':
+        pin_ingresado = request.POST.get('pin_ingresado', '').strip()
+        
+        if not pin_ingresado:
+            messages.error(request, 'Por favor ingrese su PIN.')
+            return render(request, 'tauser/inicio.html', {'terminal': terminal})
+        
+        try:
+            # Buscar PIN válido
+            pin_acceso = PinAcceso.objects.get(
+                pin=pin_ingresado,
+                terminal=terminal,
+                usado=False,
+                fecha_expiracion__gt=timezone.now()
+            )
+            
+            # Marcar el PIN como usado
+            pin_acceso.usado = True
+            pin_acceso.fecha_uso = timezone.now()
+            pin_acceso.save()
+            
+            # Guardar información en la sesión
+            request.session['pin_validado'] = True
+            request.session['pin_acceso_id'] = pin_acceso.id
+            request.session['cliente_id'] = pin_acceso.cliente.id
+            
+            messages.success(
+                request, 
+                f'¡Bienvenido! Acceso autorizado al terminal {terminal.nombre}'
+            )
+            
+            # Redirigir al menú principal del TAUSER
+            return redirect('tauser:menu_principal', terminal_codigo=terminal.codigo)
+            
+        except PinAcceso.DoesNotExist:
+            messages.error(
+                request, 
+                'PIN inválido, expirado o ya utilizado. Por favor verifique e intente nuevamente.'
+            )
+            return render(request, 'tauser/inicio.html', {'terminal': terminal})
+    
+    # GET request
+    return render(request, 'tauser/inicio.html', {'terminal': terminal})
+
+
+@login_required
+def menu_principal(request, terminal_codigo):
+    """
+    Vista del menú principal después de validar el PIN.
+    """
+    # Verificar que el PIN esté validado
+    if not request.session.get('pin_validado'):
+        messages.warning(request, 'Debe ingresar un PIN válido primero.')
+        return redirect('tauser:inicio_tauser', terminal_codigo=terminal_codigo)
+    
+    terminal = get_object_or_404(Terminal, codigo=terminal_codigo, is_active=True)
+    
+    # Obtener información del cliente desde la sesión
+    cliente_id = request.session.get('cliente_id')
+    
+    context = {
+        'terminal': terminal,
+        'cliente_id': cliente_id,
+    }
+    
+    return render(request, 'tauser/menu_principal.html', context)
+
+
+@login_required
+def cerrar_sesion_tauser(request, terminal_codigo):
+    """
+    Cierra la sesión del TAUSER y limpia la sesión.
+    """
+    # Limpiar variables de sesión relacionadas con TAUSER
+    request.session.pop('pin_validado', None)
+    request.session.pop('pin_acceso_id', None)
+    request.session.pop('cliente_id', None)
+    request.session.pop('terminal_codigo', None)
+    request.session.pop('terminal_nombre', None)
+    
+    messages.info(request, 'Sesión del terminal cerrada exitosamente.')
+    
+    return redirect('tauser:lista_terminales')
