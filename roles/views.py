@@ -240,9 +240,13 @@ class GroupDetailPermissionsView(RoleRequiredMixin, UpdateView):
     
     def _agrupar_permisos_por_modulo(self):
         """
-        Agrupa todos los permisos disponibles por módulo con metadata.
+        Agrupa SOLO permisos personalizados por módulo con metadata.
+        Los permisos nativos de Django son ignorados.
         """
         modulos = {}
+        
+        # ✅ CAMBIO CLAVE: Crear set de codenames custom para filtrado rápido
+        codenames_custom = {perm_def['codename'] for perm_def in TODOS_LOS_PERMISOS}
         
         # Obtener todos los permisos del sistema
         all_permissions = Permission.objects.select_related('content_type').all()
@@ -250,12 +254,18 @@ class GroupDetailPermissionsView(RoleRequiredMixin, UpdateView):
         for perm in all_permissions:
             app_label = perm.content_type.app_label
             
-            # Filtrar solo apps relevantes
-            if app_label not in ['clientes', 'divisas', 'transacciones', 'medios_pago', 'users', 'auth']:
+            # ✅ FILTRO 1: Solo apps relevantes
+            if app_label not in ['clientes', 'divisas', 'transacciones', 'medios_pago', 'users', 'mfa']:
                 continue
             
-            # Obtener metadata
+            # ✅ FILTRO 2: Solo permisos custom (ignorar nativos)
+            if perm.codename not in codenames_custom:
+                continue
+            
+            # Obtener metadata (siempre existirá porque ya filtramos)
             metadata = self._get_permission_metadata(perm.codename)
+            
+            # Usar módulo de metadata en lugar de app_label
             modulo_nombre = metadata['modulo'] if metadata else app_label
             
             # Inicializar módulo si no existe
@@ -270,12 +280,12 @@ class GroupDetailPermissionsView(RoleRequiredMixin, UpdateView):
                 'id': perm.id,
                 'nombre': perm.name,
                 'codename': perm.codename,
-                'descripcion': metadata['descripcion_detallada'] if metadata else '',
-                'ejemplo': metadata['ejemplo_uso'] if metadata else '',
-                'nivel_riesgo_display': metadata['nivel_riesgo_display'] if metadata else 'Medio',
-                'nivel_riesgo_badge': metadata['nivel_riesgo_badge'] if metadata else 'info',
+                'descripcion': metadata['descripcion_detallada'],
+                'ejemplo': metadata['ejemplo_uso'],
+                'nivel_riesgo_display': metadata['nivel_riesgo_display'],
+                'nivel_riesgo_badge': metadata['nivel_riesgo_badge'],
                 'app_label': app_label,
-                'es_personalizado': bool(metadata),
+                'es_personalizado': True,  # Siempre True ahora
             }
             
             modulos[modulo_nombre]['permisos'].append(perm_data)
@@ -294,6 +304,7 @@ class GroupDetailPermissionsView(RoleRequiredMixin, UpdateView):
             'transacciones': 'Transacciones',
             'medios_pago': 'Medios de Pago',
             'users': 'Usuarios',
+            'mfa': 'Autenticación MFA',
             'usuarios': 'Usuarios',
             'configuracion': 'Configuración',
             'auth': 'Autenticación',
@@ -340,15 +351,22 @@ class SearchPermissionsView(LoginRequiredMixin, View):
         if len(query) < 2:
             return JsonResponse([], safe=False)
         
+        # ✅ CAMBIO: Crear set de codenames custom
+        codenames_custom = {perm_def['codename'] for perm_def in TODOS_LOS_PERMISOS}
+        
         # Buscar permisos que coincidan
         permissions = Permission.objects.filter(
             Q(name__icontains=query) |
             Q(codename__icontains=query) |
             Q(content_type__app_label__icontains=query)
-        ).select_related('content_type')[:20]
+        ).select_related('content_type')[:50]  # Aumentado límite
         
         results = []
         for perm in permissions:
+            # ✅ FILTRO: Solo permisos custom
+            if perm.codename not in codenames_custom:
+                continue
+            
             # Obtener metadata
             metadata = self._get_permission_metadata(perm.codename)
             
@@ -357,14 +375,14 @@ class SearchPermissionsView(LoginRequiredMixin, View):
                 'name': perm.name,
                 'codename': perm.codename,
                 'app_label': perm.content_type.app_label,
-                'descripcion': metadata['descripcion_detallada'] if metadata else '',
-                'ejemplo': metadata['ejemplo_uso'] if metadata else '',
-                'modulo': metadata['modulo'] if metadata else perm.content_type.app_label,
-                'nivel_riesgo_display': metadata['nivel_riesgo_display'] if metadata else 'Medio',
-                'nivel_riesgo_badge': metadata['nivel_riesgo_badge'] if metadata else 'info',
+                'descripcion': metadata['descripcion_detallada'],
+                'ejemplo': metadata['ejemplo_uso'],
+                'modulo': metadata['modulo'],
+                'nivel_riesgo_display': metadata['nivel_riesgo_display'],
+                'nivel_riesgo_badge': metadata['nivel_riesgo_badge'],
             })
         
-        return JsonResponse(results, safe=False)
+        return JsonResponse(results[:20], safe=False)
     
     def _get_permission_metadata(self, codename):
         """Obtiene metadata de un permiso personalizado"""
@@ -480,10 +498,14 @@ class PermissionMatrixView(RoleRequiredMixin, ListView):
         # Obtener todos los grupos
         groups = self.get_queryset()
         
+        # ✅ CAMBIO: Filtrar solo permisos custom
+        codenames_custom = {perm_def['codename'] for perm_def in TODOS_LOS_PERMISOS}
+        
         # Obtener todos los permisos relevantes
         all_permissions = Permission.objects.filter(
+            codename__in=codenames_custom,  # ✅ Solo custom
             content_type__app_label__in=[
-                'clientes', 'divisas', 'transacciones', 'medios_pago', 'users', 'auth'
+                'clientes', 'divisas', 'transacciones', 'medios_pago', 'users', 'mfa'
             ]
         ).select_related('content_type').order_by(
             'content_type__app_label', 'name'

@@ -30,7 +30,7 @@
   </div>
   {% endif %}
   
-  {% if perms.medios_pago.manage_catalogo_medios_pago %}
+  {% if perms.medios_pago.view_catalogo_medios_pago %}
   <div class="col">
     <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-hover animate-stagger delay-4">
       <div class="display-3 mb-3"><i class="fas fa-credit-card"></i></div>
@@ -40,7 +40,7 @@
   </div>
   {% endif %}
   
-  {% if perms.divisas.view_divisa %}
+  {% if perms.divisas.view_divisas %}
   <div class="col">
     <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-hover animate-stagger delay-5">
       <div class="display-3 mb-3"><i class="fas fa-coins"></i></div>
@@ -80,7 +80,7 @@
   </div>
   {% endif %}
   
-  {% if perms.clientes.manage_descuento %}
+  {% if perms.clientes.view_descuentos_segmento %}
   <div class="col">
     <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-hover animate-stagger delay-9">
       <div class="display-3 mb-3"><i class="fas fa-percent"></i></div>
@@ -110,7 +110,6 @@
   <hr>
   <div class="d-flex justify-content-center gap-3 mt-3">
     <a href="mailto:admin@casadecambios.com" class="btn btn-warning btn-sm"><i class="fas fa-envelope me-2"></i>Contactar administrador</a>
-    <a href="{% url 'inicio' %}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-home me-2"></i>Volver al inicio</a>
   </div>
 </div>
 {% endif %}

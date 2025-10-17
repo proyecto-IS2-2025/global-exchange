@@ -1,16 +1,15 @@
 """
 Comando para asignar permisos a los roles existentes del sistema.
-Versión actualizada con TODOS los permisos personalizados.
+✅ VERSIÓN LIMPIA - Solo permisos personalizados custom.
 """
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group, Permission
 from django.db import transaction
-from django.contrib.contenttypes.models import ContentType
 from roles.models import RoleStatus
 
 
 class Command(BaseCommand):
-    help = 'Asigna permisos a los roles existentes del sistema'
+    help = 'Asigna permisos custom a los roles del sistema'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -24,6 +23,7 @@ class Command(BaseCommand):
         
         self.stdout.write(self.style.HTTP_INFO('=' * 60))
         self.stdout.write(self.style.HTTP_INFO('  CONFIGURACIÓN DE PERMISOS POR ROL'))
+        self.stdout.write(self.style.HTTP_INFO('  ✅ SOLO PERMISOS CUSTOM'))
         self.stdout.write(self.style.HTTP_INFO('=' * 60))
         self.stdout.write('')
         
@@ -32,11 +32,11 @@ class Command(BaseCommand):
         
         with transaction.atomic():
             self._configure_dev(verbose)
+            self._configure_administrador(verbose)
             self._configure_operador(verbose)
             self._configure_cliente(verbose)
             self._configure_usuario_registrado(verbose)
             self._configure_observador(verbose)
-            self._configure_administrador(verbose)
         
         self.stdout.write('')
         self.stdout.write(self.style.SUCCESS('=' * 60))
@@ -44,10 +44,8 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('=' * 60))
 
     def _ensure_role_status(self):
-        """
-        ✅ Asegura que todos los grupos tengan RoleStatus
-        """
-        self.stdout.write(self.style.HTTP_INFO('\n🔄 Verificando RoleStatus...'))
+        """✅ Asegura que todos los grupos tengan RoleStatus"""
+        self.stdout.write(self.style.HTTP_INFO('\n📄 Verificando RoleStatus...'))
         
         groups = Group.objects.all()
         created_count = 0
@@ -76,9 +74,7 @@ class Command(BaseCommand):
         self.stdout.write('')
 
     def _get_permissions(self, codenames, verbose=False):
-        """
-        Obtiene objetos Permission desde una lista de codenames.
-        """
+        """Obtiene objetos Permission desde una lista de codenames custom."""
         permissions = Permission.objects.filter(codename__in=codenames)
         
         if verbose:
@@ -122,30 +118,28 @@ class Command(BaseCommand):
         )
 
     def _configure_dev(self, verbose):
-        """Configurar permisos para DESARROLLADOR"""
+        """
+        ✅ DESARROLLADOR - Acceso total a permisos custom
+        """
         codenames = [
-            # ═══════════════════════════════════════════════════════
-            # USUARIOS
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # USUARIOS (5 custom)
+            # ═══════════════════════════════════════════════════════════════
             'manage_usuarios',
             'view_all_usuarios',
             'manage_usuario_roles',
             'activate_deactivate_usuarios',
             'reset_usuario_password',
-            'view_customuser',
-            'add_customuser',
-            'change_customuser',
-            'delete_customuser',
             
-            # ═══════════════════════════════════════════════════════
-            # MFA (SOLO ADMIN)
-            # ═══════════════════════════════════════════════════════
-            'view_mfa_config',      # ✅ AGREGADO
-            'manage_mfa_config',    # ✅ AGREGADO
+            # ═══════════════════════════════════════════════════════════════
+            # MFA (2 custom)
+            # ═══════════════════════════════════════════════════════════════
+            'view_mfa_config',
+            'manage_mfa_config',
             
-            # ═══════════════════════════════════════════════════════
-            # CLIENTES
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # CLIENTES (13 custom)
+            # ═══════════════════════════════════════════════════════════════
             'view_all_clientes',
             'view_assigned_clientes',
             'manage_cliente_assignment',
@@ -158,40 +152,10 @@ class Command(BaseCommand):
             'view_descuentos_segmento',
             'manage_descuentos_segmento',
             'view_historial_descuentos',
-            'view_cliente',
-            'add_cliente',
-            'change_cliente',
-            'delete_cliente',
-            'view_asignacioncliente',
-            'add_asignacioncliente',
-            'change_asignacioncliente',
-            'delete_asignacioncliente',
-            'view_clientemediodepago',
-            'add_clientemediodepago',
-            'change_clientemediodepago',
-            'delete_clientemediodepago',
-            'view_segmento',
-            'add_segmento',
-            'change_segmento',
-            'delete_segmento',
-            'view_descuento',
-            'add_descuento',
-            'change_descuento',
-            'delete_descuento',
-            'view_historialdescuentos',
-            'view_historialclientemediodepago',
-            'view_limitediario',
-            'add_limitediario',
-            'change_limitediario',
-            'delete_limitediario',
-            'view_limitemensual',
-            'add_limitemensual',
-            'change_limitemensual',
-            'delete_limitemensual',
             
-            # ═══════════════════════════════════════════════════════
-            # TRANSACCIONES
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # TRANSACCIONES (7 custom)
+            # ═══════════════════════════════════════════════════════════════
             'view_transacciones_globales',
             'view_transacciones_asignadas',
             'manage_estados_transacciones',
@@ -199,15 +163,10 @@ class Command(BaseCommand):
             'cancel_propias_transacciones',
             'view_historial_transacciones',
             'export_transacciones',
-            'view_transaccion',
-            'add_transaccion',
-            'change_transaccion',
-            'delete_transaccion',
-            'view_historialtransaccion',
             
-            # ═══════════════════════════════════════════════════════
-            # DIVISAS
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # DIVISAS (7 custom)
+            # ═══════════════════════════════════════════════════════════════
             'view_cotizaciones_segmento',
             'manage_cotizaciones_segmento',
             'realizar_operacion',
@@ -215,67 +174,40 @@ class Command(BaseCommand):
             'view_divisas',
             'manage_tasas_cambio',
             'view_tasas_cambio',
-            'view_divisa',
-            'add_divisa',
-            'change_divisa',
-            'delete_divisa',
-            'view_tasacambio',
-            'add_tasacambio',
-            'change_tasacambio',
-            'delete_tasacambio',
-            'view_cotizacionsegmento',
-            'add_cotizacionsegmento',
-            'change_cotizacionsegmento',
-            'delete_cotizacionsegmento',
             
-            # ═══════════════════════════════════════════════════════
-            # MEDIOS DE PAGO
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # MEDIOS DE PAGO (2 custom)
+            # ═══════════════════════════════════════════════════════════════
             'view_catalogo_medios_pago',
             'manage_catalogo_medios_pago',
-            'view_mediodepago',
-            'add_mediodepago',
-            'change_mediodepago',
-            'delete_mediodepago',
-            
-            # ═══════════════════════════════════════════════════════
-            # ROLES Y GRUPOS
-            # ═══════════════════════════════════════════════════════
-            'view_group',
-            'add_group',
-            'change_group',
-            'delete_group',
-            'view_permission',
         ]
-
+        # Total: 35 permisos custom
+        
         self._assign_permissions('dev', codenames, verbose)
 
     def _configure_administrador(self, verbose):
-        """Configurar permisos para ADMINISTRADOR"""
+        """
+        ✅ ADMINISTRADOR - Casi todos los permisos custom (excepto algunos críticos)
+        """
         codenames = [
-            # ═══════════════════════════════════════════════════════
-            # USUARIOS
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # USUARIOS (5 custom)
+            # ═══════════════════════════════════════════════════════════════
             'manage_usuarios',
             'view_all_usuarios',
             'manage_usuario_roles',
             'activate_deactivate_usuarios',
             'reset_usuario_password',
-            'view_customuser',
-            'add_customuser',
-            'change_customuser',
-            'delete_customuser',
             
-            # ═══════════════════════════════════════════════════════
-            # MFA (SOLO ADMIN)
-            # ═══════════════════════════════════════════════════════
-            'view_mfa_config',     
-            'manage_mfa_config', 
-            'view_transacciones_globales',   
+            # ═══════════════════════════════════════════════════════════════
+            # MFA (2 custom)
+            # ═══════════════════════════════════════════════════════════════
+            'view_mfa_config',
+            'manage_mfa_config',
             
-            # ═══════════════════════════════════════════════════════
-            # CLIENTES
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # CLIENTES (13 custom)
+            # ═══════════════════════════════════════════════════════════════
             'view_all_clientes',
             'view_assigned_clientes',
             'manage_cliente_assignment',
@@ -288,41 +220,20 @@ class Command(BaseCommand):
             'view_descuentos_segmento',
             'manage_descuentos_segmento',
             'view_historial_descuentos',
-            'view_cliente',
-            'add_cliente',
-            'change_cliente',
-            'delete_cliente',
-            'view_asignacioncliente',
-            'add_asignacioncliente',
-            'change_asignacioncliente',
-            'delete_asignacioncliente',
-            'view_clientemediodepago',
-            'add_clientemediodepago',
-            'change_clientemediodepago',
-            'delete_clientemediodepago',
-            'view_segmento',
-            'add_segmento',
-            'change_segmento',
-            'delete_segmento',
-            'view_descuento',
-            'add_descuento',
-            'change_descuento',
-            'delete_descuento',
-            'view_historialdescuentos',
-            'view_historialclientemediodepago',
-            'view_limitediario',
-            'add_limitediario',
-            'change_limitediario',
-            'delete_limitediario',
-            'view_limitemensual',
-            'add_limitemensual',
-            'change_limitemensual',
-            'delete_limitemensual',
             
+            # ═══════════════════════════════════════════════════════════════
+            # TRANSACCIONES (6 custom - sin reversiones)
+            # ═══════════════════════════════════════════════════════════════
+            'view_transacciones_globales',
+            'view_transacciones_asignadas',
+            'manage_estados_transacciones',
+            # 'manage_reversiones_transacciones',  # Solo dev
+            'view_historial_transacciones',
+            'export_transacciones',
             
-            # ═══════════════════════════════════════════════════════
-            # DIVISAS
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # DIVISAS (7 custom)
+            # ═══════════════════════════════════════════════════════════════
             'view_cotizaciones_segmento',
             'manage_cotizaciones_segmento',
             'realizar_operacion',
@@ -330,223 +241,148 @@ class Command(BaseCommand):
             'view_divisas',
             'manage_tasas_cambio',
             'view_tasas_cambio',
-            'view_divisa',
-            'add_divisa',
-            'change_divisa',
-            'delete_divisa',
-            'view_tasacambio',
-            'add_tasacambio',
-            'change_tasacambio',
-            'delete_tasacambio',
-            'view_cotizacionsegmento',
-            'add_cotizacionsegmento',
-            'change_cotizacionsegmento',
-            'delete_cotizacionsegmento',
             
-            # ═══════════════════════════════════════════════════════
-            # MEDIOS DE PAGO
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # MEDIOS DE PAGO (2 custom)
+            # ═══════════════════════════════════════════════════════════════
             'view_catalogo_medios_pago',
             'manage_catalogo_medios_pago',
-            'view_mediodepago',
-            'add_mediodepago',
-            'change_mediodepago',
-            'delete_mediodepago',
-            
-            # ═══════════════════════════════════════════════════════
-            # ROLES Y GRUPOS
-            # ═══════════════════════════════════════════════════════
-            'view_group',
-            'add_group',
-            'change_group',
-            'delete_group',
-            'view_permission',
-
-            # ═══════════════════════════════════════════════════════════════
-            # TRANSACCIONES  
-            # ═══════════════════════════════════════════════════════════════
-            'view_transacciones_globales',        
-            'view_transacciones_asignadas',
-            'manage_estados_transacciones',
-            'manage_reversiones_transacciones',
-            'view_historial_transacciones',
-            'export_transacciones',
-            'view_transaccion',
-            'add_transaccion',
-            'change_transaccion',
-            'view_historialtransaccion',
         ]
-
+        # Total: ~34 permisos custom
+        
         self._assign_permissions('administrador', codenames, verbose)
 
     def _configure_operador(self, verbose):
-        """Configurar permisos para OPERADOR"""
+        """
+        ✅ OPERADOR - Permisos operativos (sin gestión administrativa)
+        """
         codenames = [
-            # ═══════════════════════════════════════════════════════
-            # CLIENTES (SOLO ASIGNADOS)
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # CLIENTES (5 custom - solo lectura)
+            # ═══════════════════════════════════════════════════════════════
             'view_assigned_clientes',
             'view_limites_operacion',
             'view_medios_pago',
             'view_descuentos_segmento',
-            'view_cliente',
-            'view_clientemediodepago',
-            'view_segmento',
-            'view_descuento',
-            'view_limitediario',
-            'view_limitemensual',
             
-            # ═══════════════════════════════════════════════════════
-            # TRANSACCIONES
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # TRANSACCIONES (4 custom)
+            # ═══════════════════════════════════════════════════════════════
             'view_transacciones_asignadas',
             'view_transacciones_globales',
             'manage_estados_transacciones',
             'view_historial_transacciones',
-            'view_transaccion',
-            'add_transaccion',
-            'change_transaccion',
-            'view_historialtransaccion',
             
-            # ═══════════════════════════════════════════════════════
-            # DIVISAS
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # DIVISAS (4 custom)
+            # ═══════════════════════════════════════════════════════════════
             'realizar_operacion',
             'view_cotizaciones_segmento',
             'view_divisas',
             'manage_tasas_cambio',
             'view_tasas_cambio',
-            'view_divisa',
-            'view_tasacambio',
-            'view_cotizacionsegmento',
             
-            # ═══════════════════════════════════════════════════════
-            # MEDIOS DE PAGO
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # MEDIOS DE PAGO (1 custom)
+            # ═══════════════════════════════════════════════════════════════
             'view_catalogo_medios_pago',
-            'view_mediodepago',
         ]
+        # Total: ~14 permisos custom
         
         self._assign_permissions('operador', codenames, verbose)
 
     def _configure_cliente(self, verbose):
         """
-        ✅ CORREGIDO: Configurar permisos para CLIENTE (operador de cuenta)
+        ✅ CLIENTE (Operador de Cuenta) - Operaciones propias
         """
         codenames = [
-            # ═══════════════════════════════════════════════════════
-            # OPERACIONES BÁSICAS
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # OPERACIONES (1 custom)
+            # ═══════════════════════════════════════════════════════════════
             'realizar_operacion',
             
-            # ═══════════════════════════════════════════════════════
-            # TRANSACCIONES (SOLO LAS PROPIAS)
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # TRANSACCIONES (2 custom - solo propias)
+            # ═══════════════════════════════════════════════════════════════
             'view_transacciones_asignadas',
             'cancel_propias_transacciones',
-            'view_transaccion',
-            'add_transaccion',            # ✅ AGREGADO
-            'view_historialtransaccion',
             
-            # ═══════════════════════════════════════════════════════
-            # MEDIOS DE PAGO (GESTIÓN COMPLETA)
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # MEDIOS DE PAGO (2 custom)
+            # ═══════════════════════════════════════════════════════════════
             'view_medios_pago',
             'manage_medios_pago',
-            'view_clientemediodepago',
-            'add_clientemediodepago',
-            'change_clientemediodepago',
-            'delete_clientemediodepago',
-            'view_mediodepago',
             
-            # ═══════════════════════════════════════════════════════
-            # COTIZACIONES Y DIVISAS
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # DIVISAS (1 custom - consulta)
+            # ═══════════════════════════════════════════════════════════════
             'view_cotizaciones_segmento',
-            'view_divisa',
-            'view_tasacambio',
-            'view_cotizacionsegmento',
             
-            # ═══════════════════════════════════════════════════════
-            # DESCUENTOS (CONSULTA)
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # DESCUENTOS (1 custom - consulta)
+            # ═══════════════════════════════════════════════════════════════
             'view_descuentos_segmento',
-            'view_segmento',
-            'view_descuento',
             
-            # ═══════════════════════════════════════════════════════
-            # CLIENTES (CONSULTA DE ASIGNADOS)
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # CLIENTES (1 custom - consulta)
+            # ═══════════════════════════════════════════════════════════════
             'view_assigned_clientes',
-            'view_cliente',
         ]
+        # Total: ~8 permisos custom
         
         self._assign_permissions('cliente', codenames, verbose)
 
     def _configure_usuario_registrado(self, verbose):
-        """Configurar permisos para USUARIO REGISTRADO (sin cliente asignado)"""
+        """
+        ✅ USUARIO REGISTRADO - Solo consulta pública
+        """
         codenames = [
-            # ═══════════════════════════════════════════════════════
-            # COTIZACIONES PÚBLICAS (SOLO LECTURA)
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # COTIZACIONES PÚBLICAS (1 custom)
+            # ═══════════════════════════════════════════════════════════════
             'view_cotizaciones_segmento',
-            'view_divisa',
-            'view_tasacambio',
-            'view_cotizacionsegmento',
         ]
+        # Total: 1 permiso custom
         
         self._assign_permissions('usuario_registrado', codenames, verbose)
 
     def _configure_observador(self, verbose):
-        """Configurar permisos para OBSERVADOR (auditoría y reportes)"""
+        """
+        ✅ OBSERVADOR - Solo lectura (auditoría)
+        """
         codenames = [
-            # ═══════════════════════════════════════════════════════
-            # CLIENTES (SOLO LECTURA)
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # CLIENTES (4 custom - lectura)
+            # ═══════════════════════════════════════════════════════════════
             'view_all_clientes',
             'view_limites_operacion',
             'view_descuentos_segmento',
             'view_historial_descuentos',
-            'view_cliente',
-            'view_asignacioncliente',
-            'view_clientemediodepago',
-            'view_historialclientemediodepago',
-            'view_segmento',
-            'view_descuento',
-            'view_historialdescuentos',
-            'view_limitediario',
-            'view_limitemensual',
             
-            # ═══════════════════════════════════════════════════════
-            # TRANSACCIONES (SOLO LECTURA)
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # TRANSACCIONES (3 custom - lectura)
+            # ═══════════════════════════════════════════════════════════════
             'view_transacciones_globales',
             'view_historial_transacciones',
             'export_transacciones',
-            'view_transaccion',
-            'view_historialtransaccion',
             
-            # ═══════════════════════════════════════════════════════
-            # DIVISAS (SOLO LECTURA)
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # DIVISAS (3 custom - lectura)
+            # ═══════════════════════════════════════════════════════════════
             'view_cotizaciones_segmento',
             'view_divisas',
             'view_tasas_cambio',
-            'view_divisa',
-            'view_tasacambio',
-            'view_cotizacionsegmento',
             
-            # ═══════════════════════════════════════════════════════
-            # MEDIOS DE PAGO (SOLO LECTURA)
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # MEDIOS DE PAGO (1 custom - lectura)
+            # ═══════════════════════════════════════════════════════════════
             'view_catalogo_medios_pago',
-            'view_mediodepago',
             
-            # ═══════════════════════════════════════════════════════
-            # USUARIOS (SOLO LECTURA)
-            # ═══════════════════════════════════════════════════════
+            # ═══════════════════════════════════════════════════════════════
+            # USUARIOS (1 custom - lectura)
+            # ═══════════════════════════════════════════════════════════════
             'view_all_usuarios',
-            'view_customuser',
         ]
+        # Total: ~12 permisos custom
         
         self._assign_permissions('observador', codenames, verbose)
