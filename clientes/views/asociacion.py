@@ -14,7 +14,7 @@ User = get_user_model()
 
 
 @login_required
-@require_permission("clientes.manage_cliente_assignment", check_client_assignment=False)  # ✅ CORREGIDO
+@require_permission("clientes.manage_cliente_assignment", check_client_assignment=False) 
 def asociar_clientes_usuarios_view(request):
     """
     Vista para asociar clientes a usuarios del sistema.

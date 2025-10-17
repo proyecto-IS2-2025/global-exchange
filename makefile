@@ -124,7 +124,7 @@ reset-db:
 
 sync:
 	@echo "Sincronizando repositorio local con el remoto..."
-	 poetry run python manage.py sync_permissions --verbose
+	 poetry run python manage.py sync_permissions
 	@echo "Repositorio sincronizado."
 
 check:

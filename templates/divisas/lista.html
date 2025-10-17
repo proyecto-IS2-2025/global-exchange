@@ -55,12 +55,15 @@
                                 </td>
                                 <td>
                                     {% if not d.es_moneda_base %}
+                                        {% if perms.divisas.manage_divisas %}
                                         <!-- Botones solo para divisas que NO son moneda base -->
                                         <a href="{% url 'divisas:editar' d.id %}" class="btn btn-warning btn-sm me-1" title="Editar">
                                             <i class="fas fa-pencil-alt"></i>
                                         </a>
+                                        {% endif %}
                                         <form method="post" action="{% url 'divisas:toggle' d.id %}" class="d-inline">
                                             {% csrf_token %}
+                                            {% if perms.divisas.manage_divisas %}
                                             <button type="submit" class="btn btn-secondary btn-sm me-1" title="{% if d.is_active %}Deshabilitar{% else %}Habilitar{% endif %}">
                                                 {% if d.is_active %}
                                                     <i class="fas fa-times-circle"></i>
@@ -68,6 +71,7 @@
                                                     <i class="fas fa-check-circle"></i>
                                                 {% endif %}
                                             </button>
+                                            {% endif %}
                                         </form>
                                         <!-- Botón Ver Tasas solo para divisas normales -->
                                         <a href="{% url 'divisas:tasas' d.id %}" class="btn btn-info btn-sm" title="Ver Tasas">
@@ -80,11 +84,13 @@
                                             <i class="fas fa-lock me-1"></i>Protegida
                                         </span>
                                     {% endif %}
+                                    {% if perms.divisas.view_denominaciones %}
                                     <a href="{% url 'divisas:denominaciones_divisa' divisa_id=d.id %}" 
                                            class="btn btn-success btn-sm" 
                                            title="Ver Denominaciones de {{ d.code }}">
                                             <i class="fas fa-money-bill-wave"></i>
                                         </a>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% empty %}

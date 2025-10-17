@@ -49,8 +49,10 @@ que permiten listar, crear, actualizar y visualizar divisas
 y sus tasas de cambio, incluyendo un visualizador para clientes
 y otro para administradores.
 """
+
+@method_decorator(require_permission("divisas.view_divisas", check_client_assignment=False), name="dispatch")
 class DivisaListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
-    permission_required = 'divisas.view_divisa'
+    permission_required = 'divisas.view_divisas'
     model = Divisa
     template_name = 'divisas/lista.html'
     context_object_name = 'divisas'
@@ -310,11 +312,11 @@ def visualizador_tasas(request):
 
 
 @login_required
-@require_permission("divisas.manage_cotizaciones_segmento", check_client_assignment=False)
+@require_permission("divisas.view_cotizaciones_segmento", check_client_assignment=False)
 def visualizador_tasas_admin(request):
     """
-    🔐 PROTEGIDA: divisas.manage_cotizaciones_segmento
-    
+    🔐 PROTEGIDA: divisas.view_cotizaciones_segmento
+
     Vista administrativa que muestra todas las cotizaciones de todos los segmentos.
     Solo accesible para usuarios con permiso de gestión de cotizaciones.
     
@@ -356,9 +358,14 @@ def redondear(valor, decimales=2):
  
 # ==================== CRUD DE DENOMINACIONES ====================
 
-class DenominacionQuickCreateView(LoginRequiredMixin, PermissionRequiredMixin, View):
-    """Vista para crear denominaciones rápidamente desde una lista de valores"""
-    permission_required = 'divisas.add_denominacion'
+@method_decorator(require_permission("divisas.manage_denominaciones"), name="dispatch")
+class DenominacionQuickCreateView(LoginRequiredMixin, View):  # ← Sin PermissionRequiredMixin
+    """
+    🔒 PROTEGIDA: divisas.manage_denominaciones
+    Vista para crear denominaciones rápidamente desde una lista de valores
+    """
+    template_name = 'denominacion_quick_create.html'
+    permission_required = 'divisas.manage_denominaciones'
     template_name = 'denominacion_quick_create.html'
 
     def get(self, request):
@@ -460,12 +467,16 @@ class DenominacionQuickCreateView(LoginRequiredMixin, PermissionRequiredMixin, V
         return render(request, self.template_name, context)
 
 
-class DenominacionListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
-    """Lista todas las denominaciones con filtros"""
+@method_decorator(require_permission("divisas.view_denominaciones"), name="dispatch")
+class DenominacionListView(LoginRequiredMixin, ListView):  # ← Sin PermissionRequiredMixin
+    """
+    🔒 PROTEGIDA: divisas.view_denominaciones
+    Lista todas las denominaciones con filtros
+    """
     model = Denominacion
     template_name = 'denominacion_list.html'
     context_object_name = 'denominaciones'
-    permission_required = 'divisas.view_denominacion'
+    permission_required = 'divisas.view_denominaciones'
     paginate_by = 50
     
     def get_queryset(self):
@@ -510,13 +521,13 @@ class DenominacionListView(LoginRequiredMixin, PermissionRequiredMixin, ListView
         
         return context
 
-
+@method_decorator(require_permission("divisas.view_denominaciones"), name="dispatch")
 class DenominacionesDivisaView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     """Vista para mostrar denominaciones de una divisa específica"""
     model = Denominacion
     template_name = 'denominaciones_divisa.html'
     context_object_name = 'denominaciones'
-    permission_required = 'divisas.view_denominacion'
+    permission_required = 'divisas.view_denominaciones'
     paginate_by = 50
     
     def get_queryset(self):
@@ -544,10 +555,11 @@ class DenominacionesDivisaView(LoginRequiredMixin, PermissionRequiredMixin, List
         }
         
         return context
-    
+
+@method_decorator(require_permission("divisas.manage_denominaciones"), name="dispatch")
 class DenominacionCreateView(LoginRequiredMixin, PermissionRequiredMixin, View):
     """Crea múltiples denominaciones a la vez"""
-    permission_required = 'divisas.add_denominacion'
+    permission_required = 'divisas.manage_denominaciones'
     template_name = 'denominacion_create_multiple.html'
     
     def get(self, request):
@@ -615,13 +627,17 @@ class DenominacionCreateView(LoginRequiredMixin, PermissionRequiredMixin, View):
         }
         return render(request, self.template_name, context)
     
-class DenominacionUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
-    """Actualiza una denominación existente"""
+@method_decorator(require_permission("divisas.manage_denominaciones"), name="dispatch")
+class DenominacionUpdateView(LoginRequiredMixin, UpdateView):  # ← Sin PermissionRequiredMixin
+    """
+    🔒 PROTEGIDA: divisas.manage_denominaciones
+    Actualiza una denominación existente
+    """
     model = Denominacion
     form_class = DenominacionForm
     template_name = 'denominacion_form.html'
     success_url = reverse_lazy('divisas:denominacion_list')
-    permission_required = 'divisas.change_denominacion'
+    permission_required = 'divisas.manage_denominaciones'
 
     def get_success_url(self):
         # Redirigir a la vista de denominaciones de la divisa
@@ -638,9 +654,13 @@ class DenominacionUpdateView(LoginRequiredMixin, PermissionRequiredMixin, Update
         return context
 
 
-class DenominacionDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
-    """Desactiva/activa una denominación"""
-    permission_required = 'divisas.delete_denominacion'
+@method_decorator(require_permission("divisas.manage_denominaciones"), name="dispatch")
+class DenominacionDeleteView(LoginRequiredMixin, View):  # ← Sin PermissionRequiredMixin
+    """
+    🔒 PROTEGIDA: divisas.manage_denominaciones
+    Desactiva/activa una denominación
+    """
+    permission_required = 'divisas.manage_denominaciones'
     
     def post(self, request, pk):
         denominacion = get_object_or_404(Denominacion, pk=pk)
@@ -659,10 +679,12 @@ class DenominacionDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
 
 
 @login_required
-@require_permission("divisas.manage_cotizaciones_segmento", check_client_assignment=False)
-#@user_passes_test(lambda u: u.has_perm('divisas.view_denominacion'))
+@require_permission("divisas.view_denominaciones")  # ← Cambié manage por view
 def denominaciones_disponibles_json(request, divisa_id):
-    """API para obtener denominaciones disponibles de una divisa (JSON)"""
+    """
+    🔒 PROTEGIDA: divisas.view_denominaciones
+    API para obtener denominaciones disponibles de una divisa (JSON)
+    """
     denominaciones = Denominacion.objects.filter(
         divisa_id=divisa_id,
         is_active=True

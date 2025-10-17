@@ -1,89 +1,345 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
-<div class="container mt-5">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-    </div>
-    <div class="text-end mb-3">
-        <a href="{% url 'group_create' %}" class="btn btn-primary">
-        <i class="fas fa-plus-circle me-2"></i>Crear Rol
-        </a>
-    </div>
-    </div>
-    
-    
-    <div class="card shadow-sm">
-    <div class="card-body">
-      <div class="card-header bg-primary text-white text-center rounded mb-4">
-        <h2 class="card-title mb-0">
-        <i class="fas fa-plus-circle me-2"></i>Gestion de Roles
-        </h2>
-      </div>
-        <div class="table-responsive">
-        <table class="table table-striped table-hover">
-            <thead class="table-dark">
-            <tr>
-                <th scope="col">Nombre</th>
-                <th scope="col">Permisos</th>
-                <th scope="col">Estado</th>
-                <th scope="col">Acciones</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for group in groups %}
-            <tr>
-                <th scope="row">{{ group.name }}</th>
-                <td>
-                {% if group.name != 'dev' %}
-                    {% for perm in group.permissions.all %}
-                    <span class="badge bg-secondary">{{ perm.name }}</span>
-                    {% empty %}
-                    <span class="text-muted">Sin permisos</span>
-                    {% endfor %}
-                {% else %}
-                    <span class="text-muted">Todos los permisos</span>
-                {% endif %}
-                </td>
-                <td>
-                {% if group.status.is_active %}
-                    <span class="badge bg-success">Activo</span>
-                {% else %}
-                    <span class="badge bg-danger">Inactivo</span>
-                {% endif %}
-                </td>
-                <td>
-                <div class="btn-group" role="group" aria-label="Acciones de grupo">
-                     {% if group.name != 'dev' %}
-                    <a href="{% url 'group_detail_permissions' group.id %}" class="btn btn-sm btn-warning text-white">
-                        <i class="fas fa-shield-alt"></i> Permisos
-                    </a>
-                    {% endif %}
-                    <a href="{% url 'group_detail_users' group.id %}" class="btn btn-sm btn-primary text-white">
-                    <i class="fas fa-user-edit"></i> Usuarios
-                    </a>
-                    {% if group.name != 'dev' %}
-                     <form action="{% url 'group_toggle_status' group.id %}" method="post" class="d-inline">
-                    {% csrf_token %}
-                    <button type="submit"
-                        class="btn btn-sm {% if group.status.is_active %}btn-danger{% else %}btn-success{% endif %}">
-                      <i class="fas {% if group.status.is_active %}fa-ban{% else %}fa-check-circle{% endif %}"></i>
-                      {% if group.status.is_active %}Desactivar{% else %}Activar{% endif %}
-                    </button>
-                      </form>
-                    {% endif %}
-                </div>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="4" class="text-center">No hay roles registrados.</td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+<div class="container mt-4">
+    <!-- Header con título y botón de crear rol -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div>
+                <h1 class="mb-1 fw-bold">Gestión de Roles</h1>
+                <p class="text-muted mb-0">Administra los roles y permisos del sistema</p>
+            </div>
+        </div>
+        <div class="col-md-4 d-flex align-items-center justify-content-end">
+            {% if perms.roles.manage_roles %}
+            <a href="{% url 'group_create' %}" class="btn btn-primary btn-lg shadow-sm">
+                <i class="fas fa-plus-circle me-2"></i>Crear Rol
+            </a>
+            {% endif %}
         </div>
     </div>
+    
+    <!-- Tarjeta principal con la tabla -->
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-gradient py-3">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h5 class="mb-0 text-white fw-bold">
+                        <i class="fas fa-shield-alt me-2"></i>Roles del Sistema
+                    </h5>
+                </div>
+                <div class="col-auto">
+                    <span class="badge bg-white text-primary rounded-pill px-3 py-2">
+                        {{ groups|length }} roles
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th scope="col" class="border-0 fw-bold text-uppercase text-secondary" style="font-size: 0.85rem;">
+                                Nombre
+                            </th>
+                            <th scope="col" class="border-0 fw-bold text-uppercase text-secondary" style="font-size: 0.85rem;">
+                                Permisos
+                            </th>
+                            <th scope="col" class="border-0 fw-bold text-uppercase text-secondary" style="font-size: 0.85rem;">
+                                Estado
+                            </th>
+                            <th scope="col" class="border-0 fw-bold text-uppercase text-secondary text-center" style="font-size: 0.85rem;">
+                                Acciones
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for group in groups %}
+                        <tr class="border-bottom">
+                            <td class="py-3">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">{{ group.name }}</h6>
+                                    {% if group.name == 'dev' %}
+                                    <small class="text-muted">Rol de desarrollador</small>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="py-3">
+                                {% if group.name != 'dev' %}
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-info rounded-pill" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#permissionsModal{{ group.id }}">
+                                        <i class="fas fa-eye me-1"></i>Ver permisos
+                                    </button>
+                                    <span class="badge bg-secondary rounded-pill ms-2">
+                                        {{ group.permissions.all|length }} permisos
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">Todos los permisos</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3">
+                                {% if group.status.is_active %}
+                                    <span class="badge bg-success rounded-pill px-3 py-1">
+                                        <i class="fas fa-check-circle me-1"></i>Activo
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger rounded-pill px-3 py-1">
+                                        <i class="fas fa-times-circle me-1"></i>Inactivo
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3">
+                                <div class="d-flex justify-content-center gap-1">
+                                    {% if group.name != 'dev' %}
+                                        {% if perms.roles.manage_role_status %}
+                                        <a href="{% url 'group_detail_permissions' group.id %}" 
+                                           class="btn btn-sm btn-outline-warning rounded-pill" 
+                                           data-bs-toggle="tooltip" 
+                                           title="Gestionar permisos">
+                                            <i class="fas fa-shield-alt"></i>
+                                        </a>
+                                        {% endif %}
+                                    {% endif %}
+
+                                    {% if perms.roles.manage_role_status %}
+                                    <a href="{% url 'group_detail_users' group.id %}" 
+                                       class="btn btn-sm btn-outline-primary rounded-pill" 
+                                       data-bs-toggle="tooltip" 
+                                       title="Gestionar usuarios">
+                                        <i class="fas fa-user-edit"></i>
+                                    </a>
+                                    {% endif %}
+
+                                    {% if group.name != 'dev' %}
+                                        <form action="{% url 'group_toggle_status' group.id %}" method="post" class="d-inline">
+                                            {% csrf_token %}
+                                            
+                                            {% if perms.roles.manage_role_status %}
+                                            <button type="submit"
+                                                class="btn btn-sm {% if group.status.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill"
+                                                data-bs-toggle="tooltip" 
+                                                title="{% if group.status.is_active %}Desactivar rol{% else %}Activar rol{% endif %}">
+                                                <i class="fas {% if group.status.is_active %}fa-ban{% else %}fa-check-circle{% endif %}"></i>
+                                            </button>
+                                            {% endif %}
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5">
+                                <div class="py-4">
+                                    <h5 class="text-muted">No hay roles registrados</h5>
+                                    <p class="text-muted">Crea tu primer rol para comenzar a gestionar los permisos del sistema</p>
+                                    {% if perms.roles.manage_roles %}
+                                    <a href="{% url 'group_create' %}" class="btn btn-primary mt-2">
+                                        <i class="fas fa-plus-circle me-2"></i>Crear Rol
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
+
+<!-- Modales para cada grupo -->
+{% for group in groups %}
+{% if group.name != 'dev' %}
+<div class="modal fade" id="permissionsModal{{ group.id }}" tabindex="-1" aria-labelledby="permissionsModalLabel{{ group.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-square-fixed">
+        <div class="modal-content square-modal">
+            <div class="modal-header bg-primary text-white py-2">
+                <h5 class="modal-title" id="permissionsModalLabel{{ group.id }}">
+                    <i class="fas fa-key me-2"></i>{{ group.name }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3 modal-body-square">
+                {% if group.permissions.all %}
+                    <div class="permissions-grid">
+                        {% for perm in group.permissions.all %}
+                        <div class="permission-item">
+                            <div class="d-flex align-items-center p-2 border rounded mb-2 bg-light hover-bg">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <small class="mb-0">{{ perm.name }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-exclamation-circle text-warning fa-3x mb-3"></i>
+                        <p class="text-muted">Este rol no tiene permisos asignados</p>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                {% if perms.roles.manage_role_status %}
+                <a href="{% url 'group_detail_permissions' group.id %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-edit me-1"></i>Editar
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+<style>
+/* Forzar modal cuadrado */
+.modal-square-fixed {
+    width: 500px !important;
+    height: 500px !important;
+    max-width: 90vw !important;
+    max-height: 90vh !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.square-modal {
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    border-radius: 0.5rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+.modal-body-square {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    min-height: 0 !important;
+}
+
+/* Grid de permisos */
+.permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+    height: 100%;
+}
+
+.permission-item {
+    break-inside: avoid;
+}
+
+.hover-bg:hover {
+    background-color: #e9ecef !important;
+    transition: background-color 0.2s ease;
+}
+
+/* Scrollbar personalizado */
+.modal-body-square::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body-square::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.modal-body-square::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.modal-body-square::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Responsive para móviles */
+@media (max-width: 576px) {
+    .modal-square-fixed {
+        width: 95vw !important;
+        height: 95vw !important;
+        max-height: 95vh !important;
+    }
+    
+    .permissions-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Para impresión */
+@media print {
+    body > *:not(.modal) {
+        display: none !important;
+    }
+    
+    .modal {
+        position: static !important;
+        display: block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    .modal-backdrop {
+        display: none !important;
+    }
+    
+    .modal-square-fixed {
+        position: static !important;
+        width: 100% !important;
+        height: auto !important;
+        max-width: none !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .square-modal {
+        height: auto !important;
+        min-height: 100vh !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+    
+    .modal-header,
+    .modal-footer {
+        display: none !important;
+    }
+    
+    .modal-body-square {
+        padding: 20px !important;
+        overflow: visible !important;
+        height: auto !important;
+    }
+    
+    .permissions-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+    
+    .permission-item {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+}
+</style>
+
+<!-- Script para tooltips -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    });
+</script>
 {% endblock %}

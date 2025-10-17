@@ -188,6 +188,8 @@ class Command(BaseCommand):
             'view_divisas',
             'manage_tasas_cambio',
             'view_tasas_cambio',
+            'view_denominaciones',      
+            'manage_denominaciones',
             
             # ═══════════════════════════════════════════════════════════════
             # MEDIOS DE PAGO (2 custom)
@@ -314,7 +316,7 @@ class Command(BaseCommand):
             'view_divisas',
             'manage_tasas_cambio',
             'view_tasas_cambio',
-            
+            'view_denominaciones',
             # ═══════════════════════════════════════════════════════════════
             # MEDIOS DE PAGO (1 custom)
             # ═══════════════════════════════════════════════════════════════
@@ -414,11 +416,12 @@ class Command(BaseCommand):
             'view_cotizaciones_segmento',
             'view_divisas',
             'view_tasas_cambio',
-            
+            'view_denominaciones',
             # ═══════════════════════════════════════════════════════════════
             # MEDIOS DE PAGO (1 custom - lectura)
             # ═══════════════════════════════════════════════════════════════
             'view_catalogo_medios_pago',
+            'view_mfa_config',
             
             # ═══════════════════════════════════════════════════════════════
             # USUARIOS (1 custom - lectura)

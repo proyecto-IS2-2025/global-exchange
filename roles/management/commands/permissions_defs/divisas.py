@@ -113,36 +113,32 @@ PERMISOS_DIVISAS = [
     },
     
     # ═══════════════════════════════════════════════════════════════════
-    # PERMISOS COMENTADOS - FUNCIONALIDAD NO IMPLEMENTADA AÚN
+    # ✅ NUEVOS: GESTIÓN DE DENOMINACIONES
     # ═══════════════════════════════════════════════════════════════════
-    
-    # TODO: Implementar vista de aprobación de operaciones de alto monto
-    # {
-    #     'app_label': 'divisas',
-    #     'model': 'divisa',
-    #     'codename': 'approve_operaciones_divisas',
-    #     'name': 'Puede aprobar operaciones de divisas',
-    #     'modulo': 'divisas',
-    #     'descripcion': 'Habilita la aprobación de operaciones superiores al límite estándar.',
-    #     'ejemplo': 'Aprobar la compra de USD 50.000 para el cliente ACME (requiere doble autorización).',
-    #     'nivel_riesgo': 'critico',
-    #     'orden': 80,
-    #     'categoria': 'aprobaciones',
-    #     'requiere_auditoria': True,
-    # },
-    
-    # TODO: Implementar dashboard de reportes consolidados
-    # {
-    #     'app_label': 'divisas',
-    #     'model': 'divisa',
-    #     'codename': 'view_reportes_divisas',
-    #     'name': 'Puede ver reportes consolidados de divisas',
-    #     'modulo': 'divisas',
-    #     'descripcion': 'Permite acceder a tableros y reportes de operaciones y posiciones.',
-    #     'ejemplo': 'Descargar el reporte semanal de operaciones de divisas en formato Excel.',
-    #     'nivel_riesgo': 'medio',
-    #     'orden': 90,
-    #     'categoria': 'reportes',
-    #     'requiere_auditoria': False,
-    # },
+    {
+        'app_label': 'divisas',
+        'model': 'denominacion',
+        'codename': 'view_denominaciones',
+        'name': 'Puede ver denominaciones de divisas',
+        'modulo': 'divisas',
+        'descripcion': 'Permite consultar el catálogo de denominaciones (billetes/monedas) de cada divisa.',
+        'ejemplo': 'Un operador consulta qué denominaciones están disponibles para USD.',
+        'nivel_riesgo': 'bajo',
+        'orden': 80,
+        'categoria': 'consulta_denominaciones',
+        'requiere_auditoria': False,
+    },
+    {
+        'app_label': 'divisas',
+        'model': 'denominacion',
+        'codename': 'manage_denominaciones',
+        'name': 'Puede gestionar denominaciones de divisas',
+        'modulo': 'divisas',
+        'descripcion': 'Permite crear, editar, activar y desactivar denominaciones de divisas.',
+        'ejemplo': 'Un administrador agrega la denominación de 100 dólares para USD.',
+        'nivel_riesgo': 'medio',
+        'orden': 90,
+        'categoria': 'gestion_denominaciones',
+        'requiere_auditoria': True,
+    },
 ]
