@@ -22,36 +22,6 @@
                                 <div class="me-3">
                                     <i class="fas fa-plus-circle fa-2x text-success"></i>
                                 </div>
-                            {% elif movimiento.tipo == 'ENVIO' %}
-                                <div class="me-3">
-                                    <i class="fas fa-arrow-up fa-2x text-danger"></i>
-                                </div>
-                            {% else %}
-                                <div class="me-3">
-                                    <i class="fas fa-arrow-down fa-2x text-success"></i>
-                                </div>
-                            {% endif %}
-                            <div>
-                                <h6 class="mb-1">{{ movimiento.get_tipo_display }}</h6>
-                                <p class="text-muted mb-1">{{ movimiento.descripcion }}</p>
-                                <small class="text-muted">
-                                    <i class="fas fa-calendar me-1"></i>{{ movimiento.fecha|date:"d/m/Y H:i" }}
-                                </small>
-                            </div>
-                        </div>
-                        <div class="text-end">
-                            <h5 class="mb-1 {% if movimiento.tipo == 'ENVIO' %}text-danger{% else %}text-success{% endif %}">
-                                {% if movimiento.tipo == 'ENVIO' %}-{% else %}+{% endif %}₲{{ movimiento.monto|floatformat:0 }}
-                            </h5>
-                            <small class="text-muted">
-                                <i class="fas fa-receipt me-1"></i>{{ movimiento.comprobante|truncatechars:8 }}...
-                            </small>
-                            <br>
-                            <button class="btn btn-sm btn-outline-info mt-1" onclick="verComprobante('{{ movimiento.comprobante }}')">
-                                <i class="fas fa-eye"></i> Ver
-                            </button>
-                        </div>
-                    </div>
                     {% endfor %}
                 {% else %}
                     <div class="text-center py-5">
@@ -81,11 +51,11 @@
                 </div>
                 <hr>
                 <div class="row text-center">
-                    <div class="col-4">
+                    <div class="col-3">
                         <strong class="text-success">{{ movimientos|length }}</strong>
                         <br><small>Total</small>
                     </div>
-                    <div class="col-4">
+                    <div class="col-3">
                         <strong class="text-info">
                             {% for mov in movimientos %}
                                 {% if mov.tipo == 'RECARGA' %}{{ forloop.counter0|add:1 }}{% endif %}
@@ -93,13 +63,21 @@
                         </strong>
                         <br><small>Recargas</small>
                     </div>
-                    <div class="col-4">
+                    <div class="col-3">
                         <strong class="text-primary">
                             {% for mov in movimientos %}
                                 {% if mov.tipo == 'ENVIO' %}{{ forloop.counter0|add:1 }}{% endif %}
                             {% empty %}0{% endfor %}
                         </strong>
                         <br><small>Envíos</small>
+                    </div>
+                    <div class="col-3">
+                        <strong class="text-warning">
+                            {% for mov in movimientos %}
+                                {% if mov.tipo == 'PAGO' %}{{ forloop.counter0|add:1 }}{% endif %}
+                            {% empty %}0{% endfor %}
+                        </strong>
+                        <br><small>Pagos</small>
                     </div>
                 </div>
             </div>
@@ -116,6 +94,9 @@
                     </a>
                     <a href="{% url 'billetera:transferir' %}" class="btn btn-primary">
                         <i class="fas fa-paper-plane me-1"></i>Transferir
+                    </a>
+                    <a href="{% url 'billetera:pagar' %}" class="btn btn-warning">
+                        <i class="fas fa-university me-1"></i>Pagar
                     </a>
                     <a href="{% url 'billetera:dashboard' %}" class="btn btn-outline-secondary">
                         <i class="fas fa-home me-1"></i>Dashboard
@@ -185,3 +166,37 @@ function verComprobante(comprobante) {
 }
 </script>
 {% endblock %}
+                            {% elif movimiento.tipo == 'ENVIO' %}
+                                <div class="me-3">
+                                    <i class="fas fa-arrow-up fa-2x text-danger"></i>
+                                </div>
+                            {% elif movimiento.tipo == 'PAGO' %}
+                                <div class="me-3">
+                                    <i class="fas fa-university fa-2x text-warning"></i>
+                                </div>
+                            {% else %}
+                                <div class="me-3">
+                                    <i class="fas fa-arrow-down fa-2x text-success"></i>
+                                </div>
+                            {% endif %}
+                            <div>
+                                <h6 class="mb-1">{{ movimiento.get_tipo_display }}</h6>
+                                <p class="text-muted mb-1">{{ movimiento.descripcion }}</p>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>{{ movimiento.fecha|date:"d/m/Y H:i" }}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <h5 class="mb-1 {% if movimiento.tipo == 'ENVIO' or movimiento.tipo == 'PAGO' %}text-danger{% else %}text-success{% endif %}">
+                                {% if movimiento.tipo == 'ENVIO' or movimiento.tipo == 'PAGO' %}-{% else %}+{% endif %}₲{{ movimiento.monto|floatformat:0 }}
+                            </h5>
+                            <small class="text-muted">
+                                <i class="fas fa-receipt me-1"></i>{{ movimiento.comprobante|truncatechars:8 }}...
+                            </small>
+                            <br>
+                            <button class="btn btn-sm btn-outline-info mt-1" onclick="verComprobante('{{ movimiento.comprobante }}')">
+                                <i class="fas fa-eye"></i> Ver
+                            </button>
+                        </div>
+                    </div>

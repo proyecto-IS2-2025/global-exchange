@@ -5,7 +5,7 @@ import uuid
 from decimal import Decimal
 
 # Importar modelos del sistema bancario existente
-from banco.models import EntidadBancaria, TarjetaDebito
+from banco.models import EntidadBancaria, TarjetaDebito, Cuenta, PagoTarjeta
 from django.utils import timezone
 
 class UsuarioBilletera(models.Model):
@@ -46,6 +46,7 @@ class MovimientoBilletera(models.Model):
         ('RECARGA', 'Recarga'),
         ('ENVIO', 'Envío'),
         ('RECEPCION', 'Recepción'),
+        ('PAGO', 'Pago'),
     ]
 
     billetera = models.ForeignKey(
@@ -108,12 +109,19 @@ class RecargaBilletera(models.Model):
             
             self.exitosa = True
             
-            # Crear movimiento en el historial
+            # Crear movimiento en el historial de la billetera
             MovimientoBilletera.objects.create(
                 billetera=self.billetera,
                 tipo='RECARGA',
                 monto=self.monto,
                 descripcion=f"Recarga desde tarjeta {self.tarjeta_debito.numero[-4:]}"
+            )
+            
+            # ✅ NUEVO: Crear registro en el historial del banco
+            PagoTarjeta.objects.create(
+                tarjeta_debito=self.tarjeta_debito,
+                monto=self.monto,
+                billetera=self.billetera  # Relacionar con billetera
             )
 
         super().save(*args, **kwargs)
@@ -174,3 +182,52 @@ class TransferenciaBilletera(models.Model):
 
     def __str__(self):
         return f"Transferencia ₲{self.monto} - {self.comprobante}"
+
+
+class PagoBilletera(models.Model):
+    """Modelo para pagos desde billetera a cuentas bancarias"""
+    billetera = models.ForeignKey(
+        Billetera,
+        on_delete=models.CASCADE,
+        related_name="pagos_realizados"
+    )
+    cuenta_destino = models.ForeignKey(
+        Cuenta,
+        on_delete=models.CASCADE,
+        related_name="pagos_recibidos_billetera"
+    )
+    monto = models.DecimalField(max_digits=12, decimal_places=2)
+    comprobante = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+    exitoso = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        if not self.pk:  # Solo en creación
+            # Verificar saldo suficiente
+            if self.billetera.saldo < self.monto:
+                raise ValidationError("Saldo insuficiente en la billetera.")
+            
+            # Realizar el pago
+            self.billetera.saldo -= self.monto
+            self.billetera.save()
+            
+            self.cuenta_destino.saldo += self.monto
+            self.cuenta_destino.save()
+            
+            self.exitoso = True
+            
+            # Crear movimiento en el historial de la billetera
+            MovimientoBilletera.objects.create(
+                billetera=self.billetera,
+                tipo='PAGO',
+                monto=self.monto,
+                descripcion=f"Pago a cuenta {self.cuenta_destino.numero_cuenta} ({self.cuenta_destino.entidad.nombre})"
+            )
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Pago ₲{self.monto} - {self.comprobante}"
+
+    class Meta:
+        ordering = ['-fecha']

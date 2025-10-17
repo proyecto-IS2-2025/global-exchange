@@ -180,17 +180,12 @@ def transferir(request):
 
 # --------- HISTORIAL ---------
 # views.py
+# banco/views.py - Actualizar la función historial
+
 def historial(request):
     """
     Muestra el historial unificado de movimientos bancarios del usuario.
-
-    Recupera todas las :class:`~banco.models.Transferencia` y :class:`~banco.models.PagoTarjeta` 
-    relacionadas con el usuario autenticado, las unifica y ordena por fecha.
-
-    :param request: El objeto de solicitud HTTP.
-    :type request: :class:`django.http.HttpRequest`
-    :returns: Una respuesta HTTP de renderizado con la lista de movimientos.
-    :rtype: :class:`django.http.HttpResponse`
+    Incluye transferencias, pagos con tarjeta, recargas de billetera y pagos recibidos desde billetera.
     """
     user = get_logged_user(request)
     if not user:
@@ -198,21 +193,27 @@ def historial(request):
 
     cuentas_usuario = user.cuentas.all()
 
-    # Transferencias
+    # Transferencias bancarias
     transferencias = Transferencia.objects.filter(
         Q(cuenta_origen__in=cuentas_usuario) |
         Q(cuenta_destino__in=cuentas_usuario)
     )
 
-    # Pagos con tarjetas del usuario
+    # Pagos con tarjetas del usuario (incluye recargas a billetera)
     pagos = PagoTarjeta.objects.filter(
         Q(tarjeta_debito__usuario=user) |
         Q(tarjeta_credito__usuario=user)
     )
 
-    # Unificar
+    # ✅ NUEVO: Pagos recibidos desde billeteras a las cuentas del usuario
+    from billetera.models import PagoBilletera
+    pagos_billetera = PagoBilletera.objects.filter(
+        cuenta_destino__in=cuentas_usuario
+    )
+
+    # Unificar todos los movimientos
     movimientos = sorted(
-        list(transferencias) + list(pagos),
+        list(transferencias) + list(pagos) + list(pagos_billetera),
         key=lambda x: x.fecha,
         reverse=True
     )
