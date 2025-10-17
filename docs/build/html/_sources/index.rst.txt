@@ -15,13 +15,19 @@ Esta documentación incluye información detallada sobre los módulos, modelos y
    :caption: Contenidos:
 
    autenticacion
+   mfa
    clientes
    vistas_cliente
    form_cliente
    divisas
+   operacion_divisas
    roles
    medios_pago
+   stripe_payments
+   billetera
    users 
    simulador
    transacciones
    banco
+   notificaciones
+   interfaz

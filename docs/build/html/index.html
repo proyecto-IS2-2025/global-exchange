@@ -48,6 +48,13 @@
 <li class="toctree-l2"><a class="reference internal" href="autenticacion.html#autenticacion.utils.generar_token"><code class="docutils literal notranslate"><span class="pre">generar_token()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="mfa.html">Módulo de Autenticación Multifactor (MFA)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mfa.html#module-mfa.models">Modelos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mfa.html#module-mfa.views">Vistas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mfa.html#formularios">Formularios</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mfa.html#module-mfa.urls">URLs</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="clientes.html">Módulos de Clientes</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="clientes.html#clientes.models.AsignacionCliente"><code class="docutils literal notranslate"><span class="pre">AsignacionCliente</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="clientes.html#clientes.models.Cliente"><code class="docutils literal notranslate"><span class="pre">Cliente</span></code></a></li>
@@ -76,19 +83,18 @@
 <li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.SeleccionarMedioAcreditacionView"><code class="docutils literal notranslate"><span class="pre">SeleccionarMedioAcreditacionView</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.SeleccionarMedioPagoView"><code class="docutils literal notranslate"><span class="pre">SeleccionarMedioPagoView</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.asociar_clientes_usuarios_view"><code class="docutils literal notranslate"><span class="pre">asociar_clientes_usuarios_view()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.calcular_similitud_medio"><code class="docutils literal notranslate"><span class="pre">calcular_similitud_medio()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.crear_cliente_view"><code class="docutils literal notranslate"><span class="pre">crear_cliente_view()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.crear_limite_diario"><code class="docutils literal notranslate"><span class="pre">crear_limite_diario()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.crear_limite_mensual"><code class="docutils literal notranslate"><span class="pre">crear_limite_mensual()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.dashboard_medios_pago"><code class="docutils literal notranslate"><span class="pre">dashboard_medios_pago()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.exportar_medios_pago"><code class="docutils literal notranslate"><span class="pre">exportar_medios_pago()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.get_cliente_activo"><code class="docutils literal notranslate"><span class="pre">get_cliente_activo()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.get_medio_acreditacion_seleccionado"><code class="docutils literal notranslate"><span class="pre">get_medio_acreditacion_seleccionado()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.get_medio_pago_seleccionado"><code class="docutils literal notranslate"><span class="pre">get_medio_pago_seleccionado()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.lista_clientes"><code class="docutils literal notranslate"><span class="pre">lista_clientes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.lista_limites_diarios"><code class="docutils literal notranslate"><span class="pre">lista_limites_diarios()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.lista_limites_mensuales"><code class="docutils literal notranslate"><span class="pre">lista_limites_mensuales()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.listar_asociaciones"><code class="docutils literal notranslate"><span class="pre">listar_asociaciones()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.medio_pago_detail_ajax"><code class="docutils literal notranslate"><span class="pre">medio_pago_detail_ajax()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.normalizar_valor"><code class="docutils literal notranslate"><span class="pre">normalizar_valor()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.panel_limites"><code class="docutils literal notranslate"><span class="pre">panel_limites()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.seleccionar_cliente_view"><code class="docutils literal notranslate"><span class="pre">seleccionar_cliente_view()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.select_medio_pago_view"><code class="docutils literal notranslate"><span class="pre">select_medio_pago_view()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.to_serializable"><code class="docutils literal notranslate"><span class="pre">to_serializable()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="vistas_cliente.html#clientes.views.verificar_duplicados_ajax"><code class="docutils literal notranslate"><span class="pre">verificar_duplicados_ajax()</span></code></a></li>
 </ul>
 </li>
@@ -106,47 +112,64 @@
 <li class="toctree-l1"><a class="reference internal" href="divisas.html">Módulos de Divisas</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.models.CotizacionSegmento"><code class="docutils literal notranslate"><span class="pre">CotizacionSegmento</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.models.CotizacionSegmentoQuerySet"><code class="docutils literal notranslate"><span class="pre">CotizacionSegmentoQuerySet</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.models.Denominacion"><code class="docutils literal notranslate"><span class="pre">Denominacion</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.models.DesgloseDenominacion"><code class="docutils literal notranslate"><span class="pre">DesgloseDenominacion</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.models.Divisa"><code class="docutils literal notranslate"><span class="pre">Divisa</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.models.TasaCambio"><code class="docutils literal notranslate"><span class="pre">TasaCambio</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.CompraConfirmacionView"><code class="docutils literal notranslate"><span class="pre">CompraConfirmacionView</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.CompraDivisaView"><code class="docutils literal notranslate"><span class="pre">CompraDivisaView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.CalculadoraDenominacionesView"><code class="docutils literal notranslate"><span class="pre">CalculadoraDenominacionesView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.DenominacionCreateView"><code class="docutils literal notranslate"><span class="pre">DenominacionCreateView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.DenominacionDeleteView"><code class="docutils literal notranslate"><span class="pre">DenominacionDeleteView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.DenominacionListView"><code class="docutils literal notranslate"><span class="pre">DenominacionListView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.DenominacionQuickCreateView"><code class="docutils literal notranslate"><span class="pre">DenominacionQuickCreateView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.DenominacionUpdateView"><code class="docutils literal notranslate"><span class="pre">DenominacionUpdateView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.DenominacionesDivisaView"><code class="docutils literal notranslate"><span class="pre">DenominacionesDivisaView</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.DivisaCreateView"><code class="docutils literal notranslate"><span class="pre">DivisaCreateView</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.DivisaListView"><code class="docutils literal notranslate"><span class="pre">DivisaListView</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.DivisaToggleActivaView"><code class="docutils literal notranslate"><span class="pre">DivisaToggleActivaView</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.DivisaUpdateView"><code class="docutils literal notranslate"><span class="pre">DivisaUpdateView</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.SumarioCompraView"><code class="docutils literal notranslate"><span class="pre">SumarioCompraView</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.SumarioOperacionView"><code class="docutils literal notranslate"><span class="pre">SumarioOperacionView</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.TasaCambioAllListView"><code class="docutils literal notranslate"><span class="pre">TasaCambioAllListView</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.TasaCambioCreateView"><code class="docutils literal notranslate"><span class="pre">TasaCambioCreateView</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.TasaCambioListView"><code class="docutils literal notranslate"><span class="pre">TasaCambioListView</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.VentaConfirmacionView"><code class="docutils literal notranslate"><span class="pre">VentaConfirmacionView</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.VentaDivisaView"><code class="docutils literal notranslate"><span class="pre">VentaDivisaView</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.VentaMediosView"><code class="docutils literal notranslate"><span class="pre">VentaMediosView</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.decimal_to_str"><code class="docutils literal notranslate"><span class="pre">decimal_to_str()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.is_admin_or_staff"><code class="docutils literal notranslate"><span class="pre">is_admin_or_staff()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.post"><code class="docutils literal notranslate"><span class="pre">post()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.seleccionar_operacion_view"><code class="docutils literal notranslate"><span class="pre">seleccionar_operacion_view()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.TransaccionDesgloseDenominacionesView"><code class="docutils literal notranslate"><span class="pre">TransaccionDesgloseDenominacionesView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.denominaciones_disponibles_json"><code class="docutils literal notranslate"><span class="pre">denominaciones_disponibles_json()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.redondear"><code class="docutils literal notranslate"><span class="pre">redondear()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.visualizador_tasas"><code class="docutils literal notranslate"><span class="pre">visualizador_tasas()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.views.visualizador_tasas_admin"><code class="docutils literal notranslate"><span class="pre">visualizador_tasas_admin()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.forms.CompraDivisaForm"><code class="docutils literal notranslate"><span class="pre">CompraDivisaForm</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.forms.DenominacionForm"><code class="docutils literal notranslate"><span class="pre">DenominacionForm</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.forms.DenominacionQuickForm"><code class="docutils literal notranslate"><span class="pre">DenominacionQuickForm</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.forms.DesgloseDenominacionForm"><code class="docutils literal notranslate"><span class="pre">DesgloseDenominacionForm</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.forms.DivisaForm"><code class="docutils literal notranslate"><span class="pre">DivisaForm</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.forms.TasaCambioForm"><code class="docutils literal notranslate"><span class="pre">TasaCambioForm</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="divisas.html#divisas.forms.VentaDivisaForm"><code class="docutils literal notranslate"><span class="pre">VentaDivisaForm</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="operacion_divisas.html">Módulo de Operación de Divisas</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="operacion_divisas.html#module-operacion_divisas.models">Modelos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operacion_divisas.html#module-operacion_divisas.views">Vistas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operacion_divisas.html#module-operacion_divisas.forms">Formularios</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operacion_divisas.html#servicios">Servicios</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operacion_divisas.html#module-operacion_divisas.urls">URLs</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="roles.html">Módulo de Roles y Permisos</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.group_create"><code class="docutils literal notranslate"><span class="pre">group_create()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.group_delete"><code class="docutils literal notranslate"><span class="pre">group_delete()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.group_detail_permissions"><code class="docutils literal notranslate"><span class="pre">group_detail_permissions()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.group_list"><code class="docutils literal notranslate"><span class="pre">group_list()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.group_toggle_status"><code class="docutils literal notranslate"><span class="pre">group_toggle_status()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.group_update"><code class="docutils literal notranslate"><span class="pre">group_update()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.is_admin"><code class="docutils literal notranslate"><span class="pre">is_admin()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.permission_create"><code class="docutils literal notranslate"><span class="pre">permission_create()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.search_permissions"><code class="docutils literal notranslate"><span class="pre">search_permissions()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.GroupCreateView"><code class="docutils literal notranslate"><span class="pre">GroupCreateView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.GroupDeleteView"><code class="docutils literal notranslate"><span class="pre">GroupDeleteView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.GroupDetailPermissionsView"><code class="docutils literal notranslate"><span class="pre">GroupDetailPermissionsView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.GroupDetailUsersView"><code class="docutils literal notranslate"><span class="pre">GroupDetailUsersView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.GroupDetailView"><code class="docutils literal notranslate"><span class="pre">GroupDetailView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.GroupListView"><code class="docutils literal notranslate"><span class="pre">GroupListView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.GroupToggleStatusView"><code class="docutils literal notranslate"><span class="pre">GroupToggleStatusView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.GroupUpdateView"><code class="docutils literal notranslate"><span class="pre">GroupUpdateView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.PermissionMatrixView"><code class="docutils literal notranslate"><span class="pre">PermissionMatrixView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.SearchPermissionsView"><code class="docutils literal notranslate"><span class="pre">SearchPermissionsView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.bad_request_view"><code class="docutils literal notranslate"><span class="pre">bad_request_view()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.page_not_found_view"><code class="docutils literal notranslate"><span class="pre">page_not_found_view()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.permission_denied_view"><code class="docutils literal notranslate"><span class="pre">permission_denied_view()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.search_users"><code class="docutils literal notranslate"><span class="pre">search_users()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.views.server_error_view"><code class="docutils literal notranslate"><span class="pre">server_error_view()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="roles.html#roles.forms.GroupForm"><code class="docutils literal notranslate"><span class="pre">GroupForm</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="roles.html#roles.forms.PermissionForm"><code class="docutils literal notranslate"><span class="pre">PermissionForm</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.context_processors.grupo_usuario"><code class="docutils literal notranslate"><span class="pre">grupo_usuario()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="roles.html#roles.context_processors.user_permissions"><code class="docutils literal notranslate"><span class="pre">user_permissions()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="medios_pago.html">Modulo de Medios de Pago</a><ul>
@@ -174,6 +197,22 @@
 <li class="toctree-l2"><a class="reference internal" href="medios_pago.html#medios_pago.tests.run_essential_tests"><code class="docutils literal notranslate"><span class="pre">run_essential_tests()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="stripe_payments.html">Módulo de Pagos con Stripe</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="stripe_payments.html#module-stripe_payments.models">Modelos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stripe_payments.html#module-stripe_payments.views">Vistas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stripe_payments.html#module-stripe_payments.services">Servicios</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stripe_payments.html#module-stripe_payments.webhooks">Webhooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stripe_payments.html#module-stripe_payments.urls">URLs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="billetera.html">Módulo de Billetera</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="billetera.html#module-billetera.models">Modelos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="billetera.html#module-billetera.views">Vistas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="billetera.html#module-billetera.forms">Formularios</a></li>
+<li class="toctree-l2"><a class="reference internal" href="billetera.html#module-billetera.signals">Señales</a></li>
+<li class="toctree-l2"><a class="reference internal" href="billetera.html#module-billetera.urls">URLs</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="users.html">Gestión de Usuarios</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="users.html#users.models.CustomUser"><code class="docutils literal notranslate"><span class="pre">CustomUser</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="users.html#users.models.Role"><code class="docutils literal notranslate"><span class="pre">Role</span></code></a></li>
@@ -183,7 +222,7 @@
 <li class="toctree-l2"><a class="reference internal" href="users.html#users.views.CustomUserDeleteView"><code class="docutils literal notranslate"><span class="pre">CustomUserDeleteView</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="users.html#users.views.CustomUserListView"><code class="docutils literal notranslate"><span class="pre">CustomUserListView</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="users.html#users.views.CustomUserUpdateView"><code class="docutils literal notranslate"><span class="pre">CustomUserUpdateView</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="users.html#users.views.perfil_usuario"><code class="docutils literal notranslate"><span class="pre">perfil_usuario()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="users.html#users.views.perfil_usuario_view"><code class="docutils literal notranslate"><span class="pre">perfil_usuario_view()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="simulador.html">Simulador de Divisas</a><ul>
@@ -200,14 +239,24 @@
 <li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.models.Transaccion"><code class="docutils literal notranslate"><span class="pre">Transaccion</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.models.cancelar_transacciones_pendientes_por_tasa"><code class="docutils literal notranslate"><span class="pre">cancelar_transacciones_pendientes_por_tasa()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.views.DetalleTransaccionView"><code class="docutils literal notranslate"><span class="pre">DetalleTransaccionView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.views.ExportarTransaccionesView"><code class="docutils literal notranslate"><span class="pre">ExportarTransaccionesView</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.views.HistorialTransaccionesClienteView"><code class="docutils literal notranslate"><span class="pre">HistorialTransaccionesClienteView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.views.calcular_monto_final"><code class="docutils literal notranslate"><span class="pre">calcular_monto_final()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.views.cambiar_estado_transaccion"><code class="docutils literal notranslate"><span class="pre">cambiar_estado_transaccion()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.views.cancelar_transaccion"><code class="docutils literal notranslate"><span class="pre">cancelar_transaccion()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.views.confirmacion_operacion"><code class="docutils literal notranslate"><span class="pre">confirmacion_operacion()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.views.crear_transaccion_desde_compra"><code class="docutils literal notranslate"><span class="pre">crear_transaccion_desde_compra()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.views.crear_transaccion_desde_venta"><code class="docutils literal notranslate"><span class="pre">crear_transaccion_desde_venta()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.views.determinar_decimales_divisa"><code class="docutils literal notranslate"><span class="pre">determinar_decimales_divisa()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.views.generar_numero_transaccion"><code class="docutils literal notranslate"><span class="pre">generar_numero_transaccion()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.views.get_cliente_from_session"><code class="docutils literal notranslate"><span class="pre">get_cliente_from_session()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.views.historial_admin"><code class="docutils literal notranslate"><span class="pre">historial_admin()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.views.is_staff_or_admin"><code class="docutils literal notranslate"><span class="pre">is_staff_or_admin()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.views.limpiar_sesion_operacion"><code class="docutils literal notranslate"><span class="pre">limpiar_sesion_operacion()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.views.preparar_datos_medio"><code class="docutils literal notranslate"><span class="pre">preparar_datos_medio()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.views.realizar_pago_billetera"><code class="docutils literal notranslate"><span class="pre">realizar_pago_billetera()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.views.realizar_pago_tarjeta"><code class="docutils literal notranslate"><span class="pre">realizar_pago_tarjeta()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.views.realizar_transferencia_bancaria"><code class="docutils literal notranslate"><span class="pre">realizar_transferencia_bancaria()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="transacciones.html#transacciones.views.redondear"><code class="docutils literal notranslate"><span class="pre">redondear()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="banco.html">Aplicacion Banco</a><ul>
@@ -227,6 +276,19 @@
 <li class="toctree-l2"><a class="reference internal" href="banco.html#banco.views.logout_view"><code class="docutils literal notranslate"><span class="pre">logout_view()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="banco.html#banco.views.pagar"><code class="docutils literal notranslate"><span class="pre">pagar()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="banco.html#banco.views.transferir"><code class="docutils literal notranslate"><span class="pre">transferir()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="notificaciones.html">Módulo de Notificaciones</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="notificaciones.html#module-notificaciones.models">Modelos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="notificaciones.html#module-notificaciones.views">Vistas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="notificaciones.html#module-notificaciones.services">Servicios</a></li>
+<li class="toctree-l2"><a class="reference internal" href="notificaciones.html#module-notificaciones.urls">URLs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="interfaz.html">Módulo de Interfaz</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="interfaz.html#module-interfaz.views">Vistas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interfaz.html#module-interfaz.backends">Backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interfaz.html#module-interfaz.urls">URLs</a></li>
 </ul>
 </li>
 </ul>
@@ -262,16 +324,22 @@
 <p class="caption" role="heading"><span class="caption-text">Contenidos:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="autenticacion.html">Modulo de Autenticacion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mfa.html">Módulo de Autenticación Multifactor (MFA)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="clientes.html">Módulos de Clientes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vistas_cliente.html">Vistas de Clientes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="form_cliente.html">Formularios de Clientes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="divisas.html">Módulos de Divisas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operacion_divisas.html">Módulo de Operación de Divisas</a></li>
 <li class="toctree-l1"><a class="reference internal" href="roles.html">Módulo de Roles y Permisos</a></li>
 <li class="toctree-l1"><a class="reference internal" href="medios_pago.html">Modulo de Medios de Pago</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stripe_payments.html">Módulo de Pagos con Stripe</a></li>
+<li class="toctree-l1"><a class="reference internal" href="billetera.html">Módulo de Billetera</a></li>
 <li class="toctree-l1"><a class="reference internal" href="users.html">Gestión de Usuarios</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulador.html">Simulador de Divisas</a></li>
 <li class="toctree-l1"><a class="reference internal" href="transacciones.html">Modulo de Transacciones</a></li>
 <li class="toctree-l1"><a class="reference internal" href="banco.html">Aplicacion Banco</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notificaciones.html">Módulo de Notificaciones</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaz.html">Módulo de Interfaz</a></li>
 </ul>
 
 <div class="relations">

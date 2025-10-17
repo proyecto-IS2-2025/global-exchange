@@ -38,183 +38,275 @@
 <h1>Módulo de Roles y Permisos<a class="headerlink" href="#modulo-de-roles-y-permisos" title="Link to this heading">¶</a></h1>
 <p>Este módulo gestiona la creación y asignación de roles y permisos
 a los usuarios del sistema.</p>
-<dl class="py function" id="module-roles.views">
-<dt class="sig sig-object py" id="roles.views.group_create">
-<span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">group_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.group_create" title="Link to this definition">¶</a></dt>
-<dd><p>Vista para crear un nuevo grupo (rol).</p>
-<p>Solo accesible para usuarios con privilegios de administrador.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>request</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">HttpRequest</span></code>) – Objeto de solicitud HTTP.</p>
-</dd>
-<dt class="field-even">Devuelve<span class="colon">:</span></dt>
-<dd class="field-even"><p>Un objeto de respuesta HTTP que renderiza el formulario de creación o redirige a la lista de grupos.</p>
-</dd>
-<dt class="field-odd">Tipo del valor devuelto<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpResponse</span></code></p>
-</dd>
-</dl>
+<p id="module-roles.views">Vistas para la gestión de roles, grupos y permisos del sistema.
+REFACTORIZADO: Usa permisos personalizados en lugar de RoleRequiredMixin hardcoded.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="roles.views.GroupCreateView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">GroupCreateView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupCreateView" title="Link to this definition">¶</a></dt>
+<dd><p>🔒 PROTEGIDA: roles.manage_roles</p>
+<p>Crea un nuevo grupo/rol en el sistema.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="roles.views.GroupCreateView.form_class">
+<span class="sig-name descname"><span class="pre">form_class</span></span><a class="headerlink" href="#roles.views.GroupCreateView.form_class" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="#roles.forms.GroupForm" title="roles.forms.GroupForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroupForm</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="roles.views.GroupCreateView.form_valid">
+<span class="sig-name descname"><span class="pre">form_valid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">form</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupCreateView.form_valid" title="Link to this definition">¶</a></dt>
+<dd><p>If the form is valid, save the associated model.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="roles.views.GroupCreateView.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#roles.views.GroupCreateView.model" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <code class="xref py py-class docutils literal notranslate"><span class="pre">Group</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="roles.views.GroupDeleteView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">GroupDeleteView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupDeleteView" title="Link to this definition">¶</a></dt>
+<dd><p>🔒 PROTEGIDA: roles.manage_roles</p>
+<p>Elimina un grupo/rol del sistema (con confirmación).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="roles.views.GroupDeleteView.delete">
+<span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupDeleteView.delete" title="Link to this definition">¶</a></dt>
+<dd><p>Call the delete() method on the fetched object and then redirect to the
+success URL.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="roles.views.GroupDeleteView.dispatch">
+<span class="sig-name descname"><span class="pre">dispatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupDeleteView.dispatch" title="Link to this definition">¶</a></dt>
+<dd><p>Validar que el grupo no esté protegido</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="roles.views.GroupDeleteView.get_context_data">
+<span class="sig-name descname"><span class="pre">get_context_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupDeleteView.get_context_data" title="Link to this definition">¶</a></dt>
+<dd><p>Insert the form into the context dict.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="roles.views.GroupDeleteView.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#roles.views.GroupDeleteView.model" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <code class="xref py py-class docutils literal notranslate"><span class="pre">Group</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="roles.views.GroupDetailPermissionsView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">GroupDetailPermissionsView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupDetailPermissionsView" title="Link to this definition">¶</a></dt>
+<dd><p>🔒 PROTEGIDA: roles.manage_group_permissions</p>
+<p>Vista para gestionar permisos de un grupo con metadata enriquecida.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="roles.views.GroupDetailPermissionsView.dispatch">
+<span class="sig-name descname"><span class="pre">dispatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupDetailPermissionsView.dispatch" title="Link to this definition">¶</a></dt>
+<dd><p>Validar que el usuario no modifique permisos de sus propios grupos</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="roles.views.GroupDetailPermissionsView.get_context_data">
+<span class="sig-name descname"><span class="pre">get_context_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupDetailPermissionsView.get_context_data" title="Link to this definition">¶</a></dt>
+<dd><p>Insert the form into the context dict.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="roles.views.GroupDetailPermissionsView.get_success_url">
+<span class="sig-name descname"><span class="pre">get_success_url</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupDetailPermissionsView.get_success_url" title="Link to this definition">¶</a></dt>
+<dd><p>Return the URL to redirect to after processing a valid form.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="roles.views.GroupDetailPermissionsView.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#roles.views.GroupDetailPermissionsView.model" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <code class="xref py py-class docutils literal notranslate"><span class="pre">Group</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="roles.views.GroupDetailPermissionsView.post">
+<span class="sig-name descname"><span class="pre">post</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupDetailPermissionsView.post" title="Link to this definition">¶</a></dt>
+<dd><p>Procesa la actualización de permisos del grupo</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="roles.views.GroupDetailUsersView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">GroupDetailUsersView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupDetailUsersView" title="Link to this definition">¶</a></dt>
+<dd><p>🔒 PROTEGIDA: roles.manage_group_users</p>
+<p>Vista para gestionar usuarios asignados a un grupo.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="roles.views.GroupDetailUsersView.dispatch">
+<span class="sig-name descname"><span class="pre">dispatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupDetailUsersView.dispatch" title="Link to this definition">¶</a></dt>
+<dd><p>Validar que no se modifiquen los propios grupos</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="roles.views.GroupDetailUsersView.get_context_data">
+<span class="sig-name descname"><span class="pre">get_context_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupDetailUsersView.get_context_data" title="Link to this definition">¶</a></dt>
+<dd><p>Insert the single object into the context dict.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="roles.views.GroupDetailUsersView.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#roles.views.GroupDetailUsersView.model" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <code class="xref py py-class docutils literal notranslate"><span class="pre">Group</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="roles.views.GroupDetailUsersView.post">
+<span class="sig-name descname"><span class="pre">post</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupDetailUsersView.post" title="Link to this definition">¶</a></dt>
+<dd><p>Procesa la adición/eliminación de usuarios del grupo</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="roles.views.GroupDetailView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">GroupDetailView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupDetailView" title="Link to this definition">¶</a></dt>
+<dd><p>🔒 PROTEGIDA: roles.view_role_details</p>
+<p>Muestra los detalles de un grupo/rol específico.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="roles.views.GroupDetailView.get_context_data">
+<span class="sig-name descname"><span class="pre">get_context_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupDetailView.get_context_data" title="Link to this definition">¶</a></dt>
+<dd><p>Insert the single object into the context dict.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="roles.views.GroupDetailView.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#roles.views.GroupDetailView.model" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <code class="xref py py-class docutils literal notranslate"><span class="pre">Group</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="roles.views.GroupListView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">GroupListView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupListView" title="Link to this definition">¶</a></dt>
+<dd><p>🔒 PROTEGIDA: roles.view_roles_list</p>
+<p>Lista todos los grupos/roles del sistema con información de permisos y usuarios.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="roles.views.GroupListView.get_context_data">
+<span class="sig-name descname"><span class="pre">get_context_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupListView.get_context_data" title="Link to this definition">¶</a></dt>
+<dd><p>Get the context for this view.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="roles.views.GroupListView.get_queryset">
+<span class="sig-name descname"><span class="pre">get_queryset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupListView.get_queryset" title="Link to this definition">¶</a></dt>
+<dd><p>Obtiene grupos con contadores de permisos y usuarios</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="roles.views.GroupListView.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#roles.views.GroupListView.model" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <code class="xref py py-class docutils literal notranslate"><span class="pre">Group</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="roles.views.GroupToggleStatusView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">GroupToggleStatusView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupToggleStatusView" title="Link to this definition">¶</a></dt>
+<dd><p>🔒 PROTEGIDA: roles.manage_role_status</p>
+<p>Activa/desactiva un rol.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="roles.views.GroupUpdateView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">GroupUpdateView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupUpdateView" title="Link to this definition">¶</a></dt>
+<dd><p>🔒 PROTEGIDA: roles.manage_roles</p>
+<p>Actualiza la información básica de un grupo/rol.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="roles.views.GroupUpdateView.dispatch">
+<span class="sig-name descname"><span class="pre">dispatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupUpdateView.dispatch" title="Link to this definition">¶</a></dt>
+<dd><p>Validar que el grupo no esté protegido</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="roles.views.GroupUpdateView.form_class">
+<span class="sig-name descname"><span class="pre">form_class</span></span><a class="headerlink" href="#roles.views.GroupUpdateView.form_class" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="#roles.forms.GroupForm" title="roles.forms.GroupForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroupForm</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="roles.views.GroupUpdateView.form_valid">
+<span class="sig-name descname"><span class="pre">form_valid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">form</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.GroupUpdateView.form_valid" title="Link to this definition">¶</a></dt>
+<dd><p>If the form is valid, save the associated model.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="roles.views.GroupUpdateView.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#roles.views.GroupUpdateView.model" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <code class="xref py py-class docutils literal notranslate"><span class="pre">Group</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="roles.views.PermissionMatrixView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">PermissionMatrixView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.PermissionMatrixView" title="Link to this definition">¶</a></dt>
+<dd><p>🔒 PROTEGIDA: roles.view_permission_matrix</p>
+<p>Muestra una matriz comparativa de permisos entre todos los roles.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="roles.views.PermissionMatrixView.get_context_data">
+<span class="sig-name descname"><span class="pre">get_context_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.PermissionMatrixView.get_context_data" title="Link to this definition">¶</a></dt>
+<dd><p>Get the context for this view.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="roles.views.PermissionMatrixView.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#roles.views.PermissionMatrixView.model" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <code class="xref py py-class docutils literal notranslate"><span class="pre">Group</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="roles.views.SearchPermissionsView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">SearchPermissionsView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.SearchPermissionsView" title="Link to this definition">¶</a></dt>
+<dd><p>🔒 PROTEGIDA: roles.view_group_permissions</p>
+<p>API para buscar permisos con metadata enriquecida.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="roles.views.group_delete">
-<span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">group_delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.group_delete" title="Link to this definition">¶</a></dt>
-<dd><p>Vista para eliminar un grupo (rol).</p>
-<p>Solo accesible para usuarios con privilegios de administrador.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>request</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">HttpRequest</span></code>) – Objeto de solicitud HTTP.</p></li>
-<li><p><strong>pk</strong> (<em>int</em>) – Clave primaria del grupo a eliminar.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Devuelve<span class="colon">:</span></dt>
-<dd class="field-even"><p>Un objeto de respuesta HTTP que redirige a la lista de grupos.</p>
-</dd>
-<dt class="field-odd">Tipo del valor devuelto<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpResponse</span></code></p>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="roles.views.bad_request_view">
+<span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">bad_request_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exception</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.bad_request_view" title="Link to this definition">¶</a></dt>
+<dd><p>Vista personalizada para error 400 (Bad Request).</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="roles.views.group_detail_permissions">
-<span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">group_detail_permissions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.group_detail_permissions" title="Link to this definition">¶</a></dt>
-<dd><p>Vista que muestra los detalles de un grupo (rol) y sus permisos asociados.</p>
-<p>Permite a un administrador ver y gestionar los permisos de un grupo.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>request</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">HttpRequest</span></code>) – Objeto de solicitud HTTP.</p></li>
-<li><p><strong>pk</strong> (<em>int</em>) – Clave primaria del grupo.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Devuelve<span class="colon">:</span></dt>
-<dd class="field-even"><p>Un objeto de respuesta HTTP que renderiza la página de detalles del grupo.</p>
-</dd>
-<dt class="field-odd">Tipo del valor devuelto<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpResponse</span></code></p>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="roles.views.page_not_found_view">
+<span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">page_not_found_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exception</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.page_not_found_view" title="Link to this definition">¶</a></dt>
+<dd><p>Vista personalizada para error 404 (Not Found).
+Redirige al dashboard según el tipo de usuario.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="roles.views.group_list">
-<span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">group_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.group_list" title="Link to this definition">¶</a></dt>
-<dd><p>Vista que muestra la lista de todos los grupos (roles) existentes.</p>
-<p>Solo accesible para usuarios con privilegios de administrador.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>request</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">HttpRequest</span></code>) – Objeto de solicitud HTTP.</p>
-</dd>
-<dt class="field-even">Devuelve<span class="colon">:</span></dt>
-<dd class="field-even"><p>Un objeto de respuesta HTTP que renderiza la plantilla con la lista de grupos.</p>
-</dd>
-<dt class="field-odd">Tipo del valor devuelto<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpResponse</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="roles.views.group_toggle_status">
-<span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">group_toggle_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.group_toggle_status" title="Link to this definition">¶</a></dt>
-<dd><p>Vista para activar o desactivar un rol.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="roles.views.group_update">
-<span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">group_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.group_update" title="Link to this definition">¶</a></dt>
-<dd><p>Vista para actualizar un grupo (rol) existente.</p>
-<p>Solo accesible para usuarios con privilegios de administrador.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>request</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">HttpRequest</span></code>) – Objeto de solicitud HTTP.</p></li>
-<li><p><strong>pk</strong> (<em>int</em>) – Clave primaria del grupo a actualizar.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Devuelve<span class="colon">:</span></dt>
-<dd class="field-even"><p>Un objeto de respuesta HTTP que renderiza el formulario de actualización o redirige.</p>
-</dd>
-<dt class="field-odd">Tipo del valor devuelto<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpResponse</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="roles.views.is_admin">
-<span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">is_admin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.is_admin" title="Link to this definition">¶</a></dt>
-<dd><p>Verifica si un usuario es un administrador.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>user</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">User</span></code>) – El objeto de usuario a verificar.</p>
-</dd>
-<dt class="field-even">Devuelve<span class="colon">:</span></dt>
-<dd class="field-even"><p><cite>True</cite> si el usuario tiene el estatus de staff o superusuario, <cite>False</cite> en caso contrario.</p>
-</dd>
-<dt class="field-odd">Tipo del valor devuelto<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="roles.views.permission_create">
-<span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">permission_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.permission_create" title="Link to this definition">¶</a></dt>
-<dd><p>Vista para crear un nuevo permiso.</p>
-<p>Solo accesible para usuarios con privilegios de administrador.
-Permite crear un permiso personalizado en la base de datos.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>request</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">HttpRequest</span></code>) – Objeto de solicitud HTTP.</p>
-</dd>
-<dt class="field-even">Devuelve<span class="colon">:</span></dt>
-<dd class="field-even"><p>Un objeto de respuesta HTTP que renderiza el formulario o redirige.</p>
-</dd>
-<dt class="field-odd">Tipo del valor devuelto<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpResponse</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="roles.views.search_permissions">
-<span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">search_permissions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.search_permissions" title="Link to this definition">¶</a></dt>
-<dd><p>Vista para buscar permisos por nombre o codename.</p>
-<p>Devuelve una lista de permisos en formato JSON.
-Esta vista es utilizada por las llamadas AJAX en las plantillas.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>request</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">HttpRequest</span></code>) – Objeto de solicitud HTTP con el parámetro GET “q”.</p>
-</dd>
-<dt class="field-even">Devuelve<span class="colon">:</span></dt>
-<dd class="field-even"><p>Un objeto de respuesta JSON con una lista de permisos.</p>
-</dd>
-<dt class="field-odd">Tipo del valor devuelto<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">JsonResponse</span></code></p>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="roles.views.permission_denied_view">
+<span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">permission_denied_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exception</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.permission_denied_view" title="Link to this definition">¶</a></dt>
+<dd><p>Vista personalizada para error 403 (Permission Denied).
+Redirige según el tipo de usuario.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="roles.views.search_users">
 <span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">search_users</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.search_users" title="Link to this definition">¶</a></dt>
-<dd><p>Vista para buscar usuarios por nombre de usuario o email.</p>
-<p>Devuelve una lista de usuarios en formato JSON.
+<dd><p>🔒 PROTEGIDA: roles.view_group_users</p>
+<p>Vista para buscar usuarios por nombre de usuario o email.
+Devuelve una lista de usuarios en formato JSON.
 Esta vista es utilizada por las llamadas AJAX.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parámetros<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>request</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">HttpRequest</span></code>) – Objeto de solicitud HTTP con el parámetro GET “q”.</p>
-</dd>
-<dt class="field-even">Devuelve<span class="colon">:</span></dt>
-<dd class="field-even"><p>Un objeto de respuesta JSON con una lista de usuarios.</p>
-</dd>
-<dt class="field-odd">Tipo del valor devuelto<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">JsonResponse</span></code></p>
-</dd>
-</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="roles.views.server_error_view">
+<span class="sig-prename descclassname"><span class="pre">roles.views.</span></span><span class="sig-name descname"><span class="pre">server_error_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.views.server_error_view" title="Link to this definition">¶</a></dt>
+<dd><p>Vista personalizada para error 500 (Server Error).
+Siempre redirige al inicio para evitar loops.</p>
 </dd></dl>
 
 <dl class="py class" id="module-roles.forms">
@@ -257,7 +349,21 @@ asociados a un tipo de contenido (modelo) específico.</p>
 
 </dd></dl>
 
-<span class="target" id="module-roles.context_processors"></span></section>
+<p id="module-roles.context_processors">Context processor que inyecta información del usuario y permisos de forma dinámica.
+Maneja múltiples roles de staff y determina automáticamente el tipo de menú a mostrar.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="roles.context_processors.grupo_usuario">
+<span class="sig-prename descclassname"><span class="pre">roles.context_processors.</span></span><span class="sig-name descname"><span class="pre">grupo_usuario</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.context_processors.grupo_usuario" title="Link to this definition">¶</a></dt>
+<dd><p>✅ Context processor principal que determina el tipo de usuario y sus permisos.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="roles.context_processors.user_permissions">
+<span class="sig-prename descclassname"><span class="pre">roles.context_processors.</span></span><span class="sig-name descname"><span class="pre">user_permissions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#roles.context_processors.user_permissions" title="Link to this definition">¶</a></dt>
+<dd><p>✅ Context processor alternativo con estructura diferente.</p>
+</dd></dl>
+
+</section>
 
 
           </div>
@@ -293,24 +399,32 @@ asociados a un tipo de contenido (modelo) específico.</p>
 <li class="toctree-l1"><a class="reference internal" href="form_cliente.html">Formularios de Clientes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="divisas.html">Módulos de Divisas</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Módulo de Roles y Permisos</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#roles.views.group_create"><code class="docutils literal notranslate"><span class="pre">group_create()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#roles.views.group_delete"><code class="docutils literal notranslate"><span class="pre">group_delete()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#roles.views.group_detail_permissions"><code class="docutils literal notranslate"><span class="pre">group_detail_permissions()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#roles.views.group_list"><code class="docutils literal notranslate"><span class="pre">group_list()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#roles.views.group_toggle_status"><code class="docutils literal notranslate"><span class="pre">group_toggle_status()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#roles.views.group_update"><code class="docutils literal notranslate"><span class="pre">group_update()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#roles.views.is_admin"><code class="docutils literal notranslate"><span class="pre">is_admin()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#roles.views.permission_create"><code class="docutils literal notranslate"><span class="pre">permission_create()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#roles.views.search_permissions"><code class="docutils literal notranslate"><span class="pre">search_permissions()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#roles.views.GroupCreateView"><code class="docutils literal notranslate"><span class="pre">GroupCreateView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#roles.views.GroupDeleteView"><code class="docutils literal notranslate"><span class="pre">GroupDeleteView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#roles.views.GroupDetailPermissionsView"><code class="docutils literal notranslate"><span class="pre">GroupDetailPermissionsView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#roles.views.GroupDetailUsersView"><code class="docutils literal notranslate"><span class="pre">GroupDetailUsersView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#roles.views.GroupDetailView"><code class="docutils literal notranslate"><span class="pre">GroupDetailView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#roles.views.GroupListView"><code class="docutils literal notranslate"><span class="pre">GroupListView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#roles.views.GroupToggleStatusView"><code class="docutils literal notranslate"><span class="pre">GroupToggleStatusView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#roles.views.GroupUpdateView"><code class="docutils literal notranslate"><span class="pre">GroupUpdateView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#roles.views.PermissionMatrixView"><code class="docutils literal notranslate"><span class="pre">PermissionMatrixView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#roles.views.SearchPermissionsView"><code class="docutils literal notranslate"><span class="pre">SearchPermissionsView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#roles.views.bad_request_view"><code class="docutils literal notranslate"><span class="pre">bad_request_view()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#roles.views.page_not_found_view"><code class="docutils literal notranslate"><span class="pre">page_not_found_view()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#roles.views.permission_denied_view"><code class="docutils literal notranslate"><span class="pre">permission_denied_view()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#roles.views.search_users"><code class="docutils literal notranslate"><span class="pre">search_users()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#roles.views.server_error_view"><code class="docutils literal notranslate"><span class="pre">server_error_view()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#roles.forms.GroupForm"><code class="docutils literal notranslate"><span class="pre">GroupForm</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#roles.forms.PermissionForm"><code class="docutils literal notranslate"><span class="pre">PermissionForm</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#roles.context_processors.grupo_usuario"><code class="docutils literal notranslate"><span class="pre">grupo_usuario()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#roles.context_processors.user_permissions"><code class="docutils literal notranslate"><span class="pre">user_permissions()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="medios_pago.html">Modulo de Medios de Pago</a></li>
 <li class="toctree-l1"><a class="reference internal" href="users.html">Gestión de Usuarios</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulador.html">Simulador de Divisas</a></li>
 <li class="toctree-l1"><a class="reference internal" href="transacciones.html">Modulo de Transacciones</a></li>
+<li class="toctree-l1"><a class="reference internal" href="banco.html">Aplicacion Banco</a></li>
 </ul>
 
 <div class="relations">
