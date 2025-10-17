@@ -434,6 +434,138 @@ def realizar_transferencia_bancaria(entidad_src, numero_cuenta_src, entidad_dst,
         logger.error(f'Error en transferencia bancaria: {e}', exc_info=True)
         return {'ok': False, 'code': '96', 'message': 'Error interno del sistema'}
 
+
+def realizar_pago_billetera(medio_datos, monto, referencia=None):
+    """
+    Realiza un pago desde una billetera digital a la cuenta bancaria de la empresa.
+    
+    Args:
+        medio_datos: Diccionario con información del medio de pago (debe contener datos_campos con wallet_phone y bank_name)
+        monto: Monto a pagar en guaraníes
+        referencia: Referencia opcional para el pago
+        
+    Returns:
+        dict: {'ok': bool, 'code': str, 'message': str, 'comprobante': str}
+    """
+    try:
+        from billetera.models import Billetera, PagoBilletera, UsuarioBilletera
+        from banco.models import Cuenta, EntidadBancaria
+    except ImportError as e:
+        logger.error(f"Error al importar modelos de billetera o banco: {e}")
+        return {'ok': False, 'code': '96', 'message': 'Módulo de billetera no disponible'}
+    
+    try:
+        logger.info(f"[PAGO_BILLETERA] Iniciando pago desde billetera por monto={monto}")
+        
+        # Extraer datos de la billetera desde medio_datos
+        datos_campos = medio_datos.get('datos_campos', {})
+        if not isinstance(datos_campos, dict):
+            logger.error(f"[PAGO_BILLETERA] datos_campos no es un diccionario: {type(datos_campos)}")
+            return {'ok': False, 'code': '12', 'message': 'Datos de billetera incompletos'}
+        
+        logger.debug(f"[PAGO_BILLETERA] datos_campos: {datos_campos}")
+        
+        # Buscar número de teléfono (puede venir con diferentes nombres de campo)
+        numero_telefono = None
+        for key, value in datos_campos.items():
+            key_normalized = _normalize_text(key)
+            if any(variant in key_normalized for variant in ['telefono', 'phone', 'celular', 'movil', 'wallet_phone']):
+                numero_telefono = str(value).strip()
+                logger.debug(f"[PAGO_BILLETERA] Número de teléfono encontrado: {numero_telefono}")
+                break
+        
+        if not numero_telefono:
+            logger.error(f"[PAGO_BILLETERA] No se encontró número de teléfono en datos_campos")
+            return {'ok': False, 'code': '12', 'message': 'No se encontró número de teléfono de la billetera'}
+        
+        # Buscar entidad bancaria (opcional, puede venir en el medio de pago)
+        entidad_nombre = None
+        for key, value in datos_campos.items():
+            key_normalized = _normalize_text(key)
+            if any(variant in key_normalized for variant in ['entidad', 'banco', 'bank', 'bank_name']):
+                entidad_nombre = str(value).strip()
+                logger.debug(f"[PAGO_BILLETERA] Entidad encontrada: {entidad_nombre}")
+                break
+        
+        # Buscar la billetera por número de teléfono
+        try:
+            usuario_billetera = UsuarioBilletera.objects.get(numero_celular=numero_telefono)
+            logger.debug(f"[PAGO_BILLETERA] Usuario billetera encontrado: {usuario_billetera}")
+        except UsuarioBilletera.DoesNotExist:
+            logger.error(f"[PAGO_BILLETERA] No existe usuario de billetera con teléfono: {numero_telefono}")
+            return {'ok': False, 'code': '14', 'message': f'No se encontró billetera con teléfono {numero_telefono}'}
+        except UsuarioBilletera.MultipleObjectsReturned:
+            logger.error(f"[PAGO_BILLETERA] Múltiples usuarios con el mismo teléfono: {numero_telefono}")
+            return {'ok': False, 'code': '14', 'message': 'Error: múltiples billeteras con el mismo teléfono'}
+        
+        # Obtener la billetera del usuario
+        try:
+            if entidad_nombre:
+                # Buscar billetera específica de la entidad
+                entidad = _get_entidad(entidad_nombre)
+                if entidad:
+                    billetera = Billetera.objects.get(usuario=usuario_billetera, entidad=entidad, activa=True)
+                else:
+                    logger.warning(f"[PAGO_BILLETERA] Entidad no encontrada: {entidad_nombre}, usando cualquier billetera activa")
+                    billetera = Billetera.objects.get(usuario=usuario_billetera, activa=True)
+            else:
+                # Si no hay entidad especificada, usar la primera billetera activa
+                billetera = Billetera.objects.filter(usuario=usuario_billetera, activa=True).first()
+                if not billetera:
+                    raise Billetera.DoesNotExist()
+            
+            logger.debug(f"[PAGO_BILLETERA] Billetera encontrada: {billetera}, saldo: {billetera.saldo}")
+        except Billetera.DoesNotExist:
+            logger.error(f"[PAGO_BILLETERA] No se encontró billetera activa para usuario: {usuario_billetera}")
+            return {'ok': False, 'code': '14', 'message': 'No se encontró billetera activa'}
+        
+        # Verificar saldo suficiente
+        monto_decimal = Decimal(str(monto))
+        if billetera.saldo < monto_decimal:
+            logger.warning(f"[PAGO_BILLETERA] Saldo insuficiente. Requerido: {monto_decimal}, Disponible: {billetera.saldo}")
+            return {'ok': False, 'code': '51', 'message': f'Saldo insuficiente en billetera. Disponible: ₲{billetera.saldo}'}
+        
+        # Obtener cuenta de la empresa
+        ent_emp, cta_emp = _get_cuenta_empresa()
+        if not ent_emp or not cta_emp:
+            logger.error(f"[PAGO_BILLETERA] No se encontró cuenta de empresa")
+            return {'ok': False, 'code': '96', 'message': 'Error de configuración: cuenta de empresa no encontrada'}
+        
+        # Buscar la cuenta destino
+        cuenta_destino = Cuenta.objects.filter(
+            entidad=ent_emp,
+            numero_cuenta=cta_emp
+        ).first()
+        
+        if not cuenta_destino:
+            logger.error(f"[PAGO_BILLETERA] Cuenta destino no encontrada: entidad={ent_emp}, cuenta={cta_emp}")
+            return {'ok': False, 'code': '14', 'message': 'Cuenta destino no encontrada'}
+        
+        logger.info(f"[PAGO_BILLETERA] Ejecutando pago: billetera={billetera} -> cuenta={cuenta_destino.numero_cuenta} por ₲{monto_decimal}")
+        
+        # Realizar el pago utilizando el modelo PagoBilletera
+        with transaction.atomic():
+            pago = PagoBilletera.objects.create(
+                billetera=billetera,
+                cuenta_destino=cuenta_destino,
+                monto=monto_decimal
+            )
+            
+            comprobante = str(pago.comprobante)
+            logger.info(f"[PAGO_BILLETERA] Pago exitoso. Comprobante: {comprobante}")
+            
+            return {
+                'ok': True,
+                'code': '00',
+                'message': 'Pago desde billetera realizado con éxito',
+                'comprobante': comprobante
+            }
+            
+    except Exception as e:
+        logger.error(f"[PAGO_BILLETERA] Error al procesar pago: {e}", exc_info=True)
+        return {'ok': False, 'code': '96', 'message': f'Error al procesar pago desde billetera: {str(e)}'}
+
+
 @login_required
 def crear_transaccion_desde_venta(request):
     """
@@ -733,36 +865,56 @@ def crear_transaccion_desde_compra(request):
         # Limpiar datos de sesión
         limpiar_sesion_operacion(request, ['operacion', 'compra_resultado', 'medio_pago_seleccionado'])
 
-        # NUEVO: realizar transferencia del CLIENTE -> EMPRESA por monto_origen (PYG)
+        # NUEVO: realizar transferencia/pago del CLIENTE -> EMPRESA por monto_origen (PYG)
         try:
             medio_datos = transaccion.get_medio_pago_info() or {}
-            ent_cli_hint, cta_cli = _extraer_cuenta_desde_medio(medio_datos)
-            ent_emp, cta_emp = _get_cuenta_empresa()
-
-            logger.debug(f"[COMPRA] Extract medio -> entidad_cliente='{ent_cli_hint}', cuenta_cliente_raw='{cta_cli}' | empresa_entidad='{getattr(ent_emp,'codigo',ent_emp)}', empresa_cuenta='{cta_emp}'")
-
-            # Validar que se tengan todos los datos necesarios
-            if not ent_cli_hint or not cta_cli:
-                logger.warning(f"[COMPRA] Faltan datos del cliente: entidad='{ent_cli_hint}', cuenta='{cta_cli}'")
-                messages.warning(request, "No se encontró información bancaria del cliente en el medio de pago seleccionado. La transacción quedó pendiente.")
-            elif not ent_emp or not cta_emp:
-                logger.error(f"[COMPRA] Faltan datos de la empresa: entidad='{ent_emp}', cuenta='{cta_emp}'")
-                messages.warning(request, "Error de configuración: no se encontró la cuenta bancaria de la empresa. Contacte al administrador.")
-            else:
-                resultado = realizar_transferencia_bancaria(
-                    entidad_src=ent_cli_hint,
-                    numero_cuenta_src=cta_cli,
-                    entidad_dst=ent_emp,
-                    numero_cuenta_dst=cta_emp,
+            tipo_medio = medio_datos.get('tipo', '').lower()
+            
+            logger.debug(f"[COMPRA] Tipo de medio: '{tipo_medio}'")
+            
+            # Verificar si es billetera electrónica
+            if 'billetera' in tipo_medio or tipo_medio == 'billetera electrónica':
+                logger.info(f"[COMPRA] Procesando pago con billetera electrónica")
+                resultado = realizar_pago_billetera(
+                    medio_datos=medio_datos,
                     monto=transaccion.monto_origen,
-                    referencia=transaccion.numero_transaccion  # NUEVO: referencia para historial
+                    referencia=transaccion.numero_transaccion
                 )
                 if resultado.get('ok'):
-                    transaccion.cambiar_estado('pagada', observacion='Pago automático recibido', usuario=request.user)
-                    messages.success(request, 'Transferencia recibida: operación pagada.')
+                    transaccion.cambiar_estado('pagada', observacion='Pago automático desde billetera recibido', usuario=request.user)
+                    messages.success(request, f"Pago exitoso desde billetera. Comprobante: {resultado.get('comprobante')}")
                 else:
-                    logger.warning(f"[COMPRA] Transferencia fallida: {resultado}")
-                    messages.warning(request, f"No se pudo recibir la transferencia: {resultado.get('message')} (código {resultado.get('code')})")
+                    logger.warning(f"[COMPRA] Pago billetera fallido: {resultado}")
+                    messages.warning(request, f"No se pudo procesar el pago desde billetera: {resultado.get('message')} (código {resultado.get('code')})")
+            else:
+                # Proceso normal con cuenta bancaria
+                ent_cli_hint, cta_cli = _extraer_cuenta_desde_medio(medio_datos)
+                ent_emp, cta_emp = _get_cuenta_empresa()
+
+                logger.debug(f"[COMPRA] Extract medio -> entidad_cliente='{ent_cli_hint}', cuenta_cliente_raw='{cta_cli}' | empresa_entidad='{getattr(ent_emp,'codigo',ent_emp)}', empresa_cuenta='{cta_emp}'")
+
+                # Validar que se tengan todos los datos necesarios
+                if not ent_cli_hint or not cta_cli:
+                    logger.warning(f"[COMPRA] Faltan datos del cliente: entidad='{ent_cli_hint}', cuenta='{cta_cli}'")
+                    messages.warning(request, "No se encontró información bancaria del cliente en el medio de pago seleccionado. La transacción quedó pendiente.")
+                elif not ent_emp or not cta_emp:
+                    logger.error(f"[COMPRA] Faltan datos de la empresa: entidad='{ent_emp}', cuenta='{cta_emp}'")
+                    messages.warning(request, "Error de configuración: no se encontró la cuenta bancaria de la empresa. Contacte al administrador.")
+                else:
+                    resultado = realizar_transferencia_bancaria(
+                        entidad_src=ent_cli_hint,
+                        numero_cuenta_src=cta_cli,
+                        entidad_dst=ent_emp,
+                        numero_cuenta_dst=cta_emp,
+                        monto=transaccion.monto_origen,
+                        referencia=transaccion.numero_transaccion  # NUEVO: referencia para historial
+                    )
+                    if resultado.get('ok'):
+                        transaccion.cambiar_estado('pagada', observacion='Pago automático recibido', usuario=request.user)
+                        messages.success(request, 'Transferencia recibida: operación pagada.')
+                    else:
+                        logger.warning(f"[COMPRA] Transferencia fallida: {resultado}")
+                        messages.warning(request, f"No se pudo recibir la transferencia: {resultado.get('message')} (código {resultado.get('code')})")
         except Exception as e:
             logger.error(f"[COMPRA] Error post-transferencia: {e}", exc_info=True)
             messages.warning(request, "Ocurrió un error al procesar la transferencia desde el cliente.")
