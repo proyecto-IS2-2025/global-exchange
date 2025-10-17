@@ -318,34 +318,73 @@ class Transaccion(models.Model):
         medio_info = self.get_medio_pago_info()
         return medio_info.get('comision', '0%')
 
-    def _enviar_notificacion_cancelacion(self, razon):
+    def _enviar_notificacion_cancelacion(self, razon, notificacion_obj=None):
         """
-        Función placeholder para simular el envío de una notificación (Email).
-        En un sistema real, aquí se implementaría el código real de envío de email/push.
+        Envía notificación por correo sobre la cancelación de transacción.
+        Retorna True si el correo se envió exitosamente, False si no.
         """
-        cliente_email = None
-        try:
-            # Asumo que puedes acceder al email del usuario a través del cliente
-            cliente_email = self.cliente.usuario.email
-        except Exception:
-            pass
+        from django.core.mail import send_mail
+        from django.conf import settings
+        from notificaciones.models import ConfiguracionGeneral
+        
+        correo_enviado_exitosamente = False
 
-        if cliente_email:
-            email_subject = f"Cancelación de Transacción #{self.numero_transaccion} - Actualización de Tasa"
-            email_body = (
-                f"Estimado(a) cliente {self.cliente.nombre_completo or self.cliente.id},\n\n"
-                f"Te informamos que tu transacción de cambio **#{self.numero_transaccion}** ha sido **CANCELADA automáticamente**.\n\n"
-                f"**Razón:** {razon}.\n"
-                f"La cotización de la divisa involucrada ha sido actualizada en nuestro sistema, invalidando la tasa anterior.\n\n"
-                "Para continuar con la operación, por favor, inicia una nueva transacción con la cotización actualizada.\n\n"
-                "Gracias por tu comprensión.\n"
-                "Equipo de Soporte."
-            )
+        if self.procesado_por:
+            # Verificar si el usuario tiene configurado recibir correos
+            try:
+                config = ConfiguracionGeneral.objects.get(usuario=self.procesado_por)
+                canal = config.canal_notificacion
+                
+                # Solo enviar si el canal incluye correo
+                if canal == "sistema_correo":
+                    # Identificar la divisa extranjera (no PYG)
+                    divisa_extranjera = None
+                    if self.divisa_origen and self.divisa_origen.code not in ['PYG', '116']:
+                        divisa_extranjera = self.divisa_origen.code
+                    elif self.divisa_destino and self.divisa_destino.code not in ['PYG', '116']:
+                        divisa_extranjera = self.divisa_destino.code
+                    
+                    divisa_texto = f"({divisa_extranjera})" if divisa_extranjera else ""
+                    
+                    email_subject = f"Cancelación de Transacción #{self.numero_transaccion} - Actualización de Tasa"
+                    email_body = (
+                        f"Estimado(a) cliente {self.cliente.nombre_completo or self.cliente.id},\n\n"
+                        f"Te informamos que tu transacción de cambio #{self.numero_transaccion} ha sido CANCELADA automáticamente.\n\n"
+                        f"Razón: {razon}\n\n"
+                        f"La cotización de la divisa extranjera {divisa_texto} ha sido actualizada en nuestro sistema, "
+                        f"invalidando la tasa de cambio anterior con la que iniciaste tu transacción.\n\n"
+                        "Para continuar con la operación, por favor, inicia una nueva transacción con la cotización actualizada.\n\n"
+                        "Gracias por tu comprensión.\n"
+                        "Equipo de Soporte - Global Exchange"
+                    )
 
-            # NOTA: En un sistema real, se usaría send_mail(email_subject, email_body, ...)
-            logger.info(f"EMAIL_SIMULADO enviado a {cliente_email} por trans. {self.numero_transaccion}. Asunto: {email_subject}")
+                    try:
+                        send_mail(
+                            subject=email_subject,
+                            message=email_body,
+                            from_email=settings.EMAIL_HOST_USER,
+                            recipient_list=[self.procesado_por.email],
+                            fail_silently=False
+                        )
+                        correo_enviado_exitosamente = True
+                        logger.info(f"📧 Correo de cancelación enviado a {self.procesado_por.email} por trans. {self.numero_transaccion}")
+                    except Exception as e:
+                        logger.error(f"❌ Error al enviar correo de cancelación a {self.procesado_por.email}: {e}")
+                        correo_enviado_exitosamente = False
+                else:
+                    logger.info(f"⏭️ Usuario {self.procesado_por.email} tiene canal='{canal}', no se envía correo de cancelación")
+                    
+            except ConfiguracionGeneral.DoesNotExist:
+                logger.warning(f"⚠️ Usuario {self.procesado_por.email} no tiene ConfiguracionGeneral, no se envía correo")
         else:
-            logger.warning(f"No se pudo enviar notificación de cancelación a cliente de trans. {self.numero_transaccion}. Email no encontrado.")
+            logger.warning(f"⚠️ No se pudo enviar correo de cancelación para trans. {self.numero_transaccion}. Email o usuario no encontrado.")
+        
+        # Actualizar el objeto Notificacion si se proporcionó
+        if notificacion_obj and correo_enviado_exitosamente:
+            notificacion_obj.correo_enviado = True
+            notificacion_obj.save(update_fields=['correo_enviado'])
+            
+        return correo_enviado_exitosamente
 
     def cancelar_automaticamente(self, razon):
         """
@@ -377,21 +416,22 @@ class Transaccion(models.Model):
             )
             
             # 🔔 CREAR NOTIFICACIÓN para el usuario que procesó la transacción
+            notificacion_obj = None
             if self.procesado_por:
                 mensaje_notificacion = (
                     f"Su transacción {self.numero_transaccion} ha sido cancelada por un cambio en la cotización. "
                     f"Ingrese a su historial de transacciones para corroborarlo."
                 )
                 
-                Notificacion.objects.create(
+                notificacion_obj = Notificacion.objects.create(
                     usuario=self.procesado_por,
                     mensaje=mensaje_notificacion,
                     estado_lectura='pendiente',
                     correo_enviado=False
                 )
 
-            # Enviar notificación (ver helper abajo)
-            self._enviar_notificacion_cancelacion(razon)
+            # Enviar notificación por correo y actualizar correo_enviado si es exitoso
+            self._enviar_notificacion_cancelacion(razon, notificacion_obj)
 
             logger.info(f"Transacción {self.numero_transaccion} cancelada automáticamente por: {razon}")
 
