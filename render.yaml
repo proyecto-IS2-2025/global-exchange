@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: global-exchange
+    env: python
+    region: oregon
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn casa_de_cambios.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: ALLOWED_HOSTS
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: global-exchange-db
+          property: connectionString
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+
+  - type: pserv
+    name: global-exchange-db
+    env: docker
+    plan: free
+    ipAllowList: []

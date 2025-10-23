@@ -74,6 +74,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # ← Debe ir justo después de SecurityMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -81,8 +82,6 @@ MIDDLEWARE = [
     'clientes.middleware.ClienteActivoMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    
-    # ✅ AGREGAR AL FINAL (solo en desarrollo)
     'roles.middleware.CustomErrorHandlerMiddleware',
 ]
 
@@ -197,57 +196,31 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
-#email de verificación
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'glex.globalexchange.respaldo@gmail.com'
-EMAIL_HOST_PASSWORD = 'iceq lnzf rtjl qgxx'
-DEFAULT_FROM_EMAIL = 'glex.globalexchange.respaldo@gmail.com'
-SERVER_EMAIL = 'glex.globalexchange.respaldo@gmail.com'
-
-#login y logout redirect
-#LOGIN_REDIRECT_URL = 'inicio'
-LOGIN_URL = '/login/'
-LOGOUT_REDIRECT_URL = 'inicio'
-LOGIN_REDIRECT_URL = '/redirect-dashboard/'
-
-LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'   # a dónde redirige tras login exitoso (puedes poner 'inicio')
-
+# Configuración de WhiteNoise para archivos estáticos en producción
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ═════════════════════════════════════════════════════════════════════
-# LOGGING
+# CONFIGURACIÓN DE MENSAJES (BOOTSTRAP 5)
 # ═════════════════════════════════════════════════════════════════════
 
-import os  # ← Asegurar que está importado al inicio
-
-# Crear carpeta de logs automáticamente
-LOGS_DIR = BASE_DIR / 'logs'
-LOGS_DIR.mkdir(exist_ok=True)  # ← AGREGAR ESTA LÍNEA
-
-
-
-
-AUTH_USER_MODEL = 'users.CustomUser'
-# Configuración de mensajes para Bootstrap 5
 from django.contrib.messages import constants as messages
 MESSAGE_TAGS = {
     messages.DEBUG: 'debug',
     messages.INFO: 'info',
     messages.SUCCESS: 'success',
     messages.WARNING: 'warning',
-    messages.ERROR: 'danger',  # Bootstrap usa 'danger' en lugar de 'error'
+    messages.ERROR: 'danger',
 }
 
-DEBUG = True
+
+# ═════════════════════════════════════════════════════════════════════
+# LOGGING
+# ═════════════════════════════════════════════════════════════════════
+
+# Crear carpeta de logs automáticamente
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -289,24 +262,38 @@ LOGGING = {
 }
 
 # ═════════════════════════════════════════════════════════════════════
+# STRIPE
+# ═════════════════════════════════════════════════════════════════════
+
+STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', 'pk_test_51SCTnvFayINu5q7y2Xs9rtuAXlKXFESkR2jtUI6yrPVRkbn2mA5lJ3QOMGYcSVVn4V3BbjfJnUHuu1gYxfZspNDz00hJkOST0s')
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', 'sk_test_51SCTnvFayINu5q7yTXQJO2Old7r5bI35yOYD43Zvas0j0ZXr66aFt4cpy73ZKn61iUPcmGlNkxaZ1ib0XUVYoc8O00cfCofmn1')
+STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', 'whsec_32b4e065fe19a60910470282b157b2536e644e0d6fdf5a01cebcdbee92334f8d')
+stripe.api_key = STRIPE_SECRET_KEY
+
+# ═════════════════════════════════════════════════════════════════════
+# CONFIGURACIÓN DE PRODUCCIÓN (RENDER)
+# ═════════════════════════════════════════════════════════════════════
+
+# Configurar base de datos desde DATABASE_URL (Render)
+import dj_database_url
+if os.environ.get('DATABASE_URL'):
+    DATABASES['default'] = dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True
+    )
+
+# ═════════════════════════════════════════════════════════════════════
 # OTROS
 # ═════════════════════════════════════════════════════════════════════
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-STRIPE_PUBLISHABLE_KEY = "pk_test_51SCTnvFayINu5q7y2Xs9rtuAXlKXFESkR2jtUI6yrPVRkbn2mA5lJ3QOMGYcSVVn4V3BbjfJnUHuu1gYxfZspNDz00hJkOST0s"
-STRIPE_SECRET_KEY = "sk_test_51SCTnvFayINu5q7yTXQJO2Old7r5bI35yOYD43Zvas0j0ZXr66aFt4cpy73ZKn61iUPcmGlNkxaZ1ib0XUVYoc8O00cfCofmn1"
-STRIPE_WEBHOOK_SECRET = "whsec_32b4e065fe19a60910470282b157b2536e644e0d6fdf5a01cebcdbee92334f8d"
-stripe.api_key = STRIPE_SECRET_KEY
-
-
-ALLOWED_HOSTS = ['GlobalExchangeTestEnvironment.onrender.com', 'localhost']
-import dj_database_url
-
-DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
-
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATIC_URL = '/static/'
-
-# WhiteNoise para servir estáticos
-MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+# Configuración de seguridad para producción
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'

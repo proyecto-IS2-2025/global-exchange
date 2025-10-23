@@ -2,7 +2,7 @@ Ignorar directorios y archivos de entorno virtual,
 .venv/
 env/
 venv/
-.env
+
 
 # Ignorar archivos de caché de Python
 __pycache__/
