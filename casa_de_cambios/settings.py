@@ -119,6 +119,7 @@ WSGI_APPLICATION = 'casa_de_cambios.wsgi.application'
 # BASE DE DATOS
 # ═════════════════════════════════════════════════════════════════════
 
+# Configuración base para desarrollo local
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -132,6 +133,15 @@ DATABASES = {
         },
     }
 }
+
+# Sobrescribir con DATABASE_URL si existe (Render/producción)
+import dj_database_url
+if os.environ.get('postgresql://global_exchange_user:D73McVwA0feInevsbS1CvLoXhLWgVSS9@dpg-d3tbmsf5r7bs73emd8tg-a/global_exchange'):
+    DATABASES['default'] = dj_database_url.config(
+        conn_max_age=600,
+        conn_health_checks=True,
+        ssl_require=True
+    )
 
 # ═════════════════════════════════════════════════════════════════════
 # AUTENTICACIÓN
@@ -269,19 +279,6 @@ STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', 'pk_test_51SCT
 STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', 'sk_test_51SCTnvFayINu5q7yTXQJO2Old7r5bI35yOYD43Zvas0j0ZXr66aFt4cpy73ZKn61iUPcmGlNkxaZ1ib0XUVYoc8O00cfCofmn1')
 STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', 'whsec_32b4e065fe19a60910470282b157b2536e644e0d6fdf5a01cebcdbee92334f8d')
 stripe.api_key = STRIPE_SECRET_KEY
-
-# ═════════════════════════════════════════════════════════════════════
-# CONFIGURACIÓN DE PRODUCCIÓN (RENDER)
-# ═════════════════════════════════════════════════════════════════════
-
-# Configurar base de datos desde DATABASE_URL (Render)
-import dj_database_url
-if os.environ.get('DATABASE_URL'):
-    DATABASES['default'] = dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600,
-        ssl_require=True
-    )
 
 # ═════════════════════════════════════════════════════════════════════
 # OTROS
