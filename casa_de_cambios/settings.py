@@ -136,7 +136,7 @@ DATABASES = {
 
 # Sobrescribir con DATABASE_URL si existe (Render/producción)
 import dj_database_url
-if os.environ.get('postgresql://global_exchange_user:D73McVwA0feInevsbS1CvLoXhLWgVSS9@dpg-d3tbmsf5r7bs73emd8tg-a/global_exchange'):
+if os.environ.get('DATABASE_URL'):
     DATABASES['default'] = dj_database_url.config(
         conn_max_age=600,
         conn_health_checks=True,
