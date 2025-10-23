@@ -38,9 +38,27 @@
               <th scope="row">Tasa de cambio aplicada</th>
               <td>{{ operacion.tasa_cambio|floatformat:0|intcomma }}</td>
             </tr>
+            <tr>
+              <th scope="row">Monto base a recibir (Gs.)</th>
+              <td>{{ operacion.monto_guaranies|floatformat:0|intcomma }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Comisión del medio de acreditación</th>
+              <td>
+                {% if comision_monto %}
+                  {{ comision_monto|floatformat:0|intcomma }} Gs. ({{ medio.comision }})
+                {% else %}
+                  No aplica
+                {% endif %}
+              </td>
+            </tr>
             <tr class="table-success">
-              <th scope="row">Monto a recibir (Gs.)</th>
-              <td><strong>{{ operacion.monto_guaranies|floatformat:0|intcomma }}</strong></td>
+              <th scope="row"><strong>Total a recibir (Gs.)</strong></th>
+              <td>
+                <strong class="text-success fs-5">
+                  {{ monto_total|floatformat:0|intcomma }} Gs.
+                </strong>
+              </td>
             </tr>
           </tbody>
         </table>
