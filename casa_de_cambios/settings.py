@@ -119,30 +119,33 @@ WSGI_APPLICATION = 'casa_de_cambios.wsgi.application'
 # BASE DE DATOS
 # ═════════════════════════════════════════════════════════════════════
 
-# Configuración base para desarrollo local
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'global_exchange'),
-        'USER': os.environ.get('DB_USER', 'django_user'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'django123'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': int(os.environ.get('DB_PORT', '5432')),
-        'TEST': {
-            'NAME': 'test_global_exchange',
-        },
-    }
-}
-
-# Sobrescribir con DATABASE_URL si existe (Render/producción)
 import dj_database_url
-if os.environ.get('DATABASE_URL'):
-    DATABASES['default'] = dj_database_url.config(
-        conn_max_age=600,
-        conn_health_checks=True,
-        ssl_require=True
-    )
 
+# Si DATABASE_URL existe (producción/Render), úsala
+if os.environ.get('DATABASE_URL'):
+    DATABASES = {
+        'default': dj_database_url.config(
+            conn_max_age=600,
+            conn_health_checks=True,
+            ssl_require=True
+        )
+    }
+else:
+    # Desarrollo local: usar variables individuales
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'global_exchange'),
+            'USER': os.environ.get('DB_USER', 'django_user'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', 'django123'),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': int(os.environ.get('DB_PORT', '5432')),
+            'TEST': {
+                'NAME': 'test_global_exchange',
+            },
+        }
+    }
+    
 # ═════════════════════════════════════════════════════════════════════
 # AUTENTICACIÓN
 # ═════════════════════════════════════════════════════════════════════
