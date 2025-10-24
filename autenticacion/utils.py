@@ -12,6 +12,8 @@ Funciones:
 from django.core.signing import TimestampSigner
 from django.core.mail import send_mail
 from django.conf import settings
+import logging
+logger = logging.getLogger(__name__)
 
 def generar_token(email):
     """
@@ -30,18 +32,34 @@ def generar_token(email):
 def enviar_verificacion(email):
     """
     Envía un correo electrónico de verificación al usuario.
-
-    Crea un token único para el correo electrónico del usuario y genera
-    un enlace de verificación. Luego, utiliza la configuración de correo
-    de Django para enviar el mensaje con ese enlace.
-
-    :param email: Correo electrónico del destinatario.
-    :return: No devuelve nada.
+    Incluye manejo robusto de errores para evitar bloqueos.
     """
-    token = generar_token(email)
-    enlace = f"http://127.0.0.1:8000/verificar/{token}/"  # Usá tu dominio local o real
-    asunto = "Verificá tu correo electrónico"
-    mensaje = f"Hacé clic en el siguiente enlace para verificar tu cuenta:\n{enlace}"
+    try:
+        token = generar_token(email)
+        # Usar el dominio de producción o desarrollo según corresponda
+        dominio = "https://global-exchange.onrender.com" if not settings.DEBUG else "http://127.0.0.1:8000"
+        enlace = f"{dominio}/verificar/{token}/"
+        
+        asunto = "Verificá tu correo electrónico - Global Exchange"
+        mensaje = f"Hacé clic en el siguiente enlace para verificar tu cuenta:\n\n{enlace}"
 
-    send_mail(asunto, mensaje, settings.EMAIL_HOST_USER, [email])
+        send_mail(
+            asunto, 
+            mensaje, 
+            settings.DEFAULT_FROM_EMAIL, 
+            [email],
+            fail_silently=True  # ← NO BLOQUEAR si falla el envío
+        )
+        logger.info(f"Email de verificación enviado a {email}")
+        
+    except Exception as e:
+        logger.error(f"Error enviando verificación a {email}: {str(e)}")
+        
+        # En desarrollo, mostrar el enlace en consola
+        if settings.DEBUG:
+            print(f"\n{'='*60}")
+            print(f"⚠️  ERROR ENVIANDO EMAIL - MODO DEBUG")
+            print(f"ENLACE DE VERIFICACIÓN PARA {email}:")
+            print(f"{enlace}")
+            print(f"{'='*60}\n")
 
