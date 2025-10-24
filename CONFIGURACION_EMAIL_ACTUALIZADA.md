@@ -7,7 +7,7 @@ Se actualizó la configuración de correo electrónico para notificaciones y MFA
 ### ✅ Credenciales Actualizadas
 
 **Correo electrónico:** `glex.globalexchange.respaldo@gmail.com`  
-**Contraseña de aplicación:** `iceq lnzf rtjl qgxx`  
+**Contraseña de aplicación:** `itlf keib ybar gyds`  
 **Proveedor:** Gmail (SMTP)
 
 ## 📁 Archivo Modificado
@@ -16,8 +16,8 @@ Se actualizó la configuración de correo electrónico para notificaciones y MFA
 
 ### Configuración Anterior:
 ```python
-EMAIL_HOST_USER = 'glex.globalexchange@gmail.com'
-EMAIL_HOST_PASSWORD = 'tpsh yedw lthc oprs'
+EMAIL_HOST_USER = 'glex.globalexchange.respaldo@gmail.com'
+EMAIL_HOST_PASSWORD = 'itlf keib ybar gyds'
 ```
 
 ### Configuración Actual:
@@ -27,7 +27,7 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'glex.globalexchange.respaldo@gmail.com'
-EMAIL_HOST_PASSWORD = 'iceq lnzf rtjl qgxx'
+EMAIL_HOST_PASSWORD = 'itlf keib ybar gyds'
 DEFAULT_FROM_EMAIL = 'glex.globalexchange.respaldo@gmail.com'
 SERVER_EMAIL = 'glex.globalexchange.respaldo@gmail.com'
 ```
@@ -78,7 +78,7 @@ La contraseña `iceq lnzf rtjl qgxx` es una **contraseña de aplicación** gener
    ```python
    import os
    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'glex.globalexchange.respaldo@gmail.com')
-   EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'iceq lnzf rtjl qgxx')
+   EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'itlf keib ybar gyds')
    ```
 4. ✅ **Agregar `settings.py` al `.gitignore`** si contiene credenciales sensibles
 5. ✅ **Rotar contraseñas de aplicación periódicamente**
