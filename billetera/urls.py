@@ -12,6 +12,7 @@ urlpatterns = [
     path('crear-billetera/', views.crear_billetera, name='crear_billetera'),
     path('recargar/', views.recargar, name='recargar'),
     path('transferir/', views.transferir, name='transferir'),
+    path('pagar/', views.pagar, name='pagar'),
     path('historial/', views.historial, name='historial'),
     path('api/comprobante/', views.comprobante_ajax, name='comprobante_ajax'),
 ]

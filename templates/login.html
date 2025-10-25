@@ -14,7 +14,7 @@
               </div>
             {% endfor %}
           {% endif %}
-          <form method="post" action="{% url 'login' %}">
+          <form method="post" action="{% url 'login' %}" id="login-form">
             {% csrf_token %}
             <div class="mb-3">
               <label for="id_email" class="form-label">Correo electrónico</label>
@@ -25,7 +25,7 @@
               <input type="password" class="form-control" id="id_password" name="password" required>
             </div>
             <div class="d-grid gap-2">
-              <button type="submit" class="btn btn-primary">Ingresar</button>
+              <button type="submit" class="btn btn-primary" id="login-btn">Ingresar</button>
             </div>
           </form>
           <div class="text-center mt-3">
@@ -36,4 +36,17 @@
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('login-form');
+    const btn = document.getElementById('login-btn');
+    
+    form.addEventListener('submit', function(e) {
+        // Deshabilitar botón y mostrar spinner
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Enviando código MFA...';
+    });
+});
+</script>
 {% endblock %}

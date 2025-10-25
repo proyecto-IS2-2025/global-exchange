@@ -47,17 +47,22 @@
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-4 mb-2">
+                    <div class="col-md-3 mb-2">
                         <a href="{% url 'billetera:recargar' %}" class="btn btn-success w-100">
                             <i class="fas fa-plus-circle me-1"></i>Recargar
                         </a>
                     </div>
-                    <div class="col-md-4 mb-2">
+                    <div class="col-md-3 mb-2">
                         <a href="{% url 'billetera:transferir' %}" class="btn btn-primary w-100">
                             <i class="fas fa-paper-plane me-1"></i>Transferir
                         </a>
                     </div>
-                    <div class="col-md-4 mb-2">
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'billetera:pagar' %}" class="btn btn-warning w-100">
+                            <i class="fas fa-university me-1"></i>Pagar
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
                         <a href="{% url 'billetera:historial' %}" class="btn btn-info w-100">
                             <i class="fas fa-history me-1"></i>Historial
                         </a>
@@ -85,6 +90,8 @@
                                 <i class="fas fa-plus-circle text-success me-3"></i>
                             {% elif movimiento.tipo == 'ENVIO' %}
                                 <i class="fas fa-arrow-up text-danger me-3"></i>
+                            {% elif movimiento.tipo == 'PAGO' %}
+                                <i class="fas fa-university text-warning me-3"></i>
                             {% else %}
                                 <i class="fas fa-arrow-down text-success me-3"></i>
                             {% endif %}
@@ -95,8 +102,8 @@
                             </div>
                         </div>
                         <div class="text-end">
-                            <strong class="{% if movimiento.tipo == 'ENVIO' %}text-danger{% else %}text-success{% endif %}">
-                                {% if movimiento.tipo == 'ENVIO' %}-{% else %}+{% endif %}₲{{ movimiento.monto|floatformat:0 }}
+                            <strong class="{% if movimiento.tipo == 'ENVIO' or movimiento.tipo == 'PAGO' %}text-danger{% else %}text-success{% endif %}">
+                                {% if movimiento.tipo == 'ENVIO' or movimiento.tipo == 'PAGO' %}-{% else %}+{% endif %}₲{{ movimiento.monto|floatformat:0 }}
                             </strong>
                             <br>
                             <small class="text-muted">{{ movimiento.fecha|date:"d/m/Y H:i" }}</small>

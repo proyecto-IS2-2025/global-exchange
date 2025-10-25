@@ -1,4 +1,4 @@
-.PHONY: dev-up dev-down prod-up prod-down docker-loaddata-dev docker-loaddata-prod docker-exec-dev docker-exec-prod docker-migrate-dev docker-migrate-prod docs test-medios-pago test-divisas test-simulador local-loaddata local-migrate help
+.PHONY: dev-up dev-down prod-up prod-down docker-loaddata-dev docker-load-prod docker-exec-dev docker-exec-prod docker-migrate-dev docker-migrate-prod docs test-medios-pago test-divisas test-simulador local-loaddata local-migrate help
 #Variables de los nombres de proyecto para mantener los entornos separados
 #Cada miembro del equipo usará el mismo nombre de proyecto, eliminando conflictos.
 
@@ -58,12 +58,32 @@ docker-migrate-prod:
 	docker compose -p $(PROD_PROJECT_NAME) -f docker-compose.prod.yml exec web python manage.py migrate
 	@echo "Migraciones aplicadas."
 
-loaddata-prod:
+# Variable para acortar los comandos de Docker en producción
+PROD_EXEC = docker compose -p $(PROD_PROJECT_NAME) -f docker-compose.prod.yml exec web
+
+# --- Target de Producción ---
+
+load-prod:
 	@echo "Cargando datos iniciales en el entorno de producción..."
-	docker compose -p $(PROD_PROJECT_NAME) -f docker-compose.prod.yml exec web python manage.py loaddata roles_data.json
-	docker compose -p $(PROD_PROJECT_NAME) -f docker-compose.prod.yml exec web python manage.py loaddata users_data.json
-	docker compose -p $(PROD_PROJECT_NAME) -f docker-compose.prod.yml exec web python manage.py loaddata clientes_data.json
-	docker compose -p $(PROD_PROJECT_NAME) -f docker-compose.prod.yml exec web python manage.py loaddata divisas_initial_data.json
+	# Carga de fixtures (datos)
+	$(PROD_EXEC) python manage.py loaddata roles_data.json
+	$(PROD_EXEC) python manage.py loaddata users_data.json
+	$(PROD_EXEC) python manage.py loaddata clientes_data.json
+	$(PROD_EXEC) python manage.py loaddata divisas_data.json
+	$(PROD_EXEC) python manage.py loaddata bancos_data.json
+	# Fixtures faltantes añadidas:
+	$(PROD_EXEC) python manage.py loaddata denominaciones_data.json
+	$(PROD_EXEC) python manage.py loaddata billetera_data.json
+	
+	@echo "Sincronizando permisos y roles de producción..."
+	# Configuración de permisos añadida:
+	$(PROD_EXEC) python manage.py sync_permissions
+	$(PROD_EXEC) python manage.py setup_test_roles --verbose
+	$(PROD_EXEC) python manage.py sync_role_status
+	
+	@echo "Creando usuario administrador de producción..."
+	$(PROD_EXEC) python manage.py create_dev_user
+
 	@echo "Datos iniciales cargados en producción."
 
 #------------------ Comandos DJANGO (Sin Docker) ------------------#
@@ -73,8 +93,21 @@ runserver:
 	poetry run python manage.py runserver
 
 migrations:
-	@echo "Creando migraciones..."
-	poetry run python manage.py makemigrations
+	@echo "Aplicando migraciones a la base de datos..."
+	@ARGS="$(filter-out $@,$(MAKECMDGOALS))"; \
+	FLAGS=""; APPS=""; \
+	for a in $$ARGS; do \
+		case $$a in \
+			-*) FLAGS="$$FLAGS $$a" ;; \
+			*) APPS="$$APPS $$a" ;; \
+		esac; \
+	done; \
+	if [ -z "$$APPS" ]; then \
+		poetry run python manage.py makemigrations $$FLAGS; \
+	else \
+		poetry run python manage.py makemigrations $$FLAGS $$APPS; \
+	fi
+	@echo "Migraciones creadas correctamente"
 
 migrate:
 	@echo "Migrando la base de datos (local)..."
@@ -110,38 +143,91 @@ test-simulador:
 	python manage.py test simulador
 	@echo "Pruebas de simulador completadas."
 
+cargar-datos:
+	@echo "Cargando datos iniciales..."
+	python manage.py loaddata roles_data.json
+	python manage.py loaddata users_data.json
+	python manage.py loaddata clientes_data.json
+	python manage.py loaddata divisas_data.json
+	python manage.py loaddata medios_data.json
+	@echo "Datos iniciales cargados."
+
+loaddata:
+	@echo "Cargando datos iniciales..."
+	poetry run python manage.py loaddata roles_data.json
+	poetry run python manage.py loaddata users_data.json
+	poetry run python manage.py loaddata clientes_data.json
+	poetry run python manage.py loaddata divisas_data.json
+	poetry run python manage.py loaddata medios_data.json
+	@echo "Datos iniciales cargados."
+
+run:
+	@echo "Ejecutando el servidor de desarrollo con recarga automática..."
+	poetry run python manage.py runserver 
+	@echo "Servidor detenido."
+
+db-init:
+	@echo "Inicializando la base de datos..."
+	poetry run python manage.py makemigrations
+	poetry run python manage.py migrate
+	poetry run python manage.py loaddata roles_data.json
+	poetry run python manage.py loaddata users_data.json
+	poetry run python manage.py loaddata clientes_data.json
+	poetry run python manage.py loaddata divisas_data.json
+	@echo "Datos cargados."
+
+test-medios-acreditacion:
+	@echo "Ejecutando pruebas de medios de acreditación..."
+	poetry run python manage.py test clientes.tests_medios_acreditacion
+	@echo "Pruebas completadas."
+
 delete-migrations:
 	@echo "Eliminando archivos de migraciones..."
 	find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
 	find . -path "*/migrations/*.pyc" -delete
 	@echo "Archivos de migraciones eliminados."
 
-#------------------ Ayuda ------------------#
+reset-db:
+	@echo "Reiniciando la base de datos..."
+	
+	dropdb --username=django_user  --if-exists global_exchange --host=localhost
+	createdb --username=django_user --host=localhost global_exchange 
+	
+	@echo "Cargando datos de prueba..."
+	poetry run python scripts/delete_migrations.py
+	poetry run python manage.py makemigrations	
+	poetry run python manage.py migrate
+	poetry run python manage.py loaddata roles_data.json
+	poetry run python manage.py loaddata users_data.json
+	poetry run python manage.py loaddata clientes_data.json
+	poetry run python manage.py loaddata divisas_data.json
+	poetry run python manage.py loaddata bancos_data.json
 
-help:
-	@echo ""
-	@echo "Comandos disponibles:"
-	@echo "--------------------"
-	@echo "dev-up                   Levanta el entorno de desarrollo (Docker)."
-	@echo "dev-down                 Detiene y elimina el entorno de desarrollo."
-	@echo "docker-exec-dev          Abre una shell en el contenedor web de desarrollo."
-	@echo "docker-migrate-dev       Aplica migraciones en el entorno de desarrollo."
-	@echo "docker-loaddata-dev      Carga los datos iniciales en el entorno de desarrollo."
-	@echo ""
-	@echo "prod-up                  Levanta el entorno de producción (Docker)."
-	@echo "prod-down                Detiene y elimina el entorno de producción."
-	@echo "docker-exec-prod         Abre una shell en el contenedor web de producción."
-	@echo "docker-migrate-prod      Aplica migraciones en el entorno de producción."
-	@echo "docker-loaddata-prod     Carga los datos iniciales en el entorno de producción."
-	@echo ""
-	@echo "runserver                Inicia el servidor de desarrollo local de Django (sin Docker)."
-	@echo "migrations               Crea migraciones de Django (local)."
-	@echo "migrate                  Aplica migraciones de Django (local)."
-	@echo "loaddata                 Carga datos iniciales (local)."
-	@echo "docs                     Genera la documentación con Sphinx."
-	@echo "tests                    Ejecuta los tests de la app."
-	@echo ""
+	@echo "Configurando roles de prueba..."
+	poetry run python manage.py sync_permissions
+	poetry run python manage.py setup_test_roles --verbose
+	poetry run python manage.py sync_role_status
+	poetry run python manage.py create_dev_user
+	
+	poetry run python manage.py loaddata denominaciones_data.json
+	poetry run python manage.py loaddata bancos_data.json
+	poetry run python manage.py loaddata billetera_data.json
 
-ps-dev-down:
-	docker compose -p $(DEV_PROJECT_NAME) down
+	
+	@echo "Base de datos reiniciada y datos cargados."
 
+migraWin:
+	@echo "Realizando migraciones en Windows..."
+	poetry run python manage.py makemigrations
+	poetry run python manage.py migrate
+	@echo "Migraciones realizadas en Windows."
+
+sync:
+	@echo "Sincronizando repositorio local con el remoto..."
+	 poetry run python manage.py sync_permissions
+	@echo "Repositorio sincronizado."
+
+check:
+	@echo "Verificando el estado del proyecto..."
+	poetry run python manage.py check
+	@echo "Verificación completada."

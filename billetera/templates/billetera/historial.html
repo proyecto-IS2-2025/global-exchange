@@ -9,13 +9,14 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4><i class="fas fa-history me-2"></i>Historial de Movimientos</h4>
                 {% if billetera %}
-                <span class="badge bg-primary">{{ movimientos|length }} movimientos</span>
+                    <span class="badge bg-primary">{{ movimientos|length }} movimientos</span>
                 {% endif %}
             </div>
+
             <div class="card-body">
                 {% if movimientos %}
                     {% for movimiento in movimientos %}
-                    <div class="d-flex justify-content-between align-items-center py-3 transaction-item border-bottom" 
+                    <div class="d-flex justify-content-between align-items-center py-3 transaction-item border-bottom"
                          data-comprobante="{{ movimiento.comprobante }}">
                         <div class="d-flex align-items-center">
                             {% if movimiento.tipo == 'RECARGA' %}
@@ -26,11 +27,16 @@
                                 <div class="me-3">
                                     <i class="fas fa-arrow-up fa-2x text-danger"></i>
                                 </div>
+                            {% elif movimiento.tipo == 'PAGO' %}
+                                <div class="me-3">
+                                    <i class="fas fa-university fa-2x text-warning"></i>
+                                </div>
                             {% else %}
                                 <div class="me-3">
-                                    <i class="fas fa-arrow-down fa-2x text-success"></i>
+                                    <i class="fas fa-arrow-down fa-2x text-secondary"></i>
                                 </div>
                             {% endif %}
+
                             <div>
                                 <h6 class="mb-1">{{ movimiento.get_tipo_display }}</h6>
                                 <p class="text-muted mb-1">{{ movimiento.descripcion }}</p>
@@ -39,9 +45,10 @@
                                 </small>
                             </div>
                         </div>
+
                         <div class="text-end">
-                            <h5 class="mb-1 {% if movimiento.tipo == 'ENVIO' %}text-danger{% else %}text-success{% endif %}">
-                                {% if movimiento.tipo == 'ENVIO' %}-{% else %}+{% endif %}₲{{ movimiento.monto|floatformat:0 }}
+                            <h5 class="mb-1 {% if movimiento.tipo == 'ENVIO' or movimiento.tipo == 'PAGO' %}text-danger{% else %}text-success{% endif %}">
+                                {% if movimiento.tipo == 'ENVIO' or movimiento.tipo == 'PAGO' %}-{% else %}+{% endif %}₲{{ movimiento.monto|floatformat:0 }}
                             </h5>
                             <small class="text-muted">
                                 <i class="fas fa-receipt me-1"></i>{{ movimiento.comprobante|truncatechars:8 }}...
@@ -81,25 +88,22 @@
                 </div>
                 <hr>
                 <div class="row text-center">
-                    <div class="col-4">
+                    <div class="col-3">
                         <strong class="text-success">{{ movimientos|length }}</strong>
                         <br><small>Total</small>
                     </div>
-                    <div class="col-4">
-                        <strong class="text-info">
-                            {% for mov in movimientos %}
-                                {% if mov.tipo == 'RECARGA' %}{{ forloop.counter0|add:1 }}{% endif %}
-                            {% empty %}0{% endfor %}
-                        </strong>
+                    <div class="col-3">
+                        {# RECOMENDACIÓN: calcular estos totales en la vista y pasarlos como contexto (ver snippet abajo) #}
+                        <strong class="text-info">{{ recargas_count|default:"0" }}</strong>
                         <br><small>Recargas</small>
                     </div>
-                    <div class="col-4">
-                        <strong class="text-primary">
-                            {% for mov in movimientos %}
-                                {% if mov.tipo == 'ENVIO' %}{{ forloop.counter0|add:1 }}{% endif %}
-                            {% empty %}0{% endfor %}
-                        </strong>
+                    <div class="col-3">
+                        <strong class="text-primary">{{ envios_count|default:"0" }}</strong>
                         <br><small>Envíos</small>
+                    </div>
+                    <div class="col-3">
+                        <strong class="text-warning">{{ pagos_count|default:"0" }}</strong>
+                        <br><small>Pagos</small>
                     </div>
                 </div>
             </div>
@@ -116,6 +120,9 @@
                     </a>
                     <a href="{% url 'billetera:transferir' %}" class="btn btn-primary">
                         <i class="fas fa-paper-plane me-1"></i>Transferir
+                    </a>
+                    <a href="{% url 'billetera:pagar' %}" class="btn btn-warning">
+                        <i class="fas fa-university me-1"></i>Pagar
                     </a>
                     <a href="{% url 'billetera:dashboard' %}" class="btn btn-outline-secondary">
                         <i class="fas fa-home me-1"></i>Dashboard

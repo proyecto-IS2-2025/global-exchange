@@ -1,0 +1,28 @@
+/* Estilos para mensajes de permiso */
+.permission-required-msg {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.permission-required-msg code {
+    background-color: #f8d7da;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.9em;
+}
+
+.permission-required-msg .alert-dark code {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ff6b6b;
+}
+
+/* Hover en botones de acción */
+.permission-required-msg .btn-outline-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+    transition: all 0.2s ease;
+}

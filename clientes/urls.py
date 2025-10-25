@@ -1,5 +1,4 @@
 # clientes/urls.py
-app_name = 'clientes'
 from django.urls import path, include
 from . import views
 from .views import (
@@ -7,7 +6,7 @@ from .views import (
     DescuentoListView, DescuentoUpdateView, HistorialDescuentoListView,
     ClienteListView, ClienteUpdateView,
 
-    # CLASES DE EDICIÓN DE LÍMITES (Nombres corregidos para coincidir con views.py)
+    # CLASES DE EDICIÓN DE LÍMITES
     LimiteDiarioUpdateView,    
     LimiteMensualUpdateView,   
     
@@ -21,7 +20,7 @@ from .views import (
     exportar_medios_pago, verificar_duplicados_ajax,
 )
 
-app_name = 'clientes'
+app_name = 'clientes' 
 
 urlpatterns = [
     # -----------------------------------------------------
@@ -84,5 +83,6 @@ urlpatterns = [
     #Seleccionar medio de pago
     path('seleccionar-medio-pago/', views.SeleccionarMedioPagoView.as_view(), name='seleccionar_medio_pago'),
 
-
+    # ✅ NUEVA RUTA: Panel unificado de límites
+    path('limites/', views.panel_limites, name='panel_limites'),
 ]

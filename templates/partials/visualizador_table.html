@@ -1,3 +1,4 @@
+{% load humanize %}
 <tbody>
   {% for data in divisas_data %}
     {% if data.cotizaciones %}
@@ -12,8 +13,8 @@
             </td>
           {% endif %}
           <td><span class="badge bg-info text-dark">{{ cotizacion.segmento.name }}</span></td>
-          <td class="text-success fw-semibold">{{ cotizacion.valor_compra_unit|floatformat:cotizacion.divisa.decimales }}</td>
-          <td class="text-primary fw-semibold">{{ cotizacion.valor_venta_unit|floatformat:cotizacion.divisa.decimales }}</td>
+          <td class="text-success fw-semibold">{{ cotizacion.valor_compra_unit|floatformat:cotizacion.divisa.decimales|intcomma }}</td>
+          <td class="text-primary fw-semibold">{{ cotizacion.valor_venta_unit|floatformat:cotizacion.divisa.decimales|intcomma }}</td>
           <td class="text-warning fw-semibold">{{ cotizacion.porcentaje_descuento|floatformat:2 }}%</td>
           <td class="text-muted small">{{ cotizacion.fecha|date:"d/m/Y H:i" }}</td>
         </tr>

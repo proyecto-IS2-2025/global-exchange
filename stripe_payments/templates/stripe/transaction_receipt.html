@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recibo de Pago - {{ transaction.payment_intent_id }}</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .receipt {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #28a745;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #28a745;
+            font-size: 32px;
+        }
+        .header .success-icon {
+            font-size: 60px;
+            color: #28a745;
+            margin-bottom: 10px;
+        }
+        .info-section {
+            margin-bottom: 30px;
+        }
+        .info-section h2 {
+            color: #333;
+            font-size: 18px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #666;
+        }
+        .info-value {
+            color: #333;
+        }
+        .amount-highlight {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        .amount-highlight .amount {
+            font-size: 36px;
+            font-weight: bold;
+            color: #28a745;
+            margin: 10px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #999;
+            font-size: 12px;
+        }
+        .print-button {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .print-button button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .print-button button:hover {
+            background: #0056b3;
+        }
+        @media print {
+            body {
+                background: white;
+                margin: 0;
+            }
+            .receipt {
+                box-shadow: none;
+                padding: 20px;
+            }
+            .print-button {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-button">
+        <button onclick="window.print()">🖨️ Imprimir Recibo</button>
+    </div>
+
+    <div class="receipt">
+        <div class="header">
+            <div class="success-icon">✓</div>
+            <h1>Recibo de Pago</h1>
+            <p>Transacción Exitosa</p>
+        </div>
+
+        <div class="amount-highlight">
+            <p style="margin: 0; color: #666;">Monto Pagado</p>
+            <div class="amount">₲ {{ transaction.amount|floatformat:0 }}</div>
+            <p style="margin: 0; color: #666;">{{ transaction.currency }}</p>
+        </div>
+
+        <div class="info-section">
+            <h2>📋 Detalles de la Transacción</h2>
+            <div class="info-row">
+                <span class="info-label">ID de Transacción:</span>
+                <span class="info-value">{{ transaction.payment_intent_id }}</span>
+            </div>
+            {% if transaction.charge_id %}
+            <div class="info-row">
+                <span class="info-label">ID de Cargo:</span>
+                <span class="info-value">{{ transaction.charge_id }}</span>
+            </div>
+            {% endif %}
+            <div class="info-row">
+                <span class="info-label">Fecha y Hora:</span>
+                <span class="info-value">{{ transaction.created_at|date:"d/m/Y H:i:s" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Tipo de Operación:</span>
+                <span class="info-value">{{ transaction.get_transaction_type_display }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Estado:</span>
+                <span class="info-value">{{ transaction.get_status_display }}</span>
+            </div>
+        </div>
+
+        {% if transaction.divisa_code %}
+        <div class="info-section">
+            <h2>💱 Información de Divisa</h2>
+            <div class="info-row">
+                <span class="info-label">Divisa:</span>
+                <span class="info-value">{{ transaction.divisa_code }}</span>
+            </div>
+            {% if transaction.monto_divisa %}
+            <div class="info-row">
+                <span class="info-label">Monto en Divisa:</span>
+                <span class="info-value">{{ transaction.monto_divisa|floatformat:2 }} {{ transaction.divisa_code }}</span>
+            </div>
+            {% endif %}
+            {% if transaction.tasa_cambio %}
+            <div class="info-row">
+                <span class="info-label">Tasa de Cambio:</span>
+                <span class="info-value">{{ transaction.tasa_cambio|floatformat:6 }}</span>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if transaction.card_brand %}
+        <div class="info-section">
+            <h2>💳 Método de Pago</h2>
+            <div class="info-row">
+                <span class="info-label">Tarjeta:</span>
+                <span class="info-value">{{ transaction.card_brand }} •••• {{ transaction.card_last4 }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="info-section">
+            <h2>👤 Información del Cliente</h2>
+            <div class="info-row">
+                <span class="info-label">Cliente:</span>
+                <span class="info-value">{{ transaction.cliente.get_full_name|default:transaction.cliente.username }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Email:</span>
+                <span class="info-value">{{ transaction.cliente.email }}</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>Global Exchange - Casa de Cambios</strong></p>
+            <p>Este es un recibo digital válido de su transacción.</p>
+            <p>Para cualquier consulta, conserve el ID de transacción: <strong>{{ transaction.payment_intent_id }}</strong></p>
+            <p style="margin-top: 20px;">Procesado por Stripe | Fecha de emisión: {{ transaction.created_at|date:"d/m/Y H:i" }}</p>
+        </div>
+    </div>
+</body>
+</html>

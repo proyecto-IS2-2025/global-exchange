@@ -4,7 +4,6 @@ from . import views
 from .views import (
     DivisaListView, DivisaCreateView, DivisaUpdateView, DivisaToggleActivaView,
     TasaCambioListView, TasaCambioCreateView, TasaCambioAllListView,
-    VentaDivisaView, VentaConfirmacionView, VentaMediosView
 )
 
 app_name = 'divisas'
@@ -25,19 +24,24 @@ urlpatterns = [
     path("tasas/actuales", views.visualizador_tasas, name="visualizador_tasas"),
     # Visualizador tasas - Administradores (todos los segmentos)
     path("tasas/admin/", views.visualizador_tasas_admin, name="visualizador_tasas_admin"),
+    
+    # Denominaciones
+    #path('denominaciones/', views.DenominacionListView.as_view(), name='denominacion_list'),
+    #path('denominaciones/nueva/', views.DenominacionCreateView.as_view(), name='denominacion_create'),
+    #path('denominaciones/rapida/', views.DenominacionQuickCreateView.as_view(), name='denominacion_quick_create'),
+    #path('denominaciones/<int:pk>/editar/', views.DenominacionUpdateView.as_view(), name='denominacion_form'),
+    #path('denominaciones/<int:pk>/toggle/', views.DenominacionDeleteView.as_view(), name='denominacion_toggle'),
+    #path('denominaciones/divisa/<int:divisa_id>/', views.DenominacionesDivisaView.as_view(), name='denominaciones_divisa'),
+    #path('denominaciones/disponibles/<int:divisa_id>/json/', views.denominaciones_disponibles_json, name='denominaciones_json'),
+    
+    path('denominaciones/', views.DenominacionListView.as_view(), name='denominacion_list'),
+    path('denominaciones/<int:divisa_id>/', views.DenominacionesDivisaView.as_view(), name='denominaciones_divisa'),
+    path('denominaciones/nueva/', views.DenominacionCreateView.as_view(), name='denominacion_create'),
+    path('denominaciones/rapida/', views.DenominacionQuickCreateView.as_view(), name='denominacion_quick_create'),
+    path('denominaciones/editar/<int:pk>/', views.DenominacionUpdateView.as_view(), name='denominacion_form'),
+    path('denominaciones/<int:pk>/toggle/', views.DenominacionDeleteView.as_view(), name='denominacion_toggle'),
 
-    #Compra de divisas
-    path("venta/", VentaDivisaView.as_view(), name="venta"),
-    path("venta/confirmacion/", VentaConfirmacionView.as_view(), name="venta_confirmacion"),
-    path("venta/medios/", VentaMediosView.as_view(), name="venta_medios"),
-
-    # urls.py (app operaciones)
-    path("venta/sumario/", views.SumarioOperacionView.as_view(), name="venta_sumario"),
-    #Venta de divisas
-    path('compra/', views.CompraDivisaView.as_view(), name='compra'),
-    path('compra/confirmacion/', views.CompraConfirmacionView.as_view(), name='compra_confirmacion'),
-    path('compra/sumario/', views.SumarioCompraView.as_view(), name='compra_sumario'),
-
-    #Seleccionar operación
-    path("operacion/", views.seleccionar_operacion_view, name="seleccionar_operacion"),    
+    # Calculadora
+    path('calculadora-denominaciones/', views.CalculadoraDenominacionesView.as_view(), name='calculadora_denominaciones'),
+    
 ]

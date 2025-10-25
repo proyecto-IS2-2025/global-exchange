@@ -62,6 +62,150 @@
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoCreateView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">ClienteMedioDePagoCreateView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoCreateView" title="Link to this definition">¶</a></dt>
+<dd><p>Vista mejorada para crear un nuevo medio de pago para el cliente</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoCreateView.dispatch">
+<span class="sig-name descname"><span class="pre">dispatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoCreateView.dispatch" title="Link to this definition">¶</a></dt>
+<dd><p>Verificar cliente y medio de pago antes de proceder</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoCreateView.form_class">
+<span class="sig-name descname"><span class="pre">form_class</span></span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoCreateView.form_class" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="form_cliente.html#clientes.forms.ClienteMedioDePagoCompleteForm" title="clientes.forms.ClienteMedioDePagoCompleteForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClienteMedioDePagoCompleteForm</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoCreateView.form_invalid">
+<span class="sig-name descname"><span class="pre">form_invalid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">form</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoCreateView.form_invalid" title="Link to this definition">¶</a></dt>
+<dd><p>Manejar formulario inválido con debug detallado</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoCreateView.form_valid">
+<span class="sig-name descname"><span class="pre">form_valid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">form</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoCreateView.form_valid" title="Link to this definition">¶</a></dt>
+<dd><p>Procesar formulario válido con debug detallado</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoCreateView.get_context_data">
+<span class="sig-name descname"><span class="pre">get_context_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoCreateView.get_context_data" title="Link to this definition">¶</a></dt>
+<dd><p>Insert the form into the context dict.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoCreateView.get_form_kwargs">
+<span class="sig-name descname"><span class="pre">get_form_kwargs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoCreateView.get_form_kwargs" title="Link to this definition">¶</a></dt>
+<dd><p>Return the keyword arguments for instantiating the form.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoCreateView.get_success_url">
+<span class="sig-name descname"><span class="pre">get_success_url</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoCreateView.get_success_url" title="Link to this definition">¶</a></dt>
+<dd><p>Return the URL to redirect to after processing a valid form.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoCreateView.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoCreateView.model" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="clientes.html#clientes.models.ClienteMedioDePago" title="clientes.models.ClienteMedioDePago"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClienteMedioDePago</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoDeleteView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">ClienteMedioDePagoDeleteView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoDeleteView" title="Link to this definition">¶</a></dt>
+<dd><p>Vista mejorada para eliminar un medio de pago del cliente</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoListView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">ClienteMedioDePagoListView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoListView" title="Link to this definition">¶</a></dt>
+<dd><p>Vista mejorada para listar los medios de pago asociados al cliente activo</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoListView.dispatch">
+<span class="sig-name descname"><span class="pre">dispatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoListView.dispatch" title="Link to this definition">¶</a></dt>
+<dd><p>Verificar que hay un cliente activo antes de proceder</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoListView.get_context_data">
+<span class="sig-name descname"><span class="pre">get_context_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoListView.get_context_data" title="Link to this definition">¶</a></dt>
+<dd><p>Get the context for this view.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoListView.get_queryset">
+<span class="sig-name descname"><span class="pre">get_queryset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoListView.get_queryset" title="Link to this definition">¶</a></dt>
+<dd><p>Filtrar medios de pago por cliente activo con optimizaciones</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoListView.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoListView.model" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="clientes.html#clientes.models.ClienteMedioDePago" title="clientes.models.ClienteMedioDePago"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClienteMedioDePago</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoToggleView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">ClienteMedioDePagoToggleView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoToggleView" title="Link to this definition">¶</a></dt>
+<dd><p>Vista mejorada para activar/desactivar un medio de pago del cliente</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoUpdateView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">ClienteMedioDePagoUpdateView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoUpdateView" title="Link to this definition">¶</a></dt>
+<dd><p>Vista mejorada para editar un medio de pago del cliente</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoUpdateView.dispatch">
+<span class="sig-name descname"><span class="pre">dispatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoUpdateView.dispatch" title="Link to this definition">¶</a></dt>
+<dd><p>Verificar permisos antes de proceder</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoUpdateView.form_class">
+<span class="sig-name descname"><span class="pre">form_class</span></span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoUpdateView.form_class" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="form_cliente.html#clientes.forms.ClienteMedioDePagoCompleteForm" title="clientes.forms.ClienteMedioDePagoCompleteForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClienteMedioDePagoCompleteForm</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoUpdateView.form_valid">
+<span class="sig-name descname"><span class="pre">form_valid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">form</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoUpdateView.form_valid" title="Link to this definition">¶</a></dt>
+<dd><p>Procesar edición con historial</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoUpdateView.get_context_data">
+<span class="sig-name descname"><span class="pre">get_context_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoUpdateView.get_context_data" title="Link to this definition">¶</a></dt>
+<dd><p>Insert the form into the context dict.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoUpdateView.get_form_kwargs">
+<span class="sig-name descname"><span class="pre">get_form_kwargs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoUpdateView.get_form_kwargs" title="Link to this definition">¶</a></dt>
+<dd><p>Return the keyword arguments for instantiating the form.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoUpdateView.get_success_url">
+<span class="sig-name descname"><span class="pre">get_success_url</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoUpdateView.get_success_url" title="Link to this definition">¶</a></dt>
+<dd><p>Return the URL to redirect to after processing a valid form.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.views.ClienteMedioDePagoUpdateView.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#clientes.views.ClienteMedioDePagoUpdateView.model" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="clientes.html#clientes.models.ClienteMedioDePago" title="clientes.models.ClienteMedioDePago"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClienteMedioDePago</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="clientes.views.ClienteUpdateView">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">ClienteUpdateView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.ClienteUpdateView" title="Link to this definition">¶</a></dt>
 <dd><dl class="py attribute">
@@ -129,6 +273,51 @@
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="clientes.views.LimiteDiarioUpdateView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">LimiteDiarioUpdateView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.LimiteDiarioUpdateView" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.views.LimiteDiarioUpdateView.form_class">
+<span class="sig-name descname"><span class="pre">form_class</span></span><a class="headerlink" href="#clientes.views.LimiteDiarioUpdateView.form_class" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="form_cliente.html#clientes.forms.LimiteDiarioForm" title="clientes.forms.LimiteDiarioForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">LimiteDiarioForm</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.views.LimiteDiarioUpdateView.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#clientes.views.LimiteDiarioUpdateView.model" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="clientes.html#clientes.models.LimiteDiario" title="clientes.models.LimiteDiario"><code class="xref py py-class docutils literal notranslate"><span class="pre">LimiteDiario</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="clientes.views.LimiteMensualUpdateView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">LimiteMensualUpdateView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.LimiteMensualUpdateView" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.views.LimiteMensualUpdateView.form_class">
+<span class="sig-name descname"><span class="pre">form_class</span></span><a class="headerlink" href="#clientes.views.LimiteMensualUpdateView.form_class" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="form_cliente.html#clientes.forms.LimiteMensualForm" title="clientes.forms.LimiteMensualForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">LimiteMensualForm</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="clientes.views.LimiteMensualUpdateView.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#clientes.views.LimiteMensualUpdateView.model" title="Link to this definition">¶</a></dt>
+<dd><p>alias de <a class="reference internal" href="clientes.html#clientes.models.LimiteMensual" title="clientes.models.LimiteMensual"><code class="xref py py-class docutils literal notranslate"><span class="pre">LimiteMensual</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="clientes.views.SeleccionarMedioAcreditacionView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">SeleccionarMedioAcreditacionView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.SeleccionarMedioAcreditacionView" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="clientes.views.SeleccionarMedioPagoView">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">SeleccionarMedioPagoView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.SeleccionarMedioPagoView" title="Link to this definition">¶</a></dt>
+<dd><p>Vista para seleccionar medio de pago para operaciones de compra</p>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="clientes.views.asociar_clientes_usuarios_view">
 <span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">asociar_clientes_usuarios_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.asociar_clientes_usuarios_view" title="Link to this definition">¶</a></dt>
@@ -149,6 +338,12 @@ permisos adecuados asignar clientes a otros usuarios.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="clientes.views.calcular_similitud_medio">
+<span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">calcular_similitud_medio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">campos_form</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">existing_medio</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">medio_de_pago</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.calcular_similitud_medio" title="Link to this definition">¶</a></dt>
+<dd><p>Calcular similitud entre campos del formulario y un medio existente</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="clientes.views.crear_cliente_view">
 <span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">crear_cliente_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.crear_cliente_view" title="Link to this definition">¶</a></dt>
 <dd><p>Vista para crear un nuevo cliente.</p>
@@ -165,6 +360,36 @@ y guardado del formulario de creación de clientes.</p>
 <dd class="field-odd"><p>django.http.HttpResponse</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="clientes.views.dashboard_medios_pago">
+<span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">dashboard_medios_pago</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.dashboard_medios_pago" title="Link to this definition">¶</a></dt>
+<dd><p>Vista dashboard con estadísticas generales de medios de pago</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="clientes.views.exportar_medios_pago">
+<span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">exportar_medios_pago</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.exportar_medios_pago" title="Link to this definition">¶</a></dt>
+<dd><p>Vista para exportar medios de pago del cliente (CSV)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="clientes.views.get_cliente_activo">
+<span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">get_cliente_activo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.get_cliente_activo" title="Link to this definition">¶</a></dt>
+<dd><p>Función helper para obtener el cliente activo de la sesión</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="clientes.views.get_medio_acreditacion_seleccionado">
+<span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">get_medio_acreditacion_seleccionado</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.get_medio_acreditacion_seleccionado" title="Link to this definition">¶</a></dt>
+<dd><p>Obtener el medio de acreditación seleccionado para la operación actual</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="clientes.views.get_medio_pago_seleccionado">
+<span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">get_medio_pago_seleccionado</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.get_medio_pago_seleccionado" title="Link to this definition">¶</a></dt>
+<dd><p>Obtener el medio de pago seleccionado para la operación de compra actual</p>
 </dd></dl>
 
 <dl class="py function">
@@ -205,6 +430,37 @@ asignaciones existentes y eliminarlas si es necesario.</p>
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="clientes.views.medio_pago_detail_ajax">
+<span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">medio_pago_detail_ajax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.medio_pago_detail_ajax" title="Link to this definition">¶</a></dt>
+<dd><p>Vista AJAX mejorada para obtener detalles de un medio de pago</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="clientes.views.normalizar_valor">
+<span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">normalizar_valor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">valor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tipo_dato</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.normalizar_valor" title="Link to this definition">¶</a></dt>
+<dd><p>Normalizar valor para comparación</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="clientes.views.select_medio_pago_view">
+<span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">select_medio_pago_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.select_medio_pago_view" title="Link to this definition">¶</a></dt>
+<dd><p>Vista mejorada para seleccionar el tipo de medio de pago antes de agregar
+FILTRO APLICADO: Solo muestra medios con campos configurados</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="clientes.views.to_serializable">
+<span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">to_serializable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.to_serializable" title="Link to this definition">¶</a></dt>
+<dd><p>Convierte valores no serializables (como Decimal) a string antes de guardarlos en sesión</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="clientes.views.verificar_duplicados_ajax">
+<span class="sig-prename descclassname"><span class="pre">clientes.views.</span></span><span class="sig-name descname"><span class="pre">verificar_duplicados_ajax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clientes.views.verificar_duplicados_ajax" title="Link to this definition">¶</a></dt>
+<dd><p>Vista AJAX para verificar posibles duplicados de medios de pago</p>
+</dd></dl>
+
 </section>
 
 
@@ -239,14 +495,34 @@ asignaciones existentes y eliminarlas si es necesario.</p>
 <li class="toctree-l1"><a class="reference internal" href="clientes.html">Módulos de Clientes</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Vistas de Clientes</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#clientes.views.ClienteListView"><code class="docutils literal notranslate"><span class="pre">ClienteListView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.views.ClienteMedioDePagoCreateView"><code class="docutils literal notranslate"><span class="pre">ClienteMedioDePagoCreateView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.views.ClienteMedioDePagoDeleteView"><code class="docutils literal notranslate"><span class="pre">ClienteMedioDePagoDeleteView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.views.ClienteMedioDePagoListView"><code class="docutils literal notranslate"><span class="pre">ClienteMedioDePagoListView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.views.ClienteMedioDePagoToggleView"><code class="docutils literal notranslate"><span class="pre">ClienteMedioDePagoToggleView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.views.ClienteMedioDePagoUpdateView"><code class="docutils literal notranslate"><span class="pre">ClienteMedioDePagoUpdateView</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#clientes.views.ClienteUpdateView"><code class="docutils literal notranslate"><span class="pre">ClienteUpdateView</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#clientes.views.DescuentoListView"><code class="docutils literal notranslate"><span class="pre">DescuentoListView</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#clientes.views.DescuentoUpdateView"><code class="docutils literal notranslate"><span class="pre">DescuentoUpdateView</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#clientes.views.HistorialDescuentoListView"><code class="docutils literal notranslate"><span class="pre">HistorialDescuentoListView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.views.LimiteDiarioUpdateView"><code class="docutils literal notranslate"><span class="pre">LimiteDiarioUpdateView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.views.LimiteMensualUpdateView"><code class="docutils literal notranslate"><span class="pre">LimiteMensualUpdateView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.views.SeleccionarMedioAcreditacionView"><code class="docutils literal notranslate"><span class="pre">SeleccionarMedioAcreditacionView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.views.SeleccionarMedioPagoView"><code class="docutils literal notranslate"><span class="pre">SeleccionarMedioPagoView</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#clientes.views.asociar_clientes_usuarios_view"><code class="docutils literal notranslate"><span class="pre">asociar_clientes_usuarios_view()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.views.calcular_similitud_medio"><code class="docutils literal notranslate"><span class="pre">calcular_similitud_medio()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#clientes.views.crear_cliente_view"><code class="docutils literal notranslate"><span class="pre">crear_cliente_view()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.views.dashboard_medios_pago"><code class="docutils literal notranslate"><span class="pre">dashboard_medios_pago()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.views.exportar_medios_pago"><code class="docutils literal notranslate"><span class="pre">exportar_medios_pago()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.views.get_cliente_activo"><code class="docutils literal notranslate"><span class="pre">get_cliente_activo()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.views.get_medio_acreditacion_seleccionado"><code class="docutils literal notranslate"><span class="pre">get_medio_acreditacion_seleccionado()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.views.get_medio_pago_seleccionado"><code class="docutils literal notranslate"><span class="pre">get_medio_pago_seleccionado()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#clientes.views.lista_clientes"><code class="docutils literal notranslate"><span class="pre">lista_clientes()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#clientes.views.listar_asociaciones"><code class="docutils literal notranslate"><span class="pre">listar_asociaciones()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.views.medio_pago_detail_ajax"><code class="docutils literal notranslate"><span class="pre">medio_pago_detail_ajax()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.views.normalizar_valor"><code class="docutils literal notranslate"><span class="pre">normalizar_valor()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.views.select_medio_pago_view"><code class="docutils literal notranslate"><span class="pre">select_medio_pago_view()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.views.to_serializable"><code class="docutils literal notranslate"><span class="pre">to_serializable()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clientes.views.verificar_duplicados_ajax"><code class="docutils literal notranslate"><span class="pre">verificar_duplicados_ajax()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="form_cliente.html">Formularios de Clientes</a></li>
@@ -255,6 +531,7 @@ asignaciones existentes y eliminarlas si es necesario.</p>
 <li class="toctree-l1"><a class="reference internal" href="medios_pago.html">Modulo de Medios de Pago</a></li>
 <li class="toctree-l1"><a class="reference internal" href="users.html">Gestión de Usuarios</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulador.html">Simulador de Divisas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transacciones.html">Modulo de Transacciones</a></li>
 </ul>
 
 <div class="relations">

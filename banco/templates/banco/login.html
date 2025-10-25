@@ -1,25 +1,161 @@
 {% extends "banco/base.html" %}
 
-{% block title %}Login Banco{% endblock %}
+{% block title %}Iniciar Sesión{% endblock %}
+
+{% block extra_head %}
+<style>
+  body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .login-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    padding: 3rem;
+    max-width: 420px;
+    width: 100%;
+  }
+
+  .login-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .login-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1.5rem;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .login-icon i {
+    font-size: 2rem;
+    color: white;
+  }
+
+  .login-header h2 {
+    color: #1f2937;
+    font-weight: 700;
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .login-header p {
+    color: #6b7280;
+    font-size: 0.95rem;
+  }
+
+  .form-label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .input-group-text {
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-right: none;
+    color: #6b7280;
+  }
+
+  .form-control {
+    border: 1px solid #d1d5db;
+    padding: 0.7rem 1rem;
+    font-size: 0.95rem;
+    border-left: none;
+  }
+
+  .form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    outline: none;
+  }
+
+  .btn-login {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border: none;
+    padding: 0.85rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 10px;
+    width: 100%;
+    margin-top: 1rem;
+    color: white;
+    transition: all 0.2s ease;
+  }
+
+  .btn-login:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .alert {
+    border-radius: 10px;
+    border: none;
+    padding: 1rem;
+    font-weight: 500;
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .footer-text {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: #6b7280;
+    font-size: 0.85rem;
+  }
+
+  .footer-text a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .footer-text a:hover {
+    text-decoration: underline;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container d-flex justify-content-center align-items-center vh-100">
-  <div class="card shadow p-4" style="max-width: 400px; width: 100%;">
-    <h2 class="text-center mb-4">Acceso al Banco</h2>
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-icon">
+        <i class="bi bi-bank"></i>
+      </div>
+      <h2>Bienvenido</h2>
+      <p>Ingresá a tu cuenta bancaria</p>
+    </div>
 
     {% if error %}
-      <div class="alert alert-danger text-center" role="alert">
-        {{ error }}
+      <div class="alert text-center" role="alert">
+        <i class="bi bi-exclamation-circle me-2"></i>{{ error }}
       </div>
     {% endif %}
 
     <form method="post">
       {% csrf_token %}
+      
       <div class="mb-3">
         <label for="email" class="form-label">Correo electrónico</label>
         <div class="input-group">
           <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-          <input type="email" name="email" id="email" class="form-control" placeholder="ejemplo@correo.com" required>
+          <input type="email" name="email" id="email" class="form-control" placeholder="ejemplo@correo.com" required autofocus>
         </div>
       </div>
 
@@ -31,8 +167,14 @@
         </div>
       </div>
 
-      <button type="submit" class="btn btn-primary w-100">Entrar</button>
+      <button type="submit" class="btn-login">
+        <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
+      </button>
     </form>
+
+    <div class="footer-text">
+      <p>¿Problemas para acceder? <a href="#">Contactá soporte</a></p>
+    </div>
   </div>
 </div>
 {% endblock %}

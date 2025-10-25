@@ -23,3 +23,5 @@ Esta documentación incluye información detallada sobre los módulos, modelos y
    medios_pago
    users 
    simulador
+   transacciones
+   banco

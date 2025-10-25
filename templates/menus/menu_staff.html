@@ -1,0 +1,115 @@
+<div class="row row-cols-2 row-cols-md-4 g-4 mt-4 justify-content-center">
+  
+  {% if perms.clientes.view_all_clientes or perms.clientes.view_assigned_clientes %}
+  <div class="col">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-hover animate-stagger delay-1">
+      <div class="display-3 mb-3"><i class="fas fa-users"></i></div>
+      <h6 class="fw-bold">Ver Clientes</h6>
+      <a href="{% url 'clientes:lista_clientes' %}" class="stretched-link"></a>
+    </div>
+  </div>
+  {% endif %}
+  
+  {% if perms.clientes.manage_cliente_assignment %}
+  <div class="col">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-hover animate-stagger delay-2">
+      <div class="display-3 mb-3"><i class="fas fa-user-friends"></i></div>
+      <h6 class="fw-bold">Asignar Clientes</h6>
+      <a href="{% url 'clientes:asociar_clientes_usuarios' %}" class="stretched-link"></a>
+    </div>
+  </div>
+  {% endif %}
+  
+  {% if perms.roles.view_roles_list %}
+  <div class="col">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-hover animate-stagger delay-3">
+      <div class="display-3 mb-3"><i class="fas fa-shield-alt"></i></div>
+      <h6 class="fw-bold">Roles</h6>
+      <a href="{% url 'group_list' %}" class="stretched-link"></a>
+    </div>
+  </div>
+  {% endif %}
+  
+  {% if perms.medios_pago.view_catalogo_medios_pago %}
+  <div class="col">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-hover animate-stagger delay-4">
+      <div class="display-3 mb-3"><i class="fas fa-credit-card"></i></div>
+      <h6 class="fw-bold">Medios de Pago</h6>
+      <a href="{% url 'medios_pago:lista' %}" class="stretched-link"></a>
+    </div>
+  </div>
+  {% endif %}
+  
+  {% if perms.divisas.view_divisas %}
+  <div class="col">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-hover animate-stagger delay-5">
+      <div class="display-3 mb-3"><i class="fas fa-coins"></i></div>
+      <h6 class="fw-bold">Divisas</h6>
+      <a href="{% url 'divisas:lista' %}" class="stretched-link"></a>
+    </div>
+  </div>
+  {% endif %}
+  
+  {% if perms.divisas.view_cotizaciones_segmento %}
+  <div class="col">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-hover animate-stagger delay-6">
+      <div class="display-3 mb-3"><i class="fas fa-rocket"></i></div>
+      <h6 class="fw-bold">Visualizador Tasas</h6>
+      <a href="{% url 'divisas:visualizador_tasas_admin' %}" class="stretched-link"></a>
+    </div>
+  </div>
+  {% endif %}
+  
+  {% if perms.transacciones.view_transacciones_globales %}
+  <div class="col">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-hover animate-stagger delay-7">
+      <div class="display-3 mb-3"><i class="fas fa-arrows-rotate"></i></div>
+      <h6 class="fw-bold">Historial Transacciones</h6>
+      <a href="{% url 'transacciones:historial_admin' %}" class="stretched-link"></a>
+    </div>
+  </div>
+  {% endif %}
+  
+  {% if perms.clientes.view_limites_operacion %}
+  <div class="col">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-hover animate-stagger delay-8">
+      <div class="display-3 mb-3"><i class="fas fa-gauge-high"></i></div>
+      <h6 class="fw-bold">Límites</h6>
+      <a href="{% url 'clientes:panel_limites' %}" class="stretched-link"></a>
+    </div>
+  </div>
+  {% endif %}
+  
+  {% if perms.clientes.view_descuentos_segmento %}
+  <div class="col">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-hover animate-stagger delay-9">
+      <div class="display-3 mb-3"><i class="fas fa-percent"></i></div>
+      <h6 class="fw-bold">Descuentos</h6>
+      <a href="{% url 'clientes:lista_descuentos' %}" class="stretched-link"></a>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if perms.mfa.view_mfa_config %}
+  <div class="col">
+    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-hover animate-stagger delay-10">
+      <div class="display-3 mb-3"><i class="fas fa-shield-halved"></i></div>
+      <h6 class="fw-bold">Configuración MFA</h6>
+      <a href="{% url 'mfa:config' %}" class="stretched-link"></a>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+{% if not perms.clientes.view_all_clientes and not perms.clientes.view_assigned_clientes and not perms.divisas.view_divisa and not perms.transacciones.view_transacciones_asignadas and not perms.clientes.view_limites_operacion and not perms.clientes.manage_descuentos and not perms.medios_pago.manage_catalogo_medios_pago and not perms.divisas.manage_cotizaciones_segmento and not perms.clientes.manage_cliente_assignment and not user.is_superuser %}
+<div class="alert alert-warning mt-5 text-center shadow-sm" role="alert">
+  <div class="mb-3"><i class="fas fa-exclamation-triangle fa-3x text-warning"></i></div>
+  <h5 class="alert-heading"><strong>Sin permisos asignados</strong></h5>
+  <p class="mb-3">Tu cuenta de staff aún no tiene permisos configurados para acceder a las funcionalidades del sistema.</p>
+  <hr>
+  <div class="d-flex justify-content-center gap-3 mt-3">
+    <a href="mailto:admin@casadecambios.com" class="btn btn-warning btn-sm"><i class="fas fa-envelope me-2"></i>Contactar administrador</a>
+  </div>
+</div>
+{% endif %}
