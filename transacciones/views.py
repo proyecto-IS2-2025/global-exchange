@@ -1,25 +1,69 @@
 # transacciones/views.py
-from django.shortcuts import get_object_or_404
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, View
 from django.db.models import Q
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.db import transaction
+from django.contrib import messages
+from django.utils.decorators import method_decorator
 from datetime import datetime, timedelta
-from .models import HistorialTransaccion
+from decimal import Decimal, ROUND_HALF_UP
+import logging
+
+from roles.decorators import require_permission  # ← IMPORT PRINCIPAL
+from .models import Transaccion, HistorialTransaccion
 from clientes.models import Cliente
 from divisas.models import Divisa
 from clientes.views import get_medio_acreditacion_seleccionado, get_medio_pago_seleccionado
-from decimal import Decimal
-import logging
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from transacciones.models import Transaccion
-logger = logging.getLogger(__name__)
 from clientes.services import verificar_limites
-from decimal import Decimal, ROUND_HALF_UP
+
+logger = logging.getLogger(__name__)
+
+
+# ═══════════════════════════════════════════════════════════════════
+# FUNCIONES AUXILIARES (SIN CAMBIOS)
+# ═══════════════════════════════════════════════════════════════════
+
+def get_cliente_from_session(request):
+    """
+    Obtiene el cliente activo desde la sesión.
+    Retorna None si no hay cliente activo o no existe.
+    """
+    cliente_id = request.session.get('cliente_id')
+    if not cliente_id:
+        return None
+    try:
+        return Cliente.objects.get(id=cliente_id)
+    except Cliente.DoesNotExist:
+        return None
+
+
+def calcular_monto_final(monto_base, es_compra=True):
+    """
+    Calcula el monto final aplicando las tasas correspondientes.
+    """
+    # ...existing code...
+    pass
+
+
+def generar_numero_transaccion():
+    """
+    Genera un número único de transacción basado en timestamp.
+    """
+    # ...existing code...
+    pass
+
+
+def determinar_decimales_divisa(codigo_divisa):
+    """
+    Determina cuántos decimales usar según la divisa.
+    PYG = 0, resto = 2
+    """
+    return 0 if codigo_divisa.upper() == 'PYG' else 2
+
 import re  # NUEVO: para enmascarar valores
 import unicodedata  # NUEVO: normalización de texto
 from django.utils import timezone  # NUEVO: para timestamps seguros
@@ -36,13 +80,11 @@ EMPRESA_NUMERO_CUENTA = "000111222"
 
 def redondear(valor, decimales=2):
     """
-    Redondea un número Decimal a la cantidad de decimales especificada.
-    - 0 → enteros (para Guaraníes)
-    - 2 → centavos (para USD/EUR, etc.)
+    Redondea un valor decimal con la cantidad de decimales especificada.
     """
     try:
         return Decimal(valor).quantize(
-            Decimal("1") if decimales == 0 else Decimal("0.01"),
+            Decimal("1") if decimales == 0 else Decimal("0." + "0" * decimales),
             rounding=ROUND_HALF_UP
         )
     except Exception:
@@ -145,23 +187,32 @@ def _get_entidad(entidad_hint):
     con matching aproximado (ignora acentos y errores típicos de codificación).
     """
     if not EntidadBancaria:
+        logger.warning("[_get_entidad] Modelo EntidadBancaria no disponible")
         return None
     if entidad_hint is None:
+        logger.debug("[_get_entidad] entidad_hint es None")
         return None
     try:
         hint = str(entidad_hint).strip()
+        logger.debug(f"[_get_entidad] Buscando entidad con hint='{hint}'")
+        
         # ID exacto
         if hint.isdigit():
             obj = EntidadBancaria.objects.filter(pk=int(hint)).first()
             if obj:
+                logger.info(f"[_get_entidad] Encontrada por ID: {obj}")
                 return obj
+        
         # Código exacto
         obj = EntidadBancaria.objects.filter(codigo__iexact=hint).first()
         if obj:
+            logger.info(f"[_get_entidad] Encontrada por código: {obj}")
             return obj
+        
         # Nombre exacto
         obj = EntidadBancaria.objects.filter(nombre__iexact=hint).first()
         if obj:
+            logger.info(f"[_get_entidad] Encontrada por nombre: {obj}")
             return obj
 
         # Matching aproximado por nombre/código normalizados
@@ -169,17 +220,26 @@ def _get_entidad(entidad_hint):
         # Heurística: algunos fallos convierten 'í' en 'y' -> intentamos variante
         n_hint_variant = n_hint.replace('y', 'i')
         candidatos = list(EntidadBancaria.objects.all())
+        logger.debug(f"[_get_entidad] Intentando matching aproximado. n_hint='{n_hint}', variante='{n_hint_variant}', candidatos={len(candidatos)}")
+        
         for e in candidatos:
             n_nombre = _normalize_text(e.nombre)
             n_codigo = _normalize_text(e.codigo)
+            # Matching exacto normalizado
             if n_hint in (n_nombre, n_codigo) or n_hint_variant in (n_nombre, n_codigo):
+                logger.info(f"[_get_entidad] Encontrada por matching exacto normalizado: {e}")
                 return e
             # Coincidencia por contains
             if n_hint and (n_hint in n_nombre or n_hint in n_codigo):
+                logger.info(f"[_get_entidad] Encontrada por contains en nombre/código: {e}")
                 return e
             if n_hint_variant and (n_hint_variant in n_nombre or n_hint_variant in n_codigo):
+                logger.info(f"[_get_entidad] Encontrada por contains variante: {e}")
                 return e
-    except Exception:
+        
+        logger.warning(f"[_get_entidad] No se encontró entidad para hint='{hint}'")
+    except Exception as ex:
+        logger.error(f"[_get_entidad] Error al buscar entidad: {ex}", exc_info=True)
         return None
     return None
 
@@ -190,35 +250,71 @@ def _extraer_cuenta_desde_medio(medio_datos):
     Retorna (entidad_hint, numero_cuenta).
     """
     if not isinstance(medio_datos, dict):
+        logger.debug("[_extraer_cuenta] medio_datos no es dict")
         return (None, None)
 
+    logger.debug(f"[_extraer_cuenta] Procesando medio_datos: {medio_datos}")
+    
     entidad_hint = None
     numero_cuenta = None
 
     # 1) Intentar datos_campos raw
     datos = medio_datos.get('datos_campos') or {}
     if isinstance(datos, dict):
+        logger.debug(f"[_extraer_cuenta] Analizando datos_campos: {datos}")
         for k, v in datos.items():
             key = (k or '').lower()
-            if numero_cuenta is None and ('cuenta' in key or 'account' in key or key in ('numero', 'nro', 'nro_cuenta', 'numero_cuenta')):
-                if v:
-                    numero_cuenta = _normalize_account_number(v)
-            if entidad_hint is None and any(t in key for t in ('entidad', 'banco', 'bank', 'entidad_id', 'entidad_codigo')):
-                if v:
-                    entidad_hint = str(v).strip()
+            # Normalizar key: quitar acentos, espacios, etc.
+            key_normalized = _normalize_text(key)
+            
+            # Buscar número de cuenta con todas las variantes posibles (inglés y español)
+            if numero_cuenta is None:
+                # Variantes en español e inglés
+                cuenta_variants = ['cuenta', 'account', 'numero', 'nro', 'numero_cuenta', 'numero de cuenta', 
+                                  'account_number', 'account number', 'nro_cuenta', 'nro cuenta']
+                if any(variant in key_normalized for variant in cuenta_variants):
+                    if v:
+                        numero_cuenta = _normalize_account_number(v)
+                        logger.debug(f"[_extraer_cuenta] Encontrado numero_cuenta desde key='{k}': raw='{v}', normalizado='{numero_cuenta}'")
+            
+            # Buscar entidad bancaria con todas las variantes posibles (inglés y español)
+            if entidad_hint is None:
+                # Variantes en español e inglés
+                entidad_variants = ['entidad', 'banco', 'bank', 'bank_name', 'bank name', 'entidad_id', 
+                                   'entidad_codigo', 'entidad bancaria', 'entidad_bancaria', 'nombre del banco',
+                                   'nombre de banco', 'nombre de la entidad']
+                if any(variant in key_normalized for variant in entidad_variants):
+                    if v:
+                        entidad_hint = str(v).strip()
+                        logger.debug(f"[_extraer_cuenta] Encontrado entidad_hint desde key='{k}': '{entidad_hint}'")
 
     # 2) Intentar campos serializados (con etiqueta legible)
     if (entidad_hint is None or not numero_cuenta) and isinstance(medio_datos.get('campos'), list):
+        logger.debug(f"[_extraer_cuenta] Analizando campos serializados: {medio_datos.get('campos')}")
         for c in medio_datos['campos']:
             etiqueta = (c.get('etiqueta') or '').lower()
+            etiqueta_normalized = _normalize_text(etiqueta)
             valor = c.get('valor') or c.get('valor_enmascarado') or ''
             if not valor:
                 continue
-            if not numero_cuenta and ('cuenta' in etiqueta or 'account' in etiqueta or 'número' in etiqueta or etiqueta in ('numero', 'nro', 'nro cuenta', 'numero de cuenta')):
-                numero_cuenta = _normalize_account_number(valor)
-            if entidad_hint is None and any(t in etiqueta for t in ('entidad', 'banco', 'bank', 'código banco')):
-                entidad_hint = str(valor).strip()
+            
+            # Buscar número de cuenta
+            if not numero_cuenta:
+                cuenta_variants = ['cuenta', 'account', 'numero', 'nro', 'numero de cuenta', 'numero_cuenta',
+                                  'account_number', 'account number', 'nro cuenta', 'nro_cuenta']
+                if any(variant in etiqueta_normalized for variant in cuenta_variants):
+                    numero_cuenta = _normalize_account_number(valor)
+                    logger.debug(f"[_extraer_cuenta] Encontrado numero_cuenta desde etiqueta='{etiqueta}': raw='{valor}', normalizado='{numero_cuenta}'")
+            
+            # Buscar entidad bancaria
+            if entidad_hint is None:
+                entidad_variants = ['entidad', 'banco', 'bank', 'codigo banco', 'entidad bancaria',
+                                   'bank name', 'nombre del banco', 'nombre de banco', 'nombre de la entidad']
+                if any(variant in etiqueta_normalized for variant in entidad_variants):
+                    entidad_hint = str(valor).strip()
+                    logger.debug(f"[_extraer_cuenta] Encontrado entidad_hint desde etiqueta='{etiqueta}': '{entidad_hint}'")
 
+    logger.info(f"[_extraer_cuenta] Resultado final: entidad_hint='{entidad_hint}', numero_cuenta='{numero_cuenta}'")
     return (entidad_hint, numero_cuenta or None)
 
 def _get_cuenta_empresa():
@@ -228,20 +324,32 @@ def _get_cuenta_empresa():
     - Número de cuenta: '000111222'
     Intenta resolver la entidad por código/nombre. Mantiene fallback por BancoUser si no está la entidad.
     """
+    logger.debug(f"[_get_cuenta_empresa] Buscando entidad empresa: código='{EMPRESA_BANCO_CODIGO}', nombre='{EMPRESA_BANCO_NOMBRE}'")
+    
     entidad = _get_entidad(EMPRESA_BANCO_CODIGO) or _get_entidad(EMPRESA_BANCO_NOMBRE)
 
     if not entidad and BancoUser and Cuenta:
         # Fallback: intentar por usuario conocido y su primera cuenta
+        logger.debug("[_get_cuenta_empresa] Entidad no encontrada, intentando fallback por BancoUser")
         try:
             bu = BancoUser.objects.filter(email__iexact='GlobalExchange@bancopy.com').first()
             if bu:
+                logger.debug(f"[_get_cuenta_empresa] BancoUser encontrado: {bu}")
                 cta = Cuenta.objects.filter(usuario=bu).order_by('id').first()
                 if cta:
+                    logger.info(f"[_get_cuenta_empresa] Cuenta empresa encontrada por fallback: entidad={cta.entidad}, cuenta={cta.numero_cuenta}")
                     return (cta.entidad, cta.numero_cuenta)
-        except Exception:
-            pass
+            else:
+                logger.warning("[_get_cuenta_empresa] No se encontró BancoUser con email 'GlobalExchange@bancopy.com'")
+        except Exception as ex:
+            logger.error(f"[_get_cuenta_empresa] Error en fallback: {ex}", exc_info=True)
 
     # Si no se encontró la entidad, devolver None y el número esperado para logging aguas arriba
+    if entidad:
+        logger.info(f"[_get_cuenta_empresa] Entidad empresa encontrada: {entidad}, cuenta={EMPRESA_NUMERO_CUENTA}")
+    else:
+        logger.warning(f"[_get_cuenta_empresa] No se encontró entidad empresa. Retornando (None, '{EMPRESA_NUMERO_CUENTA}')")
+    
     return (entidad, EMPRESA_NUMERO_CUENTA)
 
 def realizar_transferencia_bancaria(entidad_src, numero_cuenta_src, entidad_dst, numero_cuenta_dst, monto, referencia=None):
@@ -368,6 +476,374 @@ def realizar_transferencia_bancaria(entidad_src, numero_cuenta_src, entidad_dst,
         logger.error(f'Error en transferencia bancaria: {e}', exc_info=True)
         return {'ok': False, 'code': '96', 'message': 'Error interno del sistema'}
 
+
+def realizar_pago_tarjeta(medio_datos, monto, referencia=None):
+    """
+    Realiza un pago desde una tarjeta de débito/crédito a la cuenta bancaria de la empresa.
+    
+    Args:
+        medio_datos: Diccionario con información del medio de pago (debe contener datos de tarjeta)
+        monto: Monto a pagar en guaraníes
+        referencia: Referencia opcional para el pago
+        
+    Returns:
+        dict: {'ok': bool, 'code': str, 'message': str, 'comprobante': str}
+    """
+    try:
+        from banco.models import TarjetaDebito, TarjetaCredito, PagoTarjeta, Cuenta, EntidadBancaria
+    except ImportError as e:
+        logger.error(f"Error al importar modelos de banco: {e}")
+        return {'ok': False, 'code': '96', 'message': 'Módulo de banco no disponible'}
+    
+    try:
+        logger.info(f"[PAGO_TARJETA] Iniciando pago desde tarjeta por monto={monto}")
+        
+        # Extraer datos de la tarjeta desde medio_datos
+        datos_campos = medio_datos.get('datos_campos', {})
+        if not isinstance(datos_campos, dict):
+            logger.error(f"[PAGO_TARJETA] datos_campos no es un diccionario: {type(datos_campos)}")
+            return {'ok': False, 'code': '12', 'message': 'Datos de tarjeta incompletos'}
+        
+        logger.debug(f"[PAGO_TARJETA] datos_campos: {datos_campos}")
+        
+        # Extraer datos de la tarjeta
+        numero_tarjeta = None
+        mes_vencimiento = None
+        anho_vencimiento = None
+        cvv = None
+        entidad_nombre = None
+        
+        # Buscar número de tarjeta
+        for key, value in datos_campos.items():
+            key_normalized = _normalize_text(key)
+            
+            # Número de tarjeta
+            if numero_tarjeta is None:
+                if any(variant in key_normalized for variant in ['card_number', 'numero', 'tarjeta', 'card', 'numero de tarjeta']):
+                    numero_tarjeta = str(value).replace(' ', '').replace('-', '').strip()
+                    logger.debug(f"[PAGO_TARJETA] Número de tarjeta encontrado: {numero_tarjeta[-4:]}")
+            
+            # Mes de vencimiento
+            if mes_vencimiento is None:
+                if any(variant in key_normalized for variant in ['exp_month', 'mes', 'month', 'mes de vencimiento', 'mes vencimiento']):
+                    try:
+                        mes_vencimiento = int(str(value).strip())
+                        logger.debug(f"[PAGO_TARJETA] Mes de vencimiento: {mes_vencimiento}")
+                    except (ValueError, TypeError):
+                        pass
+            
+            # Año de vencimiento
+            if anho_vencimiento is None:
+                if any(variant in key_normalized for variant in ['exp_year', 'ano', 'year', 'anho', 'año', 'año de vencimiento', 'anho de vencimiento', 'año vencimiento', 'anho vencimiento']):
+                    try:
+                        anho_vencimiento = int(str(value).strip())
+                        logger.debug(f"[PAGO_TARJETA] Año de vencimiento: {anho_vencimiento}")
+                    except (ValueError, TypeError):
+                        pass
+            
+            # CVV/CVC
+            if cvv is None:
+                if any(variant in key_normalized for variant in ['cvc', 'cvv', 'codigo', 'codigo de seguridad', 'security code']):
+                    cvv = str(value).strip()
+                    logger.debug(f"[PAGO_TARJETA] CVV encontrado")
+            
+            # Entidad
+            if entidad_nombre is None:
+                if any(variant in key_normalized for variant in ['entidad', 'banco', 'bank', 'bank_name']):
+                    entidad_nombre = str(value).strip()
+                    logger.debug(f"[PAGO_TARJETA] Entidad encontrada: {entidad_nombre}")
+        
+        # Validar datos requeridos
+        if not numero_tarjeta:
+            logger.error(f"[PAGO_TARJETA] No se encontró número de tarjeta")
+            return {'ok': False, 'code': '12', 'message': 'No se encontró número de tarjeta'}
+        
+        if mes_vencimiento is None or anho_vencimiento is None:
+            logger.error(f"[PAGO_TARJETA] Faltan datos de vencimiento")
+            return {'ok': False, 'code': '12', 'message': 'Faltan datos de vencimiento de la tarjeta'}
+        
+        if not cvv:
+            logger.error(f"[PAGO_TARJETA] No se encontró CVV")
+            return {'ok': False, 'code': '12', 'message': 'No se encontró código de seguridad (CVV)'}
+        
+        logger.info(f"[PAGO_TARJETA] Buscando tarjeta: número=***{numero_tarjeta[-4:]}, vencimiento={mes_vencimiento}/{anho_vencimiento}")
+        
+        # Buscar tarjeta de débito o crédito que coincida
+        tarjeta_debito = None
+        tarjeta_credito = None
+        
+        # Intentar encontrar tarjeta de débito
+        try:
+            query_debito = TarjetaDebito.objects.filter(
+                numero=numero_tarjeta,
+                mes_vencimiento=mes_vencimiento,
+                anho_vencimiento=anho_vencimiento,
+                cvv=cvv
+            )
+            
+            # Si hay entidad, filtrar por ella
+            if entidad_nombre:
+                entidad = _get_entidad(entidad_nombre)
+                if entidad:
+                    query_debito = query_debito.filter(entidad=entidad)
+            
+            tarjeta_debito = query_debito.first()
+            
+            if tarjeta_debito:
+                logger.info(f"[PAGO_TARJETA] Tarjeta de débito encontrada: {tarjeta_debito}")
+        except Exception as e:
+            logger.debug(f"[PAGO_TARJETA] Error buscando tarjeta débito: {e}")
+        
+        # Si no se encontró débito, buscar crédito
+        if not tarjeta_debito:
+            try:
+                query_credito = TarjetaCredito.objects.filter(
+                    numero=numero_tarjeta,
+                    mes_vencimiento=mes_vencimiento,
+                    anho_vencimiento=anho_vencimiento,
+                    cvv=cvv
+                )
+                
+                # Si hay entidad, filtrar por ella
+                if entidad_nombre:
+                    entidad = _get_entidad(entidad_nombre)
+                    if entidad:
+                        query_credito = query_credito.filter(entidad=entidad)
+                
+                tarjeta_credito = query_credito.first()
+                
+                if tarjeta_credito:
+                    logger.info(f"[PAGO_TARJETA] Tarjeta de crédito encontrada: {tarjeta_credito}")
+            except Exception as e:
+                logger.debug(f"[PAGO_TARJETA] Error buscando tarjeta crédito: {e}")
+        
+        # Si no se encontró ninguna tarjeta
+        if not tarjeta_debito and not tarjeta_credito:
+            logger.error(f"[PAGO_TARJETA] No se encontró tarjeta con los datos proporcionados")
+            return {
+                'ok': False,
+                'code': '14',
+                'message': 'No se encontró tarjeta con los datos proporcionados. Verifique número, fecha de vencimiento y CVV.'
+            }
+        
+        # Verificar fondos disponibles
+        monto_decimal = Decimal(str(monto))
+        
+        if tarjeta_debito:
+            # Verificar saldo en cuenta asociada
+            if not tarjeta_debito.cuenta:
+                logger.error(f"[PAGO_TARJETA] Tarjeta de débito sin cuenta asociada")
+                return {'ok': False, 'code': '96', 'message': 'Tarjeta de débito sin cuenta asociada'}
+            
+            if tarjeta_debito.cuenta.saldo < monto_decimal:
+                logger.warning(f"[PAGO_TARJETA] Saldo insuficiente. Requerido: {monto_decimal}, Disponible: {tarjeta_debito.cuenta.saldo}")
+                return {
+                    'ok': False,
+                    'code': '51',
+                    'message': f'Saldo insuficiente en cuenta. Disponible: ₲{tarjeta_debito.cuenta.saldo:,.0f}'
+                }
+        
+        if tarjeta_credito:
+            # Verificar límite de crédito disponible
+            disponible = tarjeta_credito.disponible()
+            if disponible < monto_decimal:
+                logger.warning(f"[PAGO_TARJETA] Límite de crédito excedido. Requerido: {monto_decimal}, Disponible: {disponible}")
+                return {
+                    'ok': False,
+                    'code': '51',
+                    'message': f'Límite de crédito excedido. Disponible: ₲{disponible:,.0f}'
+                }
+        
+        # Obtener cuenta de la empresa (destino)
+        ent_emp, cta_emp = _get_cuenta_empresa()
+        if not ent_emp or not cta_emp:
+            logger.error(f"[PAGO_TARJETA] No se encontró cuenta de empresa")
+            return {'ok': False, 'code': '96', 'message': 'Error de configuración: cuenta de empresa no encontrada'}
+        
+        # Buscar la cuenta destino
+        cuenta_destino = Cuenta.objects.filter(
+            entidad=ent_emp,
+            numero_cuenta=cta_emp
+        ).first()
+        
+        if not cuenta_destino:
+            logger.error(f"[PAGO_TARJETA] Cuenta destino no encontrada: entidad={ent_emp}, cuenta={cta_emp}")
+            return {'ok': False, 'code': '14', 'message': 'Cuenta destino no encontrada'}
+        
+        tipo_tarjeta = "débito" if tarjeta_debito else "crédito"
+        tarjeta = tarjeta_debito or tarjeta_credito
+        logger.info(f"[PAGO_TARJETA] Procesando pago con tarjeta de {tipo_tarjeta}: {tarjeta} por ₲{monto_decimal:,.0f}")
+        
+        # Realizar el pago
+        # IMPORTANTE: PagoTarjeta.save() automáticamente:
+        # - Debita de la cuenta (si es débito) o consume crédito (si es crédito)
+        # - NO acredita a destino, hay que hacerlo manualmente
+        with transaction.atomic():
+            # Crear el pago (esto debita/consume crédito automáticamente)
+            if tarjeta_debito:
+                pago = PagoTarjeta.objects.create(
+                    tarjeta_debito=tarjeta_debito,
+                    monto=monto_decimal,
+                    cuenta_destino=cuenta_destino  # ✅ Guardar cuenta destino
+                )
+            else:
+                pago = PagoTarjeta.objects.create(
+                    tarjeta_credito=tarjeta_credito,
+                    monto=monto_decimal,
+                    cuenta_destino=cuenta_destino  # ✅ Guardar cuenta destino
+                )
+            
+            # Acreditar a cuenta empresa manualmente
+            cuenta_destino.saldo += monto_decimal
+            cuenta_destino.save(update_fields=['saldo'])
+            
+            comprobante = str(pago.comprobante)
+            logger.info(f"[PAGO_TARJETA] Pago exitoso. Comprobante: {comprobante}")
+            
+            return {
+                'ok': True,
+                'code': '00',
+                'message': f'Pago con tarjeta de {tipo_tarjeta} realizado con éxito',
+                'comprobante': comprobante,
+                'tipo_tarjeta': tipo_tarjeta
+            }
+            
+    except Exception as e:
+        logger.error(f"[PAGO_TARJETA] Error al procesar pago: {e}", exc_info=True)
+        return {'ok': False, 'code': '96', 'message': f'Error al procesar pago con tarjeta: {str(e)}'}
+
+
+def realizar_pago_billetera(medio_datos, monto, referencia=None):
+    """
+    Realiza un pago desde una billetera digital a la cuenta bancaria de la empresa.
+    
+    Args:
+        medio_datos: Diccionario con información del medio de pago (debe contener datos_campos con wallet_phone y bank_name)
+        monto: Monto a pagar en guaraníes
+        referencia: Referencia opcional para el pago
+        
+    Returns:
+        dict: {'ok': bool, 'code': str, 'message': str, 'comprobante': str}
+    """
+    try:
+        from billetera.models import Billetera, PagoBilletera, UsuarioBilletera
+        from banco.models import Cuenta, EntidadBancaria
+    except ImportError as e:
+        logger.error(f"Error al importar modelos de billetera o banco: {e}")
+        return {'ok': False, 'code': '96', 'message': 'Módulo de billetera no disponible'}
+    
+    try:
+        logger.info(f"[PAGO_BILLETERA] Iniciando pago desde billetera por monto={monto}")
+        
+        # Extraer datos de la billetera desde medio_datos
+        datos_campos = medio_datos.get('datos_campos', {})
+        if not isinstance(datos_campos, dict):
+            logger.error(f"[PAGO_BILLETERA] datos_campos no es un diccionario: {type(datos_campos)}")
+            return {'ok': False, 'code': '12', 'message': 'Datos de billetera incompletos'}
+        
+        logger.debug(f"[PAGO_BILLETERA] datos_campos: {datos_campos}")
+        
+        # Buscar número de teléfono (puede venir con diferentes nombres de campo)
+        numero_telefono = None
+        for key, value in datos_campos.items():
+            key_normalized = _normalize_text(key)
+            if any(variant in key_normalized for variant in ['telefono', 'phone', 'celular', 'movil', 'wallet_phone']):
+                numero_telefono = str(value).strip()
+                logger.debug(f"[PAGO_BILLETERA] Número de teléfono encontrado: {numero_telefono}")
+                break
+        
+        if not numero_telefono:
+            logger.error(f"[PAGO_BILLETERA] No se encontró número de teléfono en datos_campos")
+            return {'ok': False, 'code': '12', 'message': 'No se encontró número de teléfono de la billetera'}
+        
+        # Buscar entidad bancaria (opcional, puede venir en el medio de pago)
+        entidad_nombre = None
+        for key, value in datos_campos.items():
+            key_normalized = _normalize_text(key)
+            if any(variant in key_normalized for variant in ['entidad', 'banco', 'bank', 'bank_name']):
+                entidad_nombre = str(value).strip()
+                logger.debug(f"[PAGO_BILLETERA] Entidad encontrada: {entidad_nombre}")
+                break
+        
+        # Buscar la billetera por número de teléfono
+        try:
+            usuario_billetera = UsuarioBilletera.objects.get(numero_celular=numero_telefono)
+            logger.debug(f"[PAGO_BILLETERA] Usuario billetera encontrado: {usuario_billetera}")
+        except UsuarioBilletera.DoesNotExist:
+            logger.error(f"[PAGO_BILLETERA] No existe usuario de billetera con teléfono: {numero_telefono}")
+            return {'ok': False, 'code': '14', 'message': f'No se encontró billetera con teléfono {numero_telefono}'}
+        except UsuarioBilletera.MultipleObjectsReturned:
+            logger.error(f"[PAGO_BILLETERA] Múltiples usuarios con el mismo teléfono: {numero_telefono}")
+            return {'ok': False, 'code': '14', 'message': 'Error: múltiples billeteras con el mismo teléfono'}
+        
+        # Obtener la billetera del usuario
+        try:
+            if entidad_nombre:
+                # Buscar billetera específica de la entidad
+                entidad = _get_entidad(entidad_nombre)
+                if entidad:
+                    billetera = Billetera.objects.get(usuario=usuario_billetera, entidad=entidad, activa=True)
+                else:
+                    logger.warning(f"[PAGO_BILLETERA] Entidad no encontrada: {entidad_nombre}, usando cualquier billetera activa")
+                    billetera = Billetera.objects.get(usuario=usuario_billetera, activa=True)
+            else:
+                # Si no hay entidad especificada, usar la primera billetera activa
+                billetera = Billetera.objects.filter(usuario=usuario_billetera, activa=True).first()
+                if not billetera:
+                    raise Billetera.DoesNotExist()
+            
+            logger.debug(f"[PAGO_BILLETERA] Billetera encontrada: {billetera}, saldo: {billetera.saldo}")
+        except Billetera.DoesNotExist:
+            logger.error(f"[PAGO_BILLETERA] No se encontró billetera activa para usuario: {usuario_billetera}")
+            return {'ok': False, 'code': '14', 'message': 'No se encontró billetera activa'}
+        
+        # Verificar saldo suficiente
+        monto_decimal = Decimal(str(monto))
+        if billetera.saldo < monto_decimal:
+            logger.warning(f"[PAGO_BILLETERA] Saldo insuficiente. Requerido: {monto_decimal}, Disponible: {billetera.saldo}")
+            return {'ok': False, 'code': '51', 'message': f'Saldo insuficiente en billetera. Disponible: ₲{billetera.saldo}'}
+        
+        # Obtener cuenta de la empresa
+        ent_emp, cta_emp = _get_cuenta_empresa()
+        if not ent_emp or not cta_emp:
+            logger.error(f"[PAGO_BILLETERA] No se encontró cuenta de empresa")
+            return {'ok': False, 'code': '96', 'message': 'Error de configuración: cuenta de empresa no encontrada'}
+        
+        # Buscar la cuenta destino
+        cuenta_destino = Cuenta.objects.filter(
+            entidad=ent_emp,
+            numero_cuenta=cta_emp
+        ).first()
+        
+        if not cuenta_destino:
+            logger.error(f"[PAGO_BILLETERA] Cuenta destino no encontrada: entidad={ent_emp}, cuenta={cta_emp}")
+            return {'ok': False, 'code': '14', 'message': 'Cuenta destino no encontrada'}
+        
+        logger.info(f"[PAGO_BILLETERA] Ejecutando pago: billetera={billetera} -> cuenta={cuenta_destino.numero_cuenta} por ₲{monto_decimal}")
+        
+        # Realizar el pago utilizando el modelo PagoBilletera
+        with transaction.atomic():
+            pago = PagoBilletera.objects.create(
+                billetera=billetera,
+                cuenta_destino=cuenta_destino,
+                monto=monto_decimal
+            )
+            
+            comprobante = str(pago.comprobante)
+            logger.info(f"[PAGO_BILLETERA] Pago exitoso. Comprobante: {comprobante}")
+            
+            return {
+                'ok': True,
+                'code': '00',
+                'message': 'Pago desde billetera realizado con éxito',
+                'comprobante': comprobante
+            }
+            
+    except Exception as e:
+        logger.error(f"[PAGO_BILLETERA] Error al procesar pago: {e}", exc_info=True)
+        return {'ok': False, 'code': '96', 'message': f'Error al procesar pago desde billetera: {str(e)}'}
+
+
 @login_required
 def crear_transaccion_desde_venta(request):
     """
@@ -379,8 +855,8 @@ def crear_transaccion_desde_venta(request):
 
     try:
         operacion = request.session.get("operacion")
-        medio_inst = get_medio_acreditacion_seleccionado(request)
-
+        medio_inst = get_medio_pago_seleccionado(request)
+        
         if not operacion:
             messages.error(request, "No se encontró información de la operación.")
             return redirect("operacion_divisas:venta")
@@ -397,7 +873,6 @@ def crear_transaccion_desde_venta(request):
 
         cliente = get_object_or_404(Cliente, id=cliente_id, esta_activo=True)
         
-        # Obtener código de divisa desde operación
         codigo_divisa = operacion.get('divisa', '').strip().upper()
         logger.debug(f"Código de divisa desde operación: '{codigo_divisa}'")
         
@@ -405,7 +880,6 @@ def crear_transaccion_desde_venta(request):
             messages.error(request, "No se encontró el código de divisa en la operación.")
             return redirect('operacion_divisas:venta_sumario')
         
-        # Buscar divisas con manejo de errores más específico
         try:
             divisa_origen = Divisa.objects.get(code__iexact=codigo_divisa)
             logger.debug(f"Divisa origen encontrada: {divisa_origen}")
@@ -422,34 +896,29 @@ def crear_transaccion_desde_venta(request):
             messages.error(request, "Error: No se encontró la divisa Guaraní (PYG) en el sistema.")
             return redirect('operacion_divisas:venta_sumario')
 
-        # Convertir montos a Decimal de forma segura
         try:
-            monto_origen = Decimal(str(operacion.get('monto_divisa', '0')))  # divisa extranjera
-            monto_destino = Decimal(str(operacion.get('monto_guaranies', '0')))  # guaraníes
+            monto_origen = Decimal(str(operacion.get('monto_divisa', '0')))
+            monto_destino = Decimal(str(operacion.get('monto_guaranies', '0')))
             tasa_cambio = Decimal(str(operacion.get('tasa_cambio', '0')))
         except (ValueError, TypeError) as e:
             logger.error(f"Error al convertir montos a Decimal: {e}")
             messages.error(request, "Error en los datos de la operación.")
             return redirect('operacion_divisas:venta_sumario')
 
-        # 🔹 Aplicar redondeo según regla - MEJORA ESPECÍFICA
         decimales_origen = determinar_decimales_divisa(divisa_origen.code)
         decimales_destino = determinar_decimales_divisa(divisa_destino.code)
         
-        monto_origen = redondear(monto_origen, decimales_origen)  # según divisa origen
-        monto_destino = redondear(monto_destino, decimales_destino)  # según divisa destino
-        tasa_cambio = redondear(tasa_cambio, 2)  # tasa siempre con 2 decimales
+        monto_origen = redondear(monto_origen, decimales_origen)
+        monto_destino = redondear(monto_destino, decimales_destino)
+        tasa_cambio = redondear(tasa_cambio, 2)
 
-        # Validar límites antes de crear
         ok, msg = verificar_limites(cliente, monto_destino)
         if not ok:
             messages.error(request, msg)
             return redirect('operacion_divisas:venta_sumario')
 
-        # Preparar datos del medio
         medio_datos = preparar_datos_medio(medio_inst)
 
-        # Crear transacción
         with transaction.atomic():
             transaccion = Transaccion.objects.create(
                 tipo_operacion='venta',
@@ -473,7 +942,6 @@ def crear_transaccion_desde_venta(request):
                 modificado_por=request.user
             )
 
-        # Limpiar sesión
         limpiar_sesion_operacion(request)
 
         # NUEVO: realizar transferencia de la EMPRESA -> CLIENTE por monto_destino (PYG)
@@ -484,7 +952,14 @@ def crear_transaccion_desde_venta(request):
 
             logger.debug(f"[VENTA] Extract medio -> entidad_cliente='{ent_cli_hint}', cuenta_cliente_raw='{cta_cli}' | empresa_entidad='{getattr(ent_emp,'codigo',ent_emp)}', empresa_cuenta='{cta_emp}'")
 
-            if ent_cli_hint and cta_cli and ent_emp and cta_emp:
+            # Validar que se tengan todos los datos necesarios
+            if not ent_cli_hint or not cta_cli:
+                logger.warning(f"[VENTA] Faltan datos del cliente: entidad='{ent_cli_hint}', cuenta='{cta_cli}'")
+                messages.warning(request, "No se encontró información bancaria del cliente en el medio de acreditación seleccionado. La transacción quedó pendiente.")
+            elif not ent_emp or not cta_emp:
+                logger.error(f"[VENTA] Faltan datos de la empresa: entidad='{ent_emp}', cuenta='{cta_emp}'")
+                messages.warning(request, "Error de configuración: no se encontró la cuenta bancaria de la empresa. Contacte al administrador.")
+            else:
                 resultado = realizar_transferencia_bancaria(
                     entidad_src=ent_emp,
                     numero_cuenta_src=cta_emp,
@@ -494,14 +969,11 @@ def crear_transaccion_desde_venta(request):
                     referencia=transaccion.numero_transaccion  # NUEVO: referencia para historial
                 )
                 if resultado.get('ok'):
-                    transaccion.cambiar_estado('completado', observacion='Acreditación automática realizada', usuario=request.user)
-                    messages.success(request, 'Transferencia realizada: operación completada.')
+                    transaccion.cambiar_estado('pendiente', observacion='Transferencia registrada, pendiente de confirmación', usuario=request.user)
+                    messages.success(request, 'Transferencia registrada: operación pendiente de confirmación.')
                 else:
                     logger.warning(f"[VENTA] Transferencia fallida: {resultado}")
                     messages.warning(request, f"No se pudo realizar la transferencia: {resultado.get('message')} (código {resultado.get('code')})")
-            else:
-                logger.warning("[VENTA] Datos bancarios insuficientes para transferencia (empresa->cliente)")
-                messages.warning(request, "No se encontraron datos bancarios suficientes para la transferencia al cliente.")
         except Exception as e:
             logger.error(f"[VENTA] Error post-transferencia: {e}", exc_info=True)
             messages.warning(request, "Ocurrió un error al procesar la transferencia al cliente.")
@@ -663,32 +1135,131 @@ def crear_transaccion_desde_compra(request):
         # Limpiar datos de sesión
         limpiar_sesion_operacion(request, ['operacion', 'compra_resultado', 'medio_pago_seleccionado'])
 
-        # NUEVO: realizar transferencia del CLIENTE -> EMPRESA por monto_origen (PYG)
+        # NUEVO: realizar transferencia/pago del CLIENTE -> EMPRESA por monto_origen (PYG)
         try:
             medio_datos = transaccion.get_medio_pago_info() or {}
-            ent_cli_hint, cta_cli = _extraer_cuenta_desde_medio(medio_datos)
-            ent_emp, cta_emp = _get_cuenta_empresa()
-
-            logger.debug(f"[COMPRA] Extract medio -> entidad_cliente='{ent_cli_hint}', cuenta_cliente_raw='{cta_cli}' | empresa_entidad='{getattr(ent_emp,'codigo',ent_emp)}', empresa_cuenta='{cta_emp}'")
-
-            if ent_cli_hint and cta_cli and ent_emp and cta_emp:
-                resultado = realizar_transferencia_bancaria(
-                    entidad_src=ent_cli_hint,
-                    numero_cuenta_src=cta_cli,
-                    entidad_dst=ent_emp,
-                    numero_cuenta_dst=cta_emp,
+            tipo_medio = medio_datos.get('tipo', '').lower()
+            
+            logger.debug(f"[COMPRA] Tipo de medio: '{tipo_medio}'")
+            
+            # IMPORTANTE: Verificar Stripe PRIMERO
+            # Los pagos con Stripe se procesan a través del servicio de Stripe
+            if tipo_medio == 'stripe' or 'stripe' in tipo_medio:
+                logger.info(f"[COMPRA] Medio de pago Stripe detectado - procesando con Stripe")
+                try:
+                    from stripe_payments.services import process_stripe_payment
+                    from clientes.models import ClienteMedioDePago
+                    
+                    # Obtener el objeto ClienteMedioDePago
+                    if isinstance(medio_datos, dict) and medio_datos.get('id'):
+                        medio_id = medio_datos.get('id')
+                        medio_obj = ClienteMedioDePago.objects.select_related('medio_de_pago').get(id=medio_id)
+                    else:
+                        logger.error("[COMPRA] No se pudo obtener el medio de pago para Stripe")
+                        messages.error(request, 'Error: No se pudo identificar el medio de pago Stripe')
+                        # Mantener transacción en pendiente
+                        messages.success(request, f'Transacción {transaccion.numero_transaccion} creada exitosamente.')
+                        return redirect('transacciones:confirmacion_operacion', numero_transaccion=transaccion.numero_transaccion)
+                    
+                    # Construir datos de operación desde la transacción creada
+                    operacion_data = {
+                        'tipo': transaccion.tipo_operacion,
+                        'divisa': transaccion.divisa_destino.code,
+                        'divisa_nombre': transaccion.divisa_destino.nombre,
+                        'monto_divisa': str(transaccion.monto_destino),
+                        'monto_guaranies': str(transaccion.monto_origen),
+                        'tasa_cambio': str(transaccion.tasa_de_cambio_aplicada),
+                    }
+                    
+                    logger.info(f"[COMPRA] Datos para Stripe: monto={operacion_data['monto_guaranies']} PYG, divisa={operacion_data['divisa']}")
+                    
+                    # Obtener IP del cliente
+                    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+                    client_ip = x_forwarded_for.split(',')[0] if x_forwarded_for else request.META.get('REMOTE_ADDR')
+                    
+                    # Procesar el pago con Stripe
+                    logger.info(f"[COMPRA] Llamando a process_stripe_payment...")
+                    success, stripe_transaction, error = process_stripe_payment(
+                        cliente=request.user,
+                        medio_pago_data=medio_obj,
+                        operacion_data=operacion_data,
+                        client_ip=client_ip
+                    )
+                    
+                    if success:
+                        logger.info(f"[COMPRA] ✅ Pago Stripe exitoso - Transaction ID: {stripe_transaction.id}")
+                        transaccion.cambiar_estado('pagada', observacion='Pago con Stripe procesado exitosamente', usuario=request.user)
+                        messages.success(request, f'¡Pago procesado exitosamente con Stripe! ID: {stripe_transaction.payment_intent_id}')
+                    else:
+                        logger.error(f"[COMPRA] ❌ Pago Stripe fallido: {error}")
+                        messages.error(request, f'Error al procesar el pago con Stripe: {error}')
+                        # Mantener transacción en pendiente
+                        
+                except Exception as e:
+                    logger.error(f"[COMPRA] Error al procesar pago con Stripe: {e}", exc_info=True)
+                    messages.error(request, f'Error inesperado al procesar el pago: {str(e)}')
+                    # Mantener transacción en pendiente
+            
+            # Verificar si es billetera electrónica
+            elif 'billetera' in tipo_medio or tipo_medio == 'billetera electrónica':
+                logger.info(f"[COMPRA] Procesando pago con billetera electrónica")
+                resultado = realizar_pago_billetera(
+                    medio_datos=medio_datos,
                     monto=transaccion.monto_origen,
-                    referencia=transaccion.numero_transaccion  # NUEVO: referencia para historial
+                    referencia=transaccion.numero_transaccion
                 )
                 if resultado.get('ok'):
-                    transaccion.cambiar_estado('pagada', observacion='Pago automático recibido', usuario=request.user)
-                    messages.success(request, 'Transferencia recibida: operación pagada.')
+                    transaccion.cambiar_estado('pagada', observacion='Pago automático desde billetera recibido', usuario=request.user)
+                    messages.success(request, f"Pago exitoso desde billetera. Comprobante: {resultado.get('comprobante')}")
                 else:
-                    logger.warning(f"[COMPRA] Transferencia fallida: {resultado}")
-                    messages.warning(request, f"No se pudo recibir la transferencia: {resultado.get('message')} (código {resultado.get('code')})")
+                    logger.warning(f"[COMPRA] Pago billetera fallido: {resultado}")
+                    messages.warning(request, f"No se pudo procesar el pago desde billetera: {resultado.get('message')} (código {resultado.get('code')})")
+            
+            # Verificar si es tarjeta de crédito/débito (pero NO Stripe)
+            elif ('tarjeta' in tipo_medio or 'crédito' in tipo_medio or 'débito' in tipo_medio) and 'stripe' not in tipo_medio:
+                logger.info(f"[COMPRA] Procesando pago con tarjeta de crédito/débito")
+                resultado = realizar_pago_tarjeta(
+                    medio_datos=medio_datos,
+                    monto=transaccion.monto_origen,
+                    referencia=transaccion.numero_transaccion
+                )
+                if resultado.get('ok'):
+                    tipo_tarjeta = resultado.get('tipo_tarjeta', 'tarjeta')
+                    transaccion.cambiar_estado('pagada', observacion=f'Pago automático con tarjeta de {tipo_tarjeta} recibido', usuario=request.user)
+                    messages.success(request, f"Pago exitoso con tarjeta de {tipo_tarjeta}. Comprobante: {resultado.get('comprobante')}")
+                else:
+                    logger.warning(f"[COMPRA] Pago con tarjeta fallido: {resultado}")
+                    messages.warning(request, f"No se pudo procesar el pago con tarjeta: {resultado.get('message')} (código {resultado.get('code')})")
+            
             else:
-                logger.warning("[COMPRA] Datos bancarios insuficientes para transferencia (cliente->empresa)")
-                messages.warning(request, "No se encontraron datos bancarios suficientes para la transferencia desde el cliente.")
+                # Proceso normal con cuenta bancaria
+                ent_cli_hint, cta_cli = _extraer_cuenta_desde_medio(medio_datos)
+                ent_emp, cta_emp = _get_cuenta_empresa()
+
+                logger.debug(f"[COMPRA] Extract medio -> entidad_cliente='{ent_cli_hint}', cuenta_cliente_raw='{cta_cli}' | empresa_entidad='{getattr(ent_emp,'codigo',ent_emp)}', empresa_cuenta='{cta_emp}'")
+
+                # Validar que se tengan todos los datos necesarios
+                if not ent_cli_hint or not cta_cli:
+                    logger.warning(f"[COMPRA] Faltan datos del cliente: entidad='{ent_cli_hint}', cuenta='{cta_cli}'")
+                    messages.warning(request, "No se encontró información bancaria del cliente en el medio de pago seleccionado. La transacción quedó pendiente.")
+                elif not ent_emp or not cta_emp:
+                    logger.error(f"[COMPRA] Faltan datos de la empresa: entidad='{ent_emp}', cuenta='{cta_emp}'")
+                    messages.warning(request, "Error de configuración: no se encontró la cuenta bancaria de la empresa. Contacte al administrador.")
+                else:
+                    resultado = realizar_transferencia_bancaria(
+                        entidad_src=ent_cli_hint,
+                        numero_cuenta_src=cta_cli,
+                        entidad_dst=ent_emp,
+                        numero_cuenta_dst=cta_emp,
+                        monto=transaccion.monto_origen,
+                        referencia=transaccion.numero_transaccion  # NUEVO: referencia para historial
+                    )
+                    if resultado.get('ok'):
+                        transaccion.cambiar_estado('pagada', observacion='Pago automático recibido', usuario=request.user)
+                        messages.success(request, 'Transferencia recibida: operación pagada.')
+                    else:
+                        logger.warning(f"[COMPRA] Transferencia fallida: {resultado}")
+                        messages.warning(request, f"No se pudo recibir la transferencia: {resultado.get('message')} (código {resultado.get('code')})")
         except Exception as e:
             logger.error(f"[COMPRA] Error post-transferencia: {e}", exc_info=True)
             messages.warning(request, "Ocurrió un error al procesar la transferencia desde el cliente.")
@@ -778,9 +1349,11 @@ def limpiar_sesion_operacion(request, keys_adicionales=None):
 
 
 @login_required
+@require_permission("transacciones.view_transacciones_asignadas")  # ✅ SIN check_client_assignment
 def confirmacion_operacion(request, numero_transaccion):
     """
-    Vista de confirmación de operación exitosa
+    🔐 PROTEGIDA: transacciones.view_transacciones_asignadas
+    Vista de confirmación de operación exitosa.
     """
     transaccion = get_object_or_404(
         Transaccion, 
@@ -818,12 +1391,22 @@ def confirmacion_operacion(request, numero_transaccion):
 
 class HistorialTransaccionesClienteView(LoginRequiredMixin, ListView):
     """
-    Vista del historial de transacciones del cliente activo
+    🔐 PROTEGIDA: transacciones.view_transacciones_asignadas
+    Vista del historial de transacciones del cliente activo.
     """
     model = Transaccion
     template_name = 'historial_cliente.html'
     context_object_name = 'transacciones'
     paginate_by = 20
+
+    def dispatch(self, request, *args, **kwargs):
+        # ✅ Validar cliente activo AQUÍ
+        cliente_id = request.session.get('cliente_id')
+        if not cliente_id:
+            messages.info(request, "Selecciona un cliente para ver el historial de transacciones")
+            return redirect('clientes:seleccionar_cliente')
+        
+        return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         # Obtener cliente activo de la sesión
@@ -906,15 +1489,13 @@ class HistorialTransaccionesClienteView(LoginRequiredMixin, ListView):
         return context
 
 
-def is_staff_or_admin(user):
-    """Verificar si el usuario es staff o admin"""
-    return user.is_authenticated and (user.is_staff or user.is_superuser)
-
-
-@user_passes_test(is_staff_or_admin)
+@login_required
+@require_permission("transacciones.view_transacciones_globales")  
 def historial_admin(request):
     """
-    Vista administrativa para ver todas las transacciones
+    🔐 PROTEGIDA: transacciones.view_transacciones_globales
+    Vista administrativa para ver TODAS las transacciones del sistema.
+    Solo accesible para usuarios con permiso de visualización global.
     """
     # Filtros base
     transacciones = Transaccion.objects.select_related(
@@ -995,9 +1576,11 @@ def historial_admin(request):
     return render(request, 'historial_admin.html', context)
 
 
+@method_decorator(require_permission("transacciones.view_transacciones_asignadas"), name="dispatch")  # ✅ SIN check_client_assignment
 class DetalleTransaccionView(LoginRequiredMixin, DetailView):
     """
-    Vista detallada de una transacción
+    🔐 PROTEGIDA: transacciones.view_transacciones_asignadas
+    Vista detallada de una transacción.
     """
     model = Transaccion
     template_name = 'detalle_transaccion.html'
@@ -1008,10 +1591,21 @@ class DetalleTransaccionView(LoginRequiredMixin, DetailView):
     def get_object(self, queryset=None):
         transaccion = super().get_object(queryset)
         
-        # Verificar permisos
+        # ✅ Validación adicional según rol
         if not self.request.user.is_staff:
+            # Clientes solo ven sus propias transacciones
             cliente_id = self.request.session.get('cliente_id')
             if not cliente_id or str(transaccion.cliente.id) != str(cliente_id):
+                from django.core.exceptions import PermissionDenied
+                raise PermissionDenied("No tiene permisos para ver esta transacción.")
+        elif not self.request.user.has_perm('transacciones.view_transacciones_globales'):
+            # Operadores solo ven transacciones de clientes asignados
+            from clientes.models import AsignacionCliente
+            if not AsignacionCliente.objects.filter(
+                operador=self.request.user,
+                cliente=transaccion.cliente,
+                activa=True
+            ).exists():
                 from django.core.exceptions import PermissionDenied
                 raise PermissionDenied("No tiene permisos para ver esta transacción.")
         
@@ -1050,11 +1644,81 @@ class DetalleTransaccionView(LoginRequiredMixin, DetailView):
         return context
 
 
+# ═══════════════════════════════════════════════════════════════════
+# VISTAS DE EXPORTACIÓN
+# ═══════════════════════════════════════════════════════════════════
+
+@method_decorator(require_permission("transacciones.view_transacciones_asignadas"), name="dispatch")  # ✅ SIN check_client_assignment
+class ExportarTransaccionesView(LoginRequiredMixin, View):
+    """
+    🔐 PROTEGIDA: transacciones.view_transacciones_asignadas
+    Exportar transacciones del cliente activo a CSV.
+    """
+    
+    def dispatch(self, request, *args, **kwargs):
+        # ✅ Validar cliente activo AQUÍ
+        cliente_id = request.session.get('cliente_id')
+        if not cliente_id:
+            messages.warning(request, "Selecciona un cliente para exportar transacciones")
+            return redirect('clientes:seleccionar_cliente')
+        
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get(self, request):
+        import csv
+        from django.http import HttpResponse
+        
+        cliente_id = request.session.get('cliente_id')
+        cliente = get_object_or_404(Cliente, id=cliente_id, esta_activo=True)
+        
+        # Crear respuesta CSV
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="transacciones_{cliente.nombre_completo}_{datetime.now().strftime("%Y%m%d")}.csv"'
+        
+        writer = csv.writer(response)
+        writer.writerow([
+            'Número Transacción',
+            'Fecha',
+            'Tipo',
+            'Divisa Origen',
+            'Monto Origen',
+            'Divisa Destino',
+            'Monto Destino',
+            'Tasa Cambio',
+            'Estado'
+        ])
+        
+        transacciones = Transaccion.objects.filter(
+            cliente=cliente
+        ).select_related('divisa_origen', 'divisa_destino').order_by('-fecha_creacion')
+        
+        for t in transacciones:
+            writer.writerow([
+                t.numero_transaccion,
+                t.fecha_creacion.strftime('%Y-%m-%d %H:%M'),
+                t.get_tipo_operacion_display(),
+                t.divisa_origen.code,
+                t.monto_origen,
+                t.divisa_destino.code,
+                t.monto_destino,
+                t.tasa_de_cambio_aplicada,
+                t.get_estado_display()
+            ])
+        
+        return response
+
+
+# ═══════════════════════════════════════════════════════════════════
+# VISTAS DE GESTIÓN (CAMBIO DE ESTADO, CANCELACIÓN)
+# ═══════════════════════════════════════════════════════════════════
+
 @login_required
-@user_passes_test(is_staff_or_admin)
+@require_permission("transacciones.manage_estados_transacciones")  # ✅ SIN check_client_assignment (correcto para admin)
 def cambiar_estado_transaccion(request, numero_transaccion):
     """
-    Vista para cambiar el estado de una transacción (solo admin)
+    🔐 PROTEGIDA: transacciones.manage_estados_transacciones
+    Vista para cambiar el estado de una transacción.
+    Solo accesible para usuarios con permiso de gestión de estados (admin/operador).
     """
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Método no permitido'})
@@ -1085,17 +1749,25 @@ def cambiar_estado_transaccion(request, numero_transaccion):
 
 
 @login_required
+@require_permission("transacciones.cancel_propias_transacciones")  # ✅ SIN check_client_assignment
 def cancelar_transaccion(request, numero_transaccion):
     """
-    Vista para que el cliente cancele su transacción pendiente
+    🔐 PROTEGIDA: transacciones.cancel_propias_transacciones
+    Vista para que el cliente cancele su transacción pendiente.
     """
+    # ✅ Validar cliente activo AQUÍ
+    cliente_id = request.session.get('cliente_id')
+    if not cliente_id:
+        messages.error(request, "Debes tener un cliente seleccionado para cancelar transacciones")
+        return redirect('clientes:seleccionar_cliente')
+    
     transaccion = get_object_or_404(Transaccion, numero_transaccion=numero_transaccion)
     
-    # Verificar permisos
-    cliente_id = request.session.get('cliente_id')
-    if not cliente_id or str(transaccion.cliente.id) != str(cliente_id):
-        messages.error(request, "No tiene permisos para modificar esta transacción.")
-        return redirect('transacciones:historial_cliente')
+    # ✅ Validación adicional: el cliente solo cancela sus propias transacciones
+    if not request.user.is_staff:
+        if str(transaccion.cliente.id) != str(cliente_id):
+            messages.error(request, "No tiene permisos para modificar esta transacción.")
+            return redirect('transacciones:historial_cliente')
     
     if not transaccion.puede_cancelarse:
         messages.error(request, "Esta transacción no puede cancelarse.")

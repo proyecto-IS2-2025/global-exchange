@@ -88,15 +88,13 @@ def contacto(request):
 def cliente_dashboard(request):
     return render(request, 'cliente/dashboard.html')
 
-
+"""
 #Redirect
 @login_required
 @login_required
 def redireccion_por_grupo(request):
-    """
-    Redirige al usuario según su grupo.
-    Como no hay dashboards específicos todavía, todos van a inicio.
-    """
+    #Redirige al usuario según su grupo.
+    #Como no hay dashboards específicos todavía, todos van a inicio.
     grupos = list(request.user.groups.values_list('name', flat=True))
     print("Grupos del usuario:", grupos)
 
@@ -107,6 +105,8 @@ def redireccion_por_grupo(request):
     else:
         messages.warning(request, "Tu cuenta no tiene un grupo asignado.")
         return redirect('inicio')
+"""
+
 @login_required
 def asociar_clientes_usuarios(request):
     return render(request, "admin/asociar_clientes_usuarios.html")

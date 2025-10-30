@@ -25,12 +25,30 @@
               <td>{{ operacion.divisa }} - {{ operacion.divisa_nombre }}</td>
             </tr>
             <tr>
-              <th scope="row">Monto a pagar (Gs.)</th>
+              <th scope="row">Monto base (Gs.)</th>
               <td>{{ operacion.monto_guaranies|floatformat:0|intcomma }}</td>
             </tr>
             <tr>
               <th scope="row">Tasa de cambio aplicada</th>
               <td>{{ operacion.tasa_cambio|floatformat:0|intcomma }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Comisión del medio de pago</th>
+              <td>
+                {% if comision_monto %}
+                  {{ comision_monto|floatformat:0|intcomma }} Gs. ({{ medio.comision }})
+                {% else %}
+                  No aplica
+                {% endif %}
+              </td>
+            </tr>
+            <tr class="table-warning">
+              <th scope="row"><strong>Total a pagar (Gs.)</strong></th>
+              <td>
+                <strong class="text-danger fs-5">
+                  {{ monto_total|floatformat:0|intcomma }} Gs.
+                </strong>
+              </td>
             </tr>
             <tr class="table-success">
               <th scope="row">Monto a recibir</th>
@@ -78,13 +96,17 @@
       {% with campos=medio.campos|default:medio_ses.campos %}
       {% if campos %}
         <h6>Datos del medio</h6>
-        <table class="table table-sm">
+        <table class="table table-sm table-bordered">
           <tbody>
             {% for c in campos %}
               <tr>
-                <th scope="row">{{ c.etiqueta }}</th>
-                <td>
-                  {% if c.valor_enmascarado %}
+                <th scope="row" class="bg-light" style="width: 40%;">{{ c.etiqueta }}</th>
+                <td class="fw-semibold">
+                  {# Mostrar sin censura: Entidad, RUC, Titular, Nombre, Documento #}
+                  {% if "entidad" in c.etiqueta|lower or "ruc" in c.etiqueta|lower or "titular" in c.etiqueta|lower or "nombre" in c.etiqueta|lower or "documento" in c.etiqueta|lower %}
+                    {{ c.valor|default:"-" }}
+                  {# Mostrar con censura: Número de cuenta, tarjeta, CVV, etc #}
+                  {% elif c.valor_enmascarado %}
                     {{ c.valor_enmascarado }}
                   {% elif c.valor %}
                     {{ c.valor }}
@@ -103,12 +125,17 @@
 
     </div>
     <div class="card-footer text-end">
-      <a href="{% url 'operacion_divisas:compra' %}" class="btn btn-outline-secondary me-2">
+      <a href="{% url 'clientes:seleccionar_medio_pago' %}" class="btn btn-outline-secondary me-2">
         <i class="bi bi-arrow-left"></i> Volver
       </a>
       
+
+      <!-- Formulario para confirmar compra (ahora pasa por SumarioCompraView.post() para validar Stripe) -->
+      <form method="post" action="" class="d-inline">
+
       <!-- Formulario para iniciar verificación MFA -->
       <form method="post" action="" class="d-inline" id="mfa-form">
+
         {% csrf_token %}
         <button type="submit" class="btn btn-success" id="mfa-btn">
           <i class="bi bi-shield-check me-2"></i> Continuar a Verificación

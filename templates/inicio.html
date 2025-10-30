@@ -1,42 +1,102 @@
+<!-- filepath: c:\proyecto-is2\casa_de_cambios\templates\inicio.html -->
 {% extends "base.html" %}
 {% load static %}
 
 {% block content %}
 <div class="container mt-5">
 
-  {# Logo inicial para usuarios no admin/operador #}
-  {% if not grupo_operador and not grupo_admin %}
-    <h1 class="h3 text-center">Bienvenido a Global Exchange</h1>
-    <p class="text-center">Usa el menú superior para navegar.</p>
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {# LOGO Y BIENVENIDA (Solo para NO staff)                        #}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {% if not usuario_es_staff %}
+    <div class="text-center mb-5">
+      
+      <h1 class="h3">Bienvenido a Global Exchange</h1>
+      
+      {% if usuario_es_registrado %}
+        {# ⏳ Usuario registrado sin clientes #}
+        <div class="alert alert-info mt-4 shadow-sm">
+          <i class="fas fa-info-circle me-2"></i>
+          <strong>Tu cuenta está en revisión.</strong>
+          <br>
+          Un administrador debe asignarte clientes para que puedas realizar operaciones.
+        </div>
+      {% else %}
+        <p class="text-muted mt-3">Explora nuestras opciones en el menú superior</p>
+      {% endif %}
+    </div>
+    
     <hr class="my-5">
   {% endif %}
 
-  {# Usuario autenticado #}
+  {# ═══════════════════════════════════════════════════════════════ #}
+  {# CONTENIDO DINÁMICO SEGÚN TIPO DE USUARIO                       #}
+  {# ═══════════════════════════════════════════════════════════════ #}
   {% if user.is_authenticated %}
-    {% if grupo_cliente %}
-      {% include "menus/menu_cliente.html" %}
-    {% elif grupo_operador or grupo_admin %}
-      {% include "menus/menu_staff.html" %}
-    {% else %}
-      <!-- Usuario autenticado sin grupo -->
-      <p class="text-muted">
-        Bienvenido, <strong>{{ user.get_full_name|default:user.username }}</strong>
-        <i class="fas fa-hand-paper"></i>
-      </p>
-      {% include "partials/visualizador.html" %}
-      {% include "simulador/simulador_conversion.html" %}
-      {{ block.super }}
+    
+    {# ✅ STAFF: Menú administrativo (dev, administrador, operador, etc.) #}
+    {% if usuario_es_staff %}
+      <div class="mb-4">
+        <h2 class="h4 text-center mb-4">
+          
+        </h2>
+        {% include "menus/menu_staff.html" %}
+      </div>
+      
+    {# ✅ CLIENTE: Operador de cuenta con clientes asignados #}
+    {% elif usuario_es_cliente %}
+      <div class="mb-4">
+      
+        {% include "menus/menu_cliente.html" %}
+      </div>
+      
+    {# ⚠️ REGISTRADO: Usuario sin permisos ni clientes #}
+    {% elif usuario_es_registrado %}
+      <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+          <div class="card shadow-sm border-warning">
+            <div class="card-body text-center py-5">
+              <i class="fas fa-hourglass-half fa-3x text-warning mb-3"></i>
+              <h3 class="card-title">Cuenta en Revisión</h3>
+              <p class="card-text text-muted">
+                Tu cuenta ha sido creada exitosamente. Estamos revisando tu solicitud 
+                y pronto un administrador te asignará los clientes correspondientes.
+              </p>
+              <hr class="my-4">
+              <div class="d-flex justify-content-center gap-3">
+                <p class="text-muted mb-0">
+                  <i class="fas fa-envelope me-2"></i>
+                  Recibirás un correo cuando tu cuenta esté lista
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     {% endif %}
+    
   {% else %}
-    <!-- Usuarios sin iniciar sesión -->
-    {% include "partials/visualizador.html" %}
-    {% include "simulador/simulador_conversion.html" %}
+    {# ═══════════════════════════════════════════════════════════════ #}
+    {# USUARIOS NO AUTENTICADOS (Anónimos)                            #}
+    {# ═══════════════════════════════════════════════════════════════ #}
+    <div class="mb-5">
+    
+      {% include "partials/visualizador.html" %}
+    </div>
+    
+    <div class="mt-5">
+    
+      {% include "simulador/simulador_conversion.html" %}
+    </div>
   {% endif %}
 
 </div>
 
-{# Mantengo los estilos de botones aquí para centralizar #}
+{# ═══════════════════════════════════════════════════════════════ #}
+{# ESTILOS GLOBALES                                                #}
+{# ═══════════════════════════════════════════════════════════════ #}
 <style>
+  /* Botón de operación con animación */
   .btn-operacion {
     position: relative;
     display: inline-block;
@@ -51,10 +111,16 @@
     animation: pulse-glow 3s ease-in-out infinite;
   }
   
+  .btn-operacion:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(0, 123, 255, 0.4);
+  }
+  
   .btn-operacion:active {
     transform: translateY(-1px);
     box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
   }
+  
   .btn-operacion-content {
     display: inline-flex;
     align-items: center;
@@ -65,23 +131,22 @@
     color: white;
     font-weight: 600;
     font-size: 1.2rem;
-    letter-spacing: 0.5px;
-    position: relative;
-    z-index: 2;
-    transition: all 0.3s ease;
-  }
-  .btn-operacion:hover .btn-operacion-content {
-    background: rgba(255, 255, 255, 0.15);
   }
 
-  .btn-text { transition: transform 0.3s ease; }
-  .btn-operacion:hover .btn-text { transform: translateX(5px); }
-  .btn-operacion .fa-arrow-right { transition: transform 0.3s ease; }
-  .btn-operacion:hover .fa-arrow-right { transform: translateX(5px); }
+  .btn-text,
+  .btn-operacion .fa-arrow-right {
+    transition: transform 0.3s ease;
+  }
+  
+  .btn-operacion:hover .btn-text,
+  .btn-operacion:hover .fa-arrow-right {
+    transform: translateX(5px);
+  }
+  
   @keyframes pulse-glow {
-    0% { box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3); }
+    0%, 100% { box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3); }
     50% { box-shadow: 0 8px 30px rgba(0, 123, 255, 0.5); }
-    100% { box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3); }
   }
 </style>
+
 {% endblock %}

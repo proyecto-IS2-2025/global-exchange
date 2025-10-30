@@ -70,7 +70,6 @@ loaddata:
 	poetry run python manage.py loaddata users_data.json
 	poetry run python manage.py loaddata clientes_data.json
 	poetry run python manage.py loaddata divisas_data.json
-	poetry run python manage.py loaddata medios_data.json
 	@echo "Datos iniciales cargados."
 
 run:
@@ -101,8 +100,11 @@ delete-migrations:
 
 reset-db:
 	@echo "Reiniciando la base de datos..."
-	dropdb --username=postgres  --if-exists global_exchange --host=localhost
-	createdb --username=postgres --host=localhost global_exchange
+	
+	dropdb --username=django_user  --if-exists global_exchange --host=localhost
+	createdb --username=django_user --host=localhost global_exchange 
+	
+	@echo "Cargando datos de prueba..."
 	poetry run python scripts/delete_migrations.py
 	poetry run python manage.py makemigrations	
 	poetry run python manage.py migrate
@@ -110,4 +112,43 @@ reset-db:
 	poetry run python manage.py loaddata users_data.json
 	poetry run python manage.py loaddata clientes_data.json
 	poetry run python manage.py loaddata divisas_data.json
+	poetry run python manage.py loaddata bancos_data.json
+
+	@echo "Configurando roles de prueba..."
+	poetry run python manage.py sync_permissions
+	poetry run python manage.py setup_test_roles --verbose
+	poetry run python manage.py sync_role_status
+	poetry run python manage.py create_dev_user
+	
+	poetry run python manage.py loaddata denominaciones_data.json
+	poetry run python manage.py loaddata bancos_data.json
+	poetry run python manage.py loaddata billetera_data.json
+
+	
 	@echo "Base de datos reiniciada y datos cargados."
+
+migraWin:
+	@echo "Realizando migraciones en Windows..."
+	poetry run python manage.py makemigrations
+	poetry run python manage.py migrate
+	@echo "Migraciones realizadas en Windows."
+
+
+
+sync:
+	@echo "Sincronizando repositorio local con el remoto..."
+	 poetry run python manage.py sync_permissions
+	@echo "Repositorio sincronizado."
+
+check:
+	@echo "Verificando el estado del proyecto..."
+	poetry run python manage.py check
+	@echo "Verificación completada."
+
+roles:
+	@echo "Sincronizando roles y permisos..."
+	python manage.py sync_permissions
+	python manage.py setup_test_roles --verbose
+	python manage.py sync_role_status
+	python manage.py create_dev_user
+	@echo "Roles y permisos sincronizados."

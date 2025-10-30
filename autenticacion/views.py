@@ -108,19 +108,16 @@ def verificar_correo(request, token):
 
 def login_view(request):
     """
-    Vista modificada para el inicio de sesión. 
-    Tras credenciales válidas, inicia el flujo de verificación MFA.
+    Vista de login SIN lógica de roles hardcodeada.
     """
-    # 1. Si el usuario ya está autenticado, redirigir
+    # 1. Si ya está autenticado, redirigir
     if request.user.is_authenticated:
-        # Usa tu vista de redirección por grupo
-        return redirect('redirect_dashboard')
+        return redirect('inicio')  # ← CAMBIADO: simplemente a inicio
         
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
 
-        # Autentica usando el EmailBackend
         user = authenticate(request, username=email, password=password)
 
         if user is not None:

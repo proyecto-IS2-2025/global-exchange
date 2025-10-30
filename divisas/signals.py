@@ -60,9 +60,16 @@ def evaluar_alertas_notificacion(sender, instance, created, **kwargs):
         created (bool): True si el registro fue creado, False si fue actualizado.
         **kwargs: Argumentos de palabra clave adicionales.
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"🎯 Signal ejecutado para CotizacionSegmento: {instance.divisa.code} - Segmento: {instance.segmento} - Created: {created}")
+    
     if not created:
+        logger.info("⏭️  Signal ignorado (not created)")
         return
 
+    logger.info("✅ Programando evaluar_alertas en on_commit")
     transaction.on_commit(
         lambda: evaluar_alertas(instance)
     )

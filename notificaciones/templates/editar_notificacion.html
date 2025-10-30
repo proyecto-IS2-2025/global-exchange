@@ -112,33 +112,51 @@
     }
 
     .btn-modern {
-        padding: 0.625rem 1.25rem;
-        border-radius: 8px;
-        font-weight: 500;
-        font-size: 0.95rem;
-        transition: all 0.2s;
-        border: none;
+        padding: 0.625rem 1.25rem !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        transition: all 0.2s !important;
+        border: none !important;
+        background: #000000 !important;
+        background-color: #000000 !important;
+        color: white !important;
     }
 
     .btn-primary-modern {
-        background: var(--accent-blue);
-        color: white;
+        background: #000000 !important;
+        background-color: #000000 !important;
+        color: white !important;
+        border-color: #000000 !important;
     }
 
-    .btn-primary-modern:hover {
-        background: var(--accent-blue-hover);
+    .btn-primary-modern:hover,
+    .btn-primary-modern:focus,
+    .btn-primary-modern:active {
+        background: #1a1a1a !important;
+        background-color: #1a1a1a !important;
+        border-color: #1a1a1a !important;
         transform: translateY(-1px);
-        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+        color: white !important;
     }
 
     .btn-secondary-modern {
-        background: var(--neutral-300);
-        color: var(--neutral-700);
+        background: #000000 !important;
+        background-color: #000000 !important;
+        color: white !important;
+        border-color: #000000 !important;
     }
 
-    .btn-secondary-modern:hover {
-        background: var(--neutral-400);
+    .btn-secondary-modern:hover,
+    .btn-secondary-modern:focus,
+    .btn-secondary-modern:active {
+        background: #1a1a1a !important;
+        background-color: #1a1a1a !important;
+        border-color: #1a1a1a !important;
         transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+        color: white !important;
     }
     
     .btn-group-actions {
@@ -292,11 +310,11 @@
 
         <!-- Botones de Acción -->
         <div class="btn-group-actions">
-            <a href="{% url 'notificaciones:gestion_notificaciones' %}" class="btn btn-secondary-modern btn-modern">
+            <a href="{% url 'notificaciones:gestion_notificaciones' %}" class="btn btn-secondary-modern btn-modern" style="background: #000000 !important; background-color: #000000 !important; color: white !important; font-weight: 600 !important; border: none !important; padding: 0.625rem 1.25rem !important; border-radius: 8px !important; text-decoration: none !important;">
                 <i class="fas fa-times me-2"></i>
                 Cancelar
             </a>
-            <button type="submit" form="form-editar" class="btn btn-primary-modern btn-modern">
+            <button type="submit" form="form-editar" class="btn btn-primary-modern btn-modern" style="background: #000000 !important; background-color: #000000 !important; color: white !important; font-weight: 600 !important; border: none !important; padding: 0.625rem 1.25rem !important; border-radius: 8px !important;">
                 <i class="fas fa-save me-2"></i>
                 Guardar cambios
             </button>

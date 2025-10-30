@@ -174,8 +174,8 @@
                                             <i class="fa-solid fa-users"></i>
                                         </div>
                                         <div>
-                                            <small class="text-muted d-block">Grupo</small>
-                                            <span class="badge bg-secondary stats-badge">{{ grupo }}</span>
+                                            <small class="text-muted d-block">Rol</small>
+                                            <span class="badge bg-secondary stats-badge">{{ tipo_usuario|default:"Sin rol" }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -274,7 +274,6 @@
                     <div class="d-flex flex-column h-100">
                         <div class="flex-grow-1">
                             <div class="row g-3">
-                                <!-- Botón de Medios de Pago -->
                                 <div class="col-12">
                                     <a href="{% url 'clientes:medios_pago_cliente' %}" class="btn btn-primary w-100 btn-action text-start p-3">
                                         <div class="d-flex align-items-center">
@@ -290,7 +289,6 @@
                                     </a>
                                 </div>
 
-                                <!-- Botón de Historial de Transacciones -->
                                 <div class="col-12">
                                     <a href="{% url 'transacciones:historial_cliente' %}" class="btn btn-warning w-100 btn-action text-start p-3">
                                         <div class="d-flex align-items-center">
@@ -306,7 +304,6 @@
                                     </a>
                                 </div>
 
-                                <!-- Botón adicional de Operaciones -->
                                 <div class="col-12">
                                     <a href="{% url 'operacion_divisas:seleccionar_operacion' %}" class="btn btn-success w-100 btn-action text-start p-3">
                                         <div class="d-flex align-items-center">
@@ -324,7 +321,6 @@
                             </div>
                         </div>
 
-                        <!-- Información adicional -->
                         <div class="mt-4 pt-3 border-top">
                             <div class="text-center">
                                 <small class="text-muted">
@@ -342,8 +338,9 @@
 </div>
 
 <script>
+// Efectos visuales
 document.addEventListener('DOMContentLoaded', function() {
-    // Efectos de hover mejorados
+    // Efectos de hover para action cards
     const actionCards = document.querySelectorAll('.action-card');
     actionCards.forEach(card => {
         card.addEventListener('mouseenter', function() {

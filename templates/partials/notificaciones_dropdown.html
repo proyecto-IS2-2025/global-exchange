@@ -185,11 +185,11 @@
         
         // Mostrar mensaje de sin notificaciones
         const container = document.getElementById('notificaciones-container');
-        container.innerHTML = '<li class="p-2 text-center text-muted" style="list-style: none;" id="sin-notificaciones">Sin notificaciones nuevas</li>';
+        container.innerHTML = '<li class="px-3 py-5 text-center text-muted" style="list-style: none;" id="sin-notificaciones"><i class="fas fa-bell-slash mb-2" style="font-size: 2rem; opacity: 0.3;"></i><p class="mb-0">Sin notificaciones nuevas</p></li>';
         
-        // Ocultar botón de limpiar todo
+        // Solo ocultar el botón de limpiar todo, NO remover el contenedor padre
         const btnLimpiar = document.querySelector('.btn-limpiar-todo');
-        if (btnLimpiar) btnLimpiar.parentElement.remove();
+        if (btnLimpiar) btnLimpiar.style.display = 'none';
       }
     }
 

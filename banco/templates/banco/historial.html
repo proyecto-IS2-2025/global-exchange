@@ -101,6 +101,16 @@
     color: white;
   }
 
+  .badge-info {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+  }
+
+  .badge-secondary {
+    background: linear-gradient(135deg, #6b7280, #4b5563);
+    color: white;
+  }
+
   .text-danger {
     color: #dc2626 !important;
     font-weight: 600;
@@ -214,39 +224,83 @@
                     <td class="fecha-col">{{ m.fecha|date:"d M, Y H:i" }}</td>
                     <td>
                       {% if m.cuenta_origen %}
+                        {# Es una Transferencia bancaria #}
                         <span class="badge badge-primary">
                           <i class="bi bi-arrow-left-right"></i> Transferencia
                         </span>
-                      {% else %}
+                      {% elif m.tarjeta_debito or m.tarjeta_credito %}
+                        {# Es un PagoTarjeta #}
                         <span class="badge {% if m.tarjeta_debito %}badge-success{% else %}badge-warning{% endif %}">
                           <i class="bi bi-credit-card"></i> Pago {{ m.tarjeta_debito|yesno:"Débito,Crédito" }}
+                        </span>
+                      {% elif m.cuenta_destino and m.billetera %}
+                        {# Es un PagoBilletera (pago recibido desde billetera) #}
+                        <span class="badge badge-info">
+                          <i class="bi bi-wallet2"></i> Pago Billetera
+                        </span>
+                      {% elif m.billetera and m.tarjeta_debito %}
+                        {# Es una RecargaBilletera (recarga a billetera) #}
+                        <span class="badge badge-secondary">
+                          <i class="bi bi-arrow-up-circle"></i> Recarga Billetera
                         </span>
                       {% endif %}
                     </td>
                     <td>
                       {% if m.cuenta_origen %}
+                        {# Transferencia bancaria #}
                         {% if m.cuenta_origen.usuario.id == user.id %}
                           <span class="text-danger">- ₲ <span class="monto-valor">{{ m.monto|floatformat:0 }}</span></span>
                         {% else %}
                           <span class="text-success">+ ₲ <span class="monto-valor">{{ m.monto|floatformat:0 }}</span></span>
                         {% endif %}
+                      {% elif m.tarjeta_debito or m.tarjeta_credito %}
+                        {# PagoTarjeta - verificar si es enviado o recibido #}
+                        {% if m.tarjeta_debito and m.tarjeta_debito.usuario.id == user.id %}
+                          {# Pago ENVIADO con mi tarjeta de débito → Egreso #}
+                          <span class="text-danger">- ₲ <span class="monto-valor">{{ m.monto|floatformat:0 }}</span></span>
+                        {% elif m.tarjeta_credito and m.tarjeta_credito.usuario.id == user.id %}
+                          {# Pago ENVIADO con mi tarjeta de crédito → Egreso #}
+                          <span class="text-danger">- ₲ <span class="monto-valor">{{ m.monto|floatformat:0 }}</span></span>
+                        {% else %}
+                          {# Pago RECIBIDO en mi cuenta → Ingreso #}
+                          <span class="text-success">+ ₲ <span class="monto-valor">{{ m.monto|floatformat:0 }}</span></span>
+                        {% endif %}
+                      {% elif m.cuenta_destino and m.billetera %}
+                        {# PagoBilletera - siempre es ingreso #}
+                        <span class="text-success">+ ₲ <span class="monto-valor">{{ m.monto|floatformat:0 }}</span></span>
                       {% else %}
+                        {# Otros casos - por defecto egreso #}
                         <span class="text-danger">- ₲ <span class="monto-valor">{{ m.monto|floatformat:0 }}</span></span>
                       {% endif %}
                     </td>
                     <td>
                       {% if m.cuenta_origen %}
+                        {# Transferencia bancaria #}
                         {% if m.cuenta_origen.usuario.id == user.id %}
-                          A cuenta {{ m.cuenta_destino.numero_cuenta }}
+                          Transferencia a cuenta {{ m.cuenta_destino.numero_cuenta }}
                         {% else %}
-                          De cuenta {{ m.cuenta_origen.numero_cuenta }}
+                          Transferencia de cuenta {{ m.cuenta_origen.numero_cuenta }}
                         {% endif %}
-                      {% else %}
-                        {% if m.tarjeta_debito %}
+                      {% elif m.tarjeta_debito and not m.billetera %}
+                        {# PagoTarjeta con débito #}
+                        {% if m.tarjeta_debito.usuario.id == user.id %}
                           Pago con Débito (****{{ m.tarjeta_debito.numero|slice:"-4:" }})
-                        {% elif m.tarjeta_credito %}
-                          Pago con Crédito (****{{ m.tarjeta_credito.numero|slice:"-4:" }})
+                        {% else %}
+                          Pago recibido de Débito (****{{ m.tarjeta_debito.numero|slice:"-4:" }})
                         {% endif %}
+                      {% elif m.tarjeta_credito %}
+                        {# PagoTarjeta con crédito #}
+                        {% if m.tarjeta_credito.usuario.id == user.id %}
+                          Pago con Crédito (****{{ m.tarjeta_credito.numero|slice:"-4:" }})
+                        {% else %}
+                          Pago recibido de Crédito (****{{ m.tarjeta_credito.numero|slice:"-4:" }})
+                        {% endif %}
+                      {% elif m.cuenta_destino and m.billetera %}
+                        {# PagoBilletera #}
+                        Pago recibido desde billetera {{ m.billetera.usuario.numero_celular }}
+                      {% elif m.billetera and m.tarjeta_debito %}
+                        {# RecargaBilletera #}
+                        Recarga a billetera (****{{ m.tarjeta_debito.numero|slice:"-4:" }})
                       {% endif %}
                     </td>
                     <td>

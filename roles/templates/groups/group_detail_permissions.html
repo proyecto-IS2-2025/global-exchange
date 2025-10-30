@@ -1,124 +1,586 @@
 {% extends "base.html" %}
 {% load static %}
+
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card shadow-lg p-4">
-                <div class="card-header bg-primary text-white text-center rounded mb-4">
-                    <h2 class="card-title mb-0">
-                        <i class="fas fa-shield-alt me-2"></i>Permisos del Rol: {{ group.name }}
-                    </h2>
+<div class="container mt-4">
+    <!-- Header con título -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center">
+                <div class="bg-primary rounded-circle p-3 me-3">
+                    <i class="fas fa-shield-alt text-white fa-2x"></i>
                 </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="id_name" class="form-label">Nombre del Rol:</label>
-                            <input type="text" name="name" id="id_name" class="form-control" value="{{ group.name }}" required>
-                        </div>
-                        
-                        <hr>
-
-                        <h5 class="mb-3">Permisos Asignados</h5>
-                        <ul id="selected-permissions-list" class="list-group mb-3">
-                            {% for perm in current_permissions %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center" data-id="{{ perm.id }}">
-                                    {{ perm.codename }}
-                                    <button type="button" class="btn btn-danger btn-sm remove-permission">
-                                        &times;
-                                    </button>
-                                    <input type="hidden" name="permissions" value="{{ perm.id }}">
-                                </li>
-                            {% endfor %}
-                        </ul>
-
-                        <hr>
-
-                        <h5 class="mb-3">Añadir Permisos</h5>
-                        <div class="input-group mb-3">
-                            <input type="text" class="form-control" id="permission-search" placeholder="Buscar permiso por codename...">
-                        </div>
-
-                        <ul id="search-results" class="list-group mb-3" style="max-height: 250px; overflow-y: auto;">
-                        </ul>
-
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                            <a href="{% url 'group_list' %}" class="btn btn-secondary me-md-2">
-                                <i class="fas fa-arrow-left me-2"></i>Volver
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>Guardar Cambios
+                <div>
+                    <h1 class="mb-1 fw-bold">Permisos del Rol: {{ group.name }}</h1>
+                    <p class="text-muted mb-0">Configura los permisos para este rol</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 d-flex align-items-center justify-content-end">
+            <a href="{% url 'group_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Volver a Roles
+            </a>
+        </div>
+    </div>
+    
+    <!-- Tarjeta principal -->
+    <div class="card shadow-lg border-0">
+        <form method="post">
+            {% csrf_token %}
+            
+            <!-- Sección de resumen de permisos -->
+            <div class="card-header bg-gradient py-3">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="mb-0 text-white fw-bold">
+                            <i class="fas fa-check-circle me-2"></i>Permisos Asignados
+                        </h5>
+                    </div>
+                    <div class="col-auto">
+                        <span class="badge bg-white text-primary rounded-pill px-3 py-2" id="assigned-count">
+                            {{ current_permissions|length }} permisos
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body p-0">
+                <div class="p-4 border-bottom">
+                    {% if current_permissions %}
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="mb-2">Resumen de permisos asignados</h6>
+                                <p class="text-muted mb-0">Este rol tiene {{ current_permissions|length }} permiso{{ current_permissions|length|pluralize }} asignado{{ current_permissions|length|pluralize }}</p>
+                            </div>
+                            <button type="button" 
+                                    class="btn btn-info btn-lg" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#permissionsModal">
+                                <i class="fas fa-eye me-2"></i>Visualizar Permisos
                             </button>
                         </div>
-                    </form>
+                    {% else %}
+                        <div class="alert alert-light border">
+                            <div class="text-center py-3">
+                                <i class="fas fa-exclamation-circle text-warning fa-2x mb-2"></i>
+                                <p class="mb-0">No hay permisos asignados.</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Lista oculta para el formulario -->
+                    <div id="selected-permissions-list" class="d-none">
+                        {% for perm in current_permissions %}
+                            <input type="hidden" name="permissions" value="{{ perm.id }}" data-id="{{ perm.id }}">
+                        {% endfor %}
+                    </div>
                 </div>
+                
+                <!-- Sección de búsqueda -->
+                <div class="p-4 border-bottom">
+                    <h5 class="mb-3 fw-bold">
+                        <i class="fas fa-search me-2"></i>Buscar permisos disponibles
+                    </h5>
+                    <div class="position-relative">
+                        <input id="permission-search" type="text" class="form-control form-control-lg" placeholder="Escribe para filtrar..." autocomplete="off">
+                        <div class="position-absolute top-50 end-0 translate-middle-y me-3">
+                            <i class="fas fa-search text-muted"></i>
+                        </div>
+                        <ul id="search-results" class="list-group position-absolute w-100 shadow d-none mt-1"
+                            style="z-index: 1050; max-height: 300px; overflow-y: auto;"></ul>
+                    </div>
+                </div>
+                
+                <!-- Sección de permisos por módulo -->
+                <div class="p-4">
+                    <h5 class="mb-3 fw-bold">
+                        <i class="fas fa-layer-group me-2"></i>Permisos por Módulo
+                    </h5>
+                    
+                    <!-- Pestañas de módulos -->
+                    <ul class="nav nav-pills mb-4" id="module-tabs" role="tablist">
+                        {% for modulo, info in permisos_por_modulo.items %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link {% if forloop.first %}active{% endif %}"
+                                    id="tab-{{ modulo }}"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#panel-{{ modulo }}"
+                                    type="button"
+                                    role="tab">
+                                {{ info.nombre }}
+                                <span class="badge rounded-pill bg-secondary ms-1">{{ info.permisos|length }}</span>
+                            </button>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    
+                    <!-- Contenido de las pestañas -->
+                    <div class="tab-content border rounded p-3 bg-light">
+                        {% for modulo, info in permisos_por_modulo.items %}
+                        <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="panel-{{ modulo }}" role="tabpanel">
+                            {% if info.permisos %}
+                                <div class="permissions-grid">
+                                    {% for perm in info.permisos %}
+                                    <div class="permission-item" data-permission-id="{{ perm.id }}">
+                                        <div class="card h-100 {% if perm.id in current_permissions_ids %}border-success{% endif %}">
+                                            <div class="card-body p-3">
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <h6 class="card-title mb-0">{{ perm.nombre }}</h6>
+                                                    <button type="button"
+                                                            class="btn btn-sm permission-toggle-btn"
+                                                            data-id="{{ perm.id }}"
+                                                            data-name="{{ perm.nombre }}"
+                                                            data-descripcion="{{ perm.descripcion }}"
+                                                            data-ejemplo="{{ perm.ejemplo }}"
+                                                            data-riesgo="{{ perm.nivel_riesgo_display }}"
+                                                            data-is-assigned="{% if perm.id in current_permissions_ids %}true{% else %}false{% endif %}">
+                                                        {% if perm.id in current_permissions_ids %}
+                                                            <i class="fas fa-times"></i>
+                                                        {% else %}
+                                                            <i class="fas fa-plus"></i>
+                                                        {% endif %}
+                                                    </button>
+                                                </div>
+                                                <p class="card-text text-muted small">{{ perm.descripcion }}</p>
+                                                {% if perm.ejemplo %}
+                                                    <p class="card-text small fst-italic text-secondary">Ejemplo: {{ perm.ejemplo }}</p>
+                                                {% endif %}
+                                                {% if perm.nivel_riesgo_display %}
+                                                    <div class="mt-2">
+                                                        <span class="badge bg-outline-secondary">Riesgo: {{ perm.nivel_riesgo_display }}</span>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-inbox text-muted fa-2x mb-2"></i>
+                                    <p class="text-muted">Sin permisos registrados en este módulo.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer con botón de guardar -->
+            <div class="card-footer bg-light py-3">
+                <div class="d-flex justify-content-between">
+                    <div >
+                      
+                    </div>
+                  
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-save me-2"></i>Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para visualizar permisos -->
+<div class="modal fade" id="permissionsModal" tabindex="-1" aria-labelledby="permissionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-square-fixed">
+        <div class="modal-content square-modal">
+            <div class="modal-header bg-primary text-white py-2">
+                <h5 class="modal-title" id="permissionsModalLabel">
+                    <i class="fas fa-key me-2"></i>Permisos Asignados
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0 modal-body-square">
+                <!-- Agregado: Campo de búsqueda en el modal -->
+                <div class="p-3 border-bottom">
+                    <div class="position-relative">
+                        <input id="modal-permission-search" type="text" class="form-control" placeholder="Buscar permisos asignados..." autocomplete="off">
+                        <div class="position-absolute top-50 end-0 translate-middle-y me-3">
+                            <i class="fas fa-search text-muted"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-3 permissions-list" id="modal-permissions-list">
+                    {% if current_permissions %}
+                        {% for perm in current_permissions %}
+                        <div class="permission-item mb-2" data-id="{{ perm.id }}">
+                            <div class="d-flex align-items-center p-2 border rounded bg-light hover-bg">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <div class="flex-grow-1">
+                                    <strong>{{ perm.name }}</strong>
+                                    {% if perm.metadata and perm.metadata.descripcion_detallada %}
+                                        <div class="text-muted small">{{ perm.metadata.descripcion_detallada }}</div>
+                                    {% endif %}
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger remove-permission-modal">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-exclamation-circle text-warning fa-3x mb-3"></i>
+                            <p class="text-muted">No hay permisos asignados</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
 </div>
 
+<style>
+.permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+}
+
+.permission-item {
+    break-inside: avoid;
+}
+
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.border-success {
+    border-left: 4px solid #28a745 !important;
+}
+
+/* Estilos del modal cuadrado */
+.modal-square-fixed {
+    width: 500px !important;
+    height: 500px !important;
+    max-width: 90vw !important;
+    max-height: 90vh !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.square-modal {
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    border-radius: 0.5rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+.modal-body-square {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    min-height: 0 !important;
+}
+
+.permissions-list {
+    height: 100%;
+    overflow-y: auto;
+}
+
+.hover-bg:hover {
+    background-color: #e9ecef !important;
+    transition: background-color 0.2s ease;
+}
+
+/* Scrollbar personalizado */
+#search-results::-webkit-scrollbar,
+.modal-body-square::-webkit-scrollbar {
+    width: 6px;
+}
+
+#search-results::-webkit-scrollbar-track,
+.modal-body-square::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+#search-results::-webkit-scrollbar-thumb,
+.modal-body-square::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+#search-results::-webkit-scrollbar-thumb:hover,
+.modal-body-square::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+    .permissions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-square-fixed {
+        width: 95vw !important;
+        height: 95vw !important;
+        max-height: 95vh !important;
+    }
+}
+</style>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('permission-search');
-        const searchResults = document.getElementById('search-results');
-        const selectedList = document.getElementById('selected-permissions-list');
+document.addEventListener('DOMContentLoaded', () => {
+  const searchInput = document.getElementById('permission-search');
+  const searchResults = document.getElementById('search-results');
+  const selectedList = document.getElementById('selected-permissions-list');
+  const modalPermissionsList = document.getElementById('modal-permissions-list');
+  const assignedCount = document.getElementById('assigned-count');
+  
+  // Agregado: Referencia al campo de búsqueda del modal
+  const modalSearchInput = document.getElementById('modal-permission-search');
 
-        function addPermission(id, codename) {
-            if (!document.querySelector(`#selected-permissions-list [data-id='${id}']`)) {
-                const li = document.createElement('li');
-                li.className = 'list-group-item d-flex justify-content-between align-items-center';
-                li.dataset.id = id;
-                li.innerHTML = `
-                    ${codename}
-                    <button type="button" class="btn btn-danger btn-sm remove-permission">
-                        &times;
-                    </button>
-                    <input type="hidden" name="permissions" value="${id}">
-                `;
-                selectedList.appendChild(li);
+  // IDs de permisos ya asignados (para verificar duplicados)
+  const assignedPermissionIds = new Set({{ current_permissions_ids|safe }});
 
-                // Re-attach event listener for the new button
-                li.querySelector('.remove-permission').addEventListener('click', function() {
-                    li.remove();
-                });
-            }
-        }
+  function updateAssignedCount() {
+    const count = selectedList.querySelectorAll('input[type="hidden"]').length;
+    assignedCount.textContent = `${count} permiso${count !== 1 ? 's' : ''}`;
+  }
 
-        searchInput.addEventListener('input', function() {
-            const query = this.value;
-            if (query.length > 2) {
-                fetch(`{% url 'search_permissions' %}?q=${query}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        searchResults.innerHTML = '';
-                        data.forEach(perm => {
-                            const li = document.createElement('li');
-                            li.className = 'list-group-item list-group-item-action';
-                            li.style.cursor = 'pointer';
-                            li.innerHTML = `
-                                <strong>${perm.codename}</strong>
-                                <small class="text-muted d-block">${perm.name}</small>
-                            `;
-                            li.addEventListener('click', () => {
-                                addPermission(perm.id, perm.codename);
-                                searchInput.value = ''; // Limpia el input
-                                searchResults.innerHTML = ''; // Limpia los resultados de búsqueda
-                            });
-                            searchResults.appendChild(li);
-                        });
-                    });
-            } else {
-                searchResults.innerHTML = '';
-            }
-        });
+  function hideResults() {
+    searchResults.classList.add('d-none');
+    searchResults.innerHTML = '';
+  }
 
-        // Event listener para los botones de eliminar ya existentes
-        document.querySelectorAll('.remove-permission').forEach(button => {
-            button.addEventListener('click', function() {
-                this.closest('li').remove();
-            });
-        });
+  function addPermission(id, name, extra = {}) {
+    // Verificar si ya existe
+    if (selectedList.querySelector(`input[data-id="${id}"]`) || assignedPermissionIds.has(id)) {
+      return false;
+    }
+    
+    // Agregar al formulario oculto
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'permissions';
+    input.value = id;
+    input.dataset.id = id;
+    selectedList.appendChild(input);
+    
+    // Agregar al set de IDs asignados
+    assignedPermissionIds.add(id);
+    
+    // Agregar al modal
+    const div = document.createElement('div');
+    div.className = 'permission-item mb-2';
+    div.dataset.id = id;
+
+    const metaHtml = extra.descripcion ? `<div class="text-muted small">${extra.descripcion}</div>` : '';
+
+    div.innerHTML = `
+      <div class="d-flex align-items-center p-2 border rounded bg-light hover-bg">
+        <i class="fas fa-check-circle text-success me-2"></i>
+        <div class="flex-grow-1">
+          <strong>${name}</strong>
+          ${metaHtml}
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-danger remove-permission-modal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    `;
+    
+    modalPermissionsList.appendChild(div);
+    bindRemoveButton(div.querySelector('.remove-permission-modal'));
+    updateAssignedCount();
+    
+    // Actualizar el botón en la tarjeta
+    updatePermissionButton(id, true);
+    
+    return true;
+  }
+
+  function removePermission(id) {
+    // Remover del set de IDs asignados
+    assignedPermissionIds.delete(id);
+    
+    // Remover del formulario
+    const input = selectedList.querySelector(`input[data-id="${id}"]`);
+    if (input) input.remove();
+    
+    // Remover del modal
+    const item = modalPermissionsList.querySelector(`.permission-item[data-id="${id}"]`);
+    if (item) item.remove();
+    
+    // Actualizar el botón en la tarjeta
+    updatePermissionButton(id, false);
+    
+    updateAssignedCount();
+  }
+
+  function togglePermission(id, name, extra = {}) {
+    if (assignedPermissionIds.has(id)) {
+      removePermission(id);
+      return false;
+    } else {
+      return addPermission(id, name, extra);
+    }
+  }
+
+  function updatePermissionButton(id, isAdded) {
+    const permissionItem = document.querySelector(`[data-permission-id="${id}"]`);
+    if (permissionItem) {
+      const button = permissionItem.querySelector('.permission-toggle-btn');
+      const card = permissionItem.querySelector('.card');
+      
+      if (isAdded) {
+        button.className = 'btn btn-sm btn-danger permission-toggle-btn';
+        button.innerHTML = '<i class="fas fa-times"></i>';
+        button.dataset.isAssigned = 'true';
+        card.classList.add('border-success');
+      } else {
+        button.className = 'btn btn-sm btn-outline-primary permission-toggle-btn';
+        button.innerHTML = '<i class="fas fa-plus"></i>';
+        button.dataset.isAssigned = 'false';
+        card.classList.remove('border-success');
+      }
+    }
+  }
+
+  function bindRemoveButton(btn) {
+    btn.addEventListener('click', () => {
+      const permissionItem = btn.closest('.permission-item');
+      const id = permissionItem.dataset.id;
+      removePermission(id);
     });
+  }
+
+  function bindToggleButton(btn) {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const name = btn.dataset.name;
+      const isAssigned = btn.dataset.isAssigned === 'true';
+      
+      if (isAssigned) {
+        removePermission(id);
+      } else {
+        addPermission(id, name, {
+          descripcion: btn.dataset.descripcion,
+          ejemplo: btn.dataset.ejemplo,
+          riesgo: btn.dataset.riesgo,
+        });
+      }
+    });
+  }
+
+  // Bind botones de eliminar en el modal
+  modalPermissionsList.querySelectorAll('.remove-permission-modal').forEach(bindRemoveButton);
+
+  // Bind botones de toggle en las tarjetas
+  document.querySelectorAll('.permission-toggle-btn').forEach(bindToggleButton);
+
+  // Funcionalidad de búsqueda
+  searchInput?.addEventListener('input', function () {
+    const query = this.value.trim();
+    if (query.length < 2) {
+      hideResults();
+      return;
+    }
+
+    fetch(`{% url 'search_permissions' %}?q=${encodeURIComponent(query)}`)
+      .then(response => response.json())
+      .then(results => {
+        searchResults.innerHTML = '';
+        if (!results.length) {
+          const empty = document.createElement('li');
+          empty.className = 'list-group-item text-muted';
+          empty.textContent = 'Sin resultados.';
+          searchResults.appendChild(empty);
+        } else {
+          results.forEach(perm => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item d-flex justify-content-between align-items-center';
+            
+            const isAlreadyAdded = assignedPermissionIds.has(perm.id);
+            
+            li.innerHTML = `
+              <div>
+                <strong>${perm.name}</strong>
+                ${perm.descripcion ? `<div class="text-muted small">${perm.descripcion}</div>` : ''}
+                ${perm.ejemplo ? `<div class="small fst-italic text-secondary">Ejemplo: ${perm.ejemplo}</div>` : ''}
+              </div>
+              <button type="button" class="btn btn-sm ${isAlreadyAdded ? 'btn-danger' : 'btn-outline-primary'} permission-toggle-btn" 
+                      data-id="${perm.id}"
+                      data-name="${perm.name}"
+                      data-descripcion="${perm.descripcion}"
+                      data-ejemplo="${perm.ejemplo}"
+                      data-is-assigned="${isAlreadyAdded}">
+                ${isAlreadyAdded ? '<i class="fas fa-times"></i>' : '<i class="fas fa-plus"></i>'}
+              </button>
+            `;
+            
+            li.querySelector('.permission-toggle-btn').addEventListener('click', () => {
+              const id = perm.id;
+              const isAssigned = isAlreadyAdded;
+              
+              if (isAssigned) {
+                removePermission(id);
+              } else {
+                addPermission(perm.id, perm.name, {
+                  descripcion: perm.descripcion,
+                  ejemplo: perm.ejemplo,
+                  riesgo: perm.modulo ? `Módulo: ${perm.modulo}` : '',
+                });
+              }
+              
+              hideResults();
+              searchInput.value = '';
+            });
+            
+            searchResults.appendChild(li);
+          });
+        }
+        searchResults.classList.remove('d-none');
+      })
+      .catch(() => hideResults());
+  });
+
+  document.addEventListener('click', event => {
+    if (!searchResults.contains(event.target) && event.target !== searchInput) {
+      hideResults();
+    }
+  });
+  
+  // Agregado: Funcionalidad de búsqueda en el modal
+  modalSearchInput?.addEventListener('input', function () {
+    const query = this.value.toLowerCase().trim();
+    const permissionItems = modalPermissionsList.querySelectorAll('.permission-item');
+    
+    if (query.length === 0) {
+      // Mostrar todos los permisos si no hay texto de búsqueda
+      permissionItems.forEach(item => {
+        item.style.display = '';
+      });
+      return;
+    }
+    
+    // Filtrar permisos según el texto de búsqueda
+    permissionItems.forEach(item => {
+      const permissionText = item.textContent.toLowerCase();
+      if (permissionText.includes(query)) {
+        item.style.display = '';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  });
+});
 </script>
 {% endblock %}

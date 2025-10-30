@@ -46,10 +46,32 @@
                 <div class="card-header bg-success success-header text-white py-4">
                     <div class="text-center">
                         <div class="success-icon">
-                            <i class="bi bi-check-circle-fill"></i>
+                            {% if transaccion.estado == 'completado' or transaccion.estado == 'pagada' %}
+                                <i class="bi bi-check-circle-fill"></i>
+                            {% else %}
+                                <i class="bi bi-clock-history"></i>
+                            {% endif %}
                         </div>
-                        <h2 class="mb-2">¡Operación Realizada con Éxito!</h2>
-                        <p class="mb-0 fs-5">Tu transacción ha sido registrada correctamente</p>
+                        <h2 class="mb-2">
+                            {% if transaccion.estado == 'completado' %}
+                                ¡Operación Completada con Éxito!
+                            {% elif transaccion.estado == 'pagada' %}
+                                ¡Pago Procesado Exitosamente!
+                            {% else %}
+                                ¡Operación Registrada!
+                            {% endif %}
+                        </h2>
+                        <p class="mb-0 fs-5">
+                            {% if transaccion.estado == 'completado' or transaccion.estado == 'pagada' %}
+                                {% if transaccion.es_compra %}
+                                    Tu pago se procesó automáticamente mediante Stripe
+                                {% else %}
+                                    La acreditación se realizó automáticamente
+                                {% endif %}
+                            {% else %}
+                                Tu transacción ha sido registrada y está en proceso
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -80,7 +102,29 @@
                                         <div class="mb-3">
                                             <label class="text-muted small fw-bold">Estado</label>
                                             <p class="mb-0">
-                                                <span class="badge bg-warning fs-6">{{ transaccion.get_estado_display }}</span>
+                                                {% if transaccion.estado == 'completado' %}
+                                                    <span class="badge bg-success fs-6">
+                                                        <i class="bi bi-check-circle-fill me-1"></i>{{ transaccion.get_estado_display }}
+                                                    </span>
+                                                {% elif transaccion.estado == 'pagada' %}
+                                                    <span class="badge bg-success fs-6">
+                                                        <i class="bi bi-check-circle me-1"></i>{{ transaccion.get_estado_display }}
+                                                    </span>
+                                                {% elif transaccion.estado == 'pendiente' %}
+                                                    <span class="badge bg-warning fs-6">
+                                                        <i class="bi bi-clock-history me-1"></i>{{ transaccion.get_estado_display }}
+                                                    </span>
+                                                {% elif transaccion.estado == 'cancelada' %}
+                                                    <span class="badge bg-danger fs-6">
+                                                        <i class="bi bi-x-circle me-1"></i>{{ transaccion.get_estado_display }}
+                                                    </span>
+                                                {% elif transaccion.estado == 'anulada' %}
+                                                    <span class="badge bg-secondary fs-6">
+                                                        <i class="bi bi-slash-circle me-1"></i>{{ transaccion.get_estado_display }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-warning fs-6">{{ transaccion.get_estado_display }}</span>
+                                                {% endif %}
                                             </p>
                                         </div>
                                     </div>
@@ -181,16 +225,22 @@
                             {% if campos %}
                                 <hr>
                                 <h6 class="mb-2">Datos del medio</h6>
-                                <table class="table table-sm mb-0">
+                                <table class="table table-sm table-bordered mb-0">
                                     <tbody>
                                         {% for c in campos %}
                                         <tr>
-                                            <th class="w-50">{{ c.etiqueta }}</th>
-                                            <td>
-                                                {% if c.valor_enmascarado %}
-                                                    {{ c.valor_enmascarado }}
-                                                {% else %}
+                                            <th class="w-50 bg-light">{{ c.etiqueta }}</th>
+                                            <td class="fw-semibold">
+                                                {# Mostrar sin censura: Entidad, RUC, Titular, Nombre, Documento #}
+                                                {% if "entidad" in c.etiqueta|lower or "ruc" in c.etiqueta|lower or "titular" in c.etiqueta|lower or "nombre" in c.etiqueta|lower or "documento" in c.etiqueta|lower %}
                                                     {{ c.valor|default:"-" }}
+                                                {# Mostrar con censura: Número de cuenta, tarjeta, CVV, etc #}
+                                                {% elif c.valor_enmascarado %}
+                                                    {{ c.valor_enmascarado }}
+                                                {% elif c.valor %}
+                                                    {{ c.valor }}
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
                                                 {% endif %}
                                             </td>
                                         </tr>
@@ -229,56 +279,104 @@
                         </div>
                         <div class="card-body">
                             <div class="next-steps p-3 rounded">
-                                <div class="mb-3">
-                                    <div class="d-flex align-items-start">
-                                        <span class="badge bg-primary rounded-pill me-2">1</span>
-                                        <div>
-                                            <p class="mb-1 fw-bold">Transacción Registrada</p>
-                                            <p class="mb-0 small text-muted">Tu operación está en estado "Pendiente"</p>
+                                {% if transaccion.estado == 'completado' or transaccion.estado == 'pagada' %}
+                                    <!-- Operación completada automáticamente -->
+                                    <div class="mb-3">
+                                        <div class="d-flex align-items-start">
+                                            <span class="badge bg-success rounded-pill me-2">
+                                                <i class="bi bi-check-lg"></i>
+                                            </span>
+                                            <div>
+                                                <p class="mb-1 fw-bold text-success">¡Operación Completada!</p>
+                                                <p class="mb-0 small text-muted">
+                                                    {% if transaccion.es_compra %}
+                                                        El pago se procesó exitosamente mediante Stripe
+                                                    {% else %}
+                                                        La acreditación se realizó automáticamente
+                                                    {% endif %}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <div class="d-flex align-items-start">
-                                        <span class="badge bg-warning rounded-pill me-2">2</span>
-                                        <div>
-                                            <p class="mb-1 fw-bold">Esperando Procesamiento</p>
-                                            <p class="mb-0 small text-muted">Nuestro equipo revisará tu solicitud</p>
+                                    
+                                    {% if transaccion.es_venta %}
+                                    <div class="mb-0">
+                                        <div class="d-flex align-items-start">
+                                            <span class="badge bg-success rounded-pill me-2">
+                                                <i class="bi bi-check-lg"></i>
+                                            </span>
+                                            <div>
+                                                <p class="mb-1 fw-bold text-success">Dinero Acreditado</p>
+                                                <p class="mb-0 small text-muted">Los fondos fueron transferidos a tu medio seleccionado</p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <div class="d-flex align-items-start">
-                                        <span class="badge bg-info rounded-pill me-2">3</span>
-                                        <div>
-                                            <p class="mb-1 fw-bold">Confirmación</p>
-                                            <p class="mb-0 small text-muted">Te notificaremos cuando esté lista</p>
+                                    {% else %}
+                                    <div class="mb-0">
+                                        <div class="d-flex align-items-start">
+                                            <span class="badge bg-info rounded-pill me-2">
+                                                <i class="bi bi-info-lg"></i>
+                                            </span>
+                                            <div>
+                                                <p class="mb-1 fw-bold">Siguiente Paso</p>
+                                                <p class="mb-0 small text-muted">Podrás retirar la divisa en nuestras terminales</p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                
-                                {% if transaccion.es_venta %}
-                                <div class="mb-0">
-                                    <div class="d-flex align-items-start">
-                                        <span class="badge bg-success rounded-pill me-2">4</span>
-                                        <div>
-                                            <p class="mb-1 fw-bold">Acreditación</p>
-                                            <p class="mb-0 small text-muted">Recibirás el dinero en tu medio seleccionado</p>
-                                        </div>
-                                    </div>
-                                </div>
+                                    {% endif %}
                                 {% else %}
-                                <div class="mb-0">
-                                    <div class="d-flex align-items-start">
-                                        <span class="badge bg-success rounded-pill me-2">4</span>
-                                        <div>
-                                            <p class="mb-1 fw-bold">Retiro</p>
-                                            <p class="mb-0 small text-muted">Podrás retirar la divisa en nuestras terminales</p>
+                                    <!-- Operación pendiente (flujo manual) -->
+                                    <div class="mb-3">
+                                        <div class="d-flex align-items-start">
+                                            <span class="badge bg-warning rounded-pill me-2">1</span>
+                                            <div>
+                                                <p class="mb-1 fw-bold">Transacción Registrada</p>
+                                                <p class="mb-0 small text-muted">Tu operación está en estado "Pendiente"</p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                    
+                                    <div class="mb-3">
+                                        <div class="d-flex align-items-start">
+                                            <span class="badge bg-secondary rounded-pill me-2">2</span>
+                                            <div>
+                                                <p class="mb-1 fw-bold">Esperando Procesamiento</p>
+                                                <p class="mb-0 small text-muted">Nuestro equipo revisará tu solicitud</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <div class="d-flex align-items-start">
+                                            <span class="badge bg-secondary rounded-pill me-2">3</span>
+                                            <div>
+                                                <p class="mb-1 fw-bold">Confirmación</p>
+                                                <p class="mb-0 small text-muted">Te notificaremos cuando esté lista</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if transaccion.es_venta %}
+                                    <div class="mb-0">
+                                        <div class="d-flex align-items-start">
+                                            <span class="badge bg-secondary rounded-pill me-2">4</span>
+                                            <div>
+                                                <p class="mb-1 fw-bold">Acreditación</p>
+                                                <p class="mb-0 small text-muted">Recibirás el dinero en tu medio seleccionado</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <div class="mb-0">
+                                        <div class="d-flex align-items-start">
+                                            <span class="badge bg-secondary rounded-pill me-2">4</span>
+                                            <div>
+                                                <p class="mb-1 fw-bold">Retiro</p>
+                                                <p class="mb-0 small text-muted">Podrás retirar la divisa en nuestras terminales</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
                                 {% endif %}
                             </div>
                         </div>
