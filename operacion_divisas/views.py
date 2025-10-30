@@ -243,10 +243,12 @@ class SumarioVentaView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["operacion"] = self.request.session.get("operacion")
+        operacion = self.request.session.get("operacion")
+        ctx["operacion"] = operacion
 
         medio_inst = get_medio_acreditacion_seleccionado(self.request)
         medio_ctx = None
+        comision_porcentaje = Decimal('0')
 
         if medio_inst:
             # Caso 1: instancia de ClienteMedioDePago
@@ -267,6 +269,7 @@ class SumarioVentaView(LoginRequiredMixin, TemplateView):
 
                 try:
                     com = Decimal(str(medio_model.comision_porcentaje))
+                    comision_porcentaje = com
                     com_str = f"{com:.2f}%"
                 except Exception:
                     com_str = str(medio_model.comision_porcentaje)
@@ -276,6 +279,7 @@ class SumarioVentaView(LoginRequiredMixin, TemplateView):
                     "nombre": medio_model.nombre,
                     "tipo": tipo_label,
                     "comision": com_str,
+                    "comision_porcentaje": comision_porcentaje,
                 }
 
             # Caso 2: dict
@@ -301,6 +305,7 @@ class SumarioVentaView(LoginRequiredMixin, TemplateView):
                         
                         try:
                             com = Decimal(str(medio_model.comision_porcentaje))
+                            comision_porcentaje = com
                             com_str = f"{com:.2f}%"
                         except Exception:
                             com_str = str(medio_model.comision_porcentaje)
@@ -310,6 +315,7 @@ class SumarioVentaView(LoginRequiredMixin, TemplateView):
                             "nombre": medio_inst.get("nombre", medio_model.nombre),
                             "tipo": tipo_label,
                             "comision": com_str,
+                            "comision_porcentaje": comision_porcentaje,
                         }
                         
                     except Exception as e:
@@ -319,6 +325,7 @@ class SumarioVentaView(LoginRequiredMixin, TemplateView):
                             "nombre": medio_inst.get("nombre"),
                             "tipo": "Error al determinar tipo",
                             "comision": "No aplica" if medio_inst.get("comision") == "0.000" else f"{medio_inst.get('comision', '0')}%",
+                            "comision_porcentaje": Decimal('0'),
                         }
                 else:
                     medio_ctx = {
@@ -326,9 +333,27 @@ class SumarioVentaView(LoginRequiredMixin, TemplateView):
                         "nombre": medio_inst.get("nombre"),
                         "tipo": medio_inst.get("tipo") or medio_inst.get("tipo_legible") or "No definido",
                         "comision": "No aplica" if medio_inst.get("comision") == "0.000" else f"{medio_inst.get('comision', '0')}%",
+                        "comision_porcentaje": Decimal('0'),
                     }
 
         ctx["medio"] = medio_ctx
+        
+        # Calcular totales con comisión para VENTA (resta la comisión)
+        if operacion and medio_ctx:
+            try:
+                monto_base = Decimal(str(operacion.get('monto_guaranies', 0)))
+                comision_monto = (monto_base * comision_porcentaje / Decimal('100')).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+                monto_total = monto_base - comision_monto
+                
+                ctx['monto_base'] = monto_base
+                ctx['comision_monto'] = comision_monto
+                ctx['monto_total'] = monto_total
+            except Exception as e:
+                logger.error(f"Error al calcular comisión: {e}")
+                ctx['monto_base'] = Decimal('0')
+                ctx['comision_monto'] = Decimal('0')
+                ctx['monto_total'] = Decimal('0')
+        
         return ctx
 
     def post(self, request, *args, **kwargs):
@@ -497,10 +522,12 @@ class SumarioCompraView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["operacion"] = self.request.session.get("operacion")
+        operacion = self.request.session.get("operacion")
+        ctx["operacion"] = operacion
         
         medio_inst = get_medio_pago_seleccionado(self.request)
         medio_ctx = None
+        comision_porcentaje = Decimal('0')
 
         if medio_inst:
             if hasattr(medio_inst, "medio_de_pago"):
@@ -519,6 +546,7 @@ class SumarioCompraView(LoginRequiredMixin, TemplateView):
 
                 try:
                     com = Decimal(str(medio_model.comision_porcentaje))
+                    comision_porcentaje = com
                     com_str = f"{com:.2f}%"
                 except Exception:
                     com_str = str(medio_model.comision_porcentaje)
@@ -528,6 +556,7 @@ class SumarioCompraView(LoginRequiredMixin, TemplateView):
                     "nombre": medio_model.nombre,
                     "tipo": tipo_label,
                     "comision": com_str,
+                    "comision_porcentaje": comision_porcentaje,
                 }
 
             elif isinstance(medio_inst, dict):
@@ -552,6 +581,7 @@ class SumarioCompraView(LoginRequiredMixin, TemplateView):
                         
                         try:
                             com = Decimal(str(medio_model.comision_porcentaje))
+                            comision_porcentaje = com
                             com_str = f"{com:.2f}%"
                         except Exception:
                             com_str = str(medio_model.comision_porcentaje)
@@ -561,6 +591,7 @@ class SumarioCompraView(LoginRequiredMixin, TemplateView):
                             "nombre": medio_inst.get("nombre", medio_model.nombre),
                             "tipo": tipo_label,
                             "comision": com_str,
+                            "comision_porcentaje": comision_porcentaje,
                         }
                         
                     except Exception as e:
@@ -570,9 +601,27 @@ class SumarioCompraView(LoginRequiredMixin, TemplateView):
                             "nombre": medio_inst.get("nombre"),
                             "tipo": "Error al determinar tipo",
                             "comision": "No aplica" if medio_inst.get("comision") == "0.000" else f"{medio_inst.get('comision', '0')}%",
+                            "comision_porcentaje": Decimal('0'),
                         }
 
         ctx["medio"] = medio_ctx
+        
+        # Calcular totales con comisión para COMPRA (suma la comisión)
+        if operacion and medio_ctx:
+            try:
+                monto_base = Decimal(str(operacion.get('monto_guaranies', 0)))
+                comision_monto = (monto_base * comision_porcentaje / Decimal('100')).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+                monto_total = monto_base + comision_monto
+                
+                ctx['monto_base'] = monto_base
+                ctx['comision_monto'] = comision_monto
+                ctx['monto_total'] = monto_total
+            except Exception as e:
+                logger.error(f"Error al calcular comisión: {e}")
+                ctx['monto_base'] = Decimal('0')
+                ctx['comision_monto'] = Decimal('0')
+                ctx['monto_total'] = Decimal('0')
+        
         return ctx
 
     def post(self, request, *args, **kwargs):

@@ -25,12 +25,30 @@
               <td>{{ operacion.divisa }} - {{ operacion.divisa_nombre }}</td>
             </tr>
             <tr>
-              <th scope="row">Monto a pagar (Gs.)</th>
+              <th scope="row">Monto base (Gs.)</th>
               <td>{{ operacion.monto_guaranies|floatformat:0|intcomma }}</td>
             </tr>
             <tr>
               <th scope="row">Tasa de cambio aplicada</th>
               <td>{{ operacion.tasa_cambio|floatformat:0|intcomma }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Comisión del medio de pago</th>
+              <td>
+                {% if comision_monto %}
+                  {{ comision_monto|floatformat:0|intcomma }} Gs. ({{ medio.comision }})
+                {% else %}
+                  No aplica
+                {% endif %}
+              </td>
+            </tr>
+            <tr class="table-warning">
+              <th scope="row"><strong>Total a pagar (Gs.)</strong></th>
+              <td>
+                <strong class="text-danger fs-5">
+                  {{ monto_total|floatformat:0|intcomma }} Gs.
+                </strong>
+              </td>
             </tr>
             <tr class="table-success">
               <th scope="row">Monto a recibir</th>
