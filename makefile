@@ -70,7 +70,6 @@ loaddata:
 	poetry run python manage.py loaddata users_data.json
 	poetry run python manage.py loaddata clientes_data.json
 	poetry run python manage.py loaddata divisas_data.json
-	poetry run python manage.py loaddata medios_data.json
 	@echo "Datos iniciales cargados."
 
 run:
