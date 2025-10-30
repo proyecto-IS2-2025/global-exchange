@@ -196,8 +196,22 @@ class Command(BaseCommand):
             # ═══════════════════════════════════════════════════════════════
             'view_catalogo_medios_pago',
             'manage_catalogo_medios_pago',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # TAUSER (10 custom) - TODOS los permisos de terminales
+            # ═══════════════════════════════════════════════════════════════
+            'manage_terminales',
+            'view_terminales',
+            'manage_inventario_divisa',
+            'view_inventario_divisa',
+            'manage_denominaciones_inventario',
+            'view_denominaciones_inventario',
+            'manage_pins_terminal',
+            'view_pins_terminal',
+            'view_registros_terminal',
+            'export_registros_terminal',
         ]
-        # Total: 44 permisos custom (35 anteriores + 9 de roles)
+        # Total: 54 permisos custom (44 anteriores + 10 de tauser)
         
         self._assign_permissions('dev', codenames, verbose)
 
@@ -276,8 +290,22 @@ class Command(BaseCommand):
             # ═══════════════════════════════════════════════════════════════
             'view_catalogo_medios_pago',
             'manage_catalogo_medios_pago',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # TAUSER (10 custom) - TODOS los permisos de terminales
+            # ═══════════════════════════════════════════════════════════════
+            'manage_terminales',
+            'view_terminales',
+            'manage_inventario_divisa',
+            'view_inventario_divisa',
+            'manage_denominaciones_inventario',
+            'view_denominaciones_inventario',
+            'manage_pins_terminal',
+            'view_pins_terminal',
+            'view_registros_terminal',
+            'export_registros_terminal',
         ]
-        # Total: 43 permisos custom (34 anteriores + 9 de roles)
+        # Total: 53 permisos custom (43 anteriores + 10 de tauser)
         
         self._assign_permissions('administrador', codenames, verbose)
 
