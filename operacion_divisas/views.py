@@ -830,7 +830,29 @@ def compra_mfa_verify_view(request):
         messages.info(request, "Verificación MFA desactivada. Procesando tu compra...")
         
         from transacciones.views import crear_transaccion_desde_compra
-        return crear_transaccion_desde_compra(request)
+        response = crear_transaccion_desde_compra(request)
+        
+        # NUEVO: Generar factura automáticamente
+        if response.status_code == 302 and 'confirmacion' in response.url:
+            try:
+                from transacciones.models import Transaccion
+                numero_transaccion = response.url.split('/')[-2]
+                transaccion = Transaccion.objects.get(numero_transaccion=numero_transaccion)
+                
+                if transaccion.estado == 'pagada':
+                    from facturacion_electronica.services import generar_factura_automatica
+                    success, factura, error = generar_factura_automatica(transaccion)
+                    
+                    if success:
+                        logger.info(f"✅ Factura generada (MFA off): {factura.numero_factura}")
+                        messages.success(request, f"¡Factura {factura.numero_factura} generada exitosamente!")
+                    else:
+                        logger.warning(f"⚠️ Error generando factura (MFA off): {error}")
+                        messages.warning(request, "La compra fue exitosa pero hubo un problema al generar la factura.")
+            except Exception as e:
+                logger.error(f"Error al generar factura (MFA off): {e}", exc_info=True)
+        
+        return response
     
     # Verificar que existan los datos de operación y medio
     operacion = request.session.get("operacion")
@@ -868,7 +890,33 @@ def compra_mfa_verify_view(request):
             
             # Importar y llamar directamente a la vista
             from transacciones.views import crear_transaccion_desde_compra
-            return crear_transaccion_desde_compra(request)
+            response = crear_transaccion_desde_compra(request)
+            
+            # NUEVO: Generar factura automáticamente después de crear la transacción
+            # Obtener la transacción creada desde la URL de redirección
+            if response.status_code == 302 and 'confirmacion' in response.url:
+                try:
+                    # Extraer número de transacción de la URL
+                    from transacciones.models import Transaccion
+                    numero_transaccion = response.url.split('/')[-2]
+                    transaccion = Transaccion.objects.get(numero_transaccion=numero_transaccion)
+                    
+                    # Generar factura si la transacción está pagada
+                    if transaccion.estado == 'pagada':
+                        from facturacion_electronica.services import generar_factura_automatica
+                        success, factura, error = generar_factura_automatica(transaccion)
+                        
+                        if success:
+                            logger.info(f"✅ Factura {factura.numero_factura} generada para transacción {transaccion.numero_transaccion}")
+                            messages.success(request, f"¡Factura {factura.numero_factura} generada exitosamente!")
+                        else:
+                            logger.warning(f"⚠️ No se pudo generar factura para {transaccion.numero_transaccion}: {error}")
+                            messages.warning(request, "La compra fue exitosa pero hubo un problema al generar la factura. Contacte a soporte.")
+                except Exception as e:
+                    logger.error(f"Error al generar factura automática: {e}", exc_info=True)
+                    # No fallar la operación si falla la facturación
+            
+            return response
         else:
             messages.error(request, "El código es incorrecto o ha expirado. Por favor, intenta nuevamente.")
     

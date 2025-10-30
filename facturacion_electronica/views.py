@@ -176,7 +176,12 @@ def descargar_pdf(request, factura_id):
     
     # Verificar permisos
     if not request.user.is_staff:
-        if factura.transaccion.usuario != request.user:
+        # Cliente solo puede descargar sus propias facturas (a través de su Cliente)
+        from clientes.models import Cliente
+        clientes_usuario = Cliente.objects.filter(usuarios=request.user)
+        
+        # Verificar que la transacción pertenezca a alguno de los clientes del usuario
+        if factura.transaccion.cliente not in clientes_usuario:
             messages.error(request, 'No puede descargar facturas de otros usuarios.')
             return redirect('facturacion:mis_facturas')
     

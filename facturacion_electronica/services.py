@@ -410,3 +410,100 @@ class SQLProxyService:
             print(f"✗ Error al inutilizar número: {error}")
             self.connection.rollback()
             return False
+
+
+# =================================================================
+# FUNCIONES HELPER PARA INTEGRACIÓN CON TRANSACCIONES
+# =================================================================
+
+def generar_factura_automatica(transaccion):
+    """
+    Genera automáticamente una factura electrónica para una transacción.
+    Esta función es llamada desde el flujo de compra después de MFA o pago exitoso.
+    
+    Args:
+        transaccion: Objeto Transaccion (modelo Django)
+    
+    Returns:
+        tuple: (success: bool, factura: FacturaElectronica o None, error_msg: str o None)
+    """
+    import logging
+    from .models import FacturaElectronica
+    
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # Verificar si ya tiene factura
+        if hasattr(transaccion, 'factura_electronica'):
+            logger.info(f"Transacción {transaccion.numero_transaccion} ya tiene factura: {transaccion.factura_electronica.numero_factura}")
+            return True, transaccion.factura_electronica, None
+        
+        # Conectar al SQL Proxy
+        service = SQLProxyService()
+        if not service.conectar():
+            error_msg = "No se pudo conectar al servidor de facturación (SQL Proxy)"
+            logger.error(f"Error al generar factura para {transaccion.numero_transaccion}: {error_msg}")
+            return False, None, error_msg
+        
+        try:
+            # Preparar datos del cliente
+            cliente = transaccion.cliente
+            
+            # Obtener RUC y DV del cliente si existen
+            cliente_ruc = getattr(cliente, 'ruc', '0')
+            cliente_dv = getattr(cliente, 'dv', '0')
+            
+            # Preparar items de la factura
+            descripcion = f"Compra de {transaccion.monto_destino} {transaccion.divisa_destino.code}"
+            monto_pyg = float(transaccion.monto_origen)  # Monto en guaraníes
+            
+            items = [{
+                'descripcion': descripcion,
+                'cantidad': 1,
+                'precio_unitario': monto_pyg,
+                'descuento': 0,
+                'afectacion_iva': '1',  # Gravado
+                'proporcion_iva': '100',
+                'tasa_iva': '10'  # IVA 10%
+            }]
+            
+            # Datos para el SQL Proxy
+            datos_factura = {
+                'cliente_ruc': str(cliente_ruc),
+                'cliente_dv': str(cliente_dv),
+                'cliente_nombre': cliente.nombre_completo,
+                'cliente_email': cliente.email or 'sin_email@globalexchange.com',
+                'items': items
+            }
+            
+            # Crear factura en SQL Proxy
+            resultado = service.crear_factura(datos_factura)
+            
+            # Crear registro en Django
+            numero_completo = f"{TIMBRADO_CONFIG['establecimiento']}-{TIMBRADO_CONFIG['punto_expedicion']}-{resultado['numero_factura']}"
+            
+            factura = FacturaElectronica.objects.create(
+                transaccion=transaccion,
+                numero_factura=numero_completo,
+                establecimiento=TIMBRADO_CONFIG['establecimiento'],
+                punto_expedicion=TIMBRADO_CONFIG['punto_expedicion'],
+                numero_documento=resultado['numero_factura'],
+                de_id=resultado['de_id'],
+                estado='confirmado',
+                estado_sifen='Procesando',
+                descripcion_sifen='Factura enviada al SIFEN para procesamiento',
+                url_kude_pdf=f"{SQL_PROXY_CONFIG['kude_url']}/{resultado['numero_factura']}.pdf",
+                url_kude_xml=f"{SQL_PROXY_CONFIG['kude_url']}/{resultado['numero_factura']}.xml",
+                datos_factura=datos_factura
+            )
+            
+            logger.info(f"✅ Factura {numero_completo} generada automáticamente para transacción {transaccion.numero_transaccion}")
+            return True, factura, None
+            
+        finally:
+            service.desconectar()
+    
+    except Exception as e:
+        error_msg = f"Error al generar factura: {str(e)}"
+        logger.error(f"Error en generar_factura_automatica para {transaccion.numero_transaccion}: {e}", exc_info=True)
+        return False, None, error_msg
