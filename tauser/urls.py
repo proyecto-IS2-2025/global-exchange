@@ -6,6 +6,16 @@ app_name = 'tauser'
 urlpatterns = [
     # ==================== ACCESO Y SESIÓN ====================
     path(
+        'terminales-cliente/',
+        views.lista_terminales,
+        name='lista_terminales'
+    ),
+    path(
+        'terminal/seleccionar/<str:terminal_codigo>/',
+        views.seleccionar_terminal,
+        name='seleccionar_terminal'
+    ),
+    path(
         'terminal/<str:terminal_codigo>/',
         views.inicio_tauser,
         name='inicio_tauser'
@@ -64,9 +74,24 @@ urlpatterns = [
         name='terminal_create'
     ),
     path(
+        'terminales/<int:pk>/',
+        views.TerminalDetailView.as_view(),
+        name='terminal_detail'
+    ),
+    path(
         'terminales/<int:pk>/editar/',
         views.TerminalUpdateView.as_view(),
         name='terminal_update'
+    ),
+    path(
+        'terminales/<int:pk>/toggle/',
+        views.toggle_terminal_activa,
+        name='terminal_toggle'
+    ),
+    path(
+        'terminales/<int:terminal_pk>/inventario/',
+        views.InventarioTerminalView.as_view(),
+        name='inventario_terminal'
     ),
     
     # ==================== INVENTARIO DE DENOMINACIONES ====================

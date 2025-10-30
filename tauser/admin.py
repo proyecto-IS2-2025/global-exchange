@@ -32,7 +32,7 @@ class InventarioDenominacionTerminalAdmin(admin.ModelAdmin):
             'fields': ('ultima_reposicion', 'actualizado_por')
         }),
         ('Auditoría', {
-            'fields': ('fecha_operacion'),
+            'fields': ('creado', 'actualizado'),
             'classes': ('collapse',)
         }),
     )
@@ -111,6 +111,7 @@ class RegistroTransaccionTerminalAdmin(admin.ModelAdmin):
             'fields': ('fue_exitoso', 'mensaje_error')
         }),
         ('Auditoría', {
+            'fields': ('fecha_operacion',),
             'classes': ('collapse',)
         }),
     )

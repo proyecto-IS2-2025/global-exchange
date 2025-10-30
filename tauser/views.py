@@ -26,7 +26,7 @@ from .models import (
 from .forms import TerminalForm, InventarioDivisaTerminalForm
 from transacciones.models import Transaccion, HistorialTransaccion
 from clientes.models import Cliente
-from divisas.models import Denominacion, Divisa
+from divisas.models import Denominacion, Divisa, DesgloseDenominacion
 from .services import (  # ✅ NUEVO
     calcular_desglose_optimo,
     validar_desglose_cliente,
@@ -251,7 +251,24 @@ def menu_principal(request, terminal_codigo):
     
     # RETIRO: Cliente compró divisa extranjera y debe retirarla
     # ✅ Solo transacciones PAGADAS (ya pagó, falta retirar la divisa)
-    # ✅ MODIFICADO: Verificar disponibilidad con denominaciones
+    transacciones_retiro = Transaccion.objects.filter(
+        cliente=cliente,
+        tipo_operacion='compra',
+        estado='pagada'
+    ).exclude(
+        divisa_destino__code='PYG'
+    ).select_related('divisa_origen', 'divisa_destino').order_by('-fecha_creacion')
+    
+    # PAGO: Cliente vendió divisa y debe recibir el pago en guaraníes
+    # ✅ Solo transacciones PENDIENTES (se completan por transferencia automática)
+    transacciones_pago = Transaccion.objects.filter(
+        cliente=cliente,
+        tipo_operacion='venta',
+        estado='pendiente',
+        divisa_destino__code='PYG'
+    ).select_related('divisa_origen', 'divisa_destino').order_by('-fecha_creacion')
+    
+    # Verificar disponibilidad con denominaciones para RETIROS
     transacciones_retiro_disponibles = []
     for trans in transacciones_retiro:
         # Verificar si hay denominaciones suficientes
@@ -266,34 +283,7 @@ def menu_principal(request, terminal_codigo):
             'desglose_sugerido': desglose_sugerido
         })
     
-    
-    # PAGO: Cliente vendió divisa y debe recibir el pago en guaraníes
-    # ✅ Solo transacciones PENDIENTES (se completan por transferencia automática)
-    transacciones_pago = Transaccion.objects.filter(
-        cliente=cliente,
-        tipo_operacion='venta',
-        estado='pendiente',
-        divisa_destino__code='PYG'
-    ).select_related('divisa_origen', 'divisa_destino').order_by('-fecha_creacion')
-    
-    # Verificar disponibilidad en terminal para RETIROS (solo divisas físicas)
-    transacciones_retiro_disponibles = []
-    for trans in transacciones_retiro:
-        try:
-            inventario = InventarioDivisaTerminal.objects.get(
-                terminal=terminal,
-                divisa=trans.divisa_destino
-            )
-            disponible = inventario.cantidad >= trans.monto_destino
-        except InventarioDivisaTerminal.DoesNotExist:
-            disponible = False
-        
-        transacciones_retiro_disponibles.append({
-            'transaccion': trans,
-            'disponible': disponible
-        })
-    
-    # ✅ NUEVO: Para PAGOS (PYG), siempre están disponibles (transferencia digital)
+    # ✅ Para PAGOS (PYG), siempre están disponibles (transferencia digital)
     transacciones_pago_verificadas = []
     for trans in transacciones_pago:
         transacciones_pago_verificadas.append({
@@ -700,7 +690,7 @@ class EjecutarOperacionView(View):
             with transaction.atomic():
                 if tipo_operacion == 'RETIRO':
                     # ✅ MODIFICADO: Pasar desglose
-                    registro = self._procesar_retiro_con_denominaciones(
+                    registro = self._procesar_retiro(
                         terminal, transaccion, request, pin_usado, desglose_denominaciones
                     )
                     messages.success(
@@ -711,7 +701,7 @@ class EjecutarOperacionView(View):
                     
                 elif tipo_operacion == 'PAGO':
                     # Para ventas: cliente ENTREGA divisas, recibe PYG digitalmente
-                    registro = self._procesar_pago_venta_con_denominaciones(
+                    registro = self._procesar_pago(
                         terminal, transaccion, request, pin_usado, desglose_denominaciones
                     )
                     messages.success(
@@ -744,7 +734,7 @@ class EjecutarOperacionView(View):
                        terminal_codigo=terminal_codigo, 
                        cliente_id=transaccion.cliente.id)
     
-    def _procesar_retiro(self, terminal, transaccion, request, pin_usado):
+    def _procesar_retiro(self, terminal, transaccion, request, pin_usado, desglose_cliente=None):
         """Procesa el retiro de divisa extranjera"""
         if transaccion.tipo_operacion != 'compra':
             raise ValueError("Esta transacción no es una compra.")
@@ -752,9 +742,6 @@ class EjecutarOperacionView(View):
         if transaccion.estado != 'pagada':
             raise ValueError("Esta transacción no está lista para retiro.")
         
-        divisa_a_retirar = transaccion.divisa_destino
-        monto_a_retirar = transaccion.monto_destino
-
         divisa_a_retirar = transaccion.divisa_destino
         monto_a_retirar = transaccion.monto_destino
         
@@ -880,7 +867,7 @@ class EjecutarOperacionView(View):
         
         return registro
     
-    def _procesar_pago(self, terminal, transaccion, request, pin_usado):
+    def _procesar_pago(self, terminal, transaccion, request, pin_usado, desglose_cliente=None):
         """
         Procesa el pago en guaraníes por venta de divisa.
         ✅ NUEVO: No verifica inventario físico porque se paga por transferencia digital.
