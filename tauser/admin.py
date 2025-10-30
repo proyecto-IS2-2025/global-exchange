@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (
-    Terminal, PINCliente, RegistroTransaccionTerminal,
+    Terminal, RegistroTransaccionTerminal,
     InventarioDenominacionTerminal, DesgloseDenominacionOperacion
 )
 
@@ -32,7 +32,7 @@ class InventarioDenominacionTerminalAdmin(admin.ModelAdmin):
             'fields': ('ultima_reposicion', 'actualizado_por')
         }),
         ('Auditoría', {
-            'fields': ('creado', 'actualizado'),
+            'fields': ('fecha_operacion'),
             'classes': ('collapse',)
         }),
     )
@@ -85,17 +85,16 @@ class DesgloseDenominacionInline(admin.TabularInline):
 class RegistroTransaccionTerminalAdmin(admin.ModelAdmin):
     list_display = [
         'id', 'terminal', 'tipo_operacion', 'cliente',
-        'divisa', 'monto_operacion', 'fue_exitoso', 'fecha'
+        'divisa', 'monto_operacion', 'fue_exitoso'
     ]
     list_filter = [
         'tipo_operacion', 'fue_exitoso', 'terminal',
-        'divisa', 'fecha'
+        'divisa'
     ]
     search_fields = [
         'cliente__nombre', 'cliente__apellido',
         'transaccion_original__id'
     ]
-    readonly_fields = ['fecha']
     inlines = [DesgloseDenominacionInline]
     
     fieldsets = (
@@ -112,7 +111,6 @@ class RegistroTransaccionTerminalAdmin(admin.ModelAdmin):
             'fields': ('fue_exitoso', 'mensaje_error')
         }),
         ('Auditoría', {
-            'fields': ('fecha',),
             'classes': ('collapse',)
         }),
     )

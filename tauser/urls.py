@@ -11,11 +11,6 @@ urlpatterns = [
         name='inicio_tauser'
     ),
     path(
-        'terminal/<str:terminal_codigo>/validar-pin/',
-        views.validar_pin,
-        name='validar_pin'
-    ),
-    path(
         'terminal/<str:terminal_codigo>/menu/',
         views.menu_principal,
         name='menu_principal'
