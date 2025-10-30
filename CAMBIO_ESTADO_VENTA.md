@@ -16,7 +16,7 @@ if resultado.get('ok'):
 **Flujo anterior:**
 1. Cliente confirma operación de venta
 2. Sistema registra transferencia bancaria
-3. Si transferencia OK → Estado: **"Completado"** ✅
+3. Si transferencia OK → Estado: **"Completado"** 
 4. Mensaje: "Transferencia realizada: operación completada."
 
 ## ✅ Comportamiento Actual

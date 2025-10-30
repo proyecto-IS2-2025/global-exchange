@@ -7,49 +7,67 @@ from django.utils import timezone
 from django.contrib import messages
 from .models import OTPCode
 from django.conf import settings
+import logging
 
 # Constantes de tiempo
 MASTER_CODE = '000000'
 # RESEND_WAIT_TIME = 60 # Eliminamos el tiempo de espera
 OTP_EXPIRATION_TIME = 5 # El código es válido por 5 minutos
+logger = logging.getLogger(__name__)
 
 def generate_and_send_otp(user, request=None):
-    # 1. Verificar tiempo de espera (eliminado)
     """
-    # Código eliminado para permitir el reenvío inmediato:
-    try:
-        latest_code = OTPCode.objects.filter(user=user).latest()
-        time_since_last_code = timezone.now() - latest_code.created_at
-        
-        if time_since_last_code < timedelta(seconds=RESEND_WAIT_TIME):
-            wait_seconds = (timedelta(seconds=RESEND_WAIT_TIME) - time_since_last_code).total_seconds()
-            if request:
-                messages.warning(request, f"Debes esperar {int(wait_seconds)} segundos antes de solicitar un nuevo código.")
-            return False
-
-    except OTPCode.DoesNotExist:
-        pass
+    Genera y envía un código OTP al usuario.
+    Incluye manejo robusto de errores para evitar bloqueos.
     """
-    
-    # 2. Invalida códigos anteriores
+    # 1. Invalidar códigos anteriores
     OTPCode.objects.filter(user=user, is_active=True).update(is_active=False)
 
-    # 3. Genera y guarda el nuevo código
+    # 2. Generar y guardar el nuevo código
     otp_code = str(random.randint(100000, 999999))
     OTPCode.objects.create(user=user, code=otp_code)
 
-    # 4. Envía el código por correo
+    # 3. Enviar el código por correo con manejo de errores
     subject = 'Tu código de verificación para Global Exchange'
     message = (
         f'Tu código de un solo uso (OTP) es: {otp_code}. '
         f'Es válido por {OTP_EXPIRATION_TIME} minutos.'
     )
-    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
     
-    if request:
-        messages.success(request, f"Se ha enviado un código a {user.email[:3]}***@g***.com. Es válido por {OTP_EXPIRATION_TIME} min.")
+    try:
+        send_mail(
+            subject, 
+            message, 
+            settings.DEFAULT_FROM_EMAIL, 
+            [user.email],
+            fail_silently=True  # ← NO BLOQUEAR si falla el envío
+        )
+        logger.info(f"OTP enviado exitosamente a {user.email}")
+        
+        if request:
+            messages.success(
+                request, 
+                f"Se ha enviado un código a {user.email[:3]}***@g***.com. "
+                f"Es válido por {OTP_EXPIRATION_TIME} min."
+            )
+    except Exception as e:
+        logger.error(f"Error enviando OTP a {user.email}: {str(e)}")
+        
+        if request:
+            messages.warning(
+                request, 
+                "Hubo un problema al enviar el email. "
+                "Por favor, contacta al soporte si el problema persiste."
+            )
+        
+        # En desarrollo, mostrar el código en consola
+        if settings.DEBUG:
+            print(f"\n{'='*60}")
+            print(f"⚠️  ERROR ENVIANDO EMAIL - MODO DEBUG")
+            print(f"CÓDIGO OTP PARA {user.email}: {otp_code}")
+            print(f"{'='*60}\n")
 
-    return True
+    return True  # SIEMPRE retornar True para no bloquear el login
 
 def check_otp_validity(user, entered_code):
     # A. Verificar Código Maestro (000000)

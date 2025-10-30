@@ -95,7 +95,7 @@ def evaluar_alertas(nueva_cotizacion: CotizacionSegmento):
                     send_mail(
                         asunto,
                         mensaje,  # texto plano como fallback
-                        "glex.globalexchange@gmail.com",
+                        "glex.globalexchange.respaldo@gmail.com",
                         [regla.usuario.email],
                         fail_silently=False,
                         html_message=cuerpo,
