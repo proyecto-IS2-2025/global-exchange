@@ -1,0 +1,313 @@
+"""
+Vistas para el módulo de Facturación Electrónica
+Usa el sistema de roles y permisos personalizado (NO Django Admin)
+"""
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.http import JsonResponse, HttpResponse
+from django.db.models import Q
+from django.core.paginator import Paginator
+
+from roles.decorators import require_permission
+from .models import FacturaElectronica
+from .services import SQLProxyService
+from .utils import generar_factura_desde_transaccion, actualizar_estado_factura
+from transacciones.models import Transaccion
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# LISTADO DE FACTURAS
+# ═══════════════════════════════════════════════════════════════════════════
+
+@login_required
+@require_permission('facturacion_electronica.view_todas_facturas')
+def lista_facturas(request):
+    """
+    Lista todas las facturas del sistema (solo para staff con permisos)
+    """
+    facturas = FacturaElectronica.objects.all().select_related('transaccion').order_by('-fecha_emision')
+    
+    # Filtros
+    estado = request.GET.get('estado')
+    if estado:
+        facturas = facturas.filter(estado=estado)
+    
+    busqueda = request.GET.get('q')
+    if busqueda:
+        facturas = facturas.filter(
+            Q(numero_factura__icontains=busqueda) |
+            Q(cdc__icontains=busqueda) |
+            Q(transaccion__numero_transaccion__icontains=busqueda)
+        )
+    
+    # Paginación
+    paginator = Paginator(facturas, 20)
+    page = request.GET.get('page')
+    facturas_page = paginator.get_page(page)
+    
+    context = {
+        'facturas': facturas_page,
+        'total_facturas': facturas.count(),
+        'titulo': 'Facturas Electrónicas'
+    }
+    return render(request, 'facturacion/lista_facturas.html', context)
+
+
+@login_required
+def mis_facturas(request):
+    """
+    Lista las facturas del cliente actual
+    Solo ve sus propias facturas (de sus transacciones)
+    """
+    # Obtener clientes asociados al usuario actual
+    from clientes.models import Cliente
+    clientes_usuario = Cliente.objects.filter(usuarios=request.user)
+    
+    # Obtener transacciones de esos clientes
+    transacciones_usuario = Transaccion.objects.filter(cliente__in=clientes_usuario)
+    
+    # Obtener facturas de esas transacciones
+    facturas = FacturaElectronica.objects.filter(
+        transaccion__in=transacciones_usuario
+    ).select_related('transaccion').order_by('-fecha_emision')
+    
+    # Paginación
+    paginator = Paginator(facturas, 10)
+    page = request.GET.get('page')
+    facturas_page = paginator.get_page(page)
+    
+    context = {
+        'facturas': facturas_page,
+        'total_facturas': facturas.count(),
+        'titulo': 'Mis Facturas Electrónicas'
+    }
+    return render(request, 'facturacion/mis_facturas.html', context)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# DETALLE DE FACTURA
+# ═══════════════════════════════════════════════════════════════════════════
+
+@login_required
+def detalle_factura(request, factura_id):
+    """
+    Muestra el detalle de una factura
+    - Clientes solo pueden ver sus propias facturas
+    - Staff con permisos puede ver todas
+    """
+    factura = get_object_or_404(
+        FacturaElectronica.objects.select_related('transaccion'),
+        pk=factura_id
+    )
+    
+    # Verificar permisos
+    if request.user.is_staff:
+        # Staff con permiso puede ver todas
+        if not request.user.has_perm('facturacion_electronica.view_todas_facturas'):
+            # Si no tiene permiso global, verificar si tiene permiso de asignados
+            if not request.user.has_perm('facturacion_electronica.view_facturas_asignadas'):
+                messages.error(request, 'No tiene permiso para ver facturas.')
+                return redirect('inicio')
+    else:
+        # Cliente solo puede ver sus propias facturas (a través de su Cliente)
+        from clientes.models import Cliente
+        clientes_usuario = Cliente.objects.filter(usuarios=request.user)
+        
+        # Verificar que la transacción pertenezca a alguno de los clientes del usuario
+        if factura.transaccion.cliente not in clientes_usuario:
+            messages.error(request, 'No puede ver facturas de otros usuarios.')
+            return redirect('facturacion:mis_facturas')
+    
+    context = {
+        'factura': factura,
+        'titulo': f'Factura {factura.numero_factura}'
+    }
+    return render(request, 'facturacion/detalle_factura.html', context)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# GENERACIÓN DE FACTURAS
+# ═══════════════════════════════════════════════════════════════════════════
+
+@login_required
+@require_permission('facturacion_electronica.generar_factura')
+def generar_factura(request, transaccion_id):
+    """
+    Genera una factura electrónica para una transacción
+    Solo para staff con permisos
+    """
+    transaccion = get_object_or_404(Transaccion, pk=transaccion_id)
+    
+    # Verificar que no tenga factura ya
+    if hasattr(transaccion, 'factura'):
+        messages.warning(request, 'Esta transacción ya tiene una factura generada.')
+        return redirect('facturacion:detalle_factura', factura_id=transaccion.factura.id)
+    
+    # Verificar que la transacción esté completada
+    if transaccion.estado != 'completada':
+        messages.error(request, 'Solo se pueden facturar transacciones completadas.')
+        return redirect('transacciones:detalle', pk=transaccion_id)
+    
+    try:
+        factura = generar_factura_desde_transaccion(transaccion)
+        messages.success(
+            request,
+            f'Factura {factura.numero_factura} generada exitosamente. CDC: {factura.cdc or "Pendiente"}'
+        )
+        return redirect('facturacion:detalle_factura', factura_id=factura.id)
+    except Exception as e:
+        messages.error(request, f'Error al generar factura: {str(e)}')
+        return redirect('transacciones:detalle', pk=transaccion_id)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# DESCARGA DE DOCUMENTOS (PDF/XML)
+# ═══════════════════════════════════════════════════════════════════════════
+
+@login_required
+def descargar_pdf(request, factura_id):
+    """
+    Redirige a la URL del PDF en KuDE
+    - Clientes pueden descargar sus propias facturas
+    - Staff con permiso puede descargar todas
+    """
+    factura = get_object_or_404(FacturaElectronica, pk=factura_id)
+    
+    # Verificar permisos
+    if not request.user.is_staff:
+        if factura.transaccion.usuario != request.user:
+            messages.error(request, 'No puede descargar facturas de otros usuarios.')
+            return redirect('facturacion:mis_facturas')
+    
+    if not factura.url_kude_pdf:
+        messages.warning(request, 'La factura aún no tiene PDF disponible.')
+        return redirect('facturacion:detalle_factura', factura_id=factura_id)
+    
+    return redirect(factura.url_kude_pdf)
+
+
+@login_required
+@require_permission('facturacion_electronica.download_kude_xml')
+def descargar_xml(request, factura_id):
+    """
+    Redirige a la URL del XML en KuDE
+    Solo para staff con permisos
+    """
+    factura = get_object_or_404(FacturaElectronica, pk=factura_id)
+    
+    if not factura.url_kude_xml:
+        messages.warning(request, 'La factura aún no tiene XML disponible.')
+        return redirect('facturacion:detalle_factura', factura_id=factura_id)
+    
+    return redirect(factura.url_kude_xml)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SINCRONIZACIÓN CON SIFEN
+# ═══════════════════════════════════════════════════════════════════════════
+
+@login_required
+@require_permission('facturacion_electronica.sync_sifen')
+def actualizar_estado(request, factura_id):
+    """
+    Sincroniza el estado de una factura con SIFEN
+    Solo para staff con permisos
+    """
+    factura = get_object_or_404(FacturaElectronica, pk=factura_id)
+    
+    try:
+        actualizar_estado_factura(factura)
+        messages.success(request, f'Estado actualizado: {factura.estado_sifen or "Pendiente"}')
+    except Exception as e:
+        messages.error(request, f'Error al actualizar estado: {str(e)}')
+    
+    return redirect('facturacion:detalle_factura', factura_id=factura_id)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ANULACIÓN DE FACTURAS
+# ═══════════════════════════════════════════════════════════════════════════
+
+@login_required
+@require_permission('facturacion_electronica.cancelar_factura')
+def cancelar_factura(request, factura_id):
+    """
+    Anula una factura electrónica en SIFEN
+    Solo para supervisores/administradores con permisos críticos
+    """
+    factura = get_object_or_404(FacturaElectronica, pk=factura_id)
+    
+    if request.method == 'POST':
+        motivo = request.POST.get('motivo', '')
+        
+        if not motivo:
+            messages.error(request, 'Debe proporcionar un motivo de anulación.')
+            return redirect('facturacion:detalle_factura', factura_id=factura_id)
+        
+        try:
+            service = SQLProxyService()
+            service.conectar()
+            result = service.cancelar_factura(factura.numero_factura, motivo)
+            service.desconectar()
+            
+            if result.get('exito'):
+                factura.estado = 'cancelada'
+                factura.save()
+                messages.success(request, f'Factura {factura.numero_factura} cancelada exitosamente.')
+            else:
+                messages.error(request, f'Error al cancelar: {result.get("error")}')
+        except Exception as e:
+            messages.error(request, f'Error: {str(e)}')
+        
+        return redirect('facturacion:detalle_factura', factura_id=factura_id)
+    
+    context = {
+        'factura': factura,
+        'titulo': 'Cancelar Factura'
+    }
+    return render(request, 'facturacion/cancelar_factura.html', context)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# REPORTES
+# ═══════════════════════════════════════════════════════════════════════════
+
+@login_required
+@require_permission('facturacion_electronica.view_reporte_facturacion')
+def reporte_facturacion(request):
+    """
+    Muestra reporte consolidado de facturación
+    Solo para staff con permisos
+    """
+    from django.db.models import Count, Sum
+    from datetime import datetime, timedelta
+    
+    # Estadísticas generales
+    total_facturas = FacturaElectronica.objects.count()
+    facturas_aprobadas = FacturaElectronica.objects.filter(estado_sifen='Aprobado').count()
+    facturas_pendientes = FacturaElectronica.objects.filter(estado='borrador').count()
+    facturas_rechazadas = FacturaElectronica.objects.filter(estado_sifen='Rechazado').count()
+    
+    # Facturas del mes actual
+    hoy = datetime.now()
+    inicio_mes = hoy.replace(day=1)
+    facturas_mes = FacturaElectronica.objects.filter(
+        fecha_emision__gte=inicio_mes
+    ).count()
+    
+    # Facturas por estado
+    por_estado = FacturaElectronica.objects.values('estado').annotate(
+        cantidad=Count('id')
+    ).order_by('estado')
+    
+    context = {
+        'total_facturas': total_facturas,
+        'facturas_aprobadas': facturas_aprobadas,
+        'facturas_pendientes': facturas_pendientes,
+        'facturas_rechazadas': facturas_rechazadas,
+        'facturas_mes': facturas_mes,
+        'por_estado': por_estado,
+        'titulo': 'Reporte de Facturación'
+    }
+    return render(request, 'facturacion/reporte.html', context)

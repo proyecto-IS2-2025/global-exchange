@@ -20,12 +20,15 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 # ═════════════════════════════════════════════════════════════════════
 
 # ⚠️ IMPORTANTE: Asegúrate de tener SECRET_KEY en .env
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'clave-secreta-de-desarrollo-no-usar-en-produccion')
+
+"""
 if not SECRET_KEY:
     raise ValueError(
         "SECRET_KEY no está configurada. "
         "Agrega SECRET_KEY='tu-clave-secreta' en el archivo .env"
     )
+"""
 
 # Debug mode (solo True en desarrollo)
 DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes')
@@ -66,6 +69,7 @@ INSTALLED_APPS = [
     'autenticacion',
     'interfaz',
     'stripe_payments',
+    'facturacion_electronica',  # ✅ Facturación Electrónica
 ]
 
 # ═════════════════════════════════════════════════════════════════════
