@@ -92,13 +92,6 @@ def main():
         return
     
     print(f"📱 Apps encontradas: {', '.join(apps)}")
-    print()
-    
-    # Confirmar antes de proceder
-    respuesta = input("¿Estás seguro de que quieres eliminar TODAS las migraciones? (s/N): ")
-    if respuesta.lower() not in ['s', 'si', 'sí', 'y', 'yes']:
-        print("❌ Operación cancelada")
-        return
     
     print()
     total_apps_procesadas = 0
