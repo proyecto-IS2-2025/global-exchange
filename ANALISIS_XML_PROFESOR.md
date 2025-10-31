@@ -39,6 +39,7 @@
 <dEmailRec>soporte@facturasegura.com.py</dEmailRec>
 ```
 
+
 **❌ Lo que estamos enviando:**
 ```python
 '1', '1', 'PRY', '1',                           # iNatRec, iTiOpe, cPaisRec, iTiContRec

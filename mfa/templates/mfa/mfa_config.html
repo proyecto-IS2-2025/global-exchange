@@ -93,7 +93,7 @@
                     </div>
 
                     <!-- Configuración MFA Compra -->
-                    <div class="card border-2">
+                    <div class="card border-2 mb-4">
                         <div class="card-body p-4">
                             <div class="row align-items-center">
                                 <div class="col-md-8">
@@ -125,6 +125,54 @@
                                         {% if perms.mfa.manage_mfa_config %}
                                         <input type="hidden" name="action" value="toggle_compra">
                                         {% if config.mfa_compra_enabled %}
+                                            <button type="submit" class="btn btn-outline-danger btn-lg">
+                                                <i class="fas fa-toggle-on me-2"></i> Desactivar
+                                            </button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-success btn-lg">
+                                                <i class="fas fa-toggle-off me-2"></i> Activar
+                                            </button>
+                                        {% endif %}
+                                        {% endif %}
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configuración MFA TAUSER -->
+                    <div class="card border-2">
+                        <div class="card-body p-4">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <div class="d-flex align-items-start">
+                                        <div class="me-3">
+                                            <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                                                <i class="fas fa-desktop text-info fs-3"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-2">
+                                                MFA en Tausers
+                                                {% if config.mfa_tauser_enabled %}
+                                                    <span class="badge bg-success ms-2">ACTIVO</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary ms-2">INACTIVO</span>
+                                                {% endif %}
+                                            </h5>
+                                            <p class="text-muted mb-0">
+                                                Requiere verificación por código OTP al acceder a transacciones mediante terminales TAUSER.
+                                                Protege el acceso a operaciones en terminales externos.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                                    <form method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        {% if perms.mfa.manage_mfa_config %}
+                                        <input type="hidden" name="action" value="toggle_tauser">
+                                        {% if config.mfa_tauser_enabled %}
                                             <button type="submit" class="btn btn-outline-danger btn-lg">
                                                 <i class="fas fa-toggle-on me-2"></i> Desactivar
                                             </button>

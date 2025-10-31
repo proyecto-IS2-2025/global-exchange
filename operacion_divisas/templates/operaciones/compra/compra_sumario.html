@@ -21,16 +21,28 @@
               <td class="text-capitalize">{{ operacion.tipo|default:"-" }}</td>
             </tr>
             <tr>
-              <th scope="row">Divisa</th>
+              <th scope="row">Divisa a comprar</th>
               <td>{{ operacion.divisa }} - {{ operacion.divisa_nombre }}</td>
             </tr>
-            <tr>
-              <th scope="row">Monto base (Gs.)</th>
-              <td>{{ operacion.monto_guaranies|floatformat:0|intcomma }}</td>
+            <tr class="table-success">
+              <th scope="row"><strong>Cantidad de divisa extranjera a recibir</strong></th>
+              <td>
+                <strong class="text-success fs-5">
+                  {% if operacion.divisa == "PYG" %}
+                    {{ operacion.monto_divisa|floatformat:0|intcomma }} {{ operacion.divisa }}
+                  {% else %}
+                    {{ operacion.monto_divisa|floatformat:2|intcomma }} {{ operacion.divisa }}
+                  {% endif %}
+                </strong>
+              </td>
             </tr>
             <tr>
               <th scope="row">Tasa de cambio aplicada</th>
-              <td>{{ operacion.tasa_cambio|floatformat:0|intcomma }}</td>
+              <td>1 {{ operacion.divisa }} = Gs. {{ operacion.tasa_cambio|floatformat:0|intcomma }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Monto base (Gs.)</th>
+              <td>{{ monto_base|floatformat:0|intcomma }} Gs.</td>
             </tr>
             <tr>
               <th scope="row">Comisión del medio de pago</th>
@@ -43,22 +55,10 @@
               </td>
             </tr>
             <tr class="table-warning">
-              <th scope="row"><strong>Total a pagar (Gs.)</strong></th>
+              <th scope="row"><strong>Total a pagar en Guaraníes</strong></th>
               <td>
                 <strong class="text-danger fs-5">
                   {{ monto_total|floatformat:0|intcomma }} Gs.
-                </strong>
-              </td>
-            </tr>
-            <tr class="table-success">
-              <th scope="row">Monto a recibir</th>
-              <td>
-                <strong>
-                  {% if operacion.divisa == "PYG" %}
-                    {{ operacion.monto_divisa|floatformat:0|intcomma }} {{ operacion.divisa }}
-                  {% else %}
-                    {{ operacion.monto_divisa|floatformat:2|intcomma }} {{ operacion.divisa }}
-                  {% endif %}
                 </strong>
               </td>
             </tr>
@@ -66,6 +66,39 @@
         </table>
       {% else %}
         <p class="text-muted">No se encontraron datos de la operación.</p>
+      {% endif %}
+
+      <hr>
+
+      <!-- Terminal TAUSER -->
+      <h5 class="mb-3">
+        <i class="fas fa-terminal me-2"></i>Terminal de Retiro
+      </h5>
+      {% if tauser %}
+        <div class="alert alert-info">
+          <div class="d-flex align-items-start">
+            <i class="fas fa-map-marker-alt fa-2x me-3 text-primary"></i>
+            <div class="flex-grow-1">
+              <h6 class="mb-1">{{ tauser.nombre }}</h6>
+              <p class="mb-1">
+                <strong>Ubicación:</strong> {{ tauser.ubicacion }}
+              </p>
+              <p class="mb-0">
+                <strong>Código:</strong> <code>{{ tauser.codigo }}</code>
+              </p>
+              <small class="text-muted">
+                <i class="fas fa-info-circle me-1"></i>
+                Podrá retirar su divisa en este terminal usando el código de su transacción.
+              </small>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <div class="alert alert-warning">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          No se ha seleccionado un terminal TAUSER. 
+          <a href="{% url 'operacion_divisas:seleccionar_tauser_compra' %}" class="alert-link">Seleccionar terminal</a>
+        </div>
       {% endif %}
 
       <hr>
@@ -125,8 +158,11 @@
 
     </div>
     <div class="card-footer text-end">
+      <a href="{% url 'operacion_divisas:seleccionar_tauser_compra' %}" class="btn btn-outline-secondary me-2">
+        <i class="bi bi-arrow-left"></i> Cambiar Terminal
+      </a>
       <a href="{% url 'clientes:seleccionar_medio_pago' %}" class="btn btn-outline-secondary me-2">
-        <i class="bi bi-arrow-left"></i> Volver
+        <i class="bi bi-credit-card"></i> Cambiar Medio de Pago
       </a>
       
 

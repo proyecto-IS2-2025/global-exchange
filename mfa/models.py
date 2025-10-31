@@ -46,6 +46,11 @@ class MFAConfig(models.Model):
         verbose_name="MFA en Compra",
         help_text="Activar verificación MFA al confirmar una compra"
     )
+    mfa_tauser_enabled = models.BooleanField(
+        default=True,
+        verbose_name="MFA en Tausers",
+        help_text="Activar verificación MFA al acceder a transacciones en terminales TAUSER"
+    )
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -60,7 +65,7 @@ class MFAConfig(models.Model):
         verbose_name_plural = "Configuración MFA"
 
     def __str__(self):
-        return f"MFA Config (Login: {self.mfa_login_enabled}, Compra: {self.mfa_compra_enabled})"
+        return f"MFA Config (Login: {self.mfa_login_enabled}, Compra: {self.mfa_compra_enabled}, TAUSER: {self.mfa_tauser_enabled})"
 
     @classmethod
     def get_config(cls):

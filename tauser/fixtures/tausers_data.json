@@ -1,0 +1,953 @@
+[
+  {
+    "model": "tauser.terminal",
+    "pk": 1,
+    "fields": {
+      "nombre": "TAUSER Central",
+      "codigo": "TC-001",
+      "ubicacion": "Shopping del Sol - Planta Baja",
+      "usuario_responsable": 2,
+      "is_activa": true,
+      "fecha_creacion": "2025-10-01T08:00:00Z",
+      "fecha_actualizacion": "2025-10-31T10:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.terminal",
+    "pk": 2,
+    "fields": {
+      "nombre": "TAUSER Aeropuerto",
+      "codigo": "TA-001",
+      "ubicacion": "Aeropuerto Silvio Pettirossi - Terminal Internacional",
+      "usuario_responsable": 3,
+      "is_activa": true,
+      "fecha_creacion": "2025-10-05T09:00:00Z",
+      "fecha_actualizacion": "2025-10-31T10:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.terminal",
+    "pk": 3,
+    "fields": {
+      "nombre": "TAUSER Multiplaza",
+      "codigo": "TM-001",
+      "ubicacion": "Multiplaza - Sector Norte",
+      "usuario_responsable": 3,
+      "is_activa": true,
+      "fecha_creacion": "2025-10-10T10:00:00Z",
+      "fecha_actualizacion": "2025-10-31T10:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.terminal",
+    "pk": 4,
+    "fields": {
+      "nombre": "TAUSER Paseo La Galería",
+      "codigo": "TG-001",
+      "ubicacion": "Paseo La Galería - Entrada Principal",
+      "usuario_responsable": 2,
+      "is_activa": true,
+      "fecha_creacion": "2025-10-15T11:00:00Z",
+      "fecha_actualizacion": "2025-10-31T10:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.terminal",
+    "pk": 5,
+    "fields": {
+      "nombre": "TAUSER Mariscal López",
+      "codigo": "TML-001",
+      "ubicacion": "Av. Mariscal López - Oficina Central",
+      "usuario_responsable": 2,
+      "is_activa": true,
+      "fecha_creacion": "2025-10-20T12:00:00Z",
+      "fecha_actualizacion": "2025-10-31T10:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodivisaterminal",
+    "pk": 1,
+    "fields": {
+      "terminal": 1,
+      "divisa": 1,
+      "cantidad": "15000.00000000",
+      "cantidad_minima": "5000.00000000",
+      "ultima_actualizacion": "2025-10-31T10:00:00Z",
+      "actualizado_por": 2
+    }
+  },
+  {
+    "model": "tauser.inventariodivisaterminal",
+    "pk": 2,
+    "fields": {
+      "terminal": 1,
+      "divisa": 2,
+      "cantidad": "12000.00000000",
+      "cantidad_minima": "4000.00000000",
+      "ultima_actualizacion": "2025-10-31T10:00:00Z",
+      "actualizado_por": 2
+    }
+  },
+  {
+    "model": "tauser.inventariodivisaterminal",
+    "pk": 3,
+    "fields": {
+      "terminal": 1,
+      "divisa": 3,
+      "cantidad": "8000.00000000",
+      "cantidad_minima": "3000.00000000",
+      "ultima_actualizacion": "2025-10-31T10:00:00Z",
+      "actualizado_por": 2
+    }
+  },
+  {
+    "model": "tauser.inventariodivisaterminal",
+    "pk": 4,
+    "fields": {
+      "terminal": 2,
+      "divisa": 1,
+      "cantidad": "25000.00000000",
+      "cantidad_minima": "10000.00000000",
+      "ultima_actualizacion": "2025-10-31T10:00:00Z",
+      "actualizado_por": 3
+    }
+  },
+  {
+    "model": "tauser.inventariodivisaterminal",
+    "pk": 5,
+    "fields": {
+      "terminal": 2,
+      "divisa": 2,
+      "cantidad": "18000.00000000",
+      "cantidad_minima": "6000.00000000",
+      "ultima_actualizacion": "2025-10-31T10:00:00Z",
+      "actualizado_por": 3
+    }
+  },
+  {
+    "model": "tauser.inventariodivisaterminal",
+    "pk": 6,
+    "fields": {
+      "terminal": 3,
+      "divisa": 1,
+      "cantidad": "20000.00000000",
+      "cantidad_minima": "8000.00000000",
+      "ultima_actualizacion": "2025-10-31T10:00:00Z",
+      "actualizado_por": 3
+    }
+  },
+  {
+    "model": "tauser.inventariodivisaterminal",
+    "pk": 7,
+    "fields": {
+      "terminal": 3,
+      "divisa": 5,
+      "cantidad": "10000.00000000",
+      "cantidad_minima": "3000.00000000",
+      "ultima_actualizacion": "2025-10-31T10:00:00Z",
+      "actualizado_por": 3
+    }
+  },
+  {
+    "model": "tauser.inventariodivisaterminal",
+    "pk": 8,
+    "fields": {
+      "terminal": 4,
+      "divisa": 1,
+      "cantidad": "18000.00000000",
+      "cantidad_minima": "7000.00000000",
+      "ultima_actualizacion": "2025-10-31T10:00:00Z",
+      "actualizado_por": 2
+    }
+  },
+  {
+    "model": "tauser.inventariodivisaterminal",
+    "pk": 9,
+    "fields": {
+      "terminal": 4,
+      "divisa": 2,
+      "cantidad": "14000.00000000",
+      "cantidad_minima": "5000.00000000",
+      "ultima_actualizacion": "2025-10-31T10:00:00Z",
+      "actualizado_por": 2
+    }
+  },
+  {
+    "model": "tauser.inventariodivisaterminal",
+    "pk": 10,
+    "fields": {
+      "terminal": 5,
+      "divisa": 1,
+      "cantidad": "30000.00000000",
+      "cantidad_minima": "12000.00000000",
+      "ultima_actualizacion": "2025-10-31T10:00:00Z",
+      "actualizado_por": 2
+    }
+  },
+  {
+    "model": "tauser.inventariodivisaterminal",
+    "pk": 11,
+    "fields": {
+      "terminal": 5,
+      "divisa": 2,
+      "cantidad": "22000.00000000",
+      "cantidad_minima": "8000.00000000",
+      "ultima_actualizacion": "2025-10-31T10:00:00Z",
+      "actualizado_por": 2
+    }
+  },
+  {
+    "model": "tauser.inventariodivisaterminal",
+    "pk": 12,
+    "fields": {
+      "terminal": 5,
+      "divisa": 3,
+      "cantidad": "15000.00000000",
+      "cantidad_minima": "5000.00000000",
+      "ultima_actualizacion": "2025-10-31T10:00:00Z",
+      "actualizado_por": 2
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 1,
+    "fields": {
+      "terminal": 1,
+      "denominacion": 7,
+      "cantidad": 50,
+      "cantidad_minima": 20,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 2,
+    "fields": {
+      "terminal": 1,
+      "denominacion": 8,
+      "cantidad": 100,
+      "cantidad_minima": 30,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 3,
+    "fields": {
+      "terminal": 1,
+      "denominacion": 9,
+      "cantidad": 150,
+      "cantidad_minima": 50,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 4,
+    "fields": {
+      "terminal": 1,
+      "denominacion": 10,
+      "cantidad": 200,
+      "cantidad_minima": 80,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 5,
+    "fields": {
+      "terminal": 1,
+      "denominacion": 11,
+      "cantidad": 300,
+      "cantidad_minima": 100,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 6,
+    "fields": {
+      "terminal": 1,
+      "denominacion": 12,
+      "cantidad": 500,
+      "cantidad_minima": 150,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 7,
+    "fields": {
+      "terminal": 1,
+      "denominacion": 13,
+      "cantidad": 10,
+      "cantidad_minima": 5,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 8,
+    "fields": {
+      "terminal": 1,
+      "denominacion": 14,
+      "cantidad": 20,
+      "cantidad_minima": 8,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 9,
+    "fields": {
+      "terminal": 1,
+      "denominacion": 15,
+      "cantidad": 40,
+      "cantidad_minima": 15,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 10,
+    "fields": {
+      "terminal": 1,
+      "denominacion": 16,
+      "cantidad": 80,
+      "cantidad_minima": 30,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 11,
+    "fields": {
+      "terminal": 1,
+      "denominacion": 17,
+      "cantidad": 120,
+      "cantidad_minima": 50,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 12,
+    "fields": {
+      "terminal": 1,
+      "denominacion": 20,
+      "cantidad": 60,
+      "cantidad_minima": 20,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 13,
+    "fields": {
+      "terminal": 1,
+      "denominacion": 21,
+      "cantidad": 100,
+      "cantidad_minima": 40,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 14,
+    "fields": {
+      "terminal": 1,
+      "denominacion": 22,
+      "cantidad": 150,
+      "cantidad_minima": 60,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 15,
+    "fields": {
+      "terminal": 2,
+      "denominacion": 7,
+      "cantidad": 100,
+      "cantidad_minima": 40,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 3,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 16,
+    "fields": {
+      "terminal": 2,
+      "denominacion": 8,
+      "cantidad": 150,
+      "cantidad_minima": 50,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 3,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 17,
+    "fields": {
+      "terminal": 2,
+      "denominacion": 9,
+      "cantidad": 200,
+      "cantidad_minima": 80,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 3,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 18,
+    "fields": {
+      "terminal": 2,
+      "denominacion": 10,
+      "cantidad": 300,
+      "cantidad_minima": 120,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 3,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 19,
+    "fields": {
+      "terminal": 2,
+      "denominacion": 11,
+      "cantidad": 400,
+      "cantidad_minima": 150,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 3,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 20,
+    "fields": {
+      "terminal": 2,
+      "denominacion": 12,
+      "cantidad": 600,
+      "cantidad_minima": 200,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 3,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 21,
+    "fields": {
+      "terminal": 2,
+      "denominacion": 13,
+      "cantidad": 15,
+      "cantidad_minima": 5,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 3,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 22,
+    "fields": {
+      "terminal": 2,
+      "denominacion": 14,
+      "cantidad": 30,
+      "cantidad_minima": 10,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 3,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 23,
+    "fields": {
+      "terminal": 2,
+      "denominacion": 15,
+      "cantidad": 60,
+      "cantidad_minima": 20,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 3,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 24,
+    "fields": {
+      "terminal": 2,
+      "denominacion": 16,
+      "cantidad": 120,
+      "cantidad_minima": 40,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 3,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 25,
+    "fields": {
+      "terminal": 3,
+      "denominacion": 7,
+      "cantidad": 80,
+      "cantidad_minima": 30,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 3,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-10T10:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 26,
+    "fields": {
+      "terminal": 3,
+      "denominacion": 8,
+      "cantidad": 120,
+      "cantidad_minima": 40,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 3,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-10T10:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 27,
+    "fields": {
+      "terminal": 3,
+      "denominacion": 9,
+      "cantidad": 180,
+      "cantidad_minima": 60,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 3,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-10T10:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 28,
+    "fields": {
+      "terminal": 3,
+      "denominacion": 10,
+      "cantidad": 250,
+      "cantidad_minima": 100,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 3,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-10T10:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 29,
+    "fields": {
+      "terminal": 3,
+      "denominacion": 28,
+      "cantidad": 40,
+      "cantidad_minima": 15,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 3,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-10T10:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 30,
+    "fields": {
+      "terminal": 3,
+      "denominacion": 29,
+      "cantidad": 80,
+      "cantidad_minima": 30,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 3,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-10T10:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 31,
+    "fields": {
+      "terminal": 3,
+      "denominacion": 30,
+      "cantidad": 120,
+      "cantidad_minima": 50,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 3,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-10T10:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 32,
+    "fields": {
+      "terminal": 4,
+      "denominacion": 7,
+      "cantidad": 70,
+      "cantidad_minima": 25,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-15T11:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 33,
+    "fields": {
+      "terminal": 4,
+      "denominacion": 8,
+      "cantidad": 110,
+      "cantidad_minima": 40,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-15T11:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 34,
+    "fields": {
+      "terminal": 4,
+      "denominacion": 9,
+      "cantidad": 160,
+      "cantidad_minima": 60,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-15T11:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 35,
+    "fields": {
+      "terminal": 4,
+      "denominacion": 10,
+      "cantidad": 220,
+      "cantidad_minima": 90,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-15T11:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 36,
+    "fields": {
+      "terminal": 4,
+      "denominacion": 13,
+      "cantidad": 12,
+      "cantidad_minima": 5,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-15T11:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 37,
+    "fields": {
+      "terminal": 4,
+      "denominacion": 14,
+      "cantidad": 25,
+      "cantidad_minima": 10,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-15T11:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 38,
+    "fields": {
+      "terminal": 4,
+      "denominacion": 15,
+      "cantidad": 50,
+      "cantidad_minima": 20,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-15T11:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 39,
+    "fields": {
+      "terminal": 4,
+      "denominacion": 16,
+      "cantidad": 100,
+      "cantidad_minima": 40,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-15T11:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 40,
+    "fields": {
+      "terminal": 5,
+      "denominacion": 7,
+      "cantidad": 120,
+      "cantidad_minima": 50,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-20T12:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 41,
+    "fields": {
+      "terminal": 5,
+      "denominacion": 8,
+      "cantidad": 180,
+      "cantidad_minima": 70,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-20T12:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 42,
+    "fields": {
+      "terminal": 5,
+      "denominacion": 9,
+      "cantidad": 250,
+      "cantidad_minima": 100,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-20T12:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 43,
+    "fields": {
+      "terminal": 5,
+      "denominacion": 10,
+      "cantidad": 350,
+      "cantidad_minima": 150,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-20T12:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 44,
+    "fields": {
+      "terminal": 5,
+      "denominacion": 11,
+      "cantidad": 500,
+      "cantidad_minima": 200,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-20T12:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 45,
+    "fields": {
+      "terminal": 5,
+      "denominacion": 12,
+      "cantidad": 800,
+      "cantidad_minima": 300,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-20T12:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 46,
+    "fields": {
+      "terminal": 5,
+      "denominacion": 13,
+      "cantidad": 20,
+      "cantidad_minima": 8,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-20T12:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 47,
+    "fields": {
+      "terminal": 5,
+      "denominacion": 14,
+      "cantidad": 40,
+      "cantidad_minima": 15,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-20T12:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 48,
+    "fields": {
+      "terminal": 5,
+      "denominacion": 15,
+      "cantidad": 80,
+      "cantidad_minima": 30,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-20T12:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 49,
+    "fields": {
+      "terminal": 5,
+      "denominacion": 16,
+      "cantidad": 150,
+      "cantidad_minima": 60,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-20T12:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 50,
+    "fields": {
+      "terminal": 5,
+      "denominacion": 17,
+      "cantidad": 200,
+      "cantidad_minima": 80,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-20T12:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 51,
+    "fields": {
+      "terminal": 5,
+      "denominacion": 20,
+      "cantidad": 100,
+      "cantidad_minima": 40,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-20T12:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 52,
+    "fields": {
+      "terminal": 5,
+      "denominacion": 21,
+      "cantidad": 150,
+      "cantidad_minima": 60,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-20T12:00:00Z"
+    }
+  },
+  {
+    "model": "tauser.inventariodenominacionterminal",
+    "pk": 53,
+    "fields": {
+      "terminal": 5,
+      "denominacion": 22,
+      "cantidad": 200,
+      "cantidad_minima": 80,
+      "ultima_reposicion": "2025-10-31T08:00:00Z",
+      "actualizado_por": 2,
+      "actualizado": "2025-10-31T10:00:00Z",
+      "creado": "2025-10-20T12:00:00Z"
+    }
+  }
+]

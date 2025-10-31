@@ -1,0 +1,254 @@
+[
+  {
+    "model": "medios_pago.mediodepago",
+    "pk": 1,
+    "fields": {
+      "nombre": "Banco local",
+      "template_usado": "bank_local_ar",
+      "tipo_medio": "bank_local",
+      "custom_template": null,
+      "comision_porcentaje": "3.000",
+      "is_active": true,
+      "creado": "2025-10-30T22:04:14.431Z",
+      "actualizado": "2025-10-31T05:20:10.244Z"
+    }
+  },
+  {
+    "model": "medios_pago.mediodepago",
+    "pk": 2,
+    "fields": {
+      "nombre": "Tarjeta de Crédito Internacional",
+      "template_usado": "stripe_card",
+      "tipo_medio": "stripe",
+      "custom_template": null,
+      "comision_porcentaje": "2.900",
+      "is_active": true,
+      "creado": "2025-10-31T08:10:41.809Z",
+      "actualizado": "2025-10-31T08:11:03.531Z"
+    }
+  },
+  {
+    "model": "medios_pago.mediodepago",
+    "pk": 3,
+    "fields": {
+      "nombre": "Billetera Electrónica",
+      "template_usado": "billetera_electronica_py",
+      "tipo_medio": "billetera_electronica",
+      "custom_template": null,
+      "comision_porcentaje": "5.000",
+      "is_active": true,
+      "creado": "2025-10-31T08:11:36.382Z",
+      "actualizado": "2025-10-31T08:11:53.809Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 1,
+    "fields": {
+      "medio_de_pago": 1,
+      "nombre_campo": "Número de cuenta",
+      "campo_api": "account_number",
+      "tipo_dato": "NUMERO",
+      "is_required": true,
+      "descripcion": "Número de cuenta bancaria",
+      "orden": 0,
+      "creado": "2025-10-30T22:04:14.444Z",
+      "actualizado": "2025-10-30T22:04:14.444Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 2,
+    "fields": {
+      "medio_de_pago": 1,
+      "nombre_campo": "Entidad",
+      "campo_api": "bank_name",
+      "tipo_dato": "TEXTO",
+      "is_required": true,
+      "descripcion": "Nombre de la entidad financiera (banco, billetera, etc.)",
+      "orden": 0,
+      "creado": "2025-10-30T22:04:14.448Z",
+      "actualizado": "2025-10-30T22:04:14.448Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 3,
+    "fields": {
+      "medio_de_pago": 1,
+      "nombre_campo": "Titular de la cuenta",
+      "campo_api": "account_holder",
+      "tipo_dato": "TEXTO",
+      "is_required": true,
+      "descripcion": "Nombre del titular de la cuenta",
+      "orden": 0,
+      "creado": "2025-10-30T22:04:14.451Z",
+      "actualizado": "2025-10-30T22:04:14.451Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 4,
+    "fields": {
+      "medio_de_pago": 1,
+      "nombre_campo": "CBU/CVU",
+      "campo_api": "cbu_cvu",
+      "tipo_dato": "NUMERO",
+      "is_required": true,
+      "descripcion": "Clave Bancaria Uniforme o Clave Virtual Uniforme",
+      "orden": 0,
+      "creado": "2025-10-30T22:04:14.454Z",
+      "actualizado": "2025-10-30T22:04:14.454Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 5,
+    "fields": {
+      "medio_de_pago": 1,
+      "nombre_campo": "RUC",
+      "campo_api": "ruc",
+      "tipo_dato": "NUMERO",
+      "is_required": false,
+      "descripcion": "Registro Único del Contribuyente",
+      "orden": 0,
+      "creado": "2025-10-30T22:04:14.457Z",
+      "actualizado": "2025-10-30T22:04:14.457Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 6,
+    "fields": {
+      "medio_de_pago": 2,
+      "nombre_campo": "Número de tarjeta",
+      "campo_api": "card_number",
+      "tipo_dato": "NUMERO",
+      "is_required": true,
+      "descripcion": "Número de 16 dígitos de la tarjeta",
+      "orden": 0,
+      "creado": "2025-10-31T08:10:41.819Z",
+      "actualizado": "2025-10-31T08:10:41.819Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 7,
+    "fields": {
+      "medio_de_pago": 2,
+      "nombre_campo": "Mes de vencimiento",
+      "campo_api": "exp_month",
+      "tipo_dato": "NUMERO",
+      "is_required": true,
+      "descripcion": "Mes de vencimiento (1-12)",
+      "orden": 0,
+      "creado": "2025-10-31T08:10:41.825Z",
+      "actualizado": "2025-10-31T08:10:41.825Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 8,
+    "fields": {
+      "medio_de_pago": 2,
+      "nombre_campo": "Año de vencimiento",
+      "campo_api": "exp_year",
+      "tipo_dato": "NUMERO",
+      "is_required": true,
+      "descripcion": "Año de vencimiento (4 dígitos)",
+      "orden": 0,
+      "creado": "2025-10-31T08:10:41.827Z",
+      "actualizado": "2025-10-31T08:10:41.827Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 9,
+    "fields": {
+      "medio_de_pago": 2,
+      "nombre_campo": "Código de seguridad",
+      "campo_api": "cvc",
+      "tipo_dato": "NUMERO",
+      "is_required": true,
+      "descripcion": "Código CVV/CVC de 3 o 4 dígitos",
+      "orden": 0,
+      "creado": "2025-10-31T08:10:41.830Z",
+      "actualizado": "2025-10-31T08:10:41.830Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 11,
+    "fields": {
+      "medio_de_pago": 2,
+      "nombre_campo": "Entidad",
+      "campo_api": "bank_name",
+      "tipo_dato": "TEXTO",
+      "is_required": true,
+      "descripcion": "Dirección de correo electrónico",
+      "orden": 0,
+      "creado": "2025-10-31T08:10:41.836Z",
+      "actualizado": "2025-10-31T08:10:54.447Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 12,
+    "fields": {
+      "medio_de_pago": 3,
+      "nombre_campo": "Teléfono de billetera",
+      "campo_api": "wallet_phone",
+      "tipo_dato": "TELEFONO",
+      "is_required": true,
+      "descripcion": "Número de teléfono asociado a la billetera",
+      "orden": 0,
+      "creado": "2025-10-31T08:11:36.390Z",
+      "actualizado": "2025-10-31T08:11:36.390Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 13,
+    "fields": {
+      "medio_de_pago": 3,
+      "nombre_campo": "Entidad",
+      "campo_api": "bank_name",
+      "tipo_dato": "TEXTO",
+      "is_required": true,
+      "descripcion": "Nombre de la entidad financiera (banco, billetera, etc.)",
+      "orden": 0,
+      "creado": "2025-10-31T08:11:36.393Z",
+      "actualizado": "2025-10-31T08:11:36.393Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 14,
+    "fields": {
+      "medio_de_pago": 3,
+      "nombre_campo": "Titular de la cuenta",
+      "campo_api": "account_holder",
+      "tipo_dato": "TEXTO",
+      "is_required": true,
+      "descripcion": "Nombre del titular de la cuenta",
+      "orden": 0,
+      "creado": "2025-10-31T08:11:36.396Z",
+      "actualizado": "2025-10-31T08:11:36.396Z"
+    }
+  },
+  {
+    "model": "medios_pago.campomediodepago",
+    "pk": 15,
+    "fields": {
+      "medio_de_pago": 3,
+      "nombre_campo": "Número de documento",
+      "campo_api": "document_number",
+      "tipo_dato": "NUMERO",
+      "is_required": false,
+      "descripcion": "Número de cédula o documento de identidad",
+      "orden": 0,
+      "creado": "2025-10-31T08:11:36.399Z",
+      "actualizado": "2025-10-31T08:11:36.399Z"
+    }
+  }
+]

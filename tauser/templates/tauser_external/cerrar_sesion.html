@@ -1,0 +1,43 @@
+{% extends 'tauser_external/base_external.html' %}
+{% load static %}
+
+{% block title %}TAUSER - Cerrar Sesión{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-sign-out-alt me-2"></i>
+                        Cerrar Sesión
+                    </h4>
+                </div>
+                <div class="card-body p-5 text-center">
+                    <i class="fas fa-question-circle fa-4x text-warning mb-4"></i>
+                    <h3>¿Está seguro que desea cerrar sesión?</h3>
+                    <p class="text-muted">
+                        Su sesión en el terminal {{ terminal.nombre }} será finalizada.
+                    </p>
+
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg">
+                                <i class="fas fa-sign-out-alt me-2"></i>
+                                Sí, Cerrar Sesión
+                            </button>
+                            <a href="{% url 'tauser_external:menu_tauser' terminal.codigo %}" 
+                               class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

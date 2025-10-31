@@ -1,0 +1,333 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load tauser_filters %}
+
+{% block title %}Dashboard de Inventario - {{ terminal.nombre }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .alert-card {
+        border-left: 4px solid;
+        margin-bottom: 1rem;
+    }
+    .alert-card.critico {
+        border-left-color: #dc3545;
+        background-color: #f8d7da;
+    }
+    .alert-card.advertencia {
+        border-left-color: #ffc107;
+        background-color: #fff3cd;
+    }
+    .alert-card.normal {
+        border-left-color: #28a745;
+        background-color: #d4edda;
+    }
+    .stat-card {
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 0.5rem 0;
+    }
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+    }
+    .progress-bar-custom {
+        height: 8px;
+        border-radius: 4px;
+    }
+    .badge-nivel {
+        font-size: 0.85rem;
+        padding: 0.35rem 0.65rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-chart-line"></i> Dashboard de Inventario</h2>
+            <p class="text-muted">
+                <strong>Terminal:</strong> {{ terminal.nombre }} ({{ terminal.codigo }}) | 
+                <strong>Ubicación:</strong> {{ terminal.ubicacion }}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'tauser:recarga_masiva' terminal.pk %}" class="btn btn-success btn-lg">
+                <i class="fas fa-box-open"></i> Recarga Masiva
+            </a>
+            <a href="{% url 'tauser:historial_recargas' terminal.pk %}" class="btn btn-info btn-lg">
+                <i class="fas fa-history"></i> Historial
+            </a>
+            <a href="{% url 'tauser:gestion_inventario_denominaciones' terminal.pk %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <!-- Estadísticas Globales -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card bg-primary text-white">
+                <div class="stat-label">Total Denominaciones</div>
+                <div class="stat-value">{{ total_denominaciones }}</div>
+                <small>Configuradas en el sistema</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card bg-danger text-white">
+                <div class="stat-label">Alertas Críticas</div>
+                <div class="stat-value">{{ alertas_criticas|length }}</div>
+                <small>≤ 10% del máximo</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card bg-warning text-dark">
+                <div class="stat-label">Alertas Moderadas</div>
+                <div class="stat-value">{{ alertas_moderadas|length }}</div>
+                <small>≤ 25% del máximo</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card bg-success text-white">
+                <div class="stat-label">Inventarios OK</div>
+                <div class="stat-value">{{ inventarios_ok|length }}</div>
+                <small>> 25% del máximo</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas de Recargas (Últimos 30 días) -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Estadísticas de Recargas (Últimos 30 días)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6 class="text-muted">Total de Recargas</h6>
+                            <h3 class="text-primary">{{ total_recargas_mes }}</h3>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-muted">Valor Total Recargado</h6>
+                            <h3 class="text-success">${{ valor_total_recargado|currency }}</h3>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-muted">Denominaciones Más Recargadas</h6>
+                            <ul class="list-unstyled mb-0">
+                                {% for den in denominaciones_frecuentes %}
+                                <li class="mb-1">
+                                    <span class="badge bg-secondary">{{ den.denominacion__divisa__code }} {{ den.denominacion__valor }}</span>
+                                    <small class="text-muted">{{ den.total_recargas }} recargas ({{ den.total_cantidad }} billetes)</small>
+                                </li>
+                                {% empty %}
+                                <li class="text-muted">No hay datos</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertas Críticas -->
+    {% if alertas_criticas %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> ALERTAS CRÍTICAS (≤ 10%)</h5>
+                </div>
+                <div class="card-body">
+                    {% for alerta in alertas_criticas %}
+                    <div class="alert-card critico">
+                        <div class="d-flex justify-content-between align-items-center p-3">
+                            <div>
+                                <h6 class="mb-1">
+                                    <span class="badge badge-nivel bg-danger">CRÍTICO</span>
+                                    {{ alerta.inventario.denominacion.divisa.code }} {{ alerta.inventario.denominacion.valor_formateado }}
+                                </h6>
+                                <p class="mb-0">
+                                    <strong>Cantidad:</strong> {{ alerta.inventario.cantidad }} / {{ alerta.inventario.cantidad_maxima }} billetes
+                                    <span class="text-danger ms-3">({{ alerta.porcentaje|floatformat:1 }}%)</span>
+                                </p>
+                                <div class="progress progress-bar-custom mt-2" style="width: 200px;">
+                                    <div class="progress-bar bg-danger" role="progressbar" data-width="{{ alerta.porcentaje|floatformat:0 }}"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <a href="{% url 'tauser:recarga_masiva' terminal.pk %}" class="btn btn-danger">
+                                    <i class="fas fa-plus-circle"></i> Recargar Ahora
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Alertas Moderadas -->
+    {% if alertas_moderadas %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-warning">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-circle"></i> Alertas Moderadas (≤ 25%)</h5>
+                </div>
+                <div class="card-body">
+                    {% for alerta in alertas_moderadas %}
+                    <div class="alert-card advertencia">
+                        <div class="d-flex justify-content-between align-items-center p-3">
+                            <div>
+                                <h6 class="mb-1">
+                                    <span class="badge badge-nivel bg-warning text-dark">ADVERTENCIA</span>
+                                    {{ alerta.inventario.denominacion.divisa.code }} {{ alerta.inventario.denominacion.valor_formateado }}
+                                </h6>
+                                <p class="mb-0">
+                                    <strong>Cantidad:</strong> {{ alerta.inventario.cantidad }} / {{ alerta.inventario.cantidad_maxima }} billetes
+                                    <span class="text-warning ms-3">({{ alerta.porcentaje|floatformat:1 }}%)</span>
+                                </p>
+                                <div class="progress progress-bar-custom mt-2" style="width: 200px;">
+                                    <div class="progress-bar bg-warning" role="progressbar" data-width="{{ alerta.porcentaje|floatformat:0 }}"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <a href="{% url 'tauser:recarga_masiva' terminal.pk %}" class="btn btn-warning">
+                                    <i class="fas fa-plus-circle"></i> Recargar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Inventarios en Estado Normal -->
+    {% if inventarios_ok %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-check-circle"></i> Inventarios en Estado Normal (> 25%)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for alerta in inventarios_ok %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="alert-card normal p-3">
+                                <h6 class="mb-1">
+                                    <span class="badge badge-nivel bg-success">NORMAL</span>
+                                    {{ alerta.inventario.denominacion.divisa.code }} {{ alerta.inventario.denominacion.valor_formateado }}
+                                </h6>
+                                <p class="mb-0">
+                                    <strong>{{ alerta.inventario.cantidad }}</strong> / {{ alerta.inventario.cantidad_maxima }} billetes
+                                    <span class="text-success ms-2">({{ alerta.porcentaje|floatformat:1 }}%)</span>
+                                </p>
+                                <div class="progress progress-bar-custom mt-2">
+                                    <div class="progress-bar bg-success" role="progressbar" data-width="{{ alerta.porcentaje|floatformat:0 }}"></div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Últimas Recargas -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-clock"></i> Últimas 10 Recargas</h5>
+                </div>
+                <div class="card-body">
+                    {% if ultimas_recargas %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Denominación</th>
+                                    <th>Cantidad</th>
+                                    <th>Anterior → Nueva</th>
+                                    <th>Valor Total</th>
+                                    <th>Usuario</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for recarga in ultimas_recargas %}
+                                <tr>
+                                    <td>{{ recarga.fecha|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">
+                                            {{ recarga.denominacion.divisa.code }} {{ recarga.denominacion.valor_formateado }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">+{{ recarga.cantidad_agregada }}</span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ recarga.cantidad_anterior }} → {{ recarga.cantidad_nueva }}</small>
+                                    </td>
+                                    <td><strong>${{ recarga.valor_total_agregado|currency }}</strong></td>
+                                    <td>
+                                        <small>
+                                            <i class="fas fa-user"></i> 
+                                            {{ recarga.usuario.username|default:"Sistema" }}
+                                        </small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-end mt-3">
+                        <a href="{% url 'tauser:historial_recargas' terminal.pk %}" class="btn btn-outline-secondary">
+                            Ver Historial Completo <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3">No hay recargas registradas aún</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Aplicar anchos desde data-width a las barras de progreso
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.progress-bar[data-width]').forEach(function(bar) {
+            bar.style.width = bar.getAttribute('data-width') + '%';
+        });
+    });
+
+    // Auto-refresh cada 60 segundos para mantener dashboard actualizado
+    setTimeout(function() {
+        location.reload();
+    }, 60000);
+</script>
+{% endblock %}

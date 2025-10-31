@@ -28,6 +28,8 @@ urlpatterns = [
     path('facturacion/', include('facturacion_electronica.urls', namespace='facturacion')),
     path('mfa/', include('mfa.urls')),
     path('divisas/operacion/', include('operacion_divisas.urls', namespace='operacion_divisas')),
+    path("terminal/", include("tauser.urls", namespace="tauser")),  # Admin interno (casa de cambios)
+    path("tauser/", include("tauser.urls_external", namespace="tauser_external")),  # Acceso externo público
     path('stripe/', include('stripe_payments.urls', namespace='stripe_payments')),
 ]
 
@@ -42,3 +44,4 @@ handler400 = 'roles.views.bad_request_view'
 handler403 = 'roles.views.permission_denied_view'
 handler404 = 'roles.views.page_not_found_view'
 handler500 = 'roles.views.server_error_view'
+

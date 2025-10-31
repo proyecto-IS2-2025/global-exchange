@@ -1,0 +1,296 @@
+{% extends 'base_tauser.html' %}
+{% load static %}
+
+{% block title %}Verificación MFA - {{ terminal.nombre }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .mfa-container {
+        max-width: 500px;
+        width: 100%;
+        padding: 2rem;
+    }
+
+    .mfa-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+    }
+
+    .mfa-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .mfa-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+
+    .mfa-body {
+        padding: 2rem;
+    }
+
+    .email-info {
+        background: #f8f9fa;
+        border-left: 4px solid #667eea;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+
+    .otp-input-wrapper {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .otp-digit {
+        width: 50px;
+        height: 60px;
+        font-size: 2rem;
+        font-weight: 700;
+        text-align: center;
+        border: 3px solid #e2e8f0;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .otp-digit:focus {
+        border-color: #667eea;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn-verify {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-verify:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-verify:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .btn-resend {
+        width: 100%;
+        padding: 0.75rem;
+        background: white;
+        color: #667eea;
+        border: 2px solid #667eea;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+    }
+
+    .btn-resend:hover {
+        background: #667eea;
+        color: white;
+    }
+
+    .transaction-info {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .transaction-info h4 {
+        font-size: 0.9rem;
+        color: #64748b;
+        margin-bottom: 0.75rem;
+        text-transform: uppercase;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mfa-container">
+    <div class="mfa-card">
+        <div class="mfa-header">
+            <i class="fas fa-shield-alt fa-3x mb-3"></i>
+            <h2>Verificación de Seguridad</h2>
+            <p class="mb-0">{{ terminal.nombre }}</p>
+        </div>
+
+        <div class="mfa-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="email-info">
+                <i class="fas fa-envelope me-2"></i>
+                <strong>Código enviado a:</strong><br>
+                <span class="text-muted">{{ email_masked }}</span>
+            </div>
+
+            <form method="POST" id="mfa-form">
+                {% csrf_token %}
+                
+                <p class="text-center mb-3">
+                    <strong>Ingrese el código de 6 dígitos</strong>
+                </p>
+
+                <div class="otp-input-wrapper">
+                    <input type="text" class="otp-digit" maxlength="1" id="digit-1" autocomplete="off" required autofocus>
+                    <input type="text" class="otp-digit" maxlength="1" id="digit-2" autocomplete="off" required>
+                    <input type="text" class="otp-digit" maxlength="1" id="digit-3" autocomplete="off" required>
+                    <input type="text" class="otp-digit" maxlength="1" id="digit-4" autocomplete="off" required>
+                    <input type="text" class="otp-digit" maxlength="1" id="digit-5" autocomplete="off" required>
+                    <input type="text" class="otp-digit" maxlength="1" id="digit-6" autocomplete="off" required>
+                </div>
+                <input type="hidden" name="otp_code" id="otp_code">
+
+                <button type="submit" class="btn-verify" id="submit-btn" disabled>
+                    <i class="fas fa-check-circle me-2"></i>
+                    Verificar
+                </button>
+            </form>
+
+            <a href="{% url 'tauser_external:reenviar_mfa' terminal_codigo=terminal.codigo %}" class="btn-resend">
+                <i class="fas fa-redo me-2"></i>
+                Reenviar Código
+            </a>
+
+            <div class="transaction-info">
+                <h4><i class="fas fa-info-circle me-2"></i>Detalles de la transacción</h4>
+                <div class="info-row">
+                    <span class="text-muted">Tipo:</span>
+                    <strong class="text-capitalize">{{ transaccion.get_tipo_operacion_display }}</strong>
+                </div>
+                <div class="info-row">
+                    <span class="text-muted">Número:</span>
+                    <strong class="font-monospace">{{ transaccion.numero_transaccion }}</strong>
+                </div>
+                <div class="info-row">
+                    <span class="text-muted">Estado:</span>
+                    <strong class="text-capitalize">{{ transaccion.get_estado_display }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('.otp-digit');
+    const form = document.getElementById('mfa-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const hiddenInput = document.getElementById('otp_code');
+
+    // Auto-focus y navegación
+    inputs.forEach((input, index) => {
+        input.addEventListener('input', function(e) {
+            const value = this.value;
+            
+            // Solo permitir números
+            if (!/^[0-9]$/.test(value) && value !== '') {
+                this.value = '';
+                return;
+            }
+
+            // Auto-avanzar
+            if (value && index < inputs.length - 1) {
+                inputs[index + 1].focus();
+            }
+
+            checkAllFilled();
+        });
+
+        input.addEventListener('keydown', function(e) {
+            // Backspace: volver al anterior
+            if (e.key === 'Backspace' && !this.value && index > 0) {
+                inputs[index - 1].focus();
+            }
+        });
+
+        input.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const pasteData = e.clipboardData.getData('text');
+            const chars = pasteData.match(/[0-9]/g);
+            
+            if (chars) {
+                chars.forEach((char, i) => {
+                    if (index + i < inputs.length) {
+                        inputs[index + i].value = char;
+                    }
+                });
+                const lastIndex = Math.min(index + chars.length - 1, inputs.length - 1);
+                inputs[lastIndex].focus();
+                checkAllFilled();
+            }
+        });
+    });
+
+    function checkAllFilled() {
+        const allFilled = Array.from(inputs).every(input => input.value.length === 1);
+        submitBtn.disabled = !allFilled;
+        
+        if (allFilled) {
+            const code = Array.from(inputs).map(input => input.value).join('');
+            hiddenInput.value = code;
+        }
+    }
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const code = Array.from(inputs).map(input => input.value).join('');
+        
+        if (code.length !== 6) {
+            return;
+        }
+
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Verificando...';
+        submitBtn.disabled = true;
+
+        this.submit();
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load tauser_filters %}
+
+{% block title %}Eliminar Denominación - Terminal {{ terminal.codigo }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <div class="mb-3">
+                    <i class="fas fa-exclamation-triangle fa-4x text-warning"></i>
+                </div>
+                <h1 class="h3 mb-2">Confirmar Eliminación</h1>
+                <p class="text-muted">
+                    Esta acción no se puede deshacer
+                </p>
+            </div>
+
+            <!-- Card de confirmación -->
+            <div class="card shadow-sm border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-trash-alt me-2"></i>
+                        Eliminar Denominación del Inventario
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Información del terminal -->
+                    <div class="alert alert-light border">
+                        <h6 class="mb-2">
+                            <i class="fas fa-desktop text-primary me-2"></i>
+                            Terminal
+                        </h6>
+                        <p class="mb-1">
+                            <strong>Nombre:</strong> {{ terminal.nombre }}
+                        </p>
+                        <p class="mb-1">
+                            <strong>Código:</strong> {{ terminal.codigo }}
+                        </p>
+                        <p class="mb-0">
+                            <strong>Ubicación:</strong> {{ terminal.ubicacion }}
+                        </p>
+                    </div>
+
+                    <!-- Información de la denominación -->
+                    <div class="alert alert-warning">
+                        <h6 class="mb-2">
+                            <i class="fas fa-money-bill-wave me-2"></i>
+                            Denominación a Eliminar
+                        </h6>
+                        <p class="mb-1">
+                            <strong>Divisa:</strong> {{ object.denominacion.divisa.name }} ({{ object.denominacion.divisa.code }})
+                        </p>
+                        <p class="mb-1">
+                            <strong>Tipo:</strong> {{ object.denominacion.get_tipo_display|title }}
+                        </p>
+                        <p class="mb-1">
+                            <strong>Valor:</strong> {{ object.denominacion.divisa.symbol }}{{ object.denominacion.valor|currency }}
+                        </p>
+                        <p class="mb-1">
+                            <strong>Cantidad Actual:</strong> 
+                            <span class="badge bg-dark fs-6">{{ object.cantidad }} unidades</span>
+                        </p>
+                        <p class="mb-0">
+                            <strong>Valor Total en Inventario:</strong> 
+                            <span class="badge bg-danger fs-6">
+                                {{ object.denominacion.divisa.symbol }}{{ object.valor_total|currency }}
+                            </span>
+                        </p>
+                    </div>
+
+                    <!-- Advertencia -->
+                    <div class="alert alert-danger mb-4">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            ¡Atención!
+                        </h6>
+                        <ul class="mb-0 small">
+                            <li>Se eliminará permanentemente esta denominación del inventario de la terminal.</li>
+                            <li>Se perderá el registro de las {{ object.cantidad }} unidades existentes.</li>
+                            <li>El valor total de {{ object.denominacion.divisa.symbol }}{{ object.valor_total|currency }} dejará de contabilizarse.</li>
+                            <li>Esta acción no se puede deshacer.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Formulario de confirmación -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex gap-2 justify-content-center">
+                            <a href="{% url 'tauser:gestion_inventario_denominaciones' terminal.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt me-1"></i> Sí, Eliminar Denominación
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Alternativas -->
+            <div class="card shadow-sm mt-4 border-info">
+                <div class="card-body">
+                    <h6 class="text-info">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        ¿Sabías que...?
+                    </h6>
+                    <p class="small mb-2">
+                        Si solo deseas ajustar la cantidad a cero (0) sin eliminar el registro, 
+                        puedes usar la función de <strong>Ajustar</strong> en lugar de eliminar.
+                    </p>
+                    <p class="small mb-0">
+                        Esto te permitirá mantener el historial y volver a agregar stock más tarde.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

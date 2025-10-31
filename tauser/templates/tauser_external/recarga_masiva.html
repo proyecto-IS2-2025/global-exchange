@@ -1,0 +1,380 @@
+{% extends 'base_tauser.html' %}
+{% load static %}
+
+{% block title %}Recarga Masiva - {{ terminal.nombre }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .divisa-section {
+        border: 2px solid #dee2e6;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        background-color: #f8f9fa;
+    }
+    .divisa-header {
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #0d6efd;
+    }
+    .denominacion-row {
+        background-color: white;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s;
+    }
+    .denominacion-row:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-color: #0d6efd;
+    }
+    .cantidad-input {
+        font-size: 1.1rem;
+        font-weight: bold;
+        text-align: center;
+    }
+    .stock-info {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    .stock-bar {
+        height: 6px;
+        border-radius: 3px;
+        background-color: #e9ecef;
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+    .stock-fill {
+        height: 100%;
+        transition: width 0.3s;
+    }
+    .stock-fill.low { background-color: #dc3545; }
+    .stock-fill.medium { background-color: #ffc107; }
+    .stock-fill.high { background-color: #28a745; }
+    .total-calculator {
+        position: sticky;
+        top: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .total-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 1rem 0;
+    }
+    .btn-submit-large {
+        font-size: 1.2rem;
+        padding: 1rem 2rem;
+        border-radius: 10px;
+    }
+    .alert-instructions {
+        background-color: #e7f3ff;
+        border-left: 4px solid #0d6efd;
+        padding: 1rem;
+        border-radius: 5px;
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-box-open"></i> Recarga Masiva de Inventario</h2>
+            <p class="text-muted">
+                <strong>Terminal:</strong> {{ terminal.nombre }} ({{ terminal.codigo }})
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'tauser_external:dashboard_inventario' terminal.codigo %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver al Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Instrucciones -->
+    <div class="alert-instructions">
+        <h5><i class="fas fa-info-circle"></i> Instrucciones</h5>
+        <ul class="mb-0">
+            <li>Seleccione la divisa que desea recargar usando el filtro</li>
+            <li>Ingrese la cantidad de billetes que desea agregar a cada denominación</li>
+            <li>Deje en blanco o en 0 las denominaciones que no desea recargar</li>
+            <li>El sistema calculará automáticamente el valor total</li>
+            <li>Puede agregar observaciones opcionales sobre la recarga</li>
+        </ul>
+    </div>
+
+    <!-- Selector de Divisa -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-filter"></i> Filtrar por Divisa:
+                    </label>
+                </div>
+                <div class="col-md-6">
+                    <select id="divisaFilter" class="form-select form-select-lg">
+                        <option value="">Todas las divisas</option>
+                        {% for divisa_code, data in inventarios_por_divisa.items %}
+                        <option value="{{ divisa_code }}">{{ divisa_code }} - {{ data.divisa.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('divisaFilter').value=''; filterDivisas();">
+                        <i class="fas fa-redo"></i> Mostrar Todas
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" id="recargaForm">
+        {% csrf_token %}
+        
+        <div class="row">
+            <!-- Formulario de Denominaciones -->
+            <div class="col-md-8">
+                {% for divisa_code, data in inventarios_por_divisa.items %}
+                <div class="divisa-section" data-divisa="{{ divisa_code }}">
+                    <div class="divisa-header">
+                        <i class="fas fa-money-bill-wave"></i> {{ data.divisa.name }} ({{ divisa_code }})
+                    </div>
+                    
+                    {% for inv in data.inventarios %}
+                    <div class="denominacion-row" data-inventario-id="{{ inv.denominacion.id }}" data-valor="{{ inv.denominacion.valor }}">
+                        <div class="row align-items-center">
+                            <div class="col-md-3">
+                                <h5 class="mb-1">
+                                    <span class="badge bg-primary" style="font-size: 1rem;">
+                                        {{ inv.denominacion.valor_formateado }}
+                                    </span>
+                                    {% if inv.es_nuevo %}
+                                    <span class="badge bg-success" style="font-size: 0.7rem;">NUEVA</span>
+                                    {% endif %}
+                                </h5>
+                                <small class="text-muted">{{ inv.denominacion.nombre }}</small>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <div class="stock-info">
+                                    <strong>Stock actual:</strong> {{ inv.cantidad }} billetes (mín: {{ inv.cantidad_minima }})
+                                    <div class="stock-bar">
+                                        {% if inv.cantidad_minima > 0 %}
+                                        {% widthratio inv.cantidad inv.cantidad_minima 100 as percent %}
+                                        <div class="stock-fill {% if percent < 50 %}low{% elif percent < 100 %}medium{% else %}high{% endif %}" 
+                                             data-width="{{ percent }}"></div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label mb-1"><strong>Cantidad a agregar:</strong></label>
+                                <input type="number" 
+                                       name="cantidad_{{ inv.denominacion.id }}" 
+                                       class="form-control cantidad-input cantidad-change" 
+                                       min="0" 
+                                       step="1" 
+                                       value="0"
+                                       placeholder="0">
+                            </div>
+                            
+                            <div class="col-md-3 text-end">
+                                <small class="text-muted d-block">Valor unitario:</small>
+                                <strong class="subtotal-display">$0.00</strong>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+
+                <!-- Observaciones -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-comment"></i> Observaciones (Opcional)</h5>
+                    </div>
+                    <div class="card-body">
+                        <textarea name="observaciones" 
+                                  class="form-control" 
+                                  rows="3" 
+                                  placeholder="Ej: Recarga programada semanal, Reposición por alta demanda, etc."></textarea>
+                        <small class="text-muted">Estas observaciones se guardarán en el historial de recargas</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calculadora de Total -->
+            <div class="col-md-4">
+                <div class="total-calculator">
+                    <h4 class="mb-3">
+                        <i class="fas fa-calculator"></i> Resumen de Recarga
+                    </h4>
+                    
+                    <div class="mb-3">
+                        <small class="d-block">Total de Billetes</small>
+                        <h3 id="totalBilletes">0</h3>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="d-block">Denominaciones Seleccionadas</small>
+                        <h3 id="totalDenominaciones">0</h3>
+                    </div>
+                    
+                    <hr style="border-color: rgba(255,255,255,0.3);">
+                    
+                    <div class="mb-4">
+                        <small class="d-block">Valor Total a Recargar</small>
+                        <div class="total-value" id="valorTotal">$0.00</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-light btn-submit-large" id="btnSubmit" disabled>
+                            <i class="fas fa-check-circle"></i> Confirmar Recarga
+                        </button>
+                        <a href="{% url 'tauser_external:dashboard_inventario' terminal.codigo %}" class="btn btn-outline-light">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <small><i class="fas fa-info-circle"></i> El botón se activará cuando agregue al menos una cantidad</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Función global para filtrar divisas
+function filterDivisas() {
+    const divisaFilter = document.getElementById('divisaFilter');
+    const selectedDivisa = divisaFilter.value;
+    const divisaSections = document.querySelectorAll('.divisa-section');
+    
+    divisaSections.forEach(section => {
+        if (selectedDivisa === '' || section.dataset.divisa === selectedDivisa) {
+            section.style.display = 'block';
+        } else {
+            section.style.display = 'none';
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('recargaForm');
+    const inputs = document.querySelectorAll('.cantidad-change');
+    const totalBilletesEl = document.getElementById('totalBilletes');
+    const totalDenominacionesEl = document.getElementById('totalDenominaciones');
+    const valorTotalEl = document.getElementById('valorTotal');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const divisaFilter = document.getElementById('divisaFilter');
+    
+    // Aplicar anchos de barras de stock desde data-width
+    document.querySelectorAll('.stock-fill[data-width]').forEach(function(fill) {
+        const width = fill.getAttribute('data-width');
+        fill.style.width = width + '%';
+    });
+    
+    // Event listener para el filtro
+    divisaFilter.addEventListener('change', filterDivisas);
+    
+    // Función para calcular totales
+    function calcularTotales() {
+        let totalBilletes = 0;
+        let totalDenominaciones = 0;
+        let valorTotal = 0;
+        
+        inputs.forEach(input => {
+            const cantidad = parseInt(input.value) || 0;
+            if (cantidad > 0) {
+                const row = input.closest('.denominacion-row');
+                const valorUnitario = parseFloat(row.dataset.valor);
+                const subtotal = cantidad * valorUnitario;
+                
+                // Actualizar subtotal en la fila
+                const subtotalDisplay = row.querySelector('.subtotal-display');
+                subtotalDisplay.textContent = '$' + subtotal.toFixed(2);
+                subtotalDisplay.style.color = '#28a745';
+                subtotalDisplay.style.fontSize = '1.2rem';
+                
+                totalBilletes += cantidad;
+                totalDenominaciones += 1;
+                valorTotal += subtotal;
+            } else {
+                // Resetear subtotal si es 0
+                const row = input.closest('.denominacion-row');
+                const subtotalDisplay = row.querySelector('.subtotal-display');
+                subtotalDisplay.textContent = '$0.00';
+                subtotalDisplay.style.color = '#6c757d';
+                subtotalDisplay.style.fontSize = '1rem';
+            }
+        });
+        
+        // Actualizar visualización
+        totalBilletesEl.textContent = totalBilletes.toLocaleString();
+        totalDenominacionesEl.textContent = totalDenominaciones;
+        valorTotalEl.textContent = '$' + valorTotal.toLocaleString('es-PY', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        
+        // Habilitar/deshabilitar botón
+        btnSubmit.disabled = totalBilletes === 0;
+        
+        if (totalBilletes > 0) {
+            btnSubmit.classList.remove('btn-light');
+            btnSubmit.classList.add('btn-success');
+        } else {
+            btnSubmit.classList.remove('btn-success');
+            btnSubmit.classList.add('btn-light');
+        }
+    }
+    
+    // Event listeners para inputs
+    inputs.forEach(input => {
+        input.addEventListener('input', calcularTotales);
+        input.addEventListener('change', calcularTotales);
+    });
+    
+    // Validación antes de enviar
+    form.addEventListener('submit', function(e) {
+        const totalBilletes = parseInt(totalBilletesEl.textContent.replace(/,/g, ''));
+        
+        if (totalBilletes === 0) {
+            e.preventDefault();
+            alert('Debe ingresar al menos una cantidad para recargar');
+            return false;
+        }
+        
+        const confirmacion = confirm(
+            `¿Está seguro de realizar esta recarga?\n\n` +
+            `Total de billetes: ${totalBilletes}\n` +
+            `Denominaciones: ${totalDenominacionesEl.textContent}\n` +
+            `Valor total: ${valorTotalEl.textContent}\n\n` +
+            `Esta acción quedará registrada en el historial.`
+        );
+        
+        if (!confirmacion) {
+            e.preventDefault();
+        }
+    });
+    
+    // Calcular totales iniciales
+    calcularTotales();
+});
+</script>
+{% endblock %}

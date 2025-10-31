@@ -1,0 +1,101 @@
+[
+  {
+    "model": "clientes.clientemediodepago",
+    "pk": 1,
+    "fields": {
+      "cliente": 1,
+      "medio_de_pago": 1,
+      "datos_campos": {
+        "RUC": "12345678",
+        "CBU/CVU": "2131-3131-3323-3112-1312-31",
+        "Entidad": "Banco Guaraní",
+        "Número de cuenta": "0003 3344 4",
+        "Titular de la cuenta": "María"
+      },
+      "es_activo": true,
+      "es_principal": true,
+      "fecha_creacion": "2025-10-30T22:11:41.128Z",
+      "fecha_actualizacion": "2025-10-30T22:11:41.128Z",
+      "creado_por": 4
+    }
+  },
+  {
+    "model": "clientes.clientemediodepago",
+    "pk": 2,
+    "fields": {
+      "cliente": 1,
+      "medio_de_pago": 2,
+      "datos_campos": {
+        "Entidad": "Stripe",
+        "Mes de vencimiento": "01",
+        "Número de tarjeta": "4242 4242 4242 4242",
+        "Año de vencimiento": "2030",
+        "Código de seguridad": "123"
+      },
+      "es_activo": true,
+      "es_principal": false,
+      "fecha_creacion": "2025-10-31T14:07:45.824Z",
+      "fecha_actualizacion": "2025-10-31T14:07:45.824Z",
+      "creado_por": 1
+    }
+  },
+  {
+    "model": "clientes.clientemediodepago",
+    "pk": 3,
+    "fields": {
+      "cliente": 1,
+      "medio_de_pago": 3,
+      "datos_campos": {
+        "Entidad": "Billetera Digital",
+        "Número de documento": "12345678",
+        "Titular de la cuenta": "María",
+        "Teléfono de billetera": "0982222222"
+      },
+      "es_activo": true,
+      "es_principal": false,
+      "fecha_creacion": "2025-10-31T14:10:21.347Z",
+      "fecha_actualizacion": "2025-10-31T14:10:21.347Z",
+      "creado_por": 1
+    }
+  },
+  {
+    "model": "clientes.clientemediodepago",
+    "pk": 4,
+    "fields": {
+      "cliente": 1,
+      "medio_de_pago": 1,
+      "datos_campos": {
+        "RUC": "12345678",
+        "CBU/CVU": "4222-2222-2222-2222-0000-00",
+        "Entidad": "Banco Guaraní",
+        "Número de cuenta": "4222 2222 2222 2222",
+        "Titular de la cuenta": "María - Tarjeta de Débito"
+      },
+      "es_activo": true,
+      "es_principal": false,
+      "fecha_creacion": "2025-10-31T14:15:26.467Z",
+      "fecha_actualizacion": "2025-10-31T14:16:38.042Z",
+      "creado_por": 1
+    }
+  },
+  {
+    "model": "clientes.clientemediodepago",
+    "pk": 5,
+    "fields": {
+      "cliente": 1,
+      "medio_de_pago": 1,
+      "datos_campos": {
+        "RUC": "12345678",
+        "CBU/CVU": "4444-4444-4444-4444-0000-00",
+        "Entidad": "Banco Guaraní",
+        "Número de cuenta": "4444 4444 4444 4444",
+        "Titular de la cuenta": "María - Tarjeta de Crédito"
+      },
+      "es_activo": true,
+      "es_principal": false,
+      "fecha_creacion": "2025-10-31T14:17:23.661Z",
+      "fecha_actualizacion": "2025-10-31T14:17:23.661Z",
+      "creado_por": 1
+    }
+  }
+]

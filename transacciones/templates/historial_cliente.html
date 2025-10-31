@@ -34,6 +34,7 @@
     font-weight: 600;
 }
 .status-pendiente { background-color: #ffc107; color: #000; } /* Amarillo - Pendiente */
+.status-requiere_confirmacion { background-color: #fd7e14; color: #fff; } /* Naranja - Requiere Confirmación */
 .status-pagada { background-color: #28a745; color: #fff; } /* Verde - Pagada */
 .status-completado { background-color: #198754; color: #fff; } /* Verde oscuro - Completado */
 .status-cancelada { background-color: #dc3545; color: #fff; } /* Rojo */
@@ -88,6 +89,11 @@
 .badge.status-pendiente {
     background-color: #ffc107; /* Amarillo - Pendiente */
     color: #000 !important; /* Texto negro para mejor contraste */
+}
+
+.badge.status-requiere_confirmacion {
+    background-color: #fd7e14; /* Naranja - Requiere Confirmación */
+    color: white !important;
 }
 
 .badge.status-pagada {
@@ -233,6 +239,11 @@
                                 <div class="d-flex justify-content-between align-items-start mb-3">
                                     <div>
                                         <h6 class="card-title mb-1 font-monospace">{{ transaccion.numero_transaccion }}</h6>
+                                        {% if transaccion.tauser_code %}
+                                        <small class="d-block text-info font-monospace fw-bold" style="letter-spacing: 1px;">
+                                            <i class="bi bi-key-fill"></i> {{ transaccion.tauser_code }}
+                                        </small>
+                                        {% endif %}
                                         <small class="text-muted">{{ transaccion.fecha_creacion|date:"d/m/Y H:i" }}</small>
                                     </div>
                                     <span class="badge status-{{ transaccion.estado }} text-black">
@@ -328,7 +339,12 @@
                                         <i class="bi bi-eye me-1"></i>Ver Detalle
                                     </a>
                                     
-                                    {% if transaccion.puede_cancelarse %}
+                                    {% if transaccion.estado == 'requiere_confirmacion' %}
+                                        <a href="{% url 'transacciones:confirmar_nueva_tasa' numero_transaccion=transaccion.numero_transaccion %}" 
+                                           class="btn btn-warning btn-sm">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i>Confirmar
+                                        </a>
+                                    {% elif transaccion.puede_cancelarse %}
                                         <a href="{% url 'transacciones:cancelar' numero_transaccion=transaccion.numero_transaccion %}" 
                                            class="btn btn-outline-danger btn-sm">
                                             <i class="bi bi-x-circle me-1"></i>Cancelar

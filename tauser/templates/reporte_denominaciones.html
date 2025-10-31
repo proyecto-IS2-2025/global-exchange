@@ -1,0 +1,528 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+{% load tauser_filters %}
+
+{% block title %}Reporte de Denominaciones - {{ terminal.nombre }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .denom-stat-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid #007bff;
+    }
+    
+    .denom-stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 350px;
+    }
+    
+    .inventario-badge {
+        font-size: 1.1rem;
+        padding: 8px 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-success text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">
+                                <i class="fas fa-money-bill-wave me-2"></i>
+                                Reporte de Uso de Denominaciones
+                            </h4>
+                            <p class="mb-0 mt-1 small opacity-75">
+                                <i class="fas fa-map-marker-alt me-1"></i>
+                                Terminal: <strong>{{ terminal.nombre }}</strong> ({{ terminal.codigo }})
+                            </p>
+                        </div>
+                        <div>
+                            <a href="{% url 'tauser:inventario_denominaciones' terminal_codigo=terminal.codigo %}" 
+                               class="btn btn-light">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Volver
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Selector de período -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light">
+            <h6 class="mb-0">
+                <i class="fas fa-calendar-alt me-2"></i>
+                Período del Reporte
+            </h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="fecha_desde" class="form-label">Desde:</label>
+                    <input type="date" 
+                           name="fecha_desde" 
+                           id="fecha_desde" 
+                           class="form-control"
+                           value="{{ fecha_desde|date:'Y-m-d' }}">
+                </div>
+
+                <div class="col-md-4">
+                    <label for="fecha_hasta" class="form-label">Hasta:</label>
+                    <input type="date" 
+                           name="fecha_hasta" 
+                           id="fecha_hasta" 
+                           class="form-control"
+                           value="{{ fecha_hasta|date:'Y-m-d' }}">
+                </div>
+
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="fas fa-sync-alt me-2"></i>
+                        Actualizar Reporte
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Mostrando datos desde {{ fecha_desde|date:"d/m/Y" }} hasta {{ fecha_hasta|date:"d/m/Y" }}
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventario Actual -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-warehouse me-2"></i>
+                Inventario Actual
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for inv in inventario_actual %}
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
+                    <div class="card denom-stat-card h-100">
+                        <div class="card-body text-center">
+                            <div class="mb-2">
+                                <strong>{{ inv.denominacion.divisa.code }}</strong>
+                            </div>
+                            <h5 class="text-primary mb-2">
+                                {{ inv.denominacion.valor_formateado }}
+                            </h5>
+                            <div class="mb-2">
+                                <span class="badge inventario-badge {% if inv.necesita_reposicion %}bg-danger{% else %}bg-success{% endif %}">
+                                    {{ inv.cantidad }} billetes
+                                </span>
+                            </div>
+                            <small class="text-muted d-block">
+                                Valor: {{ inv.denominacion.divisa.simbolo }}{{ inv.valor_total|floatformat:2|intcomma }}
+                            </small>
+                            {% if inv.necesita_reposicion %}
+                            <small class="text-danger d-block mt-1">
+                                <i class="fas fa-exclamation-triangle"></i> Requiere reposición
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info text-center" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No hay inventario de denominaciones registrado
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas por Divisa -->
+    {% if stats_por_divisa %}
+    {% for divisa_code, divisa_stats in stats_por_divisa.items %}
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                <i class="fas fa-flag me-2"></i>
+                Uso de Denominaciones - {{ divisa_code }}
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Entregas (Retiros) -->
+                <div class="col-lg-6 mb-3">
+                    <div class="card bg-light h-100">
+                        <div class="card-header bg-warning text-dark">
+                            <h6 class="mb-0">
+                                <i class="fas fa-arrow-right me-2"></i>
+                                Billetes Entregados (Retiros)
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            {% if divisa_stats.entregas %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Denominación</th>
+                                            <th class="text-center">Billetes</th>
+                                            <th class="text-center">Operaciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in divisa_stats.entregas %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ item.nombre }}</strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                    {{ divisa_code }} {{ item.valor|currency }}
+                                                </small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-warning text-dark">
+                                                    {{ item.total_billetes }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-info">
+                                                    {{ item.total_operaciones }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <td><strong>TOTAL</strong></td>
+                                            <td class="text-center">
+                                                <strong>
+                                                    {% widthratio divisa_stats.entregas|length 1 1 as total_ent %}
+                                                    {{ total_ent }}
+                                                </strong>
+                                            </td>
+                                            <td colspan="2"></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                            <!-- Gráfico de entregas -->
+                            <div class="chart-container mt-3">
+                                <canvas id="chartEntregas{{ divisa_code }}"></canvas>
+                            </div>
+                            {% else %}
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-2x mb-2"></i>
+                                <p>No hay entregas registradas en este período</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recepciones (Ventas) -->
+                <div class="col-lg-6 mb-3">
+                    <div class="card bg-light h-100">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Billetes Recibidos (Ventas)
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            {% if divisa_stats.recepciones %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Denominación</th>
+                                            <th class="text-center">Billetes</th>
+                                            <th class="text-center">Operaciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in divisa_stats.recepciones %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ item.nombre }}</strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                    {{ divisa_code }} {{ item.valor|currency }}
+                                                </small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-success">
+                                                    {{ item.total_billetes }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-info">
+                                                    {{ item.total_operaciones }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <td><strong>TOTAL</strong></td>
+                                            <td class="text-center">
+                                                <strong>
+                                                    {% widthratio divisa_stats.recepciones|length 1 1 as total_rec %}
+                                                    {{ total_rec }}
+                                                </strong>
+                                            </td>
+                                            <td colspan="2"></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                            <!-- Gráfico de recepciones -->
+                            <div class="chart-container mt-3">
+                                <canvas id="chartRecepciones{{ divisa_code }}"></canvas>
+                            </div>
+                            {% else %}
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-2x mb-2"></i>
+                                <p>No hay recepciones registradas en este período</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen comparativo -->
+            <div class="card bg-light mt-3">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="fas fa-balance-scale me-2"></i>
+                        Resumen Comparativo - {{ divisa_code }}
+                    </h6>
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <h4 class="text-warning mb-0">
+                                {% widthratio divisa_stats.entregas|length 1 1 as total_ent_billetes %}
+                                {{ total_ent_billetes|default:0 }}
+                            </h4>
+                            <small class="text-muted">Billetes Entregados</small>
+                        </div>
+                        <div class="col-md-4">
+                            <h4 class="text-success mb-0">
+                                {% widthratio divisa_stats.recepciones|length 1 1 as total_rec_billetes %}
+                                {{ total_rec_billetes|default:0 }}
+                            </h4>
+                            <small class="text-muted">Billetes Recibidos</small>
+                        </div>
+                        <div class="col-md-4">
+                            <h4 class="{% if total_rec_billetes > total_ent_billetes %}text-success{% else %}text-danger{% endif %} mb-0">
+                                {% widthratio total_rec_billetes 1 1 as rec %}
+                                {% widthratio total_ent_billetes 1 1 as ent %}
+                                {% widthratio rec 1 1 as neto %}
+                                {% widthratio ent 1 1 as neto2 %}
+                                {{ rec|add:"-"|add:ent|default:0 }}
+                            </h4>
+                            <small class="text-muted">Balance Neto</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        No hay estadísticas de uso de denominaciones en el período seleccionado.
+    </div>
+    {% endif %}
+
+    <!-- Botones de acción -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <button onclick="window.print()" class="btn btn-primary me-2">
+                        <i class="fas fa-print me-2"></i>
+                        Imprimir Reporte
+                    </button>
+                    <button onclick="exportarPDF()" class="btn btn-danger me-2">
+                        <i class="fas fa-file-pdf me-2"></i>
+                        Exportar a PDF
+                    </button>
+                    <a href="{% url 'tauser:reporte_operaciones' terminal_codigo=terminal.codigo %}" 
+                       class="btn btn-info me-2">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Ver Reporte de Operaciones
+                    </a>
+                    <a href="{% url 'tauser:historial_denominaciones' terminal_codigo=terminal.codigo %}" 
+                       class="btn btn-secondary">
+                        <i class="fas fa-history me-2"></i>
+                        Ver Historial
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+// Colores para los gráficos
+const coloresEntregas = [
+    'rgba(255, 193, 7, 0.8)',
+    'rgba(255, 152, 0, 0.8)',
+    'rgba(255, 87, 34, 0.8)',
+    'rgba(244, 67, 54, 0.8)',
+];
+
+const coloresRecepciones = [
+    'rgba(76, 175, 80, 0.8)',
+    'rgba(139, 195, 74, 0.8)',
+    'rgba(205, 220, 57, 0.8)',
+    'rgba(156, 204, 101, 0.8)',
+];
+
+{% for divisa_code, divisa_stats in stats_por_divisa.items %}
+
+// Gráfico de entregas para {{ divisa_code }}
+{% if divisa_stats.entregas %}
+const ctxEntregas{{ divisa_code }} = document.getElementById('chartEntregas{{ divisa_code }}');
+if (ctxEntregas{{ divisa_code }}) {
+    new Chart(ctxEntregas{{ divisa_code }}, {
+        type: 'bar',
+        data: {
+            labels: [
+                {% for item in divisa_stats.entregas %}
+                '{{ item.nombre|escapejs }}'{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Cantidad de Billetes',
+                data: [
+                    {% for item in divisa_stats.entregas %}
+                    {{ item.total_billetes }}{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                backgroundColor: coloresEntregas,
+                borderColor: coloresEntregas.map(c => c.replace('0.8', '1')),
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Billetes Entregados por Denominación'
+                }
+            }
+        }
+    });
+}
+{% endif %}
+
+// Gráfico de recepciones para {{ divisa_code }}
+{% if divisa_stats.recepciones %}
+const ctxRecepciones{{ divisa_code }} = document.getElementById('chartRecepciones{{ divisa_code }}');
+if (ctxRecepciones{{ divisa_code }}) {
+    new Chart(ctxRecepciones{{ divisa_code }}, {
+        type: 'bar',
+        data: {
+            labels: [
+                {% for item in divisa_stats.recepciones %}
+                '{{ item.nombre|escapejs }}'{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Cantidad de Billetes',
+                data: [
+                    {% for item in divisa_stats.recepciones %}
+                    {{ item.total_billetes }}{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                backgroundColor: coloresRecepciones,
+                borderColor: coloresRecepciones.map(c => c.replace('0.8', '1')),
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Billetes Recibidos por Denominación'
+                }
+            }
+        }
+    });
+}
+{% endif %}
+
+{% endfor %}
+
+function exportarPDF() {
+    alert('Función de exportación a PDF en desarrollo');
+    // Aquí puedes implementar la generación de PDF con jsPDF o similar
+}
+
+// Animar entrada de tarjetas
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.denom-stat-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(10px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.4s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 50);
+    });
+});
+</script>
+{% endblock %}

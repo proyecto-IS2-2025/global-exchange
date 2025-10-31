@@ -1,0 +1,212 @@
+{% extends 'tauser_external/base_external.html' %}
+{% load static %}
+{% load tauser_filters %}
+
+{% block title %}Procesar Pago - {{ terminal.codigo }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-cash-register text-success me-2"></i>
+                    Procesar Pago
+                </h2>
+                <a href="{% url 'tauser_external:ver_transacciones' terminal.codigo %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Volver
+                </a>
+            </div>
+
+            <!-- Información del Cliente -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i>
+                        Información del Cliente
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <strong>Cliente:</strong> {{ cliente.persona.nombre_completo }}
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <strong>Documento:</strong> {{ cliente.persona.numero_documento }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detalles de la Transacción -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exchange-alt me-2"></i>
+                        Detalles de la Transacción
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>Número de Transacción:</strong><br>
+                                <span class="badge bg-dark fs-6">{{ transaccion.numero_transaccion }}</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>Tipo de Operación:</strong><br>
+                                <span class="badge bg-primary fs-6">{{ transaccion.get_tipo_operacion_display|title }}</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>Divisa Origen:</strong><br>
+                                {{ transaccion.divisa_origen.name }} ({{ transaccion.divisa_origen.code }})
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>Monto Origen:</strong><br>
+                                <span class="fs-5">{{ transaccion.divisa_origen.symbol }}{{ transaccion.monto_origen|currency }}</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>Divisa Destino:</strong><br>
+                                {{ transaccion.divisa_destino.name }} ({{ transaccion.divisa_destino.code }})
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>Monto a Pagar:</strong><br>
+                                <span class="fs-4 text-success fw-bold">{{ transaccion.divisa_destino.symbol }}{{ transaccion.monto_destino|currency }}</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <p class="mb-2">
+                                <strong>Tasa de Cambio:</strong> {{ transaccion.tasa_de_cambio_aplicada|currency }}
+                            </p>
+                            <p class="mb-0">
+                                <strong>Estado:</strong> 
+                                <span class="badge bg-warning text-dark">{{ transaccion.get_estado_display|title }}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulario de Pago -->
+            <div class="card shadow-sm border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-money-bill-wave me-2"></i>
+                        Confirmar Pago
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Instrucciones
+                            </h6>
+                            <ul class="mb-0 small">
+                                <li>Verifique que el monto sea correcto: <strong>{{ transaccion.divisa_destino.symbol }}{{ transaccion.monto_destino|currency }}</strong></li>
+                                <li>Reciba el pago del cliente en efectivo o mediante el medio acordado</li>
+                                <li>Presione "Confirmar Pago" solo después de recibir el dinero</li>
+                            </ul>
+                        </div>
+
+                        <!-- Resumen del Pago -->
+                        <div class="card mb-4 bg-light">
+                            <div class="card-body text-center">
+                                <p class="mb-2 text-muted">Monto Total a Recibir</p>
+                                <h2 class="display-4 text-success mb-0">
+                                    {{ transaccion.divisa_destino.symbol }}{{ transaccion.monto_destino|currency }}
+                                </h2>
+                            </div>
+                        </div>
+
+                        <!-- Campo de observaciones opcional -->
+                        <div class="mb-4">
+                            <label for="observaciones" class="form-label">Observaciones (opcional)</label>
+                            <textarea class="form-control" 
+                                      id="observaciones" 
+                                      name="observaciones" 
+                                      rows="3"
+                                      placeholder="Ej: Pago recibido en billetes de 100.000"></textarea>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'tauser_external:ver_transacciones' terminal.codigo %}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times me-1"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-check me-1"></i> Confirmar Pago Recibido
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Advertencia -->
+            <div class="alert alert-warning mt-4">
+                <h6 class="alert-heading">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Importante
+                </h6>
+                <p class="mb-0 small">
+                    Solo confirme el pago después de haber recibido físicamente el dinero del cliente. 
+                    Esta acción actualizará el estado de la transacción y no se puede deshacer.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.card-header {
+    border-bottom: none;
+    padding: 1rem 1.5rem;
+}
+
+.display-4 {
+    font-weight: 700;
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+    .d-flex.gap-2 {
+        flex-direction: column;
+    }
+    
+    .d-flex.gap-2 .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,365 @@
+{% extends 'base_tauser.html' %}
+{% load static %}
+{% load tauser_filters %}
+
+{% block title %}Retiro Exitoso - {{ terminal.nombre }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        min-height: 100vh;
+    }
+
+    .success-container {
+        max-width: 700px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .success-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .success-header {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 3rem 2rem;
+        text-align: center;
+    }
+
+    .success-icon {
+        width: 100px;
+        height: 100px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        animation: checkmark 0.8s ease-in-out;
+    }
+
+    @keyframes checkmark {
+        0% {
+            transform: scale(0);
+            opacity: 0;
+        }
+        50% {
+            transform: scale(1.2);
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .success-icon i {
+        font-size: 4rem;
+        color: #10b981;
+    }
+
+    .success-header h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+    }
+
+    .success-header p {
+        font-size: 1.1rem;
+        opacity: 0.95;
+        margin: 0;
+    }
+
+    .success-body {
+        padding: 2.5rem;
+    }
+
+    .amount-display {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border: 3px solid #10b981;
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .amount-label {
+        font-size: 1rem;
+        color: #065f46;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+
+    .amount-value {
+        font-size: 3rem;
+        font-weight: 700;
+        color: #047857;
+        line-height: 1;
+    }
+
+    .amount-currency {
+        font-size: 1.2rem;
+        color: #059669;
+        margin-left: 0.5rem;
+    }
+
+    .info-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-section h3 {
+        font-size: 1.1rem;
+        color: #1e293b;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .info-value {
+        color: #1e293b;
+        font-weight: 600;
+        text-align: right;
+    }
+
+    .desglose-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .desglose-section h3 {
+        font-size: 1.1rem;
+        color: #1e293b;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .desglose-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: white;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+        border-left: 4px solid #10b981;
+    }
+
+    .desglose-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .desglose-denom {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .desglose-qty {
+        font-size: 1rem;
+        color: #059669;
+        font-weight: 600;
+    }
+
+    .instruction-box {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border-left: 4px solid #f59e0b;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .instruction-box i {
+        color: #92400e;
+        font-size: 1.5rem;
+        margin-right: 1rem;
+    }
+
+    .instruction-text {
+        color: #78350f;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .btn-home {
+        width: 100%;
+        padding: 1.25rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: block;
+        text-align: center;
+    }
+
+    .btn-home:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
+
+    .countdown-text {
+        text-align: center;
+        color: #64748b;
+        margin-top: 1rem;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="success-container">
+    <div class="success-card">
+        <div class="success-header">
+            <div class="success-icon">
+                <i class="fas fa-check"></i>
+            </div>
+            <h1>¡Retiro Exitoso!</h1>
+            <p>Por favor, recoja su dinero del dispensador</p>
+        </div>
+
+        <div class="success-body">
+            <!-- Instrucción destacada -->
+            <div class="instruction-box d-flex align-items-center">
+                <i class="fas fa-hand-holding-usd"></i>
+                <p class="instruction-text">
+                    Su dinero está siendo dispensado. Por favor, retire los billetes del dispensador.
+                </p>
+            </div>
+
+            <!-- Monto retirado -->
+            <div class="amount-display">
+                <div class="amount-label">
+                    <i class="fas fa-money-bill-wave me-2"></i>Monto Retirado
+                </div>
+                <div class="amount-value">
+                    {{ retiro.divisa_simbolo }}{{ retiro.monto|currency }}
+                    <span class="amount-currency">{{ retiro.divisa_code }}</span>
+                </div>
+            </div>
+
+            <!-- Desglose de denominaciones -->
+            {% if retiro.desglose %}
+            <div class="desglose-section">
+                <h3><i class="fas fa-list-ul me-2"></i>Billetes Dispensados</h3>
+                {% for item in retiro.desglose %}
+                <div class="desglose-item">
+                    <span class="desglose-denom">
+                        <i class="fas fa-money-bill me-2"></i>
+                        {{ item.divisa_simbolo }}{{ item.denominacion }}
+                    </span>
+                    <span class="desglose-qty">
+                        × {{ item.cantidad }} billete{{ item.cantidad|pluralize }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Información de la transacción -->
+            <div class="info-section">
+                <h3><i class="fas fa-info-circle me-2"></i>Detalles de la Operación</h3>
+                <div class="info-row">
+                    <span class="info-label">Terminal</span>
+                    <span class="info-value">{{ retiro.terminal_nombre }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Nº Transacción</span>
+                    <span class="info-value font-monospace">{{ retiro.numero_transaccion }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Código TAUSER</span>
+                    <span class="info-value font-monospace">{{ retiro.tauser_code }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Cliente</span>
+                    <span class="info-value">{{ retiro.cliente_nombre }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Divisa</span>
+                    <span class="info-value">{{ retiro.divisa_nombre }} ({{ retiro.divisa_code }})</span>
+                </div>
+            </div>
+
+            <!-- Botón para volver al inicio -->
+            <a href="{% url 'tauser_external:home' %}" class="btn-home">
+                <i class="fas fa-home me-2"></i>Finalizar y Volver al Inicio
+            </a>
+
+            <p class="countdown-text">
+                <i class="fas fa-clock me-1"></i>
+                Redirección automática en <span id="countdown">30</span> segundos...
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Countdown para redirección automática
+    let seconds = 30;
+    const countdownEl = document.getElementById('countdown');
+    
+    const interval = setInterval(function() {
+        seconds--;
+        countdownEl.textContent = seconds;
+        
+        if (seconds <= 0) {
+            clearInterval(interval);
+            window.location.href = "{% url 'tauser_external:home' %}";
+        }
+    }, 1000);
+    
+    // Efecto de sonido de éxito (opcional)
+    try {
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTUIGmO17u6sVhMPTaXh8LdnHAU1ltd/4MdBCAxTp+PxtmMcBjiR1/PMeSsGI3fH8N+RQQoUXrTp66lWFApGn+DyvmwhBSuBzvLZiTUIGmO17u6sVhMPTaXh8LdnHAU1ltd/4MdBCAxTp+PxtmMcBjiR1/PMeSsGI3fH8N+RQQoUXrTp66lWFApGn+DyvmwhBSuBzvLZiTUIGmO17u6sVhMPTaXh8LdnHAU1ltd/4MdBCAxTp+PxtmMcBjiR1/PMeSsGI3fH8N+RQQoUXrTp66lWFApGn+DyvmwhBSuBzvLZiTUIGmO17u6sVhMPTaXh8LdnHAU1ltd/4MdBCAxTp+PxtmMcBjiR1/PMeSsGI3fH8N+RQQoUXrTp66lWFApGn+DyvmwhBSuBzvLZiTUIGmO17u6sVhMPTaXh8LdnHAU1ltd/4MdBCAxTp+PxtmMcBjiR1/PMeSsGI3fH8N+RQQoUXrTp66lWFApGn+DyvmwhBSuBzvLZiTUIGmO17u6sVhMPTaXh8LdnHAU1ltd/4MdBCAxTp+PxtmMcBjiR1/PMeSsGI3fH8N+RQQoUXrTp66lWFApGn+DyvmwhBSuBzvLZiTUIGmO17u6sVhMPTaXh8LdnHAU1ltd/4MdBCAxTp+PxtmMcBjiR1/PMeSsGI3fH8N+RQQoUXrTp66lWFApGn+DyvmwhBSuBzvLZiTUIGmO17u6sVhMPTaXh8LdnHAU1ltd/4MdBCAxTp+PxtmMcBjiR1/PMeSsGI3fH8N+RQQoUXrTp66lWFApGn+DyvmwhBSuBzvLZiTUIGmO17u6sVhMPTaXh8LdnHAU1ltd/4MdBCAxTp+PxtmMcBjiR1/PMeSsGI3fH8N+RQQoUXrTp66lWFApGn+DyvmwhBSuBzvLZiTUIGmO17u6sVhMPTaXh8LdnHAU1ltd/4MdBCAxTp+PxtmMcBjiR1/PMeSsGI3fH8N+RQQoUXrTp66lWFApGn+DyvmwhBSuBzvLZiTUIGmO17u6sVhMPTaXh8LdnHAU1ltd/4MdBCAxTp+PxtmMcBjiR1/PMeSsGI3fH8N+RQQoUXrTp66lWFApGn+DyvmwhBSuBzvLZiTUIGmO17u6sVhMPTaXh8LdnHAU1ltd/4MdBCAxTp+PxtmMcBjiR1/PMeSsGI3fH8N+RQQoUXrTp66lWFApGn+DyvmwhBSuBzvLZiTUIGmO17u6sVhMPTaXh8LdnHAU1ltd/4MdBCAxTp+PxtmMcBjiR1/PMeSsGI3fH8N+RQQoUXrTp66lWFApGn+DyvmwhBSuBzvLZiTUIGmO17u6sVhMPTaXh8LdnHAU1ltd/4MdBCAxTp+PxtmMcBjiR1/PMeSsGI3fH8N+RQQoUXrTp66lWFApGn+DyvmwhBSuBzvLZiTUIGmO17u6sVhMPTaXh8LdnHAU1ltd/4MdBCAxTp+PxtmMcBjiR1/PMeSsGI3fH8N+RQQoUXrTp66lWFApGn+DyvmwhBQ==');
+        audio.play().catch(e => console.log('Audio play failed:', e));
+    } catch(e) {
+        console.log('Audio not supported');
+    }
+});
+</script>
+{% endblock %}
