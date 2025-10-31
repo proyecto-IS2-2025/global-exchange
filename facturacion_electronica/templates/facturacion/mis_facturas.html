@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2><i class="fas fa-receipt"></i> {{ titulo }}</h2>
+            <p class="text-muted">Tus facturas electrónicas</p>
+        </div>
+    </div>
+
+    <!-- Listado de facturas del cliente -->
+    <div class="card">
+        <div class="card-body">
+            {% if facturas %}
+            <div class="row">
+                {% for factura in facturas %}
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <strong>{{ factura.numero_factura }}</strong>
+                            {% if factura.estado == 'aprobado' %}
+                                <span class="badge bg-success"><i class="fas fa-check-circle"></i> Aprobado</span>
+                            {% elif factura.estado == 'rechazado' %}
+                                <span class="badge bg-danger"><i class="fas fa-times-circle"></i> Rechazado</span>
+                            {% elif factura.estado == 'confirmado' or factura.estado == 'borrador' %}
+                                <span class="badge bg-warning text-dark"><i class="fas fa-hourglass-half"></i> Procesando</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ factura.estado|title }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-2">
+                                <strong>Fecha:</strong> {{ factura.fecha_emision|date:"d/m/Y H:i" }}
+                            </p>
+                            <p class="mb-2">
+                                <strong>Transacción:</strong> {{ factura.transaccion.numero_transaccion }}
+                            </p>
+                            {% if factura.cdc %}
+                            <p class="mb-2">
+                                <strong>CDC:</strong> <small class="font-monospace">{{ factura.cdc }}</small>
+                            </p>
+                            {% endif %}
+                            
+                            {# Mensaje de procesamiento #}
+                            {% if factura.estado == 'confirmado' or factura.estado == 'borrador' %}
+                            <div class="alert alert-warning p-2 mb-0 mt-2">
+                                <small>
+                                    <i class="fas fa-spinner fa-spin"></i> 
+                                    <strong>Procesando en SIFEN...</strong><br>
+                                    Espere 30-60 segundos y presione <kbd>F5</kbd> para actualizar
+                                </small>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer">
+                            <a href="{% url 'facturacion:detalle_factura' factura.id %}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-eye"></i> Ver Detalle
+                            </a>
+                            
+                            {# Botón PDF - Solo activo si tiene CDC válido, está aprobado Y tiene PDF #}
+                            {% if factura.estado == 'aprobado' and factura.cdc and factura.cdc != '0' and factura.url_kude_pdf and '.pdf' in factura.url_kude_pdf %}
+                                <a href="{% url 'facturacion:descargar_pdf' factura.id %}" class="btn btn-sm btn-success" target="_blank">
+                                    <i class="fas fa-file-pdf"></i> Descargar PDF
+                                </a>
+                            {% elif factura.estado == 'aprobado' and factura.cdc and factura.cdc != '0' %}
+                                <button class="btn btn-sm btn-warning text-dark" disabled title="PDF generándose. Presione F5 para actualizar.">
+                                    <i class="fas fa-hourglass-half"></i> PDF generándose...
+                                </button>
+                            {% elif factura.estado == 'confirmado' or factura.estado == 'borrador' or not factura.cdc or factura.cdc == '0' %}
+                                <button class="btn btn-sm btn-warning text-dark" disabled title="Esperando aprobación de SIFEN. Presione F5 para actualizar.">
+                                    <i class="fas fa-hourglass-half"></i> Procesando...
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Paginación -->
+            {% if facturas.has_other_pages %}
+            <nav aria-label="Paginación de facturas" class="mt-3">
+                <ul class="pagination justify-content-center">
+                    {% if facturas.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ facturas.previous_page_number }}">Anterior</a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">Página {{ facturas.number }} de {{ facturas.paginator.num_pages }}</span>
+                    </li>
+
+                    {% if facturas.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ facturas.next_page_number }}">Siguiente</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <p class="text-muted">Aún no tienes facturas electrónicas.</p>
+                <p class="text-muted">Tus facturas aparecerán aquí cuando completes transacciones.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

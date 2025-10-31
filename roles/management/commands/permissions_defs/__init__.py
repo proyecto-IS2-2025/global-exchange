@@ -9,8 +9,8 @@ from .medios_pago import PERMISOS_MEDIOS_PAGO
 from .transacciones import PERMISOS_TRANSACCIONES
 from .usuarios import PERMISOS_USUARIOS
 from .mfa import PERMISOS_MFA 
-from .roles import PERMISOS_ROLES  # ← YA EXISTÍA, pero ahora con más permisos
-from .tauser import PERMISOS_TAUSER
+from .roles import PERMISOS_ROLES
+from .facturacion_electronica import PERMISOS_FACTURACION
 
 # Consolidar todos los permisos personalizados del sistema
 TODOS_LOS_PERMISOS = (
@@ -21,7 +21,7 @@ TODOS_LOS_PERMISOS = (
     PERMISOS_USUARIOS +
     PERMISOS_MFA +
     PERMISOS_ROLES +
-    PERMISOS_TAUSER
+    PERMISOS_FACTURACION
 )
 
 __all__ = [
@@ -33,5 +33,5 @@ __all__ = [
     'PERMISOS_USUARIOS',
     'PERMISOS_MFA',
     'PERMISOS_ROLES',
-    'PERMISOS_TAUSER',
+    'PERMISOS_FACTURACION',
 ]

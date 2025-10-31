@@ -37,12 +37,12 @@ class MFAConfig(models.Model):
     Solo debe existir un registro (singleton).
     """
     mfa_login_enabled = models.BooleanField(
-        default=True,
+        default=False,
         verbose_name="MFA en Login",
         help_text="Activar verificación MFA al iniciar sesión"
     )
     mfa_compra_enabled = models.BooleanField(
-        default=True,
+        default=False,
         verbose_name="MFA en Compra",
         help_text="Activar verificación MFA al confirmar una compra"
     )

@@ -1,0 +1,2 @@
+# Requirements para Facturación Electrónica
+psycopg2-binary>=2.9.0
