@@ -295,7 +295,7 @@ class Command(BaseCommand):
             'manage_catalogo_medios_pago',
             
             # ═══════════════════════════════════════════════════════════════
-            # FACTURACIÓN ELECTRÓNICA (11 custom - sin generación manual)
+            # FACTURACIÓN ELECTRÓNICA (12 custom - sin generación manual)
             # ═══════════════════════════════════════════════════════════════
             'view_facturas_propias',
             'view_facturas_asignadas',
@@ -308,9 +308,10 @@ class Command(BaseCommand):
             'download_kude_xml',
             'view_reporte_facturacion',
             'export_reporte_facturacion',
+            'manage_config_facturacion',  # ✅ Configurar sistema
             'sync_sifen',
         ]
-        # Total: 54 permisos custom (43 anteriores + 11 de facturación)
+        # Total: 55 permisos custom (43 anteriores + 12 de facturación)
         
         self._assign_permissions('administrador', codenames, verbose)
 
@@ -452,11 +453,10 @@ class Command(BaseCommand):
             'view_historial_descuentos',
             
             # ═══════════════════════════════════════════════════════════════
-            # TRANSACCIONES (3 custom - lectura)
+            # TRANSACCIONES (2 custom - SOLO lectura)
             # ═══════════════════════════════════════════════════════════════
             'view_transacciones_globales',
             'view_historial_transacciones',
-            'export_transacciones',
             
             # ═══════════════════════════════════════════════════════════════
             # DIVISAS (3 custom - lectura)
@@ -477,14 +477,13 @@ class Command(BaseCommand):
             'view_all_usuarios',
             
             # ═══════════════════════════════════════════════════════════════
-            # FACTURACIÓN ELECTRÓNICA (4 custom - solo lectura)
+            # FACTURACIÓN ELECTRÓNICA (3 custom - SOLO LECTURA)
             # ═══════════════════════════════════════════════════════════════
             'view_todas_facturas',
             'download_kude_pdf',
             'view_reporte_facturacion',
-            'export_reporte_facturacion',
         ]
-        # Total: 21 permisos custom (17 anteriores + 4 de facturación)
+        # Total: 19 permisos custom (17 anteriores - 1 transacción + 3 de facturación)
         
         self._assign_permissions('observador', codenames, verbose)
 
