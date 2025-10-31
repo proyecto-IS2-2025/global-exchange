@@ -231,13 +231,14 @@ def buscar_y_actualizar_pdf(factura):
                     xml_encontrado = href
             
             # Actualizar URLs si se encontraron archivos
+            # Nota: Reemplazar host.docker.internal por localhost para que funcione desde el navegador
             if pdf_encontrado:
-                nueva_url_pdf = f"{dir_url}{pdf_encontrado}"
+                nueva_url_pdf = f"{dir_url}{pdf_encontrado}".replace('host.docker.internal', 'localhost')
                 factura.url_kude_pdf = nueva_url_pdf
                 logger.info(f"📄 PDF encontrado para {factura.numero_factura}: {pdf_encontrado}")
             
             if xml_encontrado:
-                nueva_url_xml = f"{dir_url}{xml_encontrado}"
+                nueva_url_xml = f"{dir_url}{xml_encontrado}".replace('host.docker.internal', 'localhost')
                 factura.url_kude_xml = nueva_url_xml
                 logger.info(f"📄 XML encontrado para {factura.numero_factura}: {xml_encontrado}")
             
