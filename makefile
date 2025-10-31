@@ -118,7 +118,12 @@ loaddata:
 	poetry run python manage.py loaddata roles_data.json
 	poetry run python manage.py loaddata users_data.json
 	poetry run python manage.py loaddata clientes_data.json
-	poetry run python manage.py loaddata divisas_initial_data.json
+	poetry run python manage.py loaddata divisas_data.json
+	poetry run python manage.py loaddata denominaciones_data.json
+	poetry run python manage.py loaddata bancos_data.json
+	poetry run python manage.py loaddata billetera_data.json
+	poetry run python manage.py loaddata mediosfinancieros_data.json
+	poetry run python manage.py loaddata mediosfinancieroscliente_data.json
 	@echo "Datos iniciales cargados (local)."
 
 docs:
