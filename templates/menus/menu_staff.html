@@ -110,16 +110,6 @@
   </div>
   {% endif %}
 
-  {% if perms.facturacion_electronica.view_reporte_facturacion %}
-  <div class="col">
-    <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-hover animate-stagger delay-12">
-      <div class="display-3 mb-3"><i class="fas fa-chart-bar"></i></div>
-      <h6 class="fw-bold">Reportes de Facturación</h6>
-      <a href="{% url 'facturacion:reporte' %}" class="stretched-link"></a>
-    </div>
-  </div>
-  {% endif %}
-
 </div>
 
 {% if not perms.clientes.view_all_clientes and not perms.clientes.view_assigned_clientes and not perms.divisas.view_divisa and not perms.transacciones.view_transacciones_asignadas and not perms.clientes.view_limites_operacion and not perms.clientes.manage_descuentos and not perms.medios_pago.manage_catalogo_medios_pago and not perms.divisas.manage_cotizaciones_segmento and not perms.clientes.manage_cliente_assignment and not user.is_superuser %}

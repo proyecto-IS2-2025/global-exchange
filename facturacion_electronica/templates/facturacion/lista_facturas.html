@@ -2,11 +2,13 @@
 {% load static %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container-fluid mt-4">
     <div class="row mb-4">
         <div class="col-md-12">
             <h2><i class="fas fa-file-invoice"></i> {{ titulo }}</h2>
-            <p class="text-muted">Listado completo de facturas electrónicas - Agrupadas por cliente</p>
+            <p class="text-muted">
+                {{ total_clientes }} cliente{{ total_clientes|pluralize }} con {{ total_facturas }} factura{{ total_facturas|pluralize }}
+            </p>
         </div>
     </div>
 
@@ -15,35 +17,34 @@
         <div class="card-body">
             <form method="get" class="row g-3">
                 <div class="col-md-3">
-                    <label class="form-label">Buscar</label>
-                    <input type="text" name="q" class="form-control" placeholder="Número, CDC..." value="{{ request.GET.q }}">
+                    <label class="form-label"><i class="fas fa-search"></i> Buscar</label>
+                    <input type="text" name="q" class="form-control" placeholder="Número, CDC, Cliente..." value="{{ busqueda }}">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Estado</label>
-                    <select name="estado" class="form-select">
-                        <option value="">Todos los estados</option>
-                        <option value="borrador" {% if request.GET.estado == 'borrador' %}selected{% endif %}>Borrador</option>
-                        <option value="confirmado" {% if request.GET.estado == 'confirmado' %}selected{% endif %}>Confirmado</option>
-                        <option value="aprobado" {% if request.GET.estado == 'aprobado' %}selected{% endif %}>Aprobado</option>
-                        <option value="rechazado" {% if request.GET.estado == 'rechazado' %}selected{% endif %}>Rechazado</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Cliente</label>
-                    <select name="cliente" class="form-select">
-                        <option value="">Todos los clientes</option>
-                        {% for cliente in clientes %}
-                        <option value="{{ cliente.id }}" {% if request.GET.cliente == cliente.id|stringformat:"s" %}selected{% endif %}>
-                            {{ cliente.nombre_completo }}
+                    <label class="form-label"><i class="fas fa-tags"></i> Segmento</label>
+                    <select name="segmento" class="form-select">
+                        <option value="">Todos los segmentos</option>
+                        {% for segmento in segmentos %}
+                        <option value="{{ segmento.id }}" {% if segmento_filtro == segmento.id|stringformat:"s" %}selected{% endif %}>
+                            {{ segmento.name }}
                         </option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-search"></i> Buscar
+                <div class="col-md-3">
+                    <label class="form-label"><i class="fas fa-traffic-light"></i> Estado</label>
+                    <select name="estado" class="form-select">
+                        <option value="">Todos los estados</option>
+                        <option value="pendiente" {% if estado_filtro == 'pendiente' %}selected{% endif %}>⏳ Pendiente</option>
+                        <option value="aprobado" {% if estado_filtro == 'aprobado' %}selected{% endif %}>✅ Aprobado</option>
+                        <option value="rechazado" {% if estado_filtro == 'rechazado' %}selected{% endif %}>❌ Rechazado</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1">
+                        <i class="fas fa-filter"></i> Filtrar
                     </button>
-                    <a href="{% url 'facturacion:lista' %}" class="btn btn-secondary ms-2">
+                    <a href="{% url 'facturacion:lista' %}" class="btn btn-secondary" title="Limpiar filtros">
                         <i class="fas fa-times"></i>
                     </a>
                 </div>
@@ -51,110 +52,150 @@
         </div>
     </div>
 
-    <!-- Tabla de facturas -->
+    <!-- Lista de clientes con acordeón -->
+    {% if clientes_con_facturas %}
+    <div class="accordion" id="acordeonClientes">
+        {% for cliente, datos in clientes_con_facturas %}
+        <div class="accordion-item mb-3 shadow-sm">
+            <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                        data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false" 
+                        aria-controls="collapse{{ forloop.counter }}">
+                    <div class="d-flex w-100 justify-content-between align-items-center pe-3">
+                        <div>
+                            <strong><i class="fas fa-user"></i> {{ cliente.nombre_completo }}</strong>
+                            <small class="text-muted ms-2">
+                                {% if cliente.segmento %}
+                                    <span class="badge bg-info">{{ cliente.segmento.name }}</span>
+                                {% endif %}
+                                <span class="badge bg-secondary">{{ cliente.cedula }}</span>
+                            </small>
+                        </div>
+                        <div>
+                            <span class="badge bg-primary me-1">{{ datos.total_facturas }} factura{{ datos.total_facturas|pluralize }}</span>
+                            {% if datos.total_aprobadas > 0 %}
+                            <span class="badge bg-success me-1">{{ datos.total_aprobadas }} aprobada{{ datos.total_aprobadas|pluralize }}</span>
+                            {% endif %}
+                            {% if datos.total_rechazadas > 0 %}
+                            <span class="badge bg-danger">{{ datos.total_rechazadas }} rechazada{{ datos.total_rechazadas|pluralize }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </button>
+            </h2>
+            <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse" 
+                 aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#acordeonClientes">
+                <div class="accordion-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Número</th>
+                                    <th>Fecha</th>
+                                    <th>Transacción</th>
+                                    <th>Estado</th>
+                                    <th>SIFEN</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for factura in datos.facturas %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ factura.numero_factura }}</strong>
+                                        {% if factura.cdc and factura.cdc != '0' %}
+                                        <br><small class="text-muted" style="font-size: 0.75rem;">{{ factura.cdc|slice:":20" }}...</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ factura.fecha_emision|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        <a href="{% url 'transacciones:detalle' factura.transaccion.numero_transaccion %}" 
+                                           target="_blank" class="text-decoration-none">
+                                            <i class="fas fa-external-link-alt"></i> {{ factura.transaccion.numero_transaccion }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        {% if factura.estado == 'aprobado' %}
+                                            <span class="badge bg-success">✅ Aprobado</span>
+                                        {% elif factura.estado == 'rechazado' %}
+                                            <span class="badge bg-danger">❌ Rechazado</span>
+                                        {% elif factura.estado == 'pendiente' %}
+                                            <span class="badge bg-warning text-dark">⏳ Pendiente</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ factura.estado|title }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if factura.estado_sifen %}
+                                            <small class="text-muted">{{ factura.estado_sifen }}</small>
+                                        {% else %}
+                                            <small class="text-muted">-</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{% url 'facturacion:detalle_factura' factura.id %}" 
+                                               class="btn btn-outline-primary" title="Ver detalle">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if factura.estado == 'aprobado' and factura.url_kude_pdf %}
+                                            <a href="{% url 'facturacion:descargar_pdf' factura.id %}" 
+                                               class="btn btn-outline-success" title="Descargar PDF" target="_blank">
+                                                <i class="fas fa-file-pdf"></i>
+                                            </a>
+                                            {% elif factura.cdc == '0' or not factura.cdc %}
+                                            <button class="btn btn-outline-warning" disabled title="Esperando CDC de SIFEN">
+                                                <i class="fas fa-hourglass-half"></i>
+                                            </button>
+                                            {% elif factura.estado == 'aprobado' and not factura.url_kude_pdf %}
+                                            <button class="btn btn-outline-info" disabled title="PDF en generación">
+                                                <i class="fas fa-spinner"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
     <div class="card">
-        <div class="card-body">
-            {% if facturas %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Número</th>
-                            <th>Fecha</th>
-                            <th>Transacción</th>
-                            <th>Cliente</th>
-                            <th>Estado</th>
-                            <th>SIFEN</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for factura in facturas %}
-                        <tr>
-                            <td>
-                                <strong>{{ factura.numero_factura }}</strong>
-                            </td>
-                            <td>{{ factura.fecha_emision|date:"d/m/Y H:i" }}</td>
-                            <td>
-                                <a href="{% url 'transacciones:detalle' factura.transaccion.numero_transaccion %}" target="_blank">
-                                    {{ factura.transaccion.numero_transaccion }}
-                                </a>
-                            </td>
-                            <td>{{ factura.transaccion.cliente.nombre_completo }}</td>
-                            <td>
-                                {% if factura.estado == 'aprobado' %}
-                                    <span class="badge bg-success">Aprobado</span>
-                                {% elif factura.estado == 'rechazado' %}
-                                    <span class="badge bg-danger">Rechazado</span>
-                                {% elif factura.estado == 'procesando' %}
-                                    <span class="badge bg-warning">Procesando</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">{{ factura.estado|title }}</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if factura.estado_sifen %}
-                                    <small class="text-muted">{{ factura.estado_sifen }}</small>
-                                {% else %}
-                                    <small class="text-muted">-</small>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a href="{% url 'facturacion:detalle_factura' factura.id %}" class="btn btn-sm btn-primary" title="Ver detalle">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                {% if factura.estado == 'aprobado' and factura.url_kude_pdf %}
-                                <a href="{% url 'facturacion:descargar_pdf' factura.id %}" class="btn btn-sm btn-success" title="Descargar PDF" target="_blank">
-                                    <i class="fas fa-file-pdf"></i>
-                                </a>
-                                {% elif factura.estado_sifen == 'Procesando' or factura.estado_sifen == 'Sol.Aprobacion' or factura.estado_sifen == 'Confirmado' %}
-                                <button class="btn btn-sm btn-warning" disabled title="Procesando en SIFEN">
-                                    <i class="fas fa-hourglass-half"></i>
-                                </button>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Paginación -->
-            {% if facturas.has_other_pages %}
-            <nav aria-label="Paginación de facturas">
-                <ul class="pagination justify-content-center">
-                    {% if facturas.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page=1">Primera</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ facturas.previous_page_number }}">Anterior</a>
-                    </li>
-                    {% endif %}
-
-                    <li class="page-item active">
-                        <span class="page-link">Página {{ facturas.number }} de {{ facturas.paginator.num_pages }}</span>
-                    </li>
-
-                    {% if facturas.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ facturas.next_page_number }}">Siguiente</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ facturas.paginator.num_pages }}">Última</a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </nav>
-            {% endif %}
-
-            {% else %}
-            <div class="text-center py-5">
-                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                <p class="text-muted">No se encontraron facturas.</p>
-            </div>
-            {% endif %}
+        <div class="card-body text-center py-5">
+            <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">No se encontraron facturas</h4>
+            <p class="text-muted">Intenta ajustar los filtros o eliminarlos para ver más resultados.</p>
+            <a href="{% url 'facturacion:lista' %}" class="btn btn-primary">
+                <i class="fas fa-redo"></i> Limpiar filtros
+            </a>
         </div>
     </div>
+    {% endif %}
 </div>
+
+<style>
+.accordion-button:not(.collapsed) {
+    background-color: #e7f1ff;
+    color: #0056b3;
+}
+
+.accordion-button:focus {
+    box-shadow: none;
+    border-color: rgba(0,0,0,.125);
+}
+
+.accordion-item {
+    border-radius: 8px !important;
+    overflow: hidden;
+}
+
+.table-responsive {
+    border-radius: 0 0 8px 8px;
+}
+</style>
 {% endblock %}

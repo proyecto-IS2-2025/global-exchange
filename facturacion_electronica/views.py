@@ -30,11 +30,9 @@ logger = logging.getLogger(__name__)
 @require_permission('facturacion_electronica.view_todas_facturas')
 def lista_facturas(request):
     """
-    Lista todas las facturas del sistema (solo para staff con permisos)
-    Permite filtrar por estado y cliente, ordenadas de más nueva a más vieja
+    Lista facturas electrónicas agrupadas por cliente
+    Permite filtrar por segmento, estado y búsqueda
     """
-    facturas = FacturaElectronica.objects.all().select_related('transaccion', 'transaccion__cliente').order_by('-fecha_emision')
-    
     # ═══ AUTO-SINCRONIZAR FACTURAS PENDIENTES ═══
     # Buscar facturas sin CDC válido o en estado pendiente
     facturas_pendientes = FacturaElectronica.objects.filter(
@@ -61,22 +59,25 @@ def lista_facturas(request):
             except Exception as e:
                 logger.warning(f"Error buscando PDF para {factura.numero_factura}: {e}")
     
-    # Refrescar la consulta después de las actualizaciones
-    facturas = FacturaElectronica.objects.all().select_related('transaccion', 'transaccion__cliente').order_by('-fecha_emision')
+    # ═══ OBTENER TODAS LAS FACTURAS ═══
+    facturas = FacturaElectronica.objects.all().select_related(
+        'transaccion', 
+        'transaccion__cliente',
+        'transaccion__cliente__segmento'
+    )
     
     # ═══ FILTROS ═══
+    from clientes.models import Cliente, Segmento
+    
+    segmento_id = request.GET.get('segmento', '')
+    estado = request.GET.get('estado', '')
+    busqueda = request.GET.get('q', '')
+    
     # Filtro por estado
-    estado = request.GET.get('estado')
     if estado:
         facturas = facturas.filter(estado=estado)
     
-    # Filtro por cliente
-    cliente_id = request.GET.get('cliente')
-    if cliente_id:
-        facturas = facturas.filter(transaccion__cliente_id=cliente_id)
-    
-    # Búsqueda por texto
-    busqueda = request.GET.get('q')
+    # Filtro por búsqueda
     if busqueda:
         facturas = facturas.filter(
             Q(numero_factura__icontains=busqueda) |
@@ -85,23 +86,58 @@ def lista_facturas(request):
             Q(transaccion__cliente__nombre_completo__icontains=busqueda)
         )
     
-    # Obtener lista de clientes para el filtro
-    from clientes.models import Cliente
-    clientes = Cliente.objects.filter(
-        transaccion__factura_electronica__isnull=False
-    ).distinct().order_by('nombre_completo')
+    # ═══ AGRUPAR POR CLIENTE ═══
+    clientes_con_facturas = {}
+    for factura in facturas:
+        cliente = factura.transaccion.cliente
+        if cliente not in clientes_con_facturas:
+            clientes_con_facturas[cliente] = {
+                'facturas': [],
+                'total_facturas': 0,
+                'total_aprobadas': 0,
+                'total_rechazadas': 0,
+            }
+        clientes_con_facturas[cliente]['facturas'].append(factura)
+        clientes_con_facturas[cliente]['total_facturas'] += 1
+        if factura.estado == 'aprobado':
+            clientes_con_facturas[cliente]['total_aprobadas'] += 1
+        elif factura.estado == 'rechazado':
+            clientes_con_facturas[cliente]['total_rechazadas'] += 1
     
-    # Paginación
-    paginator = Paginator(facturas, 20)
-    page = request.GET.get('page')
-    facturas_page = paginator.get_page(page)
+    # Filtrar por segmento si se especificó
+    if segmento_id:
+        clientes_con_facturas = {
+            cliente: datos 
+            for cliente, datos in clientes_con_facturas.items() 
+            if cliente.segmento_id == int(segmento_id)
+        }
+    
+    # Ordenar clientes alfabéticamente
+    clientes_ordenados = sorted(
+        clientes_con_facturas.items(),
+        key=lambda x: x[0].nombre_completo
+    )
+    
+    # Ordenar facturas dentro de cada cliente por fecha (más reciente primero)
+    for cliente, datos in clientes_ordenados:
+        datos['facturas'].sort(key=lambda x: x.fecha_emision, reverse=True)
+    
+    # Obtener lista de segmentos para el filtro
+    segmentos = Segmento.objects.filter(
+        cliente__transacciones__factura_electronica__isnull=False
+    ).distinct().order_by('name')
     
     context = {
-        'facturas': facturas_page,
-        'total_facturas': facturas.count(),
-        'clientes': clientes,
-        'titulo': 'Facturas Electrónicas'
+        'clientes_con_facturas': clientes_ordenados,
+        'segmentos': segmentos,
+        'segmento_filtro': segmento_id,
+        'estado_filtro': estado,
+        'busqueda': busqueda,
+        'total_clientes': len(clientes_ordenados),
+        'total_facturas': sum(datos['total_facturas'] for _, datos in clientes_ordenados),
+        'titulo': 'Facturas Electrónicas por Cliente'
     }
+    
     return render(request, 'facturacion/lista_facturas.html', context)
 
 
