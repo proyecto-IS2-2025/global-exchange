@@ -6,6 +6,11 @@ from .services import SQLProxyService
 from .models import FacturaElectronica
 from .config import TIMBRADO_CONFIG, KUDE_CONFIG
 from django.utils import timezone
+import glob
+import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def generar_factura_desde_transaccion(transaccion):
@@ -172,6 +177,56 @@ def actualizar_estado_factura(factura):
     
     finally:
         servicio.desconectar()
+
+
+def buscar_y_actualizar_pdf(factura):
+    """
+    Busca el archivo PDF en el filesystem y actualiza la URL en la factura.
+    
+    Esta función se ejecuta automáticamente cada vez que se accede a una factura
+    aprobada que aún no tiene la URL del PDF completa.
+    
+    Args:
+        factura: Instancia de FacturaElectronica
+    
+    Returns:
+        bool: True si se encontró y actualizó el PDF, False en caso contrario
+    """
+    # Solo buscar para facturas aprobadas con CDC válido
+    if factura.estado != 'aprobado' or not factura.cdc or factura.cdc == '0':
+        return False
+    
+    # Si ya tiene URL completa con .pdf, no buscar de nuevo
+    if factura.url_kude_pdf and '.pdf' in factura.url_kude_pdf:
+        return True
+    
+    try:
+        # Construir patrón de búsqueda
+        fecha_str = factura.fecha_emision.strftime('%Y%m')
+        pdf_pattern = f'/home/jose/proyecto_is2/sql-proxy01/volumes/web/kude/{fecha_str}/{factura.numero_factura}_*.pdf'
+        
+        # Buscar archivos que coincidan
+        pdfs = glob.glob(pdf_pattern)
+        
+        if pdfs:
+            # Tomar el primer archivo encontrado
+            pdf_file = os.path.basename(pdfs[0])
+            nueva_url = f"http://localhost:40080/kude/{fecha_str}/{pdf_file}"
+            
+            # Actualizar solo si cambió
+            if factura.url_kude_pdf != nueva_url:
+                factura.url_kude_pdf = nueva_url
+                factura.save(update_fields=['url_kude_pdf'])
+                logger.info(f"📄 PDF encontrado y actualizado para {factura.numero_factura}: {pdf_file}")
+            
+            return True
+        else:
+            logger.debug(f"PDF no encontrado aún para {factura.numero_factura} en {pdf_pattern}")
+            return False
+            
+    except Exception as e:
+        logger.warning(f"Error buscando PDF para {factura.numero_factura}: {e}")
+        return False
 
 
 def generar_facturas_pendientes():

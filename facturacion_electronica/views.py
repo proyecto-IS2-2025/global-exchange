@@ -51,20 +51,12 @@ def lista_facturas(request):
         except Exception as e:
             logger.warning(f"No se pudo sincronizar {factura.numero_factura}: {e}")
     
-    # Buscar PDFs en el filesystem para facturas aprobadas sin URL
+    # Buscar PDFs en el filesystem para facturas aprobadas sin URL completa
+    from .utils import buscar_y_actualizar_pdf
     for factura in list(facturas_pendientes) + list(facturas_sin_pdf):
-        if factura.estado == 'aprobado' and not factura.url_kude_pdf:
+        if factura.estado == 'aprobado' and factura.cdc and factura.cdc != '0':
             try:
-                fecha_str = factura.fecha_emision.strftime('%Y%m')
-                pdf_pattern = f'/home/jose/proyecto_is2/sql-proxy01/volumes/web/kude/{fecha_str}/{factura.numero_factura}_*.pdf'
-                pdfs = glob.glob(pdf_pattern)
-                
-                if pdfs:
-                    pdf_file = os.path.basename(pdfs[0])
-                    nueva_url = f"http://localhost:40080/kude/{fecha_str}/{pdf_file}"
-                    factura.url_kude_pdf = nueva_url
-                    factura.save(update_fields=['url_kude_pdf'])
-                    logger.info(f"📄 PDF encontrado para {factura.numero_factura}")
+                buscar_y_actualizar_pdf(factura)
             except Exception as e:
                 logger.warning(f"Error buscando PDF para {factura.numero_factura}: {e}")
     
@@ -132,20 +124,12 @@ def mis_facturas(request):
         except Exception as e:
             logger.warning(f"No se pudo sincronizar {factura.numero_factura}: {e}")
     
-    # Buscar PDFs en el filesystem para facturas aprobadas sin URL
+    # Buscar PDFs en el filesystem para facturas aprobadas sin URL completa
+    from .utils import buscar_y_actualizar_pdf
     for factura in list(facturas_pendientes) + list(facturas_sin_pdf):
-        if factura.estado == 'aprobado' and not factura.url_kude_pdf:
+        if factura.estado == 'aprobado' and factura.cdc and factura.cdc != '0':
             try:
-                fecha_str = factura.fecha_emision.strftime('%Y%m')
-                pdf_pattern = f'/home/jose/proyecto_is2/sql-proxy01/volumes/web/kude/{fecha_str}/{factura.numero_factura}_*.pdf'
-                pdfs = glob.glob(pdf_pattern)
-                
-                if pdfs:
-                    pdf_file = os.path.basename(pdfs[0])
-                    nueva_url = f"http://localhost:40080/kude/{fecha_str}/{pdf_file}"
-                    factura.url_kude_pdf = nueva_url
-                    factura.save(update_fields=['url_kude_pdf'])
-                    logger.info(f"📄 PDF encontrado para {factura.numero_factura}")
+                buscar_y_actualizar_pdf(factura)
             except Exception as e:
                 logger.warning(f"Error buscando PDF para {factura.numero_factura}: {e}")
     
@@ -194,6 +178,16 @@ def detalle_factura(request, factura_id):
             import logging
             logger = logging.getLogger(__name__)
             logger.warning(f"No se pudo sincronizar factura {factura.numero_factura}: {e}")
+    
+    # AUTO-BUSCAR PDF: Si está aprobada pero no tiene URL del PDF completa, buscar en filesystem
+    if factura.estado == 'aprobado' and factura.cdc and factura.cdc != '0':
+        if not factura.url_kude_pdf or '.pdf' not in factura.url_kude_pdf:
+            try:
+                from .utils import buscar_y_actualizar_pdf
+                buscar_y_actualizar_pdf(factura)
+                factura.refresh_from_db()
+            except Exception as e:
+                logger.warning(f"No se pudo buscar PDF para {factura.numero_factura}: {e}")
     
     # Verificar permisos
     if request.user.is_staff:
