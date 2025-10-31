@@ -220,7 +220,19 @@ check:
 	@echo "Verificando el estado del proyecto..."
 	poetry run python manage.py check
 	@echo "Verificación completada."
+
+
+roles:
+	@echo "Sincronizando roles y permisos..."
+	python manage.py sync_permissions
+	python manage.py setup_test_roles --verbose
+	python manage.py sync_role_status
+	python manage.py create_dev_user
+	@echo "Roles y permisos sincronizados."
+
 test-fact:
 	@echo "Ejecutando pruebas de facturación electrónica..."
 	poetry run python manage.py test facturacion_electronica.tests
 	@echo "Pruebas de facturación electrónica completadas."
+
+

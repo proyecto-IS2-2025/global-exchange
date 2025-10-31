@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+{% load tauser_filters %}
+
+{% block title %}Inventario de Denominaciones - {{ terminal.nombre }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card-denominacion {
+        transition: all 0.3s ease;
+        border-left: 4px solid #007bff;
+    }
+    
+    .card-denominacion:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .alerta-reposicion {
+        border-left-color: #dc3545;
+        background-color: #fff5f5;
+    }
+    
+    .badge-cantidad {
+        font-size: 1.1rem;
+        padding: 8px 12px;
+    }
+    
+    .divisa-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header divisa-header text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">
+                                <i class="fas fa-wallet me-2"></i>
+                                Inventario de Denominaciones
+                            </h4>
+                            <p class="mb-0 mt-1 small opacity-75">
+                                <i class="fas fa-map-marker-alt me-1"></i>
+                                Terminal: <strong>{{ terminal.nombre }}</strong> ({{ terminal.codigo }})
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <a href="{% url 'tauser:reponer_denominaciones' terminal_codigo=terminal.codigo %}" 
+                               class="btn btn-success btn-lg">
+                                <i class="fas fa-plus-circle me-2"></i>
+                                Reponer Denominaciones
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumen general -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-primary shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-coins text-primary fa-3x mb-2"></i>
+                    <h3 class="text-primary mb-0">{{ total_divisas }}</h3>
+                    <p class="text-muted mb-0">Divisa{{ total_divisas|pluralize }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-money-bill-wave text-info fa-3x mb-2"></i>
+                    <h3 class="text-info mb-0">
+                        {{ inventarios_por_divisa.values|length }}
+                    </h3>
+                    <p class="text-muted mb-0">Denominaciones Activas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle text-success fa-3x mb-2"></i>
+                    <h3 class="text-success mb-0">
+                        {% for divisa_data in inventarios_por_divisa.values %}
+                            {{ divisa_data.total_billetes }}{% if not forloop.last %} + {% endif %}
+                        {% endfor %}
+                    </h3>
+                    <p class="text-muted mb-0">Total Billetes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-{% if total_alertas > 0 %}danger{% else %}secondary{% endif %} shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-exclamation-triangle text-{% if total_alertas > 0 %}danger{% else %}secondary{% endif %} fa-3x mb-2"></i>
+                    <h3 class="text-{% if total_alertas > 0 %}danger{% else %}secondary{% endif %} mb-0">
+                        {{ total_alertas }}
+                    </h3>
+                    <p class="text-muted mb-0">Alerta{{ total_alertas|pluralize }} de Reposición</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventario por divisa -->
+    {% for divisa_code, divisa_data in inventarios_por_divisa.items %}
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">
+                        <i class="fas fa-flag me-2"></i>
+                        {{ divisa_data.divisa.nombre }} ({{ divisa_code }})
+                    </h5>
+                    <small class="text-muted">
+                        {{ divisa_data.inventarios|length }} denominación{{ divisa_data.inventarios|length|pluralize:"es" }} | 
+                        {{ divisa_data.total_billetes }} billete{{ divisa_data.total_billetes|pluralize }} | 
+                        Valor total: {{ divisa_data.divisa.simbolo }}{{ divisa_data.valor_total|currency }}
+                    </small>
+                </div>
+                {% if divisa_data.alertas > 0 %}
+                <div>
+                    <span class="badge bg-danger badge-cantidad">
+                        <i class="fas fa-exclamation-circle me-1"></i>
+                        {{ divisa_data.alertas }} alerta{{ divisa_data.alertas|pluralize }}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                {% for inventario in divisa_data.inventarios %}
+                <div class="col-md-6 col-lg-4 col-xl-3">
+                    <div class="card card-denominacion {% if inventario.necesita_reposicion %}alerta-reposicion{% endif %} h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="mb-0">{{ inventario.denominacion.nombre }}</h6>
+                                    <h4 class="text-primary mb-0">
+                                        {{ inventario.denominacion.valor_formateado }}
+                                    </h4>
+                                </div>
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                     style="width: 45px; height: 45px; font-size: 1.2rem; font-weight: bold;">
+                                    {{ inventario.denominacion.divisa.simbolo }}
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <div class="mb-2">
+                                <small class="text-muted d-block">Cantidad disponible:</small>
+                                <h3 class="mb-0 {% if inventario.necesita_reposicion %}text-danger{% else %}text-success{% endif %}">
+                                    {{ inventario.cantidad }}
+                                    <small class="text-muted" style="font-size: 0.6em;">
+                                        / {{ inventario.cantidad_minima }} mín.
+                                    </small>
+                                </h3>
+                            </div>
+
+                            <div class="mb-2">
+                                <small class="text-muted d-block">Valor en inventario:</small>
+                                <strong class="text-success">
+                                    {{ inventario.denominacion.divisa.simbolo }}{{ inventario.valor_total|currency }}
+                                </strong>
+                            </div>
+
+                            {% if inventario.ultima_reposicion %}
+                            <div class="mb-3">
+                                <small class="text-muted d-block">Última reposición:</small>
+                                <small>
+                                    <i class="far fa-clock me-1"></i>
+                                    {{ inventario.ultima_reposicion|date:"d/m/Y H:i" }}
+                                </small>
+                            </div>
+                            {% endif %}
+
+                            {% if inventario.necesita_reposicion %}
+                            <div class="alert alert-danger mb-2 py-2" role="alert">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                <small><strong>¡Requiere reposición!</strong></small>
+                            </div>
+                            {% endif %}
+
+                            <!-- Botón para ajustar -->
+                            <button type="button" 
+                                    class="btn btn-sm btn-outline-primary w-100"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#ajustarModal"
+                                    data-inventario-id="{{ inventario.id }}"
+                                    data-denominacion="{{ inventario.denominacion.nombre }}"
+                                    data-cantidad-actual="{{ inventario.cantidad }}">
+                                <i class="fas fa-edit me-1"></i>
+                                Ajustar Cantidad
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="alert alert-info" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        No hay denominaciones configuradas en esta terminal.
+        <a href="{% url 'tauser:reponer_denominaciones' terminal_codigo=terminal.codigo %}" class="alert-link">
+            Agregar denominaciones
+        </a>
+    </div>
+    {% endfor %}
+
+    <!-- Denominaciones disponibles para agregar -->
+    {% if denominaciones_disponibles %}
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-warning text-dark py-3">
+            <h5 class="mb-0">
+                <i class="fas fa-plus-circle me-2"></i>
+                Denominaciones Disponibles para Agregar
+            </h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">
+                Las siguientes denominaciones están activas pero no tienen inventario en esta terminal:
+            </p>
+            <div class="row g-2">
+                {% for denom in denominaciones_disponibles %}
+                <div class="col-auto">
+                    <span class="badge bg-warning text-dark" style="font-size: 0.9rem; padding: 8px 12px;">
+                        {{ denom.divisa.code }} - {{ denom.valor_formateado }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="mt-3">
+                <a href="{% url 'tauser:reponer_denominaciones' terminal_codigo=terminal.codigo %}" 
+                   class="btn btn-warning">
+                    <i class="fas fa-plus me-2"></i>
+                    Agregar Estas Denominaciones
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Enlaces rápidos -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h6 class="mb-3">
+                        <i class="fas fa-link me-2"></i>
+                        Enlaces Rápidos
+                    </h6>
+                    <div class="btn-group" role="group">
+                        <a href="{% url 'tauser:historial_denominaciones' terminal_codigo=terminal.codigo %}" 
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-history me-2"></i>
+                            Ver Historial
+                        </a>
+                        <a href="{% url 'tauser:reporte_denominaciones' terminal_codigo=terminal.codigo %}" 
+                           class="btn btn-outline-info">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Reportes
+                        </a>
+                        <a href="{% url 'tauser:terminal_list' %}" 
+                           class="btn btn-outline-secondary">
+                            <i class="fas fa-list me-2"></i>
+                            Todas las Terminales
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ajustar inventario -->
+<div class="modal fade" id="ajustarModal" tabindex="-1" aria-labelledby="ajustarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'tauser:ajustar_inventario_denominacion' terminal_codigo=terminal.codigo %}">
+                {% csrf_token %}
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="ajustarModalLabel">
+                        <i class="fas fa-edit me-2"></i>
+                        Ajustar Inventario
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="inventario_id" id="inventario_id">
+                    
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Atención:</strong> Este ajuste manual quedará registrado en el historial.
+                        Use esta función solo para correcciones o auditorías.
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Denominación:</strong></label>
+                        <p class="form-control-plaintext" id="denominacion_nombre"></p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Cantidad actual:</strong></label>
+                        <p class="form-control-plaintext text-primary fs-4" id="cantidad_actual"></p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="nueva_cantidad" class="form-label">
+                            <strong>Nueva cantidad:</strong>
+                        </label>
+                        <input type="number" 
+                               class="form-control form-control-lg" 
+                               id="nueva_cantidad" 
+                               name="nueva_cantidad" 
+                               min="0" 
+                               required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="motivo" class="form-label">
+                            <strong>Motivo del ajuste:</strong>
+                        </label>
+                        <textarea class="form-control" 
+                                  id="motivo" 
+                                  name="motivo" 
+                                  rows="3" 
+                                  required
+                                  placeholder="Ejemplo: Auditoría de inventario, corrección de error de conteo, etc."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>
+                        Guardar Ajuste
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Manejar modal de ajuste
+    const ajustarModal = document.getElementById('ajustarModal');
+    
+    ajustarModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        
+        const inventarioId = button.getAttribute('data-inventario-id');
+        const denominacion = button.getAttribute('data-denominacion');
+        const cantidadActual = button.getAttribute('data-cantidad-actual');
+        
+        document.getElementById('inventario_id').value = inventarioId;
+        document.getElementById('denominacion_nombre').textContent = denominacion;
+        document.getElementById('cantidad_actual').textContent = cantidadActual + ' billetes';
+        document.getElementById('nueva_cantidad').value = cantidadActual;
+    });
+    
+    // Animar tarjetas al cargar
+    const cards = document.querySelectorAll('.card-denominacion');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 50);
+    });
+
+    // Auto-refresh cada 60 segundos (opcional)
+    let autoRefresh = false; // Cambiar a true para habilitar
+    if (autoRefresh) {
+        setInterval(function() {
+            location.reload();
+        }, 60000);
+    }
+});
+</script>
+{% endblock %}

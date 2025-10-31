@@ -17,7 +17,7 @@
         <div class="card-body p-4">
           <div class="alert alert-info border-0 bg-light-info">
             <i class="bi bi-info-circle me-2"></i>
-            Selecciona la divisa que deseas comprar e ingresa el monto en <strong>Guaraníes</strong>. El sistema calculará automáticamente cuánta divisa recibirás.
+            Selecciona la divisa que deseas comprar e ingresa la <strong>cantidad de divisa extranjera</strong>. El sistema calculará automáticamente cuántos guaraníes deberás pagar.
           </div>
 
           <form method="post" novalidate class="mt-4">
@@ -109,7 +109,7 @@
     // Agregar placeholders si es necesario
     const amountField = document.querySelector('input[type="number"]');
     if (amountField && !amountField.placeholder) {
-      amountField.placeholder = "Ingresa el monto en Guaraníes";
+      amountField.placeholder = "Ingresa la cantidad de divisa que deseas comprar";
     }
   });
 </script>

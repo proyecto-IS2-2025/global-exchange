@@ -1,0 +1,381 @@
+{% extends 'base_tauser.html' %}
+{% load static %}
+
+{% block title %}{{ terminal.nombre }} - Ingrese su código{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .terminal-container {
+        max-width: 600px;
+        width: 100%;
+        padding: 2rem;
+    }
+
+    .terminal-header {
+        background: white;
+        border-radius: 15px 15px 0 0;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .terminal-header h2 {
+        color: #2563eb;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .terminal-header .location {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    .code-input-section {
+        background: white;
+        padding: 3rem 2rem;
+        border-radius: 0 0 15px 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .code-input-label {
+        text-align: center;
+        color: #475569;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+    }
+
+    .code-input-wrapper {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .code-digit {
+        width: 50px;
+        height: 60px;
+        font-size: 1.8rem;
+        font-weight: 700;
+        text-align: center;
+        border: 3px solid #e2e8f0;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+    }
+
+    .code-digit:focus {
+        border-color: #2563eb;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .btn-submit-code {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .btn-submit-code:hover:not(:disabled) {
+        background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-submit-code:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .btn-back {
+        width: 100%;
+        padding: 0.75rem;
+        background: white;
+        color: #64748b;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+        text-decoration: none;
+        display: block;
+        text-align: center;
+    }
+
+    .btn-back:hover {
+        border-color: #2563eb;
+        color: #2563eb;
+        text-decoration: none;
+    }
+
+    .instructions {
+        background: #f1f5f9;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        text-align: center;
+    }
+
+    .instructions h4 {
+        color: #475569;
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .instructions ol {
+        text-align: left;
+        color: #64748b;
+        font-size: 0.9rem;
+        line-height: 1.8;
+        padding-left: 1.5rem;
+    }
+
+    .error-message {
+        background: #fee2e2;
+        border-left: 4px solid #ef4444;
+        color: #991b1b;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        display: none;
+    }
+
+    .error-message.show {
+        display: block;
+        animation: shake 0.5s ease-in-out;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+    }
+
+    @media (max-width: 576px) {
+        .code-digit {
+            width: 40px;
+            height: 50px;
+            font-size: 1.5rem;
+        }
+
+        .terminal-container {
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="terminal-container">
+    <div class="terminal-header">
+        <i class="fas fa-desktop fa-3x text-primary mb-3"></i>
+        <h2>{{ terminal.nombre }}</h2>
+        <div class="location">
+            <i class="fas fa-map-marker-alt"></i> {{ terminal.ubicacion }}
+        </div>
+    </div>
+
+    <div class="code-input-section" data-messages="{% if messages %}{% for message in messages %}{{ message }}{% if not forloop.last %}|{% endif %}{% endfor %}{% endif %}">
+        <div class="error-message" id="error-message">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span id="error-text"></span>
+        </div>
+
+        <div class="code-input-label">
+            <i class="fas fa-key text-primary me-2"></i>
+            Ingrese su código TAUSER
+        </div>
+
+        <form id="code-form" method="POST" action="{% url 'tauser_external:verificar_codigo' terminal_codigo=terminal.codigo %}">
+            {% csrf_token %}
+            <div class="code-input-wrapper">
+                <input type="text" class="code-digit" maxlength="1" id="digit-1" name="digit-1" autocomplete="off" required>
+                <input type="text" class="code-digit" maxlength="1" id="digit-2" name="digit-2" autocomplete="off" required>
+                <input type="text" class="code-digit" maxlength="1" id="digit-3" name="digit-3" autocomplete="off" required>
+                <input type="text" class="code-digit" maxlength="1" id="digit-4" name="digit-4" autocomplete="off" required>
+                <input type="text" class="code-digit" maxlength="1" id="digit-5" name="digit-5" autocomplete="off" required>
+                <input type="text" class="code-digit" maxlength="1" id="digit-6" name="digit-6" autocomplete="off" required>
+                <input type="text" class="code-digit" maxlength="1" id="digit-7" name="digit-7" autocomplete="off" required>
+                <input type="text" class="code-digit" maxlength="1" id="digit-8" name="digit-8" autocomplete="off" required>
+            </div>
+            <input type="hidden" name="tauser_code" id="tauser_code">
+
+            <button type="submit" class="btn-submit-code" id="submit-btn" disabled>
+                <i class="fas fa-check-circle me-2"></i>
+                Continuar
+            </button>
+        </form>
+
+        <a href="{% url 'tauser_external:home' %}" class="btn-back">
+            <i class="fas fa-arrow-left me-2"></i>
+            Volver a terminales
+        </a>
+
+        <div class="instructions">
+            <h4><i class="fas fa-info-circle me-2"></i>¿Cómo obtener tu código?</h4>
+            <ol>
+                <li>Realiza una compra o venta desde el sistema web</li>
+                <li>Recibirás un código de 8 caracteres</li>
+                <li>Ingresa ese código aquí para acceder a tu transacción</li>
+                <li>Completa la operación en el terminal</li>
+            </ol>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('.code-digit');
+    const form = document.getElementById('code-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const hiddenInput = document.getElementById('tauser_code');
+    const errorMessage = document.getElementById('error-message');
+    const errorText = document.getElementById('error-text');
+
+    // Auto-focus en el primer input
+    inputs[0].focus();
+
+    // Manejo de input y navegación
+    inputs.forEach((input, index) => {
+        input.addEventListener('input', function(e) {
+            const value = this.value.toUpperCase();
+            
+            // Solo permitir letras y números
+            if (!/^[A-Z0-9]$/.test(value) && value !== '') {
+                this.value = '';
+                return;
+            }
+
+            this.value = value;
+
+            // Auto-avanzar al siguiente campo
+            if (value && index < inputs.length - 1) {
+                inputs[index + 1].focus();
+            }
+
+            // Verificar si todos los campos están llenos
+            checkAllFilled();
+        });
+
+        input.addEventListener('keydown', function(e) {
+            // Backspace: volver al campo anterior
+            if (e.key === 'Backspace' && !this.value && index > 0) {
+                inputs[index - 1].focus();
+            }
+
+            // Arrow left/right para navegación
+            if (e.key === 'ArrowLeft' && index > 0) {
+                inputs[index - 1].focus();
+            }
+            if (e.key === 'ArrowRight' && index < inputs.length - 1) {
+                inputs[index + 1].focus();
+            }
+        });
+
+        input.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const pasteData = e.clipboardData.getData('text').toUpperCase();
+            const chars = pasteData.match(/[A-Z0-9]/g);
+            
+            if (chars) {
+                chars.forEach((char, i) => {
+                    if (index + i < inputs.length) {
+                        inputs[index + i].value = char;
+                    }
+                });
+                // Focus en el último campo llenado o el último disponible
+                const lastIndex = Math.min(index + chars.length - 1, inputs.length - 1);
+                inputs[lastIndex].focus();
+                checkAllFilled();
+            }
+        });
+    });
+
+    function checkAllFilled() {
+        const allFilled = Array.from(inputs).every(input => input.value.length === 1);
+        submitBtn.disabled = !allFilled;
+        
+        if (allFilled) {
+            // Construir el código completo
+            const code = Array.from(inputs).map(input => input.value).join('');
+            hiddenInput.value = code;
+        }
+    }
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const code = Array.from(inputs).map(input => input.value).join('');
+        
+        if (code.length !== 8) {
+            showError('Por favor, complete todos los dígitos del código');
+            return;
+        }
+
+        // Mostrar loading
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Verificando...';
+        submitBtn.disabled = true;
+
+        // Enviar formulario
+        this.submit();
+    });
+
+    function showError(message) {
+        errorText.textContent = message;
+        errorMessage.classList.add('show');
+        
+        // Limpiar campos
+        inputs.forEach(input => {
+            input.value = '';
+            input.style.borderColor = '#ef4444';
+        });
+        
+        inputs[0].focus();
+        submitBtn.disabled = true;
+
+        setTimeout(() => {
+            errorMessage.classList.remove('show');
+            inputs.forEach(input => {
+                input.style.borderColor = '#e2e8f0';
+            });
+        }, 3000);
+    }
+
+    // Mensajes de Django (desde data-attribute)
+    const codeSection = document.querySelector('.code-input-section');
+    const messagesStr = codeSection.getAttribute('data-messages');
+    if (messagesStr && messagesStr.trim() !== '') {
+        const messages = messagesStr.split('|');
+        messages.forEach(msg => {
+            if (msg.trim()) showError(msg.trim());
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -30,6 +30,7 @@ class Transaccion(models.Model):
 
     ESTADO_CHOICES = [
         ('pendiente', 'Pendiente'),
+        ('requiere_confirmacion', 'Requiere Confirmación'),  # <-- NUEVO estado para confirmación de cambio de tasa
         ('pagada', 'Pagada'),
         ('completado', 'Completado'),  # <-- NUEVO estado
         ('cancelada', 'Cancelada'),
@@ -92,7 +93,7 @@ class Transaccion(models.Model):
     # Estado y fechas
     estado = models.CharField(
         'Estado',
-        max_length=15,
+        max_length=25,  # Aumentado para 'requiere_confirmacion'
         choices=ESTADO_CHOICES,
         default='pendiente'
     )
@@ -141,6 +142,27 @@ class Transaccion(models.Model):
         null=True,
         blank=True,
         related_name='transacciones_procesadas'
+    )
+    
+    # Código Tauser: generado para compras pagadas y todas las ventas
+    tauser_code = models.CharField(
+        'Código Tauser',
+        max_length=8,
+        unique=True,
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text='Código alfanumérico de 8 caracteres para acceso en terminal'
+    )
+    
+    # Terminal TAUSER asignado (solo para compras)
+    tauser_terminal = models.ForeignKey(
+        'tauser.Terminal',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='transacciones_asignadas',
+        help_text='Terminal TAUSER donde el cliente debe retirar la divisa (solo compras)'
     )
 
     class Meta:
@@ -192,6 +214,78 @@ class Transaccion(models.Model):
                 rounding=ROUND_HALF_UP
             )
 
+    def recalcular_montos_con_tasa_actual(self):
+        """
+        Recalcula los montos de la transacción con la tasa de cambio actual.
+        Retorna un diccionario con los nuevos valores calculados.
+        """
+        from clientes.models import Cliente
+        
+        # Obtener el segmento del cliente
+        segmento = self.cliente.segmento if hasattr(self.cliente, 'segmento') else None
+        
+        if not segmento:
+            raise ValueError("El cliente no tiene un segmento asignado")
+        
+        # Determinar cuál es la divisa extranjera (no PYG)
+        if self.divisa_origen.code.upper() in ['PYG', '116']:
+            divisa_extranjera = self.divisa_destino
+        else:
+            divisa_extranjera = self.divisa_origen
+        
+        # Obtener la cotización actual para el segmento
+        cotizacion_actual = CotizacionSegmento.objects.filter(
+            divisa=divisa_extranjera,
+            segmento=segmento
+        ).order_by('-fecha').first()
+        
+        if not cotizacion_actual:
+            raise ValueError(f"No hay cotización disponible para {divisa_extranjera.code}")
+        
+        # Calcular nuevos montos según el tipo de operación
+        if self.tipo_operacion == 'compra':
+            # En compra: cliente paga PYG, recibe divisa extranjera
+            # Usamos valor_compra_unit (lo que el cliente paga por unidad de divisa)
+            nueva_tasa = cotizacion_actual.valor_compra_unit
+            
+            # Si tenemos el monto en divisa extranjera fijo, recalcular PYG
+            if self.monto_destino:  # monto_destino es la divisa extranjera
+                nuevo_monto_origen = self.monto_destino * nueva_tasa
+                nuevo_monto_origen = self.redondear_monto(nuevo_monto_origen, 'PYG')
+                nuevo_monto_destino = self.monto_destino  # se mantiene
+            else:
+                # Si tenemos monto en PYG fijo, recalcular divisa extranjera
+                nuevo_monto_destino = self.monto_origen / nueva_tasa
+                nuevo_monto_destino = self.redondear_monto(nuevo_monto_destino, divisa_extranjera.code)
+                nuevo_monto_origen = self.monto_origen  # se mantiene
+                
+        else:  # venta
+            # En venta: cliente vende divisa extranjera, recibe PYG
+            # Usamos valor_venta_unit (lo que el cliente recibe por unidad de divisa)
+            nueva_tasa = cotizacion_actual.valor_venta_unit
+            
+            # El monto_origen es la divisa extranjera, monto_destino es PYG
+            if self.monto_origen:
+                nuevo_monto_destino = self.monto_origen * nueva_tasa
+                nuevo_monto_destino = self.redondear_monto(nuevo_monto_destino, 'PYG')
+                nuevo_monto_origen = self.monto_origen  # se mantiene
+            else:
+                nuevo_monto_origen = self.monto_destino / nueva_tasa
+                nuevo_monto_origen = self.redondear_monto(nuevo_monto_origen, divisa_extranjera.code)
+                nuevo_monto_destino = self.monto_destino  # se mantiene
+        
+        # Redondear la nueva tasa
+        nueva_tasa = Decimal(nueva_tasa).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        
+        return {
+            'nueva_tasa': nueva_tasa,
+            'nuevo_monto_origen': nuevo_monto_origen,
+            'nuevo_monto_destino': nuevo_monto_destino,
+            'tasa_anterior': self.tasa_de_cambio_aplicada,
+            'monto_origen_anterior': self.monto_origen,
+            'monto_destino_anterior': self.monto_destino,
+        }
+
     def clean(self):
         """
         Validaciones a nivel de modelo para la transacción
@@ -241,6 +335,9 @@ class Transaccion(models.Model):
         if not getattr(self, 'numero_transaccion', None):
             self.numero_transaccion = self._generar_numero_transaccion()
         
+        # Asignar código tauser si corresponde (ventas siempre, compras pagadas)
+        self.asignar_tauser_code_si_corresponde()
+        
         # Aplicar redondeo antes de cualquier validación
         self.aplicar_redondeo_montos()
         
@@ -257,6 +354,40 @@ class Transaccion(models.Model):
         hoy = timezone.now().strftime('%Y%m%d')
         random = uuid.uuid4().hex[:6].upper()
         return f'TRX-{hoy}-{random}'
+    
+    def _generar_tauser_code(self):
+        """Generar código tauser único de 8 caracteres alfanuméricos"""
+        import random
+        import string
+        
+        caracteres = string.ascii_uppercase + string.digits
+        while True:
+            codigo = ''.join(random.choices(caracteres, k=8))
+            # Verificar que sea único
+            if not Transaccion.objects.filter(tauser_code=codigo).exists():
+                return codigo
+    
+    def asignar_tauser_code_si_corresponde(self):
+        """
+        Asigna código tauser si:
+        - Es una compra con estado 'pagada' 
+        - Es una venta (cualquier estado inicial)
+        Y aún no tiene código asignado
+        """
+        if not self.tauser_code:
+            debe_tener_codigo = False
+            
+            # Compras: solo si está en estado 'pagada'
+            if self.tipo_operacion == 'compra' and self.estado == 'pagada':
+                debe_tener_codigo = True
+            
+            # Ventas: siempre (desde cualquier estado)
+            if self.tipo_operacion == 'venta':
+                debe_tener_codigo = True
+            
+            if debe_tener_codigo:
+                self.tauser_code = self._generar_tauser_code()
+                logger.info(f"✅ Código Tauser '{self.tauser_code}' asignado a transacción {self.numero_transaccion}")
 
     def __str__(self):
         return f"{self.numero_transaccion} - {self.cliente.nombre_completo} - {self.get_tipo_operacion_display()}"
@@ -353,7 +484,12 @@ class Transaccion(models.Model):
 
         # Persistir cambio
         self.estado = nuevo_estado
-        self.save(update_fields=['estado'])
+        
+        # Si es compra y pasa a 'pagada', asignar código tauser
+        if self.tipo_operacion == 'compra' and nuevo_estado == 'pagada':
+            self.asignar_tauser_code_si_corresponde()
+        
+        self.save(update_fields=['estado', 'tauser_code'] if self.tauser_code else ['estado'])
 
         # Registrar en historial
         try:
@@ -441,6 +577,128 @@ class Transaccion(models.Model):
             
         return correo_enviado_exitosamente
 
+    def marcar_como_requiere_confirmacion(self, razon):
+        """
+        Marca la transacción como 'requiere_confirmacion' automáticamente 
+        cuando hay un cambio de tasa y envía una notificación.
+        """
+        # Se usa 'pendiente' como string si no definiste la constante en este snippet
+        if self.estado != 'pendiente':
+            return False
+
+        estado_anterior = self.estado
+        observacion_completa = f"REQUIERE CONFIRMACIÓN POR CAMBIO DE TASA: {razon}"
+
+        with transaction.atomic():
+            self.estado = 'requiere_confirmacion'
+            self.observacion = observacion_completa
+
+            # Solo actualizar los campos modificados
+            self.save(update_fields=['estado', 'observacion'])
+
+             # 💡 PASO CLAVE: Crear el registro de historial con el motivo
+            HistorialTransaccion.objects.create(
+                transaccion=self,
+                fecha_cambio=timezone.now(),
+                estado_anterior=estado_anterior,
+                estado_nuevo=self.estado,
+                observaciones=observacion_completa,
+                # El campo 'usuario' puede ser nulo o apuntar a un usuario de sistema
+                modificado_por=None,
+            )
+            
+            # 🔔 CREAR NOTIFICACIÓN para el usuario que procesó la transacción
+            notificacion_obj = None
+            if self.procesado_por:
+                mensaje_notificacion = (
+                    f"Su transacción {self.numero_transaccion} requiere confirmación debido a un cambio en la cotización. "
+                    f"Por favor, ingrese a su historial de transacciones para confirmar o cancelar la operación."
+                )
+                
+                notificacion_obj = Notificacion.objects.create(
+                    usuario=self.procesado_por,
+                    mensaje=mensaje_notificacion,
+                    estado_lectura='pendiente',
+                    correo_enviado=False
+                )
+
+            # Enviar notificación por correo y actualizar correo_enviado si es exitoso
+            self._enviar_notificacion_requiere_confirmacion(razon, notificacion_obj)
+
+            logger.info(f"Transacción {self.numero_transaccion} marcada como 'requiere_confirmacion' por: {razon}")
+
+            return True
+
+    def _enviar_notificacion_requiere_confirmacion(self, razon, notificacion_obj=None):
+        """
+        Envía notificación por correo sobre que la transacción requiere confirmación.
+        Retorna True si el correo se envió exitosamente, False si no.
+        """
+        from django.core.mail import send_mail
+        from django.conf import settings
+        from notificaciones.models import ConfiguracionGeneral
+        
+        correo_enviado_exitosamente = False
+
+        if self.procesado_por:
+            # Verificar si el usuario tiene configurado recibir correos
+            try:
+                config = ConfiguracionGeneral.objects.get(usuario=self.procesado_por)
+                canal = config.canal_notificacion
+                
+                # Solo enviar si el canal incluye correo
+                if canal == "sistema_correo":
+                    # Identificar la divisa extranjera (no PYG)
+                    divisa_extranjera = None
+                    if self.divisa_origen and self.divisa_origen.code not in ['PYG', '116']:
+                        divisa_extranjera = self.divisa_origen.code
+                    elif self.divisa_destino and self.divisa_destino.code not in ['PYG', '116']:
+                        divisa_extranjera = self.divisa_destino.code
+                    
+                    divisa_texto = f"({divisa_extranjera})" if divisa_extranjera else ""
+                    
+                    email_subject = f"Confirmación Requerida - Transacción #{self.numero_transaccion}"
+                    email_body = (
+                        f"Estimado(a) cliente {self.cliente.nombre_completo or self.cliente.id},\n\n"
+                        f"Te informamos que tu transacción de cambio #{self.numero_transaccion} REQUIERE CONFIRMACIÓN.\n\n"
+                        f"Razón: {razon}\n\n"
+                        f"La cotización de la divisa extranjera {divisa_texto} ha sido actualizada en nuestro sistema, "
+                        f"lo que afecta la tasa de cambio con la que iniciaste tu transacción.\n\n"
+                        "Por favor, ingresa a tu historial de transacciones donde podrás:\n"
+                        "1. Recalcular los montos con la tasa actual y continuar con la transacción, o\n"
+                        "2. Cancelar la transacción\n\n"
+                        "Gracias por tu comprensión.\n"
+                        "Equipo de Soporte - Global Exchange"
+                    )
+
+                    try:
+                        send_mail(
+                            subject=email_subject,
+                            message=email_body,
+                            from_email=settings.EMAIL_HOST_USER,
+                            recipient_list=[self.procesado_por.email],
+                            fail_silently=False
+                        )
+                        correo_enviado_exitosamente = True
+                        logger.info(f"📧 Correo de confirmación requerida enviado a {self.procesado_por.email} por trans. {self.numero_transaccion}")
+                    except Exception as e:
+                        logger.error(f"❌ Error al enviar correo de confirmación a {self.procesado_por.email}: {e}")
+                        correo_enviado_exitosamente = False
+                else:
+                    logger.info(f"⏭️ Usuario {self.procesado_por.email} tiene canal='{canal}', no se envía correo de confirmación")
+                    
+            except ConfiguracionGeneral.DoesNotExist:
+                logger.warning(f"⚠️ Usuario {self.procesado_por.email} no tiene ConfiguracionGeneral, no se envía correo")
+        else:
+            logger.warning(f"⚠️ No se pudo enviar correo de confirmación para trans. {self.numero_transaccion}. Email o usuario no encontrado.")
+        
+        # Actualizar el objeto Notificacion si se proporcionó
+        if notificacion_obj and correo_enviado_exitosamente:
+            notificacion_obj.correo_enviado = True
+            notificacion_obj.save(update_fields=['correo_enviado'])
+            
+        return correo_enviado_exitosamente
+
     def cancelar_automaticamente(self, razon):
         """
         Cancela la transacción automáticamente si está pendiente y envía una notificación.
@@ -506,13 +764,13 @@ class HistorialTransaccion(models.Model):
     
     estado_anterior = models.CharField(
         'Estado Anterior',
-        max_length=15,
+        max_length=25,  # Aumentado para 'requiere_confirmacion'
         choices=Transaccion.ESTADO_CHOICES
     )
     
     estado_nuevo = models.CharField(
         'Estado Nuevo',
-        max_length=15,
+        max_length=25,  # Aumentado para 'requiere_confirmacion'
         choices=Transaccion.ESTADO_CHOICES
     )
     
@@ -628,7 +886,7 @@ class ConfiguracionTransaccion(models.Model):
 def cancelar_transacciones_pendientes_por_tasa(sender, instance, created, **kwargs):
     """
     Se ejecuta CADA VEZ que se guarda una CotizacionSegmento.
-    Busca transacciones pendientes con la misma divisa y las cancela.
+    Busca transacciones pendientes con la misma divisa y las marca como 'requiere_confirmacion'.
     """
     try:
         # 1. Validación de la divisa base
@@ -639,22 +897,22 @@ def cancelar_transacciones_pendientes_por_tasa(sender, instance, created, **kwar
         divisa_actualizada = instance.divisa
 
         # 2. Encontrar transacciones PENDIENTES afectadas
-        transacciones_a_cancelar = Transaccion.objects.filter(
+        transacciones_a_confirmar = Transaccion.objects.filter(
             Q(divisa_origen=divisa_actualizada) | Q(divisa_destino=divisa_actualizada),
             estado='pendiente'
         ).select_related('cliente', 'divisa_origen', 'divisa_destino')
 
-        razon_cancelacion = (
+        razon_cambio = (
             f"Cotización de {divisa_actualizada.code} ha sido actualizada en el sistema. "
             f"(Segmento: {instance.segmento.name})"
         )
 
-        # 3. Cancelar cada transacción
-        for transaccion in transacciones_a_cancelar:
-            transaccion.cancelar_automaticamente(razon=razon_cancelacion)
+        # 3. Marcar cada transacción como 'requiere_confirmacion'
+        for transaccion in transacciones_a_confirmar:
+            transaccion.marcar_como_requiere_confirmacion(razon=razon_cambio)
     except Exception as e:
         # Si hay un error (por ejemplo, columna faltante), no fallar
         # Solo registrar el error en logs si es necesario
         import logging
         logger = logging.getLogger(__name__)
-        logger.warning(f"Error al cancelar transacciones por tasa: {e}")
+        logger.warning(f"Error al marcar transacciones como requiere confirmación: {e}")

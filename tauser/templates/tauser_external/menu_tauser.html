@@ -1,0 +1,93 @@
+{% extends 'tauser_external/base_external.html' %}
+{% load static %}
+
+{% block title %}TAUSER - Menú Principal{% endblock %}
+
+{% block header_actions %}
+<div class="d-flex align-items-center">
+    <span class="text-white me-3">
+        <i class="fas fa-user-circle me-2"></i>
+        <strong>{{ cliente.nombre_completo }}</strong>
+    </span>
+    <a href="{% url 'tauser_external:cerrar_sesion' terminal.codigo %}" 
+       class="btn btn-sm btn-outline-light">
+        <i class="fas fa-sign-out-alt me-1"></i>
+        Salir
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Terminal Info Header -->
+            <div class="card shadow mb-4" style="background: rgba(255,255,255,0.95);">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h4 class="mb-1">
+                                <i class="fas fa-desktop text-primary"></i>
+                                {{ terminal.nombre }}
+                            </h4>
+                            <small class="text-muted">
+                                <i class="fas fa-map-marker-alt"></i>
+                                {{ terminal.ubicacion }}
+                            </small>
+                        </div>
+                        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                            <div class="alert alert-success mb-0 py-2">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <strong>Sesión Activa</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Welcome Message -->
+            <div class="text-center mb-4">
+                <h2 class="text-white mb-2">
+                    ¡Bienvenido, {{ cliente.nombre_completo }}!
+                </h2>
+                <p class="text-white-50">
+                    Seleccione la operación que desea realizar
+                </p>
+            </div>
+
+            <!-- Menú de Opciones -->
+            <div class="row justify-content-center">
+                {% for opcion in opciones %}
+                    <div class="col-md-6 col-lg-5 mb-4">
+                        <div class="card h-100 shadow hover-card" style="background: rgba(255,255,255,0.95);">
+                            <div class="card-body text-center p-5">
+                                <div class="mb-4">
+                                    <i class="{{ opcion.icono }} fa-5x text-{{ opcion.color }}"></i>
+                                </div>
+                                <h3 class="card-title fw-bold">{{ opcion.titulo }}</h3>
+                                <p class="card-text text-muted mb-4">{{ opcion.descripcion }}</p>
+                                <a href="{% url opcion.url terminal.codigo %}" 
+                                   class="btn btn-{{ opcion.color }} btn-lg w-100">
+                                    <i class="fas fa-arrow-right me-2"></i>
+                                    Acceder
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-card {
+    transition: all 0.3s ease;
+    transform: translateY(0);
+}
+.hover-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.3) !important;
+}
+</style>
+{% endblock %}

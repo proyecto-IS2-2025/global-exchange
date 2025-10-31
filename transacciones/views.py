@@ -19,6 +19,8 @@ from clientes.models import Cliente
 from divisas.models import Divisa
 from clientes.views import get_medio_acreditacion_seleccionado, get_medio_pago_seleccionado
 from clientes.services import verificar_limites
+from tauser.services import crear_reservas_para_transaccion  # ← NUEVO IMPORT
+from tauser.models import Terminal  # ← NUEVO IMPORT
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +28,48 @@ logger = logging.getLogger(__name__)
 # ═══════════════════════════════════════════════════════════════════
 # FUNCIONES AUXILIARES (SIN CAMBIOS)
 # ═══════════════════════════════════════════════════════════════════
+
+def _crear_reservas_denominaciones_compra(transaccion):
+    """
+    Crea las reservas de denominaciones cuando una compra es pagada.
+    
+    :param transaccion: Objeto Transaccion (debe estar en estado 'pagada')
+    :return: tuple (success: bool, message: str)
+    """
+    try:
+        # Obtener terminal desde medio_pago_datos
+        medio_datos = transaccion.get_medio_pago_info() or {}
+        tauser_info = medio_datos.get('tauser')
+        
+        if not tauser_info:
+            logger.error(f"No se encontró información del tauser en transacción {transaccion.numero_transaccion}")
+            return False, "No se encontró información del tauser seleccionado"
+        
+        terminal_id = tauser_info.get('id')
+        if not terminal_id:
+            logger.error(f"No se encontró ID del tauser en transacción {transaccion.numero_transaccion}")
+            return False, "No se encontró ID del tauser"
+        
+        try:
+            terminal = Terminal.objects.get(id=terminal_id, is_activa=True)
+        except Terminal.DoesNotExist:
+            logger.error(f"Terminal {terminal_id} no existe o está inactiva")
+            return False, f"Terminal no encontrada o inactiva"
+        
+        # Crear reservas
+        success, message, reservas = crear_reservas_para_transaccion(transaccion, terminal)
+        
+        if success:
+            logger.info(f"✅ Reservas creadas para transacción {transaccion.numero_transaccion}: {message}")
+        else:
+            logger.error(f"❌ Error al crear reservas para transacción {transaccion.numero_transaccion}: {message}")
+        
+        return success, message
+        
+    except Exception as e:
+        logger.error(f"Error al crear reservas para transacción {transaccion.numero_transaccion}: {e}", exc_info=True)
+        return False, f"Error inesperado: {str(e)}"
+
 
 def get_cliente_from_session(request):
     """
@@ -855,7 +899,8 @@ def crear_transaccion_desde_venta(request):
 
     try:
         operacion = request.session.get("operacion")
-        medio_inst = get_medio_pago_seleccionado(request)
+        # CORRECCIÓN: En VENTA usamos medio de acreditación (donde se deposita al cliente)
+        medio_inst = get_medio_acreditacion_seleccionado(request)
         
         if not operacion:
             messages.error(request, "No se encontró información de la operación.")
@@ -1001,6 +1046,7 @@ def crear_transaccion_desde_compra(request):
         # Obtener datos de la sesión
         operacion = request.session.get("operacion")
         medio_inst = get_medio_pago_seleccionado(request)
+        tauser_seleccionado = request.session.get('tauser_seleccionado')  # NUEVO
         
         if not operacion:
             messages.error(request, "No se encontró información de la operación.")
@@ -1009,6 +1055,10 @@ def crear_transaccion_desde_compra(request):
         if not medio_inst:
             messages.error(request, "No se encontró el medio de pago seleccionado.")
             return redirect("clientes:seleccionar_medio_pago")
+        
+        if not tauser_seleccionado:  # NUEVO
+            messages.error(request, "No se encontró el tauser seleccionado.")
+            return redirect("operacion_divisas:seleccionar_tauser_compra")
 
         # Obtener cliente desde la sesión
         cliente_id = request.session.get('cliente_id')
@@ -1057,8 +1107,11 @@ def crear_transaccion_desde_compra(request):
         if not ok:
             messages.error(request, msg)
             return redirect('operacion_divisas:compra_sumario')
-        # Preparar datos del medio de pago
+        
+        # Preparar datos del medio de pago y obtener comisión
         medio_datos = {}
+        comision_porcentaje = Decimal('0')
+        
         if isinstance(medio_inst, dict) and medio_inst.get("id"):
             try:
                 from clientes.models import ClienteMedioDePago
@@ -1078,11 +1131,17 @@ def crear_transaccion_desde_compra(request):
                     api_info = medio_model.get_api_info()
                     tipo_label = api_info.get("nombre_usuario", "No definido")
                 
+                # Obtener comisión como Decimal
+                try:
+                    comision_porcentaje = Decimal(str(medio_model.comision_porcentaje))
+                except (ValueError, TypeError):
+                    comision_porcentaje = Decimal('0')
+                
                 medio_datos = {
                     'id': medio_inst.get("id"),
                     'nombre': medio_model.nombre,
                     'tipo': tipo_label,
-                    'comision': f"{medio_model.comision_porcentaje:.2f}%",
+                    'comision': f"{comision_porcentaje:.2f}%",
                     'datos_campos': medio_real.datos_campos or {},
                     'es_principal': medio_real.es_principal,
                 }
@@ -1100,27 +1159,46 @@ def crear_transaccion_desde_compra(request):
         decimales_origen = determinar_decimales_divisa(divisa_origen.code)
         decimales_destino = determinar_decimales_divisa(divisa_destino.code)
         
-        monto_origen = redondear(monto_origen, decimales_origen)  # según divisa origen
+        monto_origen_base = redondear(monto_origen, decimales_origen)  # monto base sin comisión
         monto_destino = redondear(monto_destino, decimales_destino)  # según divisa destino
         tasa_cambio = redondear(tasa_cambio, 2)  # tasa siempre con 2 decimales
-
-        # Preparar datos del medio
-        medio_datos = preparar_datos_medio(medio_inst)
+        
+        # 💰 Calcular el monto total incluyendo comisión del medio de pago
+        comision_monto = (monto_origen_base * comision_porcentaje / Decimal('100')).quantize(
+            Decimal('1'), rounding=ROUND_HALF_UP
+        )
+        monto_origen_total = monto_origen_base + comision_monto  # Total a pagar por el cliente
+        # 💰 Calcular el monto total incluyendo comisión del medio de pago
+        comision_monto = (monto_origen_base * comision_porcentaje / Decimal('100')).quantize(
+            Decimal('1'), rounding=ROUND_HALF_UP
+        )
+        monto_origen_total = monto_origen_base + comision_monto  # Total a pagar por el cliente
         
         # Crear la transacción
         with transaction.atomic():
+            # Agregar info del tauser a medio_datos
+            medio_datos['tauser'] = tauser_seleccionado  # NUEVO
+            
+            # Obtener el objeto Terminal
+            terminal_obj = None
+            try:
+                terminal_obj = Terminal.objects.get(id=tauser_seleccionado.get('id'))
+            except Terminal.DoesNotExist:
+                logger.error(f"Terminal con ID {tauser_seleccionado.get('id')} no encontrado")
+            
             transaccion = Transaccion.objects.create(
                 tipo_operacion='compra',
                 cliente=cliente,
                 divisa_origen=divisa_origen,
                 divisa_destino=divisa_destino,
-                monto_origen=monto_origen,
+                monto_origen=monto_origen_total,  # 💰 Usar el total con comisión
                 monto_destino=monto_destino,
                 tasa_de_cambio_aplicada=tasa_cambio,
                 estado='pendiente',
                 medio_pago_datos=medio_datos,
+                tauser_terminal=terminal_obj,  # NUEVO: Asignar terminal
                 procesado_por=request.user,
-                observaciones=f"Transacción creada desde compra de {divisa_destino.code} por {monto_origen} Gs."
+                observaciones=f"Transacción creada desde compra de {divisa_destino.code}. Monto base: {monto_origen_base} Gs. + Comisión: {comision_monto} Gs. = Total: {monto_origen_total} Gs. | Tauser: {tauser_seleccionado.get('nombre')}"
             )
             
             # Crear historial inicial
@@ -1133,7 +1211,7 @@ def crear_transaccion_desde_compra(request):
             )
         
         # Limpiar datos de sesión
-        limpiar_sesion_operacion(request, ['operacion', 'compra_resultado', 'medio_pago_seleccionado'])
+        limpiar_sesion_operacion(request, ['operacion', 'compra_resultado', 'medio_pago_seleccionado', 'tauser_seleccionado'])
 
         # NUEVO: realizar transferencia/pago del CLIENTE -> EMPRESA por monto_origen (PYG)
         try:
@@ -1189,6 +1267,14 @@ def crear_transaccion_desde_compra(request):
                     if success:
                         logger.info(f"[COMPRA] ✅ Pago Stripe exitoso - Transaction ID: {stripe_transaction.id}")
                         transaccion.cambiar_estado('pagada', observacion='Pago con Stripe procesado exitosamente', usuario=request.user)
+                        
+                        # NUEVO: Crear reservas de denominaciones
+                        reservas_ok, reservas_msg = _crear_reservas_denominaciones_compra(transaccion)
+                        if reservas_ok:
+                            logger.info(f"✅ {reservas_msg}")
+                        else:
+                            logger.warning(f"⚠️ {reservas_msg}")
+                        
                         messages.success(request, f'¡Pago procesado exitosamente con Stripe! ID: {stripe_transaction.payment_intent_id}')
                     else:
                         logger.error(f"[COMPRA] ❌ Pago Stripe fallido: {error}")
@@ -1210,6 +1296,14 @@ def crear_transaccion_desde_compra(request):
                 )
                 if resultado.get('ok'):
                     transaccion.cambiar_estado('pagada', observacion='Pago automático desde billetera recibido', usuario=request.user)
+                    
+                    # NUEVO: Crear reservas de denominaciones
+                    reservas_ok, reservas_msg = _crear_reservas_denominaciones_compra(transaccion)
+                    if reservas_ok:
+                        logger.info(f"✅ {reservas_msg}")
+                    else:
+                        logger.warning(f"⚠️ {reservas_msg}")
+                    
                     messages.success(request, f"Pago exitoso desde billetera. Comprobante: {resultado.get('comprobante')}")
                 else:
                     logger.warning(f"[COMPRA] Pago billetera fallido: {resultado}")
@@ -1226,6 +1320,14 @@ def crear_transaccion_desde_compra(request):
                 if resultado.get('ok'):
                     tipo_tarjeta = resultado.get('tipo_tarjeta', 'tarjeta')
                     transaccion.cambiar_estado('pagada', observacion=f'Pago automático con tarjeta de {tipo_tarjeta} recibido', usuario=request.user)
+                    
+                    # NUEVO: Crear reservas de denominaciones
+                    reservas_ok, reservas_msg = _crear_reservas_denominaciones_compra(transaccion)
+                    if reservas_ok:
+                        logger.info(f"✅ {reservas_msg}")
+                    else:
+                        logger.warning(f"⚠️ {reservas_msg}")
+                    
                     messages.success(request, f"Pago exitoso con tarjeta de {tipo_tarjeta}. Comprobante: {resultado.get('comprobante')}")
                 else:
                     logger.warning(f"[COMPRA] Pago con tarjeta fallido: {resultado}")
@@ -1256,6 +1358,14 @@ def crear_transaccion_desde_compra(request):
                     )
                     if resultado.get('ok'):
                         transaccion.cambiar_estado('pagada', observacion='Pago automático recibido', usuario=request.user)
+                        
+                        # NUEVO: Crear reservas de denominaciones
+                        reservas_ok, reservas_msg = _crear_reservas_denominaciones_compra(transaccion)
+                        if reservas_ok:
+                            logger.info(f"✅ {reservas_msg}")
+                        else:
+                            logger.warning(f"⚠️ {reservas_msg}")
+                        
                         messages.success(request, 'Transferencia recibida: operación pagada.')
                     else:
                         logger.warning(f"[COMPRA] Transferencia fallida: {resultado}")
@@ -1296,6 +1406,62 @@ def crear_transaccion_desde_compra(request):
         logger.error(f"Error al crear transacción de compra: {e}")
         messages.error(request, f"Error al procesar la transacción: {str(e)}")
         return redirect('operacion_divisas:compra_sumario')
+
+
+def _crear_reservas_denominaciones_compra(transaccion):
+    """
+    Función auxiliar para crear reservas de denominaciones después de confirmar pago.
+    Solo para transacciones de compra en estado 'pagada'.
+    
+    :param transaccion: Objeto Transaccion
+    :return: tuple (success: bool, message: str)
+    """
+    try:
+        # Verificar que sea una compra pagada
+        if transaccion.tipo_operacion != 'compra':
+            return False, "Solo se crean reservas para compras"
+        
+        if transaccion.estado != 'pagada':
+            return False, "La transacción debe estar pagada para crear reservas"
+        
+        # Obtener info del tauser desde medio_pago_datos
+        medio_datos = transaccion.get_medio_pago_info() or {}
+        tauser_info = medio_datos.get('tauser')
+        
+        if not tauser_info:
+            logger.warning(f"No se encontró info de tauser en transacción {transaccion.numero_transaccion}")
+            return False, "No se encontró información del tauser seleccionado"
+        
+        # Obtener el terminal
+        from tauser.models import Terminal
+        terminal_id = tauser_info.get('id')
+        
+        if not terminal_id:
+            return False, "No se encontró ID del terminal"
+        
+        try:
+            terminal = Terminal.objects.get(id=terminal_id, is_activa=True)
+        except Terminal.DoesNotExist:
+            return False, f"Terminal {terminal_id} no encontrada o inactiva"
+        
+        # Crear las reservas
+        success, message, reservas = crear_reservas_para_transaccion(transaccion, terminal)
+        
+        if success:
+            logger.info(
+                f"✅ Reservas creadas para transacción {transaccion.numero_transaccion}: "
+                f"{len(reservas)} denominaciones reservadas en {terminal.nombre}"
+            )
+        else:
+            logger.error(
+                f"❌ Error al crear reservas para transacción {transaccion.numero_transaccion}: {message}"
+            )
+        
+        return success, message
+        
+    except Exception as e:
+        logger.error(f"Error en _crear_reservas_denominaciones_compra: {e}", exc_info=True)
+        return False, f"Error al crear reservas: {str(e)}"
 
 
 def preparar_datos_medio(medio_inst):
@@ -1829,4 +1995,111 @@ def cancelar_transaccion(request, numero_transaccion):
     # GET request - mostrar página de confirmación
     return render(request, 'confirmar_cancelacion.html', {
         'transaccion': transaccion
+    })
+
+
+# ═══════════════════════════════════════════════════════════════════
+# VISTA: Confirmar Transacción con Nueva Tasa
+# ═══════════════════════════════════════════════════════════════════
+
+@login_required
+@require_permission("transacciones.cancel_propias_transacciones")  # ✅ SIN check_client_assignment
+def confirmar_transaccion_nueva_tasa(request, numero_transaccion):
+    """
+    🔐 PROTEGIDA: transacciones.cancel_propias_transacciones
+    Vista para que el cliente decida qué hacer con una transacción que requiere confirmación
+    debido a un cambio de tasa.
+    """
+    # ✅ Validar cliente activo
+    cliente_id = request.session.get('cliente_id')
+    if not cliente_id:
+        messages.error(request, "Debes tener un cliente seleccionado para confirmar transacciones")
+        return redirect('clientes:seleccionar_cliente')
+    
+    transaccion = get_object_or_404(Transaccion, numero_transaccion=numero_transaccion)
+    
+    # ✅ Validación adicional: el cliente solo maneja sus propias transacciones
+    if not request.user.is_staff:
+        if str(transaccion.cliente.id) != str(cliente_id):
+            messages.error(request, "No tiene permisos para modificar esta transacción.")
+            return redirect('transacciones:historial_cliente')
+    
+    # Verificar que la transacción esté en estado 'requiere_confirmacion'
+    if transaccion.estado != 'requiere_confirmacion':
+        messages.error(request, "Esta transacción no requiere confirmación.")
+        return redirect('transacciones:detalle', numero_transaccion=numero_transaccion)
+    
+    # Calcular nuevos montos con la tasa actual
+    nuevos_datos = None
+    error_calculo = None
+    try:
+        nuevos_datos = transaccion.recalcular_montos_con_tasa_actual()
+    except Exception as e:
+        logger.error(f'Error al recalcular montos para transacción {numero_transaccion}: {e}')
+        error_calculo = str(e)
+    
+    if request.method == 'POST':
+        accion = request.POST.get('accion')
+        
+        try:
+            if accion == 'recalcular':
+                # Opción 1: Recalcular con la nueva tasa
+                if not nuevos_datos:
+                    messages.error(request, "No se pudo recalcular los montos. Por favor, intente más tarde.")
+                    return redirect('transacciones:detalle', numero_transaccion=numero_transaccion)
+                
+                # Actualizar la transacción con los nuevos valores
+                transaccion.tasa_de_cambio_aplicada = nuevos_datos['nueva_tasa']
+                transaccion.monto_origen = nuevos_datos['nuevo_monto_origen']
+                transaccion.monto_destino = nuevos_datos['nuevo_monto_destino']
+                
+                # Cambiar estado de vuelta a pendiente
+                transaccion.cambiar_estado(
+                    nuevo_estado='pendiente',
+                    observacion=(
+                        f"Transacción actualizada con nueva tasa: {nuevos_datos['nueva_tasa']}. "
+                        f"Tasa anterior: {nuevos_datos['tasa_anterior']}"
+                    ),
+                    usuario=request.user
+                )
+                
+                messages.success(
+                    request,
+                    f'Transacción {numero_transaccion} actualizada con la nueva tasa de cambio.'
+                )
+                return redirect('transacciones:detalle', numero_transaccion=numero_transaccion)
+                
+            elif accion == 'cancelar':
+                # Opción 2: Cancelar la transacción
+                razon_cancelacion = request.POST.get('razon_cancelacion', '').strip()
+                
+                observacion = 'Transacción cancelada por el cliente debido a cambio de tasa'
+                if razon_cancelacion:
+                    observacion += f'. Razón: {razon_cancelacion}'
+                
+                transaccion.cambiar_estado(
+                    nuevo_estado='cancelada',
+                    observacion=observacion,
+                    usuario=request.user
+                )
+                
+                messages.success(
+                    request,
+                    f'Transacción {numero_transaccion} cancelada exitosamente.'
+                )
+                return redirect('transacciones:historial_cliente')
+            else:
+                messages.error(request, "Acción no válida.")
+                return redirect('transacciones:detalle', numero_transaccion=numero_transaccion)
+                
+        except Exception as e:
+            logger.error(f'Error al procesar confirmación de transacción {numero_transaccion}: {e}')
+            messages.error(request, f'Error al procesar la solicitud: {str(e)}')
+            return redirect('transacciones:detalle', numero_transaccion=numero_transaccion)
+    
+    # GET request - mostrar página de confirmación con las opciones
+    return render(request, 'confirmar_transaccion_nueva_tasa.html', {
+        'transaccion': transaccion,
+        'nuevos_datos': nuevos_datos,
+        'error_calculo': error_calculo,
     })

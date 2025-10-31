@@ -1,0 +1,81 @@
+{% extends 'tauser_external/base_external.html' %}
+{% load static %}
+
+{% block title %}TAUSER - Acceso{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <!-- Terminal Info -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-desktop me-2"></i>
+                        {{ terminal.nombre }}
+                    </h4>
+                    <small>{{ terminal.ubicacion }}</small>
+                </div>
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-key fa-4x text-warning mb-3"></i>
+                        <h3>Ingrese su PIN</h3>
+                        <p class="text-muted">Por favor ingrese su código de acceso</p>
+                    </div>
+
+                    <!-- Formulario de PIN -->
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="pin" class="form-label fw-bold">
+                                <i class="fas fa-lock me-2"></i>
+                                PIN de Acceso
+                            </label>
+                            <input 
+                                type="password" 
+                                class="form-control form-control-lg text-center" 
+                                id="pin" 
+                                name="pin" 
+                                placeholder="••••••"
+                                maxlength="6"
+                                pattern="[0-9]{6}"
+                                required
+                                autofocus
+                            >
+                            <small class="form-text text-muted">
+                                Ingrese el PIN de 6 dígitos que recibió
+                            </small>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>
+                                Acceder
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Información de seguridad -->
+                    <div class="alert alert-info mt-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <small>
+                            <strong>Seguridad:</strong> Su PIN es válido por 24 horas 
+                            y solo puede usarse una vez.
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Volver -->
+            <div class="text-center">
+                <a href="{% url 'tauser_external:seleccionar_terminal' %}" 
+                   class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Cambiar Terminal
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+{% load tauser_filters %}
+
+{% block title %}Transacciones - {{ cliente.nombre_completo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header con información del cliente -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header text-white py-3" 
+                     style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">
+                                <i class="fas fa-user-circle me-2"></i>
+                                Bienvenido, {{ cliente.nombre_completo }}
+                            </h4>
+                            <p class="mb-0 small mt-1 text-white-50">
+                                <i class="fas fa-id-card me-1"></i>
+                                {{ cliente.tipo_cliente|title }} - CI: {{ cliente.cedula }}
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <p class="mb-0 small">
+                                <i class="fas fa-desktop me-1"></i>
+                                Terminal: {{ terminal.nombre }}
+                            </p>
+                            <p class="mb-0 small text-white-50">
+                                <i class="fas fa-map-marker-alt me-1"></i>
+                                {{ terminal.ubicacion }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen de operaciones pendientes -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card border-success shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-money-bill-wave text-success fa-3x mb-2"></i>
+                            <h3 class="text-success mb-0">{{ total_retiros }}</h3>
+                            <p class="text-muted mb-0">Retiro{% if total_retiros != 1 %}s{% endif %} Pendiente{% if total_retiros != 1 %}s{% endif %}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-warning shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-cash-register text-warning fa-3x mb-2"></i>
+                            <h3 class="text-warning mb-0">{{ total_pagos }}</h3>
+                            <p class="text-muted mb-0">Pago{% if total_pagos != 1 %}s{% endif %} Pendiente{% if total_pagos != 1 %}s{% endif %}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transacciones para RETIRO -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-success text-white py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-money-bill-wave me-2"></i>
+                        Retiros Pendientes (Divisas Compradas)
+                    </h5>
+                    <small class="text-white-50">
+                        Transacciones en estado: <span class="badge bg-light text-dark">PAGADA</span>
+                    </small>
+                </div>
+                <div class="card-body">
+                    {% if transacciones_retiro %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th><i class="fas fa-hashtag me-1"></i> Nro.</th>
+                                        <th><i class="fas fa-calendar me-1"></i> Fecha</th>
+                                        <th><i class="fas fa-exchange-alt me-1"></i> Operación</th>
+                                        <th class="text-end"><i class="fas fa-coins me-1"></i> A Retirar</th>
+                                        <th class="text-center"><i class="fas fa-info-circle me-1"></i> Estado</th>
+                                        <th class="text-center"><i class="fas fa-cog me-1"></i> Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in transacciones_retiro %}
+                                    {% with trans=item.transaccion %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-primary">{{ trans.numero_transaccion }}</span>
+                                        </td>
+                                        <td>
+                                            <small>{{ trans.fecha_creacion|date:"d/m/Y H:i" }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">
+                                                {{ trans.monto_origen|currency }} {{ trans.divisa_origen.code }}
+                                                <i class="fas fa-arrow-right mx-1"></i>
+                                                {{ trans.monto_destino|currency }} {{ trans.divisa_destino.code }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong class="text-success">
+                                                {{ trans.monto_destino|currency }} {{ trans.divisa_destino.simbolo }}
+                                            </strong>
+                                        </td>
+                                        <td class="text-center">
+                                            {% if item.disponible %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check-circle me-1"></i> Disponible
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times-circle me-1"></i> No disponible
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if item.disponible %}
+                                                <form method="post" action="{% url 'tauser:ejecutar_operacion' terminal_codigo=terminal.codigo transaccion_id=trans.numero_transaccion %}" style="display: inline;">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="tipo_operacion" value="RETIRO">
+                                                    <button type="submit" class="btn btn-success btn-sm" 
+                                                            onclick="return confirm('¿Confirma el retiro de {{ trans.monto_destino|currency }} {{ trans.divisa_destino.code }}?')">
+                                                        <i class="fas fa-hand-holding-usd me-1"></i> Retirar
+                                                    </button>
+                                                </form>
+                                            {% else %}
+                                                <button class="btn btn-secondary btn-sm" disabled 
+                                                        title="No hay suficiente inventario en esta terminal">
+                                                    <i class="fas fa-ban me-1"></i> No disponible
+                                                </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endwith %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info mb-0" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No tiene divisas pendientes para retirar.
+                            <br>
+                            <small class="text-muted">
+                                Las compras aparecerán aquí una vez que estén en estado "PAGADA".
+                            </small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Transacciones para PAGO -->
+            <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-warning text-dark py-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-mobile-alt me-2"></i>
+                    Pagos Pendientes (Divisas Vendidas) - Transferencia Digital
+                </h5>
+                <small class="text-muted">
+                    Transacciones en estado: <span class="badge bg-light text-dark">PENDIENTE</span>
+                    {% if pago_digital %}
+                    | <i class="fas fa-check-circle text-success"></i> Pago por transferencia bancaria automática
+                    {% endif %}
+                </small>
+            </div>
+            <div class="card-body">
+                {% if transacciones_pago %}
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Pago Digital:</strong> Los pagos se realizan automáticamente por transferencia bancaria. 
+                        No es necesario contar con efectivo físico en la terminal.
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th><i class="fas fa-hashtag me-1"></i> Nro.</th>
+                                    <th><i class="fas fa-calendar me-1"></i> Fecha</th>
+                                    <th><i class="fas fa-exchange-alt me-1"></i> Operación</th>
+                                    <th class="text-end"><i class="fas fa-money-bill-wave me-1"></i> A Recibir</th>
+                                    <th class="text-center"><i class="fas fa-info-circle me-1"></i> Estado</th>
+                                    <th class="text-center"><i class="fas fa-cog me-1"></i> Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in transacciones_pago %}
+                                {% with trans=item.transaccion %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-primary">{{ trans.numero_transaccion }}</span>
+                                    </td>
+                                    <td>
+                                        <small>{{ trans.fecha_creacion|date:"d/m/Y H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            {{ trans.monto_origen|currency }} {{ trans.divisa_origen.code }}
+                                            <i class="fas fa-arrow-right mx-1"></i>
+                                            {{ trans.monto_destino|currency }} {{ trans.divisa_destino.code }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="text-success">
+                                            ₲{{ trans.monto_destino|currency }}
+                                        </strong>
+                                    </td>
+                                    <td class="text-center">
+                                        <!-- ✅ Siempre disponible para transferencia digital -->
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle me-1"></i> Disponible (Digital)
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <!-- ✅ Botón siempre habilitado -->
+                                        <form method="post" action="{% url 'ejecutar_operacion' terminal_codigo=trans.terminal.codigo transaccion_id=trans.id %}" style="display: inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="tipo_operacion" value="PAGO">
+                                            <button type="submit" class="btn btn-warning btn-sm" 
+                                                    onclick="return confirm('¿Confirma recibir ₲{{ trans.monto_destino|currency }} por transferencia bancaria?')">
+                                                <i class="fas fa-mobile-alt me-1"></i> Recibir Pago Digital
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endwith %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info mb-0" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No tiene pagos pendientes por recibir.
+                        <br>
+                        <small class="text-muted">
+                            Las ventas aparecerán aquí una vez que estén en estado "PENDIENTE".
+                        </small>
+                    </div>
+                {% endif %}
+            </div>
+            </div>
+
+            <!-- Botón de cerrar sesión -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body text-center py-4">
+                    <a href="{% url 'tauser:cerrar_sesion_tauser' terminal_codigo=terminal.codigo %}" 
+                       class="btn btn-danger btn-lg">
+                        <i class="fas fa-sign-out-alt me-2"></i>
+                        Cerrar Sesión
+                    </a>
+                </div>
+            </div>
+
+            <!-- Actualizar información de ayuda -->
+            <div class="alert alert-secondary" role="alert">
+            <h6 class="alert-heading">
+                <i class="fas fa-info-circle me-1"></i>
+                Información Importante
+            </h6>
+            <hr>
+            <ul class="mb-0 small">
+                <li><strong>Retiros (Compras):</strong> Solo se muestran compras en estado "PAGADA". Puede retirar cuando haya inventario físico disponible en la terminal.</li>
+                <li><strong>Pagos (Ventas):</strong> Solo se muestran ventas en estado "PENDIENTE". Los pagos se realizan automáticamente por <strong>transferencia bancaria digital</strong>, sin necesidad de efectivo físico.</li>
+                <li><strong>Disponibilidad:</strong> Los retiros dependen del inventario físico. Los pagos están siempre disponibles (transferencia digital).</li>
+                <li><strong>Seguridad:</strong> Recuerde cerrar su sesión al finalizar.</li>
+                <li><strong>Comprobante:</strong> Cada pago digital genera un comprobante bancario automáticamente.</li>
+            </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Confirmación adicional para operaciones
+    const forms = document.querySelectorAll('form[action*="ejecutar_operacion"]');
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const btnSubmit = this.querySelector('button[type="submit"]');
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Procesando...';
+        });
+    });
+    
+    // Animación de entrada para las cards
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}

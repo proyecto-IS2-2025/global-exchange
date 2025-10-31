@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load tauser_filters %}
+
+{% block title %}Consulta de Inventario - Terminal {{ terminal.codigo }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1">
+                        <i class="fas fa-eye text-info me-2"></i>
+                        Consulta de Inventario (Solo Lectura)
+                    </h1>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-desktop me-1"></i>
+                        Terminal: <strong>{{ terminal.nombre }}</strong> ({{ terminal.codigo }})
+                        <span class="ms-3">
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            {{ terminal.ubicacion }}
+                        </span>
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'tauser:terminal_detail' terminal.pk %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Volver al Terminal
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerta informativa -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <h5 class="alert-heading">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Vista de Consulta
+                </h5>
+                <p class="mb-0">
+                    Esta página muestra el estado actual del inventario de denominaciones.
+                    <strong>No se pueden realizar modificaciones desde aquí.</strong>
+                    Para recargar inventario, utilice el sistema de reabastecimiento del TAUSER.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertas de inventario bajo -->
+    {% if inventario_alertas %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <h5 class="alert-heading">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Alertas de Inventario Bajo ({{ inventario_alertas|length }})
+                </h5>
+                <ul class="mb-0">
+                    {% for item in inventario_alertas %}
+                    <li>
+                        <strong>{{ item.denominacion.divisa.code }}</strong> - 
+                        {{ item.denominacion.get_tipo_display }} {{ item.denominacion.valor_formateado }}:
+                        <span class="text-danger fw-bold">{{ item.cantidad }}</span> unidades
+                        (Mínimo: {{ item.cantidad_minima }})
+                    </li>
+                    {% endfor %}
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Tarjetas de resumen -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-primary">
+                <div class="card-body text-center">
+                    <i class="fas fa-coins fa-3x text-primary mb-2"></i>
+                    <h6 class="text-muted">Divisas Configuradas</h6>
+                    <h2 class="mb-0">{{ totales_globales.divisas_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-success">
+                <div class="card-body text-center">
+                    <i class="fas fa-money-bill-wave fa-3x text-success mb-2"></i>
+                    <h6 class="text-muted">Total de Billetes</h6>
+                    <h2 class="mb-0">{{ totales_globales.total_billetes }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-warning">
+                <div class="card-body text-center">
+                    <i class="fas fa-exclamation-triangle fa-3x text-warning mb-2"></i>
+                    <h6 class="text-muted">Alertas de Stock Bajo</h6>
+                    <h2 class="mb-0">{{ totales_globales.total_alertas }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventario agrupado por divisa -->
+    {% if inventario_por_divisa %}
+        {% for divisa_code, data in inventario_por_divisa.items %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-gradient-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-coins me-2"></i>
+                        {{ data.divisa.name }} ({{ divisa_code }})
+                    </h5>
+                    <div class="text-end">
+                        <div class="fs-6">Valor Total del Inventario</div>
+                        <div class="fs-4 fw-bold">
+                            {{ data.divisa.symbol }}{{ data.valor_total|currency }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Valor Unitario</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-center">Cant. Mínima</th>
+                                <th class="text-end">Valor Total</th>
+                                <th class="text-center">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in data.inventarios %}
+                            <tr {% if item.cantidad < item.cantidad_minima %}class="table-warning"{% endif %}>
+                                <td>
+                                    <i class="fas {% if item.denominacion.tipo == 'billete' %}fa-money-bill{% else %}fa-coins{% endif %} me-2"></i>
+                                    {{ item.denominacion.get_tipo_display|title }}
+                                </td>
+                                <td class="fw-bold">
+                                    {{ data.divisa.symbol }}{{ item.denominacion.valor|currency }}
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge {% if item.cantidad < item.cantidad_minima %}bg-warning text-dark{% else %}bg-primary{% endif %} fs-6">
+                                        {{ item.cantidad }}
+                                    </span>
+                                </td>
+                                <td class="text-center text-muted">
+                                    {{ item.cantidad_minima }}
+                                </td>
+                                <td class="text-end fw-bold">
+                                    {{ data.divisa.symbol }}{{ item.valor_total|currency }}
+                                </td>
+                                <td class="text-center">
+                                    {% if item.cantidad == 0 %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times-circle me-1"></i>Sin Stock
+                                        </span>
+                                    {% elif item.cantidad < item.cantidad_minima %}
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>Bajo
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle me-1"></i>Normal
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light fw-bold">
+                            <tr>
+                                <td colspan="4" class="text-end">Total {{ divisa_code }}:</td>
+                                <td class="text-end">{{ data.divisa.symbol }}{{ data.valor_total|currency }}</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <!-- Resumen de la divisa -->
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="text-center p-2 bg-light rounded">
+                            <small class="text-muted d-block">Total Billetes</small>
+                            <strong class="fs-5">{{ data.total_billetes }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-2 bg-light rounded">
+                            <small class="text-muted d-block">Valor Total</small>
+                            <strong class="fs-5">{{ data.divisa.symbol }}{{ data.valor_total|currency }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-2 bg-light rounded">
+                            <small class="text-muted d-block">Alertas</small>
+                            <strong class="fs-5 {% if data.alertas > 0 %}text-warning{% else %}text-success{% endif %}">
+                                {{ data.alertas }}
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <!-- Sin inventario -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">No hay denominaciones en el inventario</h4>
+                    <p class="text-muted">Este terminal aún no tiene configurado el inventario de denominaciones.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+</style>
+{% endblock %}

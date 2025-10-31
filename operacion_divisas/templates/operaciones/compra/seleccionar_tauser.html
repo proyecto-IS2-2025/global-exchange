@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Seleccionar Terminal TAUSER - Compra de Divisas{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tauser-card {
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        height: 100%;
+    }
+    
+    .tauser-card:hover {
+        border-color: #007bff;
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+        transform: translateY(-2px);
+    }
+    
+    .tauser-card.selected {
+        border-color: #28a745;
+        background-color: #f0f8f4;
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    }
+    
+    .tauser-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 8px 8px 0 0;
+    }
+    
+    .stock-badge {
+        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+    }
+    
+    .stock-disponible {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .stock-reservado {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    
+    .desglose-item {
+        border-left: 3px solid #007bff;
+        padding-left: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .no-tausers-message {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem;
+        border-radius: 15px;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'operacion_divisas:seleccionar_operacion' %}">Operaciones</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'operacion_divisas:compra' %}">Compra</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Seleccionar TAUSER</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="mb-3">
+                        <i class="fas fa-desktop me-2"></i>
+                        Seleccionar Terminal TAUSER
+                    </h2>
+                    <p class="text-muted mb-3">
+                        Seleccione la terminal donde retirará la divisa comprada. 
+                        Solo se muestran terminales con stock disponible.
+                    </p>
+                    
+                    {% if operacion %}
+                    <div class="alert alert-info d-flex align-items-center">
+                        <i class="fas fa-info-circle fa-2x me-3"></i>
+                        <div>
+                            <strong>Operación:</strong> Compra de {{ monto_divisa }} {{ divisa.code }}<br>
+                            <small>Las denominaciones se reservarán para garantizar su disponibilidad al momento del retiro.</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Tausers Disponibles -->
+    {% if tausers_disponibles %}
+    <form method="post" id="form-seleccionar-tauser">
+        {% csrf_token %}
+        <input type="hidden" name="terminal_id" id="terminal_id_input">
+        
+        <div class="row">
+            {% for item in tausers_disponibles %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="tauser-card" data-terminal-id="{{ item.terminal.id }}">
+                    <div class="tauser-header">
+                        <h4 class="mb-1">
+                            <i class="fas fa-terminal me-2"></i>
+                            {{ item.terminal.nombre }}
+                        </h4>
+                        <small><i class="fas fa-map-marker-alt me-1"></i>{{ item.terminal.ubicacion }}</small>
+                    </div>
+                    
+                    <div class="card-body">
+                        <!-- Stock Disponible -->
+                        <div class="mb-3">
+                            <h6 class="text-muted mb-2">Stock Disponible:</h6>
+                            <div class="d-flex justify-content-between">
+                                <span class="stock-badge stock-disponible">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    {{ item.stock_disponible|floatformat:2 }} {{ divisa.code }}
+                                </span>
+                                {% if item.stock_reservado > 0 %}
+                                <span class="stock-badge stock-reservado">
+                                    <i class="fas fa-lock me-1"></i>
+                                    Reservado: {{ item.stock_reservado|floatformat:2 }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Desglose de Denominaciones -->
+                        <div class="mb-3">
+                            <h6 class="text-muted mb-2">Desglose para su retiro:</h6>
+                            {% for inv_id, datos in item.desglose.items %}
+                            <div class="desglose-item">
+                                <small>
+                                    <strong>{{ datos.cantidad }}x</strong> 
+                                    {{ datos.inventario.denominacion.valor_formateado }}
+                                    <span class="text-muted">= {{ datos.subtotal|floatformat:2 }} {{ divisa.code }}</span>
+                                </small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <button type="button" class="btn btn-sm btn-outline-primary btn-seleccionar-tauser" data-terminal-id="{{ item.terminal.id }}">
+                                <i class="fas fa-hand-pointer me-1"></i>
+                                Seleccionar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12 d-flex justify-content-between">
+                <a href="{% url 'operacion_divisas:compra_confirmacion' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Volver
+                </a>
+                <button type="submit" class="btn btn-primary" id="btn-continuar" disabled>
+                    Continuar
+                    <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+        </div>
+    </form>
+    
+    {% else %}
+    <!-- No hay tausers disponibles -->
+    <div class="row">
+        <div class="col-12">
+            <div class="no-tausers-message">
+                <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                <h3>No hay Terminales TAUSER Disponibles</h3>
+                <p class="mb-4">
+                    Lo sentimos, actualmente no hay terminales con stock disponible para 
+                    <strong>{{ monto_divisa }} {{ divisa.code }}</strong>.
+                </p>
+                <p class="mb-4">
+                    Esto puede deberse a que:
+                </p>
+                <ul class="list-unstyled mb-4">
+                    <li><i class="fas fa-circle fa-xs me-2"></i>No hay suficientes denominaciones disponibles</li>
+                    <li><i class="fas fa-circle fa-xs me-2"></i>El stock está reservado para otras transacciones</li>
+                    <li><i class="fas fa-circle fa-xs me-2"></i>Las terminales están temporalmente sin stock</li>
+                </ul>
+                <div class="d-flex gap-3 justify-content-center">
+                    <a href="{% url 'operacion_divisas:compra' %}" class="btn btn-light btn-lg">
+                        <i class="fas fa-edit me-2"></i>
+                        Modificar Monto
+                    </a>
+                    <a href="{% url 'operacion_divisas:seleccionar_operacion' %}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-home me-2"></i>
+                        Volver al Inicio
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let terminalSeleccionada = null;
+
+    // Agregar event listeners a todos los botones de selección
+    document.querySelectorAll('.btn-seleccionar-tauser').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const terminalId = this.getAttribute('data-terminal-id');
+            seleccionarTauser(terminalId);
+        });
+    });
+
+    // También permitir click en la tarjeta completa
+    document.querySelectorAll('.tauser-card').forEach(function(card) {
+        card.addEventListener('click', function(e) {
+            // Solo si no se clickeó el botón
+            if (!e.target.closest('.btn-seleccionar-tauser')) {
+                const terminalId = this.getAttribute('data-terminal-id');
+                seleccionarTauser(terminalId);
+            }
+        });
+    });
+
+    function seleccionarTauser(terminalId) {
+        // Remover selección anterior
+        document.querySelectorAll('.tauser-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        // Agregar selección a la tarjeta clickeada
+        const card = document.querySelector(`.tauser-card[data-terminal-id="${terminalId}"]`);
+        if (card) {
+            card.classList.add('selected');
+            terminalSeleccionada = terminalId;
+            
+            // Actualizar input hidden
+            document.getElementById('terminal_id_input').value = terminalId;
+            
+            // Habilitar botón continuar
+            document.getElementById('btn-continuar').disabled = false;
+        }
+    }
+
+    // Validar antes de enviar
+    document.getElementById('form-seleccionar-tauser').addEventListener('submit', function(e) {
+        if (!terminalSeleccionada) {
+            e.preventDefault();
+            alert('Por favor, seleccione una terminal TAUSER.');
+        }
+    });
+});
+</script>
+{% endblock %}

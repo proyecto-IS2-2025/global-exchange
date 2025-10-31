@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+{% load tauser_filters %}
+
+{% block title %}Confirmar Venta{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-warning text-dark py-3">
+                    <h4 class="mb-0">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Confirmar Venta de Divisa
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success">
+                        <i class="fas fa-thumbs-up me-2"></i>
+                        El desglose de billetes es correcto. Revise el resumen antes de continuar.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen de la operación -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-invoice me-2"></i>
+                        Resumen de la Operación
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">Transacción:</p>
+                            <p class="h5"><strong>#{{ transaccion.id }}</strong></p>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <p class="mb-1 text-muted">Terminal:</p>
+                            <p class="h6">{{ terminal.nombre }}</p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="text-primary mb-3">Billetes a Entregar:</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Denominación</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in resumen %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ item.denominacion.valor_formateado }}</strong>
+                                        <small class="text-muted d-block">{{ item.denominacion.nombre }}</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info">{{ item.cantidad }}</span>
+                                    </td>
+                                    <td class="text-end">
+                                        {{ item.denominacion.divisa.simbolo }}{{ item.subtotal|currency }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="2" class="text-end"><strong>Total a entregar:</strong></td>
+                                    <td class="text-end">
+                                        <strong class="text-primary">
+                                            {{ transaccion.divisa_origen.simbolo }}{{ total|currency }}
+                                        </strong>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">
+                                        <small>Total de billetes: <strong>{{ total_billetes }}</strong></small>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="text-success mb-3">Recibirá por Transferencia:</h6>
+                    <div class="alert alert-success mb-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-university me-2"></i>
+                                <strong>Guaraníes (PYG):</strong>
+                            </div>
+                            <div class="h4 mb-0">
+                                <strong>₱{{ transaccion.monto_destino|currency }}</strong>
+                            </div>
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            La transferencia se realizará a su cuenta registrada
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instrucciones finales -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <h6 class="text-danger mb-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Antes de confirmar:
+                    </h6>
+                    <ul class="mb-0">
+                        <li class="mb-2">Verifique que tiene los billetes exactos listos</li>
+                        <li class="mb-2">Los billetes deben estar en buen estado (no rotos, manchados o dañados)</li>
+                        <li class="mb-2">Deposite los billetes uno por uno en el receptor</li>
+                        <li class="mb-2">Espere la confirmación de cada billete antes de insertar el siguiente</li>
+                        <li>La transferencia bancaria se realizará automáticamente al completar</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body text-center py-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <button type="submit" class="btn btn-warning btn-lg me-3">
+                            <i class="fas fa-check-double me-2"></i>
+                            Confirmar y Depositar Billetes
+                        </button>
+                        
+                        <a href="{% url 'tauser:seleccionar_denominaciones_venta' terminal_codigo=terminal.codigo transaccion_id=transaccion.id %}" 
+                           class="btn btn-outline-secondary btn-lg">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Modificar Cantidades
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const confirmado = confirm(
+            '¿Confirma que tiene los billetes listos y desea proceder?\n\n' +
+            'Total a depositar: {{ total }} {{ transaccion.divisa_origen.code }}\n' +
+            'Billetes: {{ total_billetes }}\n' +
+            'Recibirá: ₱{{ transaccion.monto_destino|currency }}'
+        );
+        
+        if (confirmado) {
+            const btn = this.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Procesando transferencia...';
+            this.submit();
+        }
+    });
+});
+</script>
+{% endblock %}

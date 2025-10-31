@@ -1,6 +1,7 @@
 """
 Configuración de Django para el proyecto Casa de Cambios.
 """
+
 from pathlib import Path
 import os
 from dotenv import load_dotenv
@@ -59,6 +60,7 @@ INSTALLED_APPS = [
     'simulador',
     'mfa', 
     'autenticacion',
+    'tauser',
     'interfaz',
     'stripe_payments',
     'facturacion_electronica',  # ✅ Facturación Electrónica

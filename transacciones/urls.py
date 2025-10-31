@@ -25,6 +25,9 @@ urlpatterns = [
     
     # Cancelar transacción (cliente)
     path('cancelar/<str:numero_transaccion>/', views.cancelar_transaccion, name='cancelar'),
+    
+    # Confirmar transacción con nueva tasa (cliente)
+    path('confirmar-nueva-tasa/<str:numero_transaccion>/', views.confirmar_transaccion_nueva_tasa, name='confirmar_nueva_tasa'),
 
     #Crear transacción
     path('crear-desde-compra/', views.crear_transaccion_desde_compra, name='crear_desde_compra'),

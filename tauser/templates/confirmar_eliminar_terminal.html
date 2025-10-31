@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-danger text-white py-3">
+                <h4 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Confirmar Desactivación
+                </h4>
+            </div>
+            
+            <div class="card-body p-4">
+                <div class="alert alert-warning" role="alert">
+                    <h5 class="alert-heading">¿Está seguro?</h5>
+                    <p>
+                        Está a punto de desactivar la terminal:
+                        <strong>{{ terminal.nombre }}</strong> ({{ terminal.codigo }})
+                    </p>
+                    <hr>
+                    <p class="mb-0">
+                        La terminal dejará de estar disponible para operaciones,
+                        pero se mantendrá el registro histórico.
+                    </p>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                        <a href="{% url 'tauser:terminal_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-power-off me-1"></i> Sí, Desactivar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

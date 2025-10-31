@@ -26,27 +26,27 @@
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <div class="d-flex align-items-center p-3 border rounded-4 h-100 bg-light-subtle detail-box">
-                                <i class="bi bi-cash-stack text-success me-3 fs-3"></i>
+                                <i class="bi bi-currency-exchange text-success me-3 fs-3"></i>
                                 <div>
-                                    <p class="mb-0 text-muted small">Vas a pagar</p>
-                                    <h5 class="mb-0 fw-semibold">Gs. {{ resultado.monto_original|floatformat:0|intcomma }}</h5>
+                                    <p class="mb-0 text-muted small">Divisa que deseas comprar</p>
+                                    <h5 class="mb-0 fw-semibold">{{ resultado.monto_original|floatformat:2|intcomma }} {{ resultado.moneda_code }}</h5>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="d-flex align-items-center p-3 border rounded-4 h-100 bg-light-subtle detail-box">
-                                <i class="bi bi-currency-exchange text-success me-3 fs-3"></i>
+                                <i class="bi bi-tag-fill text-success me-3 fs-3"></i>
                                 <div>
-                                    <p class="mb-0 text-muted small">Divisa a recibir</p>
-                                    <h5 class="mb-0 fw-semibold">{{ resultado.moneda_code }} - {{ resultado.moneda_nombre }}</h5>
+                                    <p class="mb-0 text-muted small">Moneda</p>
+                                    <h5 class="mb-0 fw-semibold">{{ resultado.moneda_nombre }}</h5>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="text-center p-4 p-md-5 rounded-4 mb-4 highlight-result-success">
-                        <p class="text-white mb-2 fs-5 fw-light">Recibirás (en divisa extranjera)</p>
-                        <h1 class="text-white mb-0 display-4 fw-bolder">{{ resultado.monto_resultado|floatformat:2|intcomma }} {{ resultado.moneda_code }}</h1>
+                        <p class="text-white mb-2 fs-5 fw-light">Deberás pagar (en Guaraníes)</p>
+                        <h1 class="text-white mb-0 display-4 fw-bolder">Gs. {{ resultado.monto_resultado|floatformat:0|intcomma }}</h1>
                     </div>
                     
                     <div class="row justify-content-center">

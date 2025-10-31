@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Confirmación Requerida - Cambio de Tasa{% endblock %}
+
+{% block extra_head %}
+<style>
+.transaction-info {
+    background-color: #f8f9fa;
+    border-left: 4px solid #ffc107;
+}
+.info-section {
+    background-color: #e7f3ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 0.375rem;
+}
+.comparison-box {
+    background-color: #f8f9fa;
+    border: 3px solid #ffc107;
+    border-radius: 0.5rem;
+}
+.comparison-box .border {
+    background-color: white;
+}
+.old-value {
+    color: #6c757d;
+    font-weight: 500;
+}
+.new-value {
+    color: #198754;
+    font-weight: bold;
+}
+.option-card {
+    border: 2px solid #dee2e6;
+    transition: all 0.3s;
+}
+.option-card:hover {
+    border-color: #007bff;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+}
+.option-card.selected {
+    border-color: #007bff;
+    background-color: #e7f3ff;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Confirmación Requerida - Cambio de Tasa
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Información de la transacción -->
+                    <div class="transaction-info p-3 rounded mb-4">
+                        <h5 class="mb-3">Información de la Transacción</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Número de Transacción:</strong><br>
+                                   <span class="font-monospace">{{ transaccion.numero_transaccion }}</span></p>
+                                <p><strong>Tipo de Operación:</strong><br>
+                                   <span class="text-capitalize">{{ transaccion.get_tipo_operacion_display }}</span></p>
+                                <p><strong>Estado Actual:</strong><br>
+                                   <span class="badge bg-warning text-dark">{{ transaccion.get_estado_display }}</span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Fecha de Creación:</strong><br>
+                                   {{ transaccion.fecha_creacion|date:"d/m/Y H:i" }}</p>
+                                <p><strong>Divisa:</strong><br>
+                                   {{ transaccion.divisa_origen.code }} → {{ transaccion.divisa_destino.code }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mensaje informativo -->
+                    <div class="info-section p-3 mb-4">
+                        <h5 class="text-primary mb-3">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            ¿Qué ha sucedido?
+                        </h5>
+                        <p class="mb-2">
+                            La cotización de la divisa ha sido actualizada en nuestro sistema, 
+                            lo que afecta la tasa de cambio de tu transacción.
+                        </p>
+                        <p class="mb-0">
+                            <strong>Debes decidir cómo continuar con esta transacción:</strong>
+                        </p>
+                    </div>
+
+                    {% if error_calculo %}
+                    <!-- Error al calcular -->
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Error:</strong> No se pudo calcular la nueva cotización. {{ error_calculo }}
+                    </div>
+                    {% else %}
+                    <!-- Comparación de montos -->
+                    <div class="comparison-box p-4 mb-4">
+                        <h5 class="mb-4 text-center">Comparación de Montos</h5>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="text-center p-3 border rounded">
+                                    <p class="text-muted mb-2 small">Tasa de Cambio</p>
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Anterior:</small>
+                                        <p class="old-value mb-0 fs-5">Gs. {{ nuevos_datos.tasa_anterior|floatformat:0|intcomma }}</p>
+                                    </div>
+                                    <i class="bi bi-arrow-down text-warning fs-4"></i>
+                                    <div class="mt-2">
+                                        <small class="text-success d-block fw-bold">Nueva:</small>
+                                        <p class="new-value mb-0 fs-4">Gs. {{ nuevos_datos.nueva_tasa|floatformat:0|intcomma }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center p-3 border rounded">
+                                    <p class="text-muted mb-2 small">{{ transaccion.divisa_origen.code }}</p>
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Anterior:</small>
+                                        <p class="old-value mb-0 fs-5">
+                                            {% if transaccion.divisa_origen.code == 'PYG' %}
+                                                Gs. {{ nuevos_datos.monto_origen_anterior|floatformat:0|intcomma }}
+                                            {% else %}
+                                                {{ nuevos_datos.monto_origen_anterior|floatformat:2|intcomma }}
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    <i class="bi bi-arrow-down text-warning fs-4"></i>
+                                    <div class="mt-2">
+                                        <small class="text-success d-block fw-bold">Nuevo:</small>
+                                        <p class="new-value mb-0 fs-4">
+                                            {% if transaccion.divisa_origen.code == 'PYG' %}
+                                                Gs. {{ nuevos_datos.nuevo_monto_origen|floatformat:0|intcomma }}
+                                            {% else %}
+                                                {{ nuevos_datos.nuevo_monto_origen|floatformat:2|intcomma }}
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center p-3 border rounded">
+                                    <p class="text-muted mb-2 small">{{ transaccion.divisa_destino.code }}</p>
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Anterior:</small>
+                                        <p class="old-value mb-0 fs-5">
+                                            {% if transaccion.divisa_destino.code == 'PYG' %}
+                                                Gs. {{ nuevos_datos.monto_destino_anterior|floatformat:0|intcomma }}
+                                            {% else %}
+                                                {{ nuevos_datos.monto_destino_anterior|floatformat:2|intcomma }}
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    <i class="bi bi-arrow-down text-warning fs-4"></i>
+                                    <div class="mt-2">
+                                        <small class="text-success d-block fw-bold">Nuevo:</small>
+                                        <p class="new-value mb-0 fs-4">
+                                            {% if transaccion.divisa_destino.code == 'PYG' %}
+                                                Gs. {{ nuevos_datos.nuevo_monto_destino|floatformat:0|intcomma }}
+                                            {% else %}
+                                                {{ nuevos_datos.nuevo_monto_destino|floatformat:2|intcomma }}
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Opciones -->
+                    <h5 class="mb-3">Selecciona una opción:</h5>
+                    
+                    <form method="POST" id="confirmForm">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- Opción 1: Recalcular -->
+                            <div class="col-md-6 mb-3">
+                                <div class="option-card p-4 rounded h-100" data-option="recalcular">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="accion" id="opcionRecalcular" 
+                                               value="recalcular" {% if not error_calculo %}required{% else %}disabled{% endif %}>
+                                        <label class="form-check-label w-100" for="opcionRecalcular">
+                                            <h5 class="text-success mb-3">
+                                                <i class="bi bi-arrow-repeat me-2"></i>
+                                                Actualizar con Nueva Tasa
+                                            </h5>
+                                            <p class="mb-2">
+                                                La transacción continuará con los montos recalculados usando la tasa actual.
+                                            </p>
+                                            {% if not error_calculo %}
+                                            <ul class="mb-0">
+                                                <li>Nueva tasa: <strong>Gs. {{ nuevos_datos.nueva_tasa|floatformat:0|intcomma }}</strong></li>
+                                                <li>La transacción volverá a estado <strong>"Pendiente"</strong></li>
+                                                <li>Podrás continuar con el proceso de pago</li>
+                                            </ul>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Opción 2: Cancelar -->
+                            <div class="col-md-6 mb-3">
+                                <div class="option-card p-4 rounded h-100" data-option="cancelar">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="accion" id="opcionCancelar" 
+                                               value="cancelar" required>
+                                        <label class="form-check-label w-100" for="opcionCancelar">
+                                            <h5 class="text-danger mb-3">
+                                                <i class="bi bi-x-circle me-2"></i>
+                                                Cancelar Transacción
+                                            </h5>
+                                            <p class="mb-2">
+                                                La transacción será cancelada permanentemente.
+                                            </p>
+                                            <ul class="mb-0">
+                                                <li>No se procesará el cambio de divisa</li>
+                                                <li>Podrás crear una nueva transacción cuando lo desees</li>
+                                                <li>Esta acción no se puede deshacer</li>
+                                            </ul>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Razón de cancelación (solo si elige cancelar) -->
+                        <div id="razonCancelacion" style="display: none;" class="mt-3">
+                            <label for="razon_cancelacion" class="form-label">
+                                Razón de cancelación (opcional)
+                            </label>
+                            <textarea 
+                                class="form-control" 
+                                id="razon_cancelacion" 
+                                name="razon_cancelacion" 
+                                rows="3" 
+                                placeholder="Describe brevemente por qué cancelas esta transacción..."
+                            ></textarea>
+                        </div>
+
+                        <!-- Confirmación -->
+                        <div class="form-check mt-4 mb-4">
+                            <input class="form-check-input" type="checkbox" id="confirmAction" required>
+                            <label class="form-check-label" for="confirmAction">
+                                <strong>Confirmo que he revisado la información y deseo proceder con la acción seleccionada.</strong>
+                            </label>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'transacciones:detalle' numero_transaccion=transaccion.numero_transaccion %}" 
+                               class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Volver al Detalle
+                            </a>
+                            
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <i class="bi bi-check-circle me-2"></i>Confirmar Acción
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('confirmForm');
+    const opcionRecalcular = document.getElementById('opcionRecalcular');
+    const opcionCancelar = document.getElementById('opcionCancelar');
+    const razonCancelacion = document.getElementById('razonCancelacion');
+    const optionCards = document.querySelectorAll('.option-card');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Manejar selección de opciones
+    optionCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio && !radio.disabled) {
+                radio.checked = true;
+                updateSelection();
+            }
+        });
+    });
+    
+    opcionRecalcular?.addEventListener('change', updateSelection);
+    opcionCancelar?.addEventListener('change', updateSelection);
+    
+    function updateSelection() {
+        // Remover clase selected de todas las tarjetas
+        optionCards.forEach(card => card.classList.remove('selected'));
+        
+        // Agregar clase selected a la tarjeta seleccionada
+        if (opcionRecalcular?.checked) {
+            opcionRecalcular.closest('.option-card').classList.add('selected');
+            razonCancelacion.style.display = 'none';
+            submitBtn.innerHTML = '<i class="bi bi-arrow-repeat me-2"></i>Actualizar Transacción';
+            submitBtn.className = 'btn btn-success';
+        } else if (opcionCancelar?.checked) {
+            opcionCancelar.closest('.option-card').classList.add('selected');
+            razonCancelacion.style.display = 'block';
+            submitBtn.innerHTML = '<i class="bi bi-x-circle me-2"></i>Cancelar Transacción';
+            submitBtn.className = 'btn btn-danger';
+        }
+    }
+    
+    // Validación del formulario
+    form.addEventListener('submit', function(e) {
+        const confirmCheckbox = document.getElementById('confirmAction');
+        if (!confirmCheckbox.checked) {
+            e.preventDefault();
+            alert('Debes confirmar que deseas proceder con la acción seleccionada.');
+            return false;
+        }
+        
+        const accionSeleccionada = form.querySelector('input[name="accion"]:checked');
+        if (!accionSeleccionada) {
+            e.preventDefault();
+            alert('Debes seleccionar una opción.');
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

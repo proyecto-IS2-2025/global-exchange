@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white py-3">
+                <h4 class="mb-0">
+                    <i class="fas fa-boxes-stacked me-2"></i>
+                    Gestión de Inventario: {{ terminal.nombre }}
+                </h4>
+            </div>
+            
+            <div class="card-body p-4">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {{ formset.management_form }}
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Divisa</th>
+                                    <th>Cantidad Disponible</th>
+                                    <th>Cantidad Mínima</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for form in formset %}
+                                <tr>
+                                    <td>
+                                        {{ form.divisa }}
+                                        {% if form.divisa.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.divisa.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ form.cantidad }}
+                                        {% if form.cantidad.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.cantidad.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ form.cantidad_minima }}
+                                        {% if form.cantidad_minima.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.cantidad_minima.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4">
+                        <a href="{% url 'tauser:terminal_detail' pk=terminal.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Guardar Inventario
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

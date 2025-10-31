@@ -1,0 +1,179 @@
+{% extends 'tauser_external/base_external.html' %}
+{% load static %}
+
+{% block title %}TAUSER - Reposición{% endblock %}
+
+{% block header_actions %}
+<div class="d-flex align-items-center">
+    <span class="text-white me-3">
+        <i class="fas fa-user-circle me-2"></i>
+        <strong>{{ cliente.nombre_completo }}</strong>
+    </span>
+    <a href="{% url 'tauser_external:cerrar_sesion' terminal.codigo %}" 
+       class="btn btn-sm btn-outline-light">
+        <i class="fas fa-sign-out-alt me-1"></i>
+        Salir
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="card shadow mb-4" style="background: rgba(255,255,255,0.95);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-1">
+                                <i class="fas fa-boxes text-success"></i>
+                                Reposición de Denominaciones
+                            </h3>
+                            <p class="text-muted mb-0">
+                                Terminal: <strong>{{ terminal.nombre }}</strong>
+                            </p>
+                        </div>
+                        <a href="{% url 'tauser_external:menu_tauser' terminal.codigo %}" 
+                           class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Volver al Menú
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulario de Reposición -->
+            <form method="post" action="{% url 'tauser_external:ejecutar_reposicion' terminal.codigo %}">
+                {% csrf_token %}
+
+                {% for divisa_code, datos in denominaciones_por_divisa.items %}
+                    <div class="card shadow mb-4" style="background: rgba(255,255,255,0.95);">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-money-bill-wave me-2"></i>
+                                {{ datos.divisa.nombre }} ({{ datos.divisa.code }})
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Denominación</th>
+                                            <th class="text-center">Inventario Actual</th>
+                                            <th class="text-center">Estado</th>
+                                            <th class="text-center" style="width: 200px;">
+                                                Cantidad a Reponer
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in datos.denominaciones %}
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ item.denominacion.nombre }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        Valor: {{ item.denominacion.valor_formateado }} {{ datos.divisa.code }}
+                                                    </small>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-info">
+                                                        {{ item.cantidad_actual }} billetes
+                                                    </span>
+                                                </td>
+                                                <td class="text-center">
+                                                    {% if item.necesita_reposicion %}
+                                                        <span class="badge bg-warning text-dark">
+                                                            <i class="fas fa-exclamation-triangle"></i>
+                                                            Bajo
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-check"></i>
+                                                            OK
+                                                        </span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <input 
+                                                        type="number" 
+                                                        class="form-control text-center" 
+                                                        name="reposicion_{{ item.denominacion.id }}"
+                                                        min="0"
+                                                        step="1"
+                                                        placeholder="0"
+                                                        {% if item.necesita_reposicion %}
+                                                            style="border-color: #ffc107;"
+                                                        {% endif %}
+                                                    >
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="card shadow" style="background: rgba(255,255,255,0.95);">
+                        <div class="card-body text-center py-5">
+                            <i class="fas fa-exclamation-triangle fa-5x text-warning mb-4"></i>
+                            <h4>No hay denominaciones configuradas</h4>
+                            <p class="text-muted">
+                                Este terminal no tiene denominaciones disponibles para reposición.
+                            </p>
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <!-- Botones de acción -->
+                <div class="card shadow" style="background: rgba(255,255,255,0.95);">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <a href="{% url 'tauser_external:menu_tauser' terminal.codigo %}" 
+                                   class="btn btn-outline-secondary btn-lg w-100">
+                                    <i class="fas fa-times me-2"></i>
+                                    Cancelar
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <button type="submit" class="btn btn-success btn-lg w-100">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    Confirmar Reposición
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Instrucciones -->
+            <div class="card shadow mt-4" style="background: rgba(255,255,255,0.95);">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Instrucciones
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0">
+                        <li>Revise el inventario actual de cada denominación</li>
+                        <li>Ingrese la cantidad de billetes que va a reponer</li>
+                        <li>Las denominaciones marcadas en amarillo necesitan reposición urgente</li>
+                        <li>Confirme la operación al finalizar</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.table td, .table th {
+    vertical-align: middle;
+}
+</style>
+{% endblock %}

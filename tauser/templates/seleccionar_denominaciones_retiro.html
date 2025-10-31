@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Desglose de Retiro - {{ divisa.code }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-success text-white py-3">
+                    <h4 class="mb-0">
+                        <i class="fas fa-money-bill-wave me-2"></i>
+                        Retiro de Divisa
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Transacción #{{ transaccion.id }}</strong><br>
+                        Retire <strong>{{ monto }} {{ divisa.simbolo }}</strong> en los siguientes billetes:
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desglose de denominaciones -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-receipt me-2"></i>
+                        Billetes a Retirar
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Denominación</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in resumen_desglose %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-success text-white rounded-circle me-3 d-flex align-items-center justify-content-center" 
+                                                 style="width: 50px; height: 50px; font-size: 1.2rem; font-weight: bold;">
+                                                {{ item.denominacion.divisa.simbolo }}
+                                            </div>
+                                            <div>
+                                                <strong>{{ item.valor_formateado }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ item.denominacion.divisa.nombre }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary" style="font-size: 1.1rem;">
+                                            {{ item.cantidad }} billete{{ item.cantidad|pluralize }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="text-success" style="font-size: 1.2rem;">
+                                            {{ item.subtotal_formateado }}
+                                        </strong>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="2" class="text-end"><strong>TOTAL:</strong></td>
+                                    <td class="text-end">
+                                        <h5 class="text-success mb-0">
+                                            <strong>{{ monto }} {{ divisa.simbolo }}</strong>
+                                        </h5>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">
+                                        <small>
+                                            <i class="fas fa-receipt me-1"></i>
+                                            Total de billetes: <strong>{{ total_billetes }}</strong>
+                                        </small>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instrucciones -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-hand-point-right me-2"></i>
+                        Instrucciones:
+                    </h6>
+                    <ol class="mb-0">
+                        <li class="mb-2">Confirme que el desglose de billetes es correcto</li>
+                        <li class="mb-2">Presione el botón "Confirmar Retiro"</li>
+                        <li class="mb-2">Retire los billetes del dispensador cuando salgan</li>
+                        <li class="mb-2">Cuente y verifique los billetes antes de retirarse</li>
+                        <li>No olvide cerrar su sesión al finalizar</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body text-center py-4">
+                    <form method="post" action="{% url 'tauser:ejecutar_operacion' terminal_codigo=terminal.codigo transaccion_id=transaccion.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="tipo_operacion" value="RETIRO">
+                        
+                        <!-- Pasar desglose como campos ocultos -->
+                        {% for inv_id, datos in desglose.items %}
+                            <input type="hidden" 
+                                   name="desglose_denominacion_{{ datos.inventario.denominacion.id }}" 
+                                   value="{{ datos.cantidad }}">
+                        {% endfor %}
+                        
+                        <button type="submit" class="btn btn-success btn-lg me-3">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Confirmar Retiro
+                        </button>
+                        
+                        <a href="{% url 'tauser:menu_principal' terminal_codigo=terminal.codigo %}" 
+                           class="btn btn-secondary btn-lg">
+                            <i class="fas fa-times-circle me-2"></i>
+                            Cancelar
+                        </a>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Advertencia de seguridad -->
+            <div class="alert alert-warning" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Importante:</strong> Verifique que los billetes estén en buen estado. 
+                Si detecta algún problema, contacte al personal inmediatamente.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animar entrada de filas
+    const rows = document.querySelectorAll('tbody tr');
+    rows.forEach((row, index) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(-20px)';
+        
+        setTimeout(() => {
+            row.style.transition = 'all 0.3s ease';
+            row.style.opacity = '1';
+            row.style.transform = 'translateX(0)';
+        }, index * 100);
+    });
+    
+    // Confirmación adicional
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const confirmado = confirm(
+            '¿Confirma que desea proceder con el retiro?\n\n' +
+            'Total: {{ monto }} {{ divisa.code }}\n' +
+            'Billetes: {{ total_billetes }}'
+        );
+        
+        if (!confirmado) {
+            e.preventDefault();
+        } else {
+            // Deshabilitar botón
+            const btn = this.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Procesando...';
+        }
+    });
+});
+</script>
+{% endblock %}
