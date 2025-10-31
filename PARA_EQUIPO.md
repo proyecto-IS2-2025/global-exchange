@@ -6,12 +6,57 @@ Cada uno debe configurar su propio rango de números de factura para evitar conf
 
 ---
 
-## 🚀 Setup Rápido (5 minutos)
+## 🚀 Setup SUPER Rápido (1 comando, 30 segundos)
+
+### ✨ **NUEVO: Configuración Automática** ✨
+
+Ejecuta este comando y el sistema te configura todo automáticamente:
+
+```bash
+cd global-exchange
+poetry run python configurar_rango_automatico.py
+```
+
+**Eso es todo.** El script:
+1. ✅ Consulta el último número usado (actualmente: 82)
+2. ✅ Te asigna automáticamente los próximos 50 números (83-132)
+3. ✅ Actualiza tu archivo `.env` con la configuración
+4. ✅ Verifica que todo esté correcto
+
+**Resultado:**
+```
+================================================================================
+🎉 CONFIGURACIÓN COMPLETADA
+================================================================================
+
+✅ Tu rango de facturas:
+   Número inicial: 0000083
+   Número final: 0000132
+   Total disponible: 50 facturas
+
+✅ ¡Todo listo! Puedes generar facturas sin conflictos con tus compañeros.
+================================================================================
+```
+
+---
+
+## 🔄 ¿Qué Pasa si Varios lo Ejecutan al Mismo Tiempo?
+
+**No hay problema.** Cada uno obtiene un rango único basado en el momento exacto en que ejecuta el script:
+
+- **José** ejecuta primero → obtiene 83-132
+- **María** ejecuta después → obtiene 133-182  
+- **Pedro** ejecuta al final → obtiene 183-232
+
+El sistema asigna rangos **secuencialmente** sin solapamiento.
+
+---
+
+## 📊 Método Manual (si prefieres coordinar antes)
 
 ### 1️⃣ Ver el estado actual
 
 ```bash
-cd global-exchange
 poetry run python obtener_proximo_numero.py
 ```
 
@@ -24,7 +69,7 @@ María: Yo del 133 al 182
 Pedro: Yo del 183 al 232
 ```
 
-### 3️⃣ Configurar tu `.env`
+### 3️⃣ Configurar manualmente tu `.env`
 
 ```bash
 # Editar el archivo .env
@@ -42,19 +87,6 @@ FACTURACION_NUMERO_FINAL=132     # ← Tu número final
 ```bash
 poetry run python verificar_configuracion_rango.py
 ```
-
-**Debes ver:**
-```
-✅ Configuración correcta!
-   Puedes generar facturas del 83 al 132
-```
-
-### 5️⃣ ¡Listo!
-
-Ahora puedes generar facturas sin conflictos. El sistema automáticamente:
-- ✅ Usa el próximo número disponible en TU rango
-- ✅ No permite salir de tu rango
-- ✅ Te avisa si te estás quedando sin números
 
 ---
 

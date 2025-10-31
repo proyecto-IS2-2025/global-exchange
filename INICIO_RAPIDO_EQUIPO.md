@@ -6,7 +6,39 @@ El sistema ya tiene **82 facturas generadas**. El próximo número disponible es
 
 ---
 
-## 📋 Qué hacer AHORA (2 minutos)
+## ⚡ Configuración AUTOMÁTICA (30 segundos)
+
+### **NUEVO: Solo ejecuta este comando** ✨
+
+```bash
+cd /home/jose/proyecto_is2/global-exchange
+poetry run python configurar_rango_automatico.py
+```
+
+**Eso es TODO.** El script hace todo automáticamente:
+1. ✅ Ve que el último número usado es **82**
+2. ✅ Te asigna automáticamente del **83 al 132** (50 números)
+3. ✅ Actualiza tu `.env` con la configuración
+4. ✅ Verifica que todo esté correcto
+5. ✅ ¡Listo para usar!
+
+---
+
+## 🤔 ¿Y si varios lo ejecutamos al mismo tiempo?
+
+**No hay problema.** Cada uno obtiene un rango único:
+
+- **Primero en ejecutar** → obtiene 83-132
+- **Segundo en ejecutar** → obtiene 133-182
+- **Tercero en ejecutar** → obtiene 183-232
+
+El sistema asigna rangos **secuencialmente** sin colisiones.
+
+---
+
+## 📋 Qué hacer AHORA (método manual - OPCIONAL)
+
+Si prefieres coordinar manualmente con el equipo antes de configurar:
 
 ### 1. Ejecutar el script:
 
