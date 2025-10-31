@@ -96,36 +96,22 @@ class SQLProxyService:
     
     def obtener_proximo_numero_factura(self):
         """
-        Obtiene el próximo número de factura disponible
-        dentro del rango asignado (51-100)
-        """
-        try:
-            # Buscar el último número usado en la base de datos
-            self.cursor.execute(f"""
-                SELECT MAX(CAST(dnumdoc AS INTEGER)) as max_num
-                FROM public.de
-                WHERE dest = '{TIMBRADO_CONFIG['establecimiento']}'
-                AND dpunexp = '{TIMBRADO_CONFIG['punto_expedicion']}'
-                AND CAST(dnumdoc AS INTEGER) >= {FACTURACION_CONFIG['numero_inicial']}
-                AND CAST(dnumdoc AS INTEGER) <= {FACTURACION_CONFIG['numero_final']}
-            """)
-            result = self.cursor.fetchone()
-            
-            if result and result['max_num']:
-                proximo = result['max_num'] + 1
-            else:
-                proximo = FACTURACION_CONFIG['numero_inicial']
-            
-            # Verificar que no exceda el rango
-            if proximo > FACTURACION_CONFIG['numero_final']:
-                raise Exception(f"Se ha alcanzado el límite de facturas. Rango disponible: {FACTURACION_CONFIG['numero_inicial']}-{FACTURACION_CONFIG['numero_final']}")
-            
-            # Formatear con ceros a la izquierda (7 dígitos)
-            return str(proximo).zfill(7)
+        Obtiene el próximo número de factura disponible.
         
-        except (Exception, psycopg2.Error) as error:
-            print(f"✗ Error al obtener próximo número de factura: {error}")
-            raise
+        DEPRECADO: Este método ahora delega a la función de utils.py
+        que obtiene el número desde Django ORM y valida el rango asignado.
+        
+        Returns:
+            str: Número de factura en formato "0000083"
+        """
+        from .utils import obtener_proximo_numero_factura as obtener_numero_django
+        
+        # Obtener el número completo desde Django (formato: 001-003-0000083)
+        numero_completo = obtener_numero_django()
+        
+        # Extraer solo la parte numérica para compatibilidad
+        partes = numero_completo.split('-')
+        return partes[2]  # Retorna "0000083"
     
     def crear_factura(self, datos_factura):
         """

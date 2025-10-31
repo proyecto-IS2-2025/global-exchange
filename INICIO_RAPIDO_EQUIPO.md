@@ -51,9 +51,30 @@ Escriban en WhatsApp/Telegram:
 
 ```bash
 # Agregar en tu .env local:
-NUMERO_FACTURA_INICIO=83
-NUMERO_FACTURA_FIN=132
+FACTURACION_NUMERO_INICIAL=83
+FACTURACION_NUMERO_FINAL=132
 ```
+
+### 5. Verificar tu configuración:
+
+```bash
+poetry run python verificar_configuracion_rango.py
+```
+
+**Deberías ver:**
+```
+✅ Configuración correcta!
+   Puedes generar facturas del 83 al 132
+   Tienes 50 números disponibles
+```
+
+### 6. ¡Listo para generar facturas!
+
+Ahora cuando generes una factura, el sistema automáticamente:
+- ✅ Usará el próximo número disponible en tu rango
+- ✅ Validará que esté dentro de tu rango asignado
+- ✅ Te avisará si te estás quedando sin números
+- ✅ Evitará conflictos con tus compañeros
 
 ---
 
