@@ -20,15 +20,7 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 # ═════════════════════════════════════════════════════════════════════
 
 # ⚠️ IMPORTANTE: Asegúrate de tener SECRET_KEY en .env
-SECRET_KEY = os.environ.get('SECRET_KEY', 'clave-secreta-de-desarrollo-no-usar-en-produccion')
-
-"""
-if not SECRET_KEY:
-    raise ValueError(
-        "SECRET_KEY no está configurada. "
-        "Agrega SECRET_KEY='tu-clave-secreta' en el archivo .env"
-    )
-"""
+SECRET_KEY = os.environ.get('SECRET_KEY', 'cambia_esto_por_una_clave_secreta_segura')
 
 # Debug mode (solo True en desarrollo)
 DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes')
@@ -305,9 +297,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Configuración de seguridad para producción
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+    # Permite desactivar SSL en entornos locales de producción
+    SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'True') == 'True'
+    SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'True') == 'True'
+    CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'True') == 'True'
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
