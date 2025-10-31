@@ -69,7 +69,7 @@ ACTIVIDADES_ECONOMICAS = [
 
 # URL para acceder a los KuDE (PDF y XML)
 KUDE_CONFIG = {
-    'url': 'http://localhost:40080/kude/',
+    'url': 'http://host.docker.internal:40080/kude/',
     'username': 'sqlproxy',
     'password': 'kude1234'
 }
