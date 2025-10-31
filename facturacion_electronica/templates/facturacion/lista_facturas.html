@@ -78,7 +78,7 @@
                             </td>
                             <td>{{ factura.fecha_emision|date:"d/m/Y" }}</td>
                             <td>
-                                <a href="{% url 'transacciones:detalle' factura.transaccion.id %}">
+                                <a href="{% url 'transacciones:detalle' factura.transaccion.numero_transaccion %}" target="_blank">
                                     {{ factura.transaccion.numero_transaccion }}
                                 </a>
                             </td>

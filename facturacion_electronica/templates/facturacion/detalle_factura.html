@@ -129,8 +129,8 @@
                     <p><strong>Cliente:</strong> {{ factura.transaccion.cliente.nombre_completo }}</p>
                     <p><strong>Tipo de Operación:</strong> {{ factura.transaccion.get_tipo_operacion_display }}</p>
                     <p class="mb-0">
-                        <a href="{% url 'transacciones:detalle' factura.transaccion.id %}" class="btn btn-sm btn-info">
-                            <i class="fas fa-eye"></i> Ver Transacción Completa
+                        <a href="{% url 'transacciones:detalle' factura.transaccion.numero_transaccion %}" class="btn btn-sm btn-info" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> Ver Transacción Completa
                         </a>
                     </p>
                 </div>
