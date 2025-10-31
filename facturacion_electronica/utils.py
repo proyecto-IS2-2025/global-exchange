@@ -153,6 +153,13 @@ def actualizar_estado_factura(factura):
                 factura.cdc = estado['cdc']
                 factura.estado = 'aprobado'
                 factura.fecha_aprobacion = timezone.now()
+                
+                # Construir URL del PDF en KuDE
+                # Formato: /kude/YYYYMM/001-003-0000070_YYYYMMDD_HHMMSS_NNNNNN.pdf
+                fecha_str = factura.fecha_emision.strftime('%Y%m')
+                # URL base - se actualizará con el archivo específico después
+                factura.url_kude_pdf = f"http://localhost:40080/kude/{fecha_str}/"
+                factura.url_kude_xml = f"http://localhost:40080/kude/{fecha_str}/"
             
             # Si fue rechazado
             elif estado.get('error_sifen'):

@@ -89,6 +89,20 @@
                     </div>
                     {% endif %}
 
+                    <!-- Alerta de procesamiento -->
+                    {% if factura.estado_sifen == 'Procesando' or factura.estado_sifen == 'Sol.Aprobacion' or not factura.cdc %}
+                    <div class="alert alert-info" role="alert">
+                        <h5><i class="fas fa-hourglass-half"></i> Procesando en SIFEN</h5>
+                        <p>La factura está siendo procesada por SIFEN. Este proceso puede tomar entre 30-60 segundos.</p>
+                        <p class="mb-2">
+                            <a href="{% url 'facturacion:actualizar_estado' factura.id %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-sync"></i> Actualizar Estado
+                            </a>
+                        </p>
+                        <small class="text-muted">Última actualización: {{ factura.fecha_emision|date:"d/m/Y H:i:s" }}</small>
+                    </div>
+                    {% endif %}
+
                     {% if factura.error_sifen %}
                     <div class="alert alert-danger" role="alert">
                         <strong><i class="fas fa-exclamation-triangle"></i> Error SIFEN:</strong>
@@ -124,10 +138,15 @@
                     <h5 class="mb-0"><i class="fas fa-file-download"></i> Documentos</h5>
                 </div>
                 <div class="card-body">
-                    {% if factura.url_kude_pdf %}
+                    {% if factura.estado == 'aprobado' and factura.url_kude_pdf %}
                     <a href="{% url 'facturacion:descargar_pdf' factura.id %}" class="btn btn-success btn-block w-100 mb-2" target="_blank">
                         <i class="fas fa-file-pdf"></i> Descargar PDF
                     </a>
+                    {% elif factura.estado_sifen == 'Procesando' or factura.estado_sifen == 'Sol.Aprobacion' or factura.estado_sifen == 'Confirmado' %}
+                    <button class="btn btn-warning btn-block w-100 mb-2" disabled>
+                        <i class="fas fa-hourglass-half"></i> PDF procesándose...
+                    </button>
+                    <small class="text-muted d-block text-center">Espere 30-60 segundos y actualice</small>
                     {% else %}
                     <button class="btn btn-secondary btn-block w-100 mb-2" disabled>
                         <i class="fas fa-file-pdf"></i> PDF no disponible
@@ -135,10 +154,15 @@
                     {% endif %}
 
                     {% if perms.facturacion_electronica.download_kude_xml %}
-                        {% if factura.url_kude_xml %}
+                        {% if factura.estado == 'aprobado' and factura.url_kude_xml %}
                         <a href="{% url 'facturacion:descargar_xml' factura.id %}" class="btn btn-info btn-block w-100" target="_blank">
                             <i class="fas fa-file-code"></i> Descargar XML
                         </a>
+                        {% elif factura.estado_sifen == 'Procesando' or factura.estado_sifen == 'Sol.Aprobacion' or factura.estado_sifen == 'Confirmado' %}
+                        <button class="btn btn-warning btn-block w-100" disabled>
+                            <i class="fas fa-hourglass-half"></i> XML procesándose...
+                        </button>
+                        <small class="text-muted d-block text-center">Espere 30-60 segundos</small>
                         {% else %}
                         <button class="btn btn-secondary btn-block w-100" disabled>
                             <i class="fas fa-file-code"></i> XML no disponible
@@ -172,4 +196,13 @@
         </div>
     </div>
 </div>
+
+{% if factura.estado_sifen == 'Procesando' or factura.estado_sifen == 'Sol.Aprobacion' or factura.estado_sifen == 'Confirmado' %}
+<script>
+// Auto-actualizar cada 15 segundos si está procesando
+setTimeout(function() {
+    location.reload();
+}, 15000);
+</script>
+{% endif %}
 {% endblock %}

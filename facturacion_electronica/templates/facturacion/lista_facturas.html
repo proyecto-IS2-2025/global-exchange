@@ -105,10 +105,14 @@
                                 <a href="{% url 'facturacion:detalle_factura' factura.id %}" class="btn btn-sm btn-primary" title="Ver detalle">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                {% if factura.url_kude_pdf %}
+                                {% if factura.estado == 'aprobado' and factura.url_kude_pdf %}
                                 <a href="{% url 'facturacion:descargar_pdf' factura.id %}" class="btn btn-sm btn-success" title="Descargar PDF" target="_blank">
                                     <i class="fas fa-file-pdf"></i>
                                 </a>
+                                {% elif factura.estado_sifen == 'Procesando' or factura.estado_sifen == 'Sol.Aprobacion' or factura.estado_sifen == 'Confirmado' %}
+                                <button class="btn btn-sm btn-warning" disabled title="Procesando en SIFEN">
+                                    <i class="fas fa-hourglass-half"></i>
+                                </button>
                                 {% endif %}
                             </td>
                         </tr>

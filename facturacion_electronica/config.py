@@ -9,7 +9,8 @@ SQL_PROXY_CONFIG = {
     'port': 45432,
     'database': 'fs_proxy_bd',
     'user': 'fs_proxy_user',
-    'password': 'p123456'
+    'password': 'p123456',
+    'kude_url': 'http://localhost:40080/kude'  # URL para acceder a los PDFs y XMLs generados
 }
 
 # Configuración del ESI (Equipo 7)

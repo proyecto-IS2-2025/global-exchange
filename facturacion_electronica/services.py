@@ -187,10 +187,10 @@ class SQLProxyService:
                 '{EMISOR_CONFIG['departamento']}', '{EMISOR_CONFIG['departamento_desc']}', 
                 '{EMISOR_CONFIG['ciudad']}', '{EMISOR_CONFIG['ciudad_desc']}', 
                 '{EMISOR_CONFIG['telefono']}', '{EMISOR_CONFIG['email']}', 
-                '1', '1', 'PRY', '1', 
-                '{datos_factura.get('cliente_ruc', '0')}', 
-                '{datos_factura.get('cliente_dv', '0')}', 
-                '0', '', '0', 
+                '1', '1', 'PRY', '2', 
+                '{datos_factura.get('cliente_ruc', '80026216')}', 
+                '{datos_factura.get('cliente_dv', '6')}', 
+                '', '', '', 
                 '{datos_factura.get('cliente_nombre', 'CLIENTE GENERICO')}', 
                 '{datos_factura.get('cliente_email', 'cliente@example.com')}', 
                 '', '', '', '', '', '', 
@@ -252,7 +252,7 @@ class SQLProxyService:
                 """
                 self.cursor.execute(insert_item_query)
             
-            # Insertar forma de pago (contado por defecto)
+            # OBLIGATORIO: Insertar forma de pago en gPaConEIni (sin esto la API da error)
             insert_pago_query = f"""
             INSERT INTO public.gPaConEIni
             (iTiPago, dMonTiPag, cMoneTiPag, dTiCamTiPag, 
@@ -266,7 +266,7 @@ class SQLProxyService:
             """
             self.cursor.execute(insert_pago_query)
             
-            # Actualizar estado a "Confirmado" para que el SQL Proxy lo envíe
+            # Actualizar estado a "Confirmado" para que el scheduler lo procese
             update_query = f"""
             UPDATE public.de
             SET estado = 'Confirmado'
@@ -432,26 +432,45 @@ def generar_factura_automatica(transaccion):
     
     logger = logging.getLogger(__name__)
     
+    logger.info(f"[FACTURA_AUTO] ═══ INICIO generar_factura_automatica para {transaccion.numero_transaccion} ═══")
+    logger.info(f"[FACTURA_AUTO] Cliente: {transaccion.cliente.nombre_completo}")
+    logger.info(f"[FACTURA_AUTO] Monto: {transaccion.monto_origen} {transaccion.divisa_origen.code}")
+    
     try:
         # Verificar si ya tiene factura
         if hasattr(transaccion, 'factura_electronica'):
-            logger.info(f"Transacción {transaccion.numero_transaccion} ya tiene factura: {transaccion.factura_electronica.numero_factura}")
+            logger.warning(f"[FACTURA_AUTO] ⚠️ Transacción ya tiene factura: {transaccion.factura_electronica.numero_factura}")
             return True, transaccion.factura_electronica, None
+        
+        logger.info(f"[FACTURA_AUTO] Conectando a SQL Proxy...")
         
         # Conectar al SQL Proxy
         service = SQLProxyService()
         if not service.conectar():
             error_msg = "No se pudo conectar al servidor de facturación (SQL Proxy)"
-            logger.error(f"Error al generar factura para {transaccion.numero_transaccion}: {error_msg}")
+            logger.error(f"[FACTURA_AUTO] ❌ {error_msg}")
             return False, None, error_msg
+        
+        logger.info(f"[FACTURA_AUTO] ✅ Conectado a SQL Proxy")
         
         try:
             # Preparar datos del cliente
             cliente = transaccion.cliente
+            logger.info(f"[FACTURA_AUTO] Preparando datos del cliente...")
             
-            # Obtener RUC y DV del cliente si existen
-            cliente_ruc = getattr(cliente, 'ruc', '0')
-            cliente_dv = getattr(cliente, 'dv', '0')
+            # TEMPORAL: Usar siempre el RUC del profesor para ambiente de prueba
+            # En producción, validar que el RUC del cliente exista en SIFEN
+            # Por ahora, SIFEN solo tiene registrado el RUC 80026216 en su base de datos de prueba
+            cliente_ruc = '80026216'  # RUC del profesor (único válido en SIFEN TEST)
+            cliente_dv = '6'
+            
+            # TODO EN PRODUCCIÓN: Descomentar esto y validar RUCs reales
+            # if hasattr(cliente, 'ruc') and cliente.ruc:
+            #     cliente_ruc = str(cliente.ruc)
+            #     cliente_dv = str(getattr(cliente, 'dv', '0'))
+            # elif hasattr(cliente, 'cedula') and cliente.cedula:
+            #     cliente_ruc = str(cliente.cedula)
+            #     cliente_dv = '0'
             
             # Preparar items de la factura
             descripcion = f"Compra de {transaccion.monto_destino} {transaccion.divisa_destino.code}"
@@ -476,11 +495,29 @@ def generar_factura_automatica(transaccion):
                 'items': items
             }
             
+            logger.info(f"[FACTURA_AUTO] Datos factura preparados: RUC={cliente_ruc}, Cliente={cliente.nombre_completo}")
+            logger.info(f"[FACTURA_AUTO] Llamando a service.crear_factura()...")
+            
             # Crear factura en SQL Proxy
             resultado = service.crear_factura(datos_factura)
             
+            logger.info(f"[FACTURA_AUTO] ✅ Factura creada en SQL Proxy: {resultado}")
+            
+            # Generar URLs correctas del PDF/XML (formato: YYYYMM/est-pto-numero_YYYYMMDD_HHMMSS_random.pdf)
+            # Nota: El nombre exacto del archivo se genera en SIFEN con timestamp, 
+            # pero podemos construir la URL base correctamente
+            fecha_actual = datetime.now()
+            directorio_fecha = fecha_actual.strftime("%Y%m")  # 202510
+            
             # Crear registro en Django
             numero_completo = f"{TIMBRADO_CONFIG['establecimiento']}-{TIMBRADO_CONFIG['punto_expedicion']}-{resultado['numero_factura']}"
+            
+            logger.info(f"[FACTURA_AUTO] Número completo: {numero_completo}")
+            logger.info(f"[FACTURA_AUTO] Creando registro en Django...")
+            
+            # URL base - el archivo real se generará con timestamp cuando SIFEN apruebe
+            # Ejemplo: http://localhost:40080/kude/202510/001-003-0000066_20251030_213134_944599.pdf
+            url_kude_base = f"{SQL_PROXY_CONFIG['kude_url']}/{directorio_fecha}"
             
             factura = FacturaElectronica.objects.create(
                 transaccion=transaccion,
@@ -491,19 +528,119 @@ def generar_factura_automatica(transaccion):
                 de_id=resultado['de_id'],
                 estado='confirmado',
                 estado_sifen='Procesando',
-                descripcion_sifen='Factura enviada al SIFEN para procesamiento',
-                url_kude_pdf=f"{SQL_PROXY_CONFIG['kude_url']}/{resultado['numero_factura']}.pdf",
-                url_kude_xml=f"{SQL_PROXY_CONFIG['kude_url']}/{resultado['numero_factura']}.xml",
+                descripcion_sifen='Factura enviada al SIFEN para procesamiento. Esperando aprobación (puede tomar 30-60 segundos).',
+                # Guardar URL base - se actualizará cuando tengamos el CDC
+                url_kude_pdf=url_kude_base,  # Se actualizará con nombre completo después
+                url_kude_xml=url_kude_base,
                 datos_factura=datos_factura
             )
             
+            logger.info(f"[FACTURA_AUTO] ✅ Registro Django creado: ID={factura.id}")
             logger.info(f"✅ Factura {numero_completo} generada automáticamente para transacción {transaccion.numero_transaccion}")
+            logger.info(f"[FACTURA_AUTO] ═══ FIN exitoso ═══")
             return True, factura, None
             
         finally:
             service.desconectar()
+            logger.info(f"[FACTURA_AUTO] SQL Proxy desconectado")
     
     except Exception as e:
+        logger.error(f"[FACTURA_AUTO] ❌ ERROR CRÍTICO: {str(e)}", exc_info=True)
         error_msg = f"Error al generar factura: {str(e)}"
         logger.error(f"Error en generar_factura_automatica para {transaccion.numero_transaccion}: {e}", exc_info=True)
         return False, None, error_msg
+
+
+def actualizar_estado_factura(factura_id):
+    """
+    Actualiza el estado de una factura consultando al SQL Proxy.
+    Debe llamarse periódicamente o después de generar una factura.
+    
+    Args:
+        factura_id: ID de la FacturaElectronica en Django
+    
+    Returns:
+        bool: True si se actualizó correctamente
+    """
+    import logging
+    import os
+    import glob
+    from .models import FacturaElectronica
+    from .config import SQL_PROXY_CONFIG
+    
+    logger = logging.getLogger(__name__)
+    
+    try:
+        factura = FacturaElectronica.objects.get(id=factura_id)
+        
+        # Conectar al SQL Proxy
+        service = SQLProxyService()
+        if not service.conectar():
+            logger.error(f"No se pudo conectar al SQL Proxy para actualizar factura {factura.numero_factura}")
+            return False
+        
+        try:
+            # Consultar estado en SQL Proxy
+            estado_sql = service.consultar_estado_factura(factura.numero_documento)
+            
+            if not estado_sql:
+                logger.warning(f"No se encontró la factura {factura.numero_documento} en SQL Proxy")
+                return False
+            
+            # Actualizar estado en Django
+            factura.estado_sifen = estado_sql.get('estado_sifen', '')
+            factura.descripcion_sifen = estado_sql.get('desc_sifen', '')
+            factura.error_sifen = estado_sql.get('error_sifen', '')
+            
+            # Si tiene CDC, actualizar
+            if estado_sql.get('cdc') and estado_sql['cdc'] != '0':
+                factura.cdc = estado_sql['cdc']
+            
+            # Actualizar estado Django según SIFEN
+            estado_sifen_lower = factura.estado_sifen.lower()
+            if 'aprobado' in estado_sifen_lower:
+                factura.estado = 'aprobado'
+                if not factura.fecha_aprobacion:
+                    factura.fecha_aprobacion = datetime.now()
+                    
+                # Buscar el archivo PDF real generado por SIFEN
+                # Formato: /kude/202510/001-003-0000066_20251030_213134_944599.pdf
+                fecha_actual = datetime.now()
+                directorio_fecha = fecha_actual.strftime("%Y%m")
+                numero_completo = f"{factura.establecimiento}-{factura.punto_expedicion}-{factura.numero_documento}"
+                
+                # Buscar en el directorio de volúmenes del SQL Proxy
+                # Nota: En producción esto puede variar según configuración
+                kude_path = f"/home/jose/proyecto_is2/sql-proxy01/volumes/web/kude/{directorio_fecha}"
+                patron_busqueda = f"{kude_path}/{numero_completo}_*.pdf"
+                
+                archivos_pdf = glob.glob(patron_busqueda)
+                if archivos_pdf:
+                    # Tomar el primer archivo encontrado (debería ser único)
+                    nombre_archivo = os.path.basename(archivos_pdf[0])
+                    nombre_xml = nombre_archivo.replace('.pdf', '.xml')
+                    
+                    # Actualizar URLs con nombres completos
+                    factura.url_kude_pdf = f"{SQL_PROXY_CONFIG['kude_url']}/{directorio_fecha}/{nombre_archivo}"
+                    factura.url_kude_xml = f"{SQL_PROXY_CONFIG['kude_url']}/{directorio_fecha}/{nombre_xml}"
+                    
+                    logger.info(f"✅ URLs actualizadas para factura {factura.numero_factura}: {nombre_archivo}")
+                else:
+                    logger.warning(f"⚠️ PDF no encontrado en {patron_busqueda}")
+                    
+            elif 'rechazado' in estado_sifen_lower or 'error' in estado_sifen_lower:
+                factura.estado = 'rechazado'
+            
+            factura.save()
+            logger.info(f"✅ Estado de factura {factura.numero_factura} actualizado: {factura.estado_sifen}")
+            return True
+            
+        finally:
+            service.desconectar()
+    
+    except FacturaElectronica.DoesNotExist:
+        logger.error(f"Factura con ID {factura_id} no existe")
+        return False
+    except Exception as e:
+        logger.error(f"Error al actualizar estado de factura: {e}", exc_info=True)
+        return False

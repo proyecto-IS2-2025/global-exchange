@@ -2,6 +2,10 @@
 Vistas para el módulo de Facturación Electrónica
 Usa el sistema de roles y permisos personalizado (NO Django Admin)
 """
+import glob
+import os
+import logging
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -15,6 +19,8 @@ from .services import SQLProxyService
 from .utils import generar_factura_desde_transaccion, actualizar_estado_factura
 from transacciones.models import Transaccion
 
+logger = logging.getLogger(__name__)
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # LISTADO DE FACTURAS
@@ -26,6 +32,44 @@ def lista_facturas(request):
     """
     Lista todas las facturas del sistema (solo para staff con permisos)
     """
+    facturas = FacturaElectronica.objects.all().select_related('transaccion').order_by('-fecha_emision')
+    
+    # ═══ AUTO-SINCRONIZAR FACTURAS PENDIENTES ═══
+    # Buscar facturas sin CDC o sin PDF
+    facturas_pendientes = FacturaElectronica.objects.filter(
+        Q(cdc__isnull=True) | Q(estado__in=['confirmado', 'borrador'])
+    )
+    facturas_sin_pdf = FacturaElectronica.objects.filter(
+        estado='aprobado',
+        cdc__isnull=False
+    ).exclude(url_kude_pdf__contains='.pdf')
+    
+    # Sincronizar estados desde SQL Proxy
+    for factura in facturas_pendientes:
+        try:
+            actualizar_estado_factura(factura)
+            factura.refresh_from_db()
+        except Exception as e:
+            logger.warning(f"No se pudo sincronizar {factura.numero_factura}: {e}")
+    
+    # Buscar PDFs en el filesystem para facturas aprobadas sin URL
+    for factura in list(facturas_pendientes) + list(facturas_sin_pdf):
+        if factura.estado == 'aprobado' and not factura.url_kude_pdf:
+            try:
+                fecha_str = factura.fecha_emision.strftime('%Y%m')
+                pdf_pattern = f'/home/jose/proyecto_is2/sql-proxy01/volumes/web/kude/{fecha_str}/{factura.numero_factura}_*.pdf'
+                pdfs = glob.glob(pdf_pattern)
+                
+                if pdfs:
+                    pdf_file = os.path.basename(pdfs[0])
+                    nueva_url = f"http://localhost:40080/kude/{fecha_str}/{pdf_file}"
+                    factura.url_kude_pdf = nueva_url
+                    factura.save(update_fields=['url_kude_pdf'])
+                    logger.info(f"📄 PDF encontrado para {factura.numero_factura}")
+            except Exception as e:
+                logger.warning(f"Error buscando PDF para {factura.numero_factura}: {e}")
+    
+    # Refrescar la consulta después de las actualizaciones
     facturas = FacturaElectronica.objects.all().select_related('transaccion').order_by('-fecha_emision')
     
     # Filtros
@@ -72,6 +116,46 @@ def mis_facturas(request):
         transaccion__in=transacciones_usuario
     ).select_related('transaccion').order_by('-fecha_emision')
     
+    # ═══ AUTO-SINCRONIZAR FACTURAS PENDIENTES ═══
+    # Buscar facturas sin CDC o sin PDF (solo las del usuario)
+    facturas_pendientes = facturas.filter(
+        Q(cdc__isnull=True) | Q(estado__in=['confirmado', 'borrador'])
+    )
+    facturas_sin_pdf = facturas.filter(
+        estado='aprobado',
+        cdc__isnull=False
+    ).exclude(url_kude_pdf__contains='.pdf')
+    
+    # Sincronizar estados desde SQL Proxy
+    for factura in facturas_pendientes:
+        try:
+            actualizar_estado_factura(factura)
+            factura.refresh_from_db()
+        except Exception as e:
+            logger.warning(f"No se pudo sincronizar {factura.numero_factura}: {e}")
+    
+    # Buscar PDFs en el filesystem para facturas aprobadas sin URL
+    for factura in list(facturas_pendientes) + list(facturas_sin_pdf):
+        if factura.estado == 'aprobado' and not factura.url_kude_pdf:
+            try:
+                fecha_str = factura.fecha_emision.strftime('%Y%m')
+                pdf_pattern = f'/home/jose/proyecto_is2/sql-proxy01/volumes/web/kude/{fecha_str}/{factura.numero_factura}_*.pdf'
+                pdfs = glob.glob(pdf_pattern)
+                
+                if pdfs:
+                    pdf_file = os.path.basename(pdfs[0])
+                    nueva_url = f"http://localhost:40080/kude/{fecha_str}/{pdf_file}"
+                    factura.url_kude_pdf = nueva_url
+                    factura.save(update_fields=['url_kude_pdf'])
+                    logger.info(f"📄 PDF encontrado para {factura.numero_factura}")
+            except Exception as e:
+                logger.warning(f"Error buscando PDF para {factura.numero_factura}: {e}")
+    
+    # Refrescar la consulta después de las actualizaciones
+    facturas = FacturaElectronica.objects.filter(
+        transaccion__in=transacciones_usuario
+    ).select_related('transaccion').order_by('-fecha_emision')
+    
     # Paginación
     paginator = Paginator(facturas, 10)
     page = request.GET.get('page')
@@ -100,6 +184,17 @@ def detalle_factura(request, factura_id):
         FacturaElectronica.objects.select_related('transaccion'),
         pk=factura_id
     )
+    
+    # AUTO-SINCRONIZAR: Si la factura está en estado procesando y no tiene CDC, actualizar desde SQL Proxy
+    if factura.estado in ['confirmado', 'borrador'] and not factura.cdc:
+        try:
+            from .utils import actualizar_estado_factura
+            actualizar_estado_factura(factura)
+            factura.refresh_from_db()
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"No se pudo sincronizar factura {factura.numero_factura}: {e}")
     
     # Verificar permisos
     if request.user.is_staff:
@@ -169,9 +264,15 @@ def generar_factura(request, transaccion_id):
 def descargar_pdf(request, factura_id):
     """
     Redirige a la URL del PDF en KuDE
+    - Busca automáticamente el PDF en el sistema de archivos
+    - Si no está, sincroniza con SQL Proxy y espera
     - Clientes pueden descargar sus propias facturas
     - Staff con permiso puede descargar todas
     """
+    import glob
+    import os
+    from .config import SQL_PROXY_CONFIG
+    
     factura = get_object_or_404(FacturaElectronica, pk=factura_id)
     
     # Verificar permisos
@@ -185,11 +286,43 @@ def descargar_pdf(request, factura_id):
             messages.error(request, 'No puede descargar facturas de otros usuarios.')
             return redirect('facturacion:mis_facturas')
     
-    if not factura.url_kude_pdf:
-        messages.warning(request, 'La factura aún no tiene PDF disponible.')
-        return redirect('facturacion:detalle_factura', factura_id=factura_id)
+    # Verificar que la factura esté aprobada
+    if factura.estado != 'aprobado':
+        # Intentar sincronizar primero
+        try:
+            actualizar_estado_factura(factura)
+            factura.refresh_from_db()
+        except:
+            pass
+        
+        if factura.estado != 'aprobado':
+            messages.warning(request, 'La factura aún no está aprobada por SIFEN. Por favor espere.')
+            return redirect('facturacion:detalle_factura', factura_id=factura_id)
     
-    return redirect(factura.url_kude_pdf)
+    # BÚSQUEDA DINÁMICA DEL PDF
+    fecha_str = factura.fecha_emision.strftime('%Y%m')
+    pdf_pattern = f'/home/jose/proyecto_is2/sql-proxy01/volumes/web/kude/{fecha_str}/{factura.numero_factura}_*.pdf'
+    pdfs = glob.glob(pdf_pattern)
+    
+    if pdfs:
+        # PDF encontrado - actualizar URL y redirigir
+        pdf_file = os.path.basename(pdfs[0])
+        nueva_url = f"http://localhost:40080/kude/{fecha_str}/{pdf_file}"
+        
+        # Actualizar en BD para la próxima vez
+        if factura.url_kude_pdf != nueva_url:
+            factura.url_kude_pdf = nueva_url
+            factura.save(update_fields=['url_kude_pdf'])
+        
+        return redirect(nueva_url)
+    else:
+        # PDF no encontrado - dar mensaje al usuario
+        messages.warning(
+            request, 
+            'El PDF aún se está generando en SIFEN. Este proceso puede tomar 1-3 minutos. '
+            'Por favor, intente nuevamente en unos momentos o actualice la página.'
+        )
+        return redirect('facturacion:detalle_factura', factura_id=factura_id)
 
 
 @login_required
@@ -200,6 +333,11 @@ def descargar_xml(request, factura_id):
     Solo para staff con permisos
     """
     factura = get_object_or_404(FacturaElectronica, pk=factura_id)
+    
+    # Verificar que la factura esté aprobada
+    if factura.estado != 'aprobado':
+        messages.warning(request, 'La factura aún no está aprobada por SIFEN. Por favor espere.')
+        return redirect('facturacion:detalle_factura', factura_id=factura_id)
     
     if not factura.url_kude_xml:
         messages.warning(request, 'La factura aún no tiene XML disponible.')
@@ -222,8 +360,11 @@ def actualizar_estado(request, factura_id):
     factura = get_object_or_404(FacturaElectronica, pk=factura_id)
     
     try:
-        actualizar_estado_factura(factura)
-        messages.success(request, f'Estado actualizado: {factura.estado_sifen or "Pendiente"}')
+        from .services import actualizar_estado_factura
+        if actualizar_estado_factura(factura.id):
+            messages.success(request, f'✅ Estado actualizado: {factura.estado_sifen or "Pendiente"}')
+        else:
+            messages.warning(request, '⚠️ No se pudo actualizar el estado. Intente nuevamente en unos segundos.')
     except Exception as e:
         messages.error(request, f'Error al actualizar estado: {str(e)}')
     

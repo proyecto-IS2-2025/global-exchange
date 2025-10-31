@@ -113,17 +113,14 @@ reset-db:
 	poetry run python manage.py loaddata clientes_data.json
 	poetry run python manage.py loaddata divisas_data.json
 	poetry run python manage.py loaddata bancos_data.json
+	poetry run python manage.py loaddata denominaciones_data.json
+	poetry run python manage.py loaddata billetera_data.json
 
 	@echo "Configurando roles de prueba..."
 	poetry run python manage.py sync_permissions
 	poetry run python manage.py setup_test_roles --verbose
 	poetry run python manage.py sync_role_status
 	poetry run python manage.py create_dev_user
-	
-	poetry run python manage.py loaddata denominaciones_data.json
-	poetry run python manage.py loaddata bancos_data.json
-	poetry run python manage.py loaddata billetera_data.json
-
 	
 	@echo "Base de datos reiniciada y datos cargados."
 
