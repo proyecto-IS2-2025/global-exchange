@@ -1,5 +1,6 @@
 {% extends 'tauser_external/base_external.html' %}
 {% load static %}
+{% load tauser_filters %}
 
 {% block title %}Procesar Pago - {{ terminal.codigo }}{% endblock %}
 
@@ -72,7 +73,7 @@
                         <div class="col-md-6">
                             <p class="mb-2">
                                 <strong>Monto Origen:</strong><br>
-                                <span class="fs-5">{{ transaccion.divisa_origen.symbol }}{{ transaccion.monto_origen|floatformat:2 }}</span>
+                                <span class="fs-5">{{ transaccion.divisa_origen.symbol }}{{ transaccion.monto_origen|currency }}</span>
                             </p>
                         </div>
                     </div>
@@ -87,7 +88,7 @@
                         <div class="col-md-6">
                             <p class="mb-2">
                                 <strong>Monto a Pagar:</strong><br>
-                                <span class="fs-4 text-success fw-bold">{{ transaccion.divisa_destino.symbol }}{{ transaccion.monto_destino|floatformat:2 }}</span>
+                                <span class="fs-4 text-success fw-bold">{{ transaccion.divisa_destino.symbol }}{{ transaccion.monto_destino|currency }}</span>
                             </p>
                         </div>
                     </div>
@@ -95,7 +96,7 @@
                     <div class="row">
                         <div class="col-12">
                             <p class="mb-2">
-                                <strong>Tasa de Cambio:</strong> {{ transaccion.tasa_de_cambio_aplicada|floatformat:2 }}
+                                <strong>Tasa de Cambio:</strong> {{ transaccion.tasa_de_cambio_aplicada|currency }}
                             </p>
                             <p class="mb-0">
                                 <strong>Estado:</strong> 
@@ -124,7 +125,7 @@
                                 Instrucciones
                             </h6>
                             <ul class="mb-0 small">
-                                <li>Verifique que el monto sea correcto: <strong>{{ transaccion.divisa_destino.symbol }}{{ transaccion.monto_destino|floatformat:2 }}</strong></li>
+                                <li>Verifique que el monto sea correcto: <strong>{{ transaccion.divisa_destino.symbol }}{{ transaccion.monto_destino|currency }}</strong></li>
                                 <li>Reciba el pago del cliente en efectivo o mediante el medio acordado</li>
                                 <li>Presione "Confirmar Pago" solo después de recibir el dinero</li>
                             </ul>
@@ -135,7 +136,7 @@
                             <div class="card-body text-center">
                                 <p class="mb-2 text-muted">Monto Total a Recibir</p>
                                 <h2 class="display-4 text-success mb-0">
-                                    {{ transaccion.divisa_destino.symbol }}{{ transaccion.monto_destino|floatformat:2 }}
+                                    {{ transaccion.divisa_destino.symbol }}{{ transaccion.monto_destino|currency }}
                                 </h2>
                             </div>
                         </div>

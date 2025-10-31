@@ -265,6 +265,88 @@
                         </div>
                     </div>
                     {% endif %}
+
+                    <!-- Información del Terminal TAUSER (solo para compras) -->
+                    {% if transaccion.es_compra and transaccion.medio_pago_datos.tauser %}
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="bi bi-geo-alt me-2"></i>
+                                Terminal de Retiro
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info mb-3">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-info-circle-fill fs-3 me-3 text-primary"></i>
+                                    <div>
+                                        <h6 class="mb-2">¿Dónde retirar tu divisa?</h6>
+                                        <p class="mb-0 small">
+                                            Dirígete al terminal seleccionado con tu código de transacción 
+                                            <strong>{{ transaccion.numero_transaccion }}</strong> para retirar 
+                                            <strong>{{ transaccion.monto_destino|floatformat:2 }} {{ transaccion.divisa_destino.code }}</strong>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="text-muted small fw-bold">
+                                            <i class="bi bi-building me-1"></i>Terminal
+                                        </label>
+                                        <p class="mb-0 fs-5 fw-bold text-primary">
+                                            {{ transaccion.medio_pago_datos.tauser.nombre }}
+                                        </p>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="text-muted small fw-bold">
+                                            <i class="bi bi-geo-alt me-1"></i>Ubicación
+                                        </label>
+                                        <p class="mb-0">{{ transaccion.medio_pago_datos.tauser.ubicacion }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="text-muted small fw-bold">
+                                            <i class="bi bi-upc me-1"></i>Código del Terminal
+                                        </label>
+                                        <p class="mb-0">
+                                            <code class="fs-6 bg-light p-2 rounded">
+                                                {{ transaccion.medio_pago_datos.tauser.codigo }}
+                                            </code>
+                                        </p>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="text-muted small fw-bold">
+                                            <i class="bi bi-shield-check me-1"></i>Estado de Reserva
+                                        </label>
+                                        <p class="mb-0">
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-lock-fill me-1"></i>
+                                                Denominaciones Reservadas
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-success mb-0 mt-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill fs-4 me-3"></i>
+                                    <div>
+                                        <strong>¡Tu dinero está garantizado!</strong>
+                                        <p class="mb-0 small">
+                                            Las denominaciones necesarias han sido reservadas automáticamente. 
+                                            Tu divisa estará 100% disponible cuando vayas a retirar.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
 
                 <!-- Panel Lateral -->

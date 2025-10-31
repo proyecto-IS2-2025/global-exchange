@@ -1,5 +1,6 @@
 {% extends 'base_tauser.html' %}
 {% load static %}
+{% load tauser_filters %}
 
 {% block title %}Dashboard de Inventario - {{ terminal.nombre }}{% endblock %}
 
@@ -119,7 +120,7 @@
                         </div>
                         <div class="col-md-4">
                             <h6 class="text-muted">Valor Total Recargado</h6>
-                            <h3 class="text-success">${{ valor_total_recargado|floatformat:2 }}</h3>
+                            <h3 class="text-success">${{ valor_total_recargado|currency }}</h3>
                         </div>
                         <div class="col-md-4">
                             <h6 class="text-muted">Denominaciones Más Recargadas</h6>
@@ -155,7 +156,7 @@
                             <div>
                                 <h6 class="mb-1">
                                     <span class="badge badge-nivel bg-danger">CRÍTICO</span>
-                                    {{ alerta.inventario.denominacion.divisa.code }} {{ alerta.inventario.denominacion.valor }}
+                                    {{ alerta.inventario.denominacion.divisa.code }} {{ alerta.inventario.denominacion.valor_formateado }}
                                 </h6>
                                 <p class="mb-0">
                                     <strong>Cantidad:</strong> {{ alerta.inventario.cantidad }} billetes
@@ -194,7 +195,7 @@
                             <div>
                                 <h6 class="mb-1">
                                     <span class="badge badge-nivel bg-warning text-dark">ADVERTENCIA</span>
-                                    {{ alerta.inventario.denominacion.divisa.code }} {{ alerta.inventario.denominacion.valor }}
+                                    {{ alerta.inventario.denominacion.divisa.code }} {{ alerta.inventario.denominacion.valor_formateado }}
                                 </h6>
                                 <p class="mb-0">
                                     <strong>Cantidad:</strong> {{ alerta.inventario.cantidad }} billetes
@@ -233,7 +234,7 @@
                             <div class="alert-card normal p-3">
                                 <h6 class="mb-1">
                                     <span class="badge badge-nivel bg-success">NORMAL</span>
-                                    {{ alerta.inventario.denominacion.divisa.code }} {{ alerta.inventario.denominacion.valor }}
+                                    {{ alerta.inventario.denominacion.divisa.code }} {{ alerta.inventario.denominacion.valor_formateado }}
                                 </h6>
                                 <p class="mb-0">
                                     <strong>{{ alerta.inventario.cantidad }}</strong> billetes
@@ -279,7 +280,7 @@
                                     <td>{{ recarga.fecha|date:"d/m/Y H:i" }}</td>
                                     <td>
                                         <span class="badge bg-primary">
-                                            {{ recarga.denominacion.divisa.code }} {{ recarga.denominacion.valor }}
+                                            {{ recarga.denominacion.divisa.code }} {{ recarga.denominacion.valor_formateado }}
                                         </span>
                                     </td>
                                     <td>
@@ -288,7 +289,7 @@
                                     <td>
                                         <small class="text-muted">{{ recarga.cantidad_anterior }} → {{ recarga.cantidad_nueva }}</small>
                                     </td>
-                                    <td><strong>${{ recarga.valor_total_agregado|floatformat:2 }}</strong></td>
+                                    <td><strong>${{ recarga.valor_total_agregado|currency }}</strong></td>
                                     <td>
                                         <small>
                                             <i class="fas fa-user"></i> 

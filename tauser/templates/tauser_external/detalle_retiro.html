@@ -1,5 +1,6 @@
 {% extends 'base_tauser.html' %}
 {% load static %}
+{% load tauser_filters %}
 
 {% block title %}Retiro de Divisas - {{ terminal.nombre }}{% endblock %}
 
@@ -251,7 +252,7 @@
                     Monto a Retirar
                 </div>
                 <div class="value">
-                    {{ transaccion.monto_destino|floatformat:2 }}
+                    {{ transaccion.monto_destino|currency }}
                     <span class="currency">{{ transaccion.divisa_destino.code }}</span>
                 </div>
             </div>
@@ -297,7 +298,7 @@
                     <div class="info-item">
                         <div class="info-item-label">Tasa de Cambio</div>
                         <div class="info-item-value">
-                            {{ transaccion.tasa_aplicada|floatformat:2 }}
+                            {{ transaccion.tasa_aplicada|currency }}
                         </div>
                     </div>
                     <div class="info-item">
@@ -317,7 +318,7 @@
                         <div class="denominacion-item">
                             <div>
                                 <span class="denom-valor">
-                                    {{ item.denominacion.valor|floatformat:0 }} {{ item.denominacion.divisa.code }}
+                                    {{ item.denominacion.valor|currency }} {{ item.denominacion.divisa.code }}
                                 </span>
                             </div>
                             <div>
@@ -377,7 +378,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        const confirmed = confirm('¿Confirma que desea procesar el retiro de {{ transaccion.monto_destino|floatformat:2 }} {{ transaccion.divisa_destino.code }}?');
+        const confirmed = confirm('¿Confirma que desea procesar el retiro de {{ transaccion.monto_destino|currency }} {{ transaccion.divisa_destino.code }}?');
         
         if (confirmed) {
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Procesando...';

@@ -510,7 +510,8 @@ class CompraConfirmacionView(LoginRequiredMixin, TemplateView):
         request.session["operacion"] = operacion
         request.session.modified = True
 
-        return redirect("clientes:seleccionar_medio_pago")
+        # Redirigir a selección de tauser (NUEVO FLUJO)
+        return redirect("operacion_divisas:seleccionar_tauser_compra")
 
 
 @method_decorator(require_permission("divisas.realizar_operacion", check_client_assignment=True), name="dispatch")
@@ -519,14 +520,33 @@ class SumarioCompraView(LoginRequiredMixin, TemplateView):
     🔐 PROTEGIDA: divisas.realizar_operacion + validación cliente activo
     
     Vista del sumario final antes de confirmar la compra.
-    Muestra operación + medio de pago seleccionado.
+    Muestra operación + tauser seleccionado + medio de pago seleccionado.
     """
     template_name = "operaciones/compra/compra_sumario.html"
+
+    def get(self, request, *args, **kwargs):
+        """Verificar que haya tauser seleccionado, si no, redirigir"""
+        tauser_seleccionado = request.session.get('tauser_seleccionado')
+        
+        if not tauser_seleccionado:
+            messages.warning(request, "Debe seleccionar un TAUSER primero.")
+            return redirect('operacion_divisas:seleccionar_tauser_compra')
+        
+        # Si no hay medio de pago seleccionado, redirigir a selección de medio
+        medio_inst = get_medio_pago_seleccionado(request)
+        if not medio_inst:
+            return redirect('clientes:seleccionar_medio_pago')
+        
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         operacion = self.request.session.get("operacion")
         ctx["operacion"] = operacion
+        
+        # Obtener tauser seleccionado
+        tauser_seleccionado = self.request.session.get('tauser_seleccionado')
+        ctx["tauser"] = tauser_seleccionado
         
         medio_inst = get_medio_pago_seleccionado(self.request)
         medio_ctx = None

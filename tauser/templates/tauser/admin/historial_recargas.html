@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load tauser_filters %}
 
 {% block title %}Historial de Recargas - {{ terminal.nombre }}{% endblock %}
 
@@ -186,7 +187,7 @@
                             </td>
                             <td>
                                 <span class="badge badge-divisa bg-primary">
-                                    {{ log.denominacion.divisa.code }} {{ log.denominacion.valor }}
+                                    {{ log.denominacion.divisa.code }} {{ log.denominacion.valor_formateado }}
                                 </span>
                             </td>
                             <td>
@@ -199,7 +200,7 @@
                                 <strong class="text-success">{{ log.cantidad_nueva }}</strong>
                             </td>
                             <td>
-                                <strong>${{ log.valor_total_agregado|floatformat:2 }}</strong>
+                                <strong>${{ log.valor_total_agregado|currency }}</strong>
                             </td>
                             <td>
                                 <small>

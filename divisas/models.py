@@ -271,12 +271,21 @@ class Denominacion(models.Model):
         return f"{self.divisa.code} - Billete de {self.valor_formateado}"
     
     @property
+    def nombre(self):
+        """Retorna el nombre/descripción de la denominación sin decimales"""
+        return f"Billete de {self.valor_formateado}"
+    
+    @property
     def valor_formateado(self):
-        """Retorna el valor formateado según los decimales de la divisa"""
+        """Retorna el valor formateado SIN decimales para todas las divisas"""
+        # Redondear a entero para eliminar decimales
+        valor_entero = int(round(float(self.valor)))
+        
         if self.divisa.code == 'PYG':
-            return f"₲{self.valor:,.0f}"
+            return f"₲{valor_entero:,}".replace(',', '.')
         else:
-            return f"{self.divisa.simbolo}{self.valor:,.2f}" if self.divisa.simbolo else f"{self.valor:,.2f}"
+            simbolo = self.divisa.simbolo if self.divisa.simbolo else ''
+            return f"{simbolo}{valor_entero:,}".replace(',', '.')
     
     def save(self, *args, **kwargs):
         # Auto-asignar orden basado en el valor (billetes grandes primero)

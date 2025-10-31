@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load humanize %}
+{% load tauser_filters %}
 
 {% block content %}
 <div class="row">
@@ -149,7 +150,7 @@
                                                 {{ item.denominacion.get_tipo_display|title }}
                                             </td>
                                             <td class="fw-bold">
-                                                {{ data.divisa.simbolo }}{{ item.denominacion.valor|floatformat:0 }}
+                                                {{ data.divisa.simbolo }}{{ item.denominacion.valor|currency }}
                                             </td>
                                             <td class="text-center">
                                                 <span class="badge bg-primary fs-6">
@@ -242,7 +243,7 @@
                                 </td>
                                 <td class="text-end">
                                     {% if operacion.monto_operacion %}
-                                        {{ operacion.monto_operacion|floatformat:2 }}
+                                        {{ operacion.monto_operacion|currency }}
                                     {% else %}
                                         <span class="text-muted">-</span>
                                     {% endif %}

@@ -19,6 +19,8 @@ from clientes.models import Cliente
 from divisas.models import Divisa
 from clientes.views import get_medio_acreditacion_seleccionado, get_medio_pago_seleccionado
 from clientes.services import verificar_limites
+from tauser.services import crear_reservas_para_transaccion  # ← NUEVO IMPORT
+from tauser.models import Terminal  # ← NUEVO IMPORT
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +28,48 @@ logger = logging.getLogger(__name__)
 # ═══════════════════════════════════════════════════════════════════
 # FUNCIONES AUXILIARES (SIN CAMBIOS)
 # ═══════════════════════════════════════════════════════════════════
+
+def _crear_reservas_denominaciones_compra(transaccion):
+    """
+    Crea las reservas de denominaciones cuando una compra es pagada.
+    
+    :param transaccion: Objeto Transaccion (debe estar en estado 'pagada')
+    :return: tuple (success: bool, message: str)
+    """
+    try:
+        # Obtener terminal desde medio_pago_datos
+        medio_datos = transaccion.get_medio_pago_info() or {}
+        tauser_info = medio_datos.get('tauser')
+        
+        if not tauser_info:
+            logger.error(f"No se encontró información del tauser en transacción {transaccion.numero_transaccion}")
+            return False, "No se encontró información del tauser seleccionado"
+        
+        terminal_id = tauser_info.get('id')
+        if not terminal_id:
+            logger.error(f"No se encontró ID del tauser en transacción {transaccion.numero_transaccion}")
+            return False, "No se encontró ID del tauser"
+        
+        try:
+            terminal = Terminal.objects.get(id=terminal_id, is_activa=True)
+        except Terminal.DoesNotExist:
+            logger.error(f"Terminal {terminal_id} no existe o está inactiva")
+            return False, f"Terminal no encontrada o inactiva"
+        
+        # Crear reservas
+        success, message, reservas = crear_reservas_para_transaccion(transaccion, terminal)
+        
+        if success:
+            logger.info(f"✅ Reservas creadas para transacción {transaccion.numero_transaccion}: {message}")
+        else:
+            logger.error(f"❌ Error al crear reservas para transacción {transaccion.numero_transaccion}: {message}")
+        
+        return success, message
+        
+    except Exception as e:
+        logger.error(f"Error al crear reservas para transacción {transaccion.numero_transaccion}: {e}", exc_info=True)
+        return False, f"Error inesperado: {str(e)}"
+
 
 def get_cliente_from_session(request):
     """
@@ -1002,6 +1046,7 @@ def crear_transaccion_desde_compra(request):
         # Obtener datos de la sesión
         operacion = request.session.get("operacion")
         medio_inst = get_medio_pago_seleccionado(request)
+        tauser_seleccionado = request.session.get('tauser_seleccionado')  # NUEVO
         
         if not operacion:
             messages.error(request, "No se encontró información de la operación.")
@@ -1010,6 +1055,10 @@ def crear_transaccion_desde_compra(request):
         if not medio_inst:
             messages.error(request, "No se encontró el medio de pago seleccionado.")
             return redirect("clientes:seleccionar_medio_pago")
+        
+        if not tauser_seleccionado:  # NUEVO
+            messages.error(request, "No se encontró el tauser seleccionado.")
+            return redirect("operacion_divisas:seleccionar_tauser_compra")
 
         # Obtener cliente desde la sesión
         cliente_id = request.session.get('cliente_id')
@@ -1127,6 +1176,16 @@ def crear_transaccion_desde_compra(request):
         
         # Crear la transacción
         with transaction.atomic():
+            # Agregar info del tauser a medio_datos
+            medio_datos['tauser'] = tauser_seleccionado  # NUEVO
+            
+            # Obtener el objeto Terminal
+            terminal_obj = None
+            try:
+                terminal_obj = Terminal.objects.get(id=tauser_seleccionado.get('id'))
+            except Terminal.DoesNotExist:
+                logger.error(f"Terminal con ID {tauser_seleccionado.get('id')} no encontrado")
+            
             transaccion = Transaccion.objects.create(
                 tipo_operacion='compra',
                 cliente=cliente,
@@ -1137,8 +1196,9 @@ def crear_transaccion_desde_compra(request):
                 tasa_de_cambio_aplicada=tasa_cambio,
                 estado='pendiente',
                 medio_pago_datos=medio_datos,
+                tauser_terminal=terminal_obj,  # NUEVO: Asignar terminal
                 procesado_por=request.user,
-                observaciones=f"Transacción creada desde compra de {divisa_destino.code}. Monto base: {monto_origen_base} Gs. + Comisión: {comision_monto} Gs. = Total: {monto_origen_total} Gs."
+                observaciones=f"Transacción creada desde compra de {divisa_destino.code}. Monto base: {monto_origen_base} Gs. + Comisión: {comision_monto} Gs. = Total: {monto_origen_total} Gs. | Tauser: {tauser_seleccionado.get('nombre')}"
             )
             
             # Crear historial inicial
@@ -1151,7 +1211,7 @@ def crear_transaccion_desde_compra(request):
             )
         
         # Limpiar datos de sesión
-        limpiar_sesion_operacion(request, ['operacion', 'compra_resultado', 'medio_pago_seleccionado'])
+        limpiar_sesion_operacion(request, ['operacion', 'compra_resultado', 'medio_pago_seleccionado', 'tauser_seleccionado'])
 
         # NUEVO: realizar transferencia/pago del CLIENTE -> EMPRESA por monto_origen (PYG)
         try:
@@ -1207,6 +1267,14 @@ def crear_transaccion_desde_compra(request):
                     if success:
                         logger.info(f"[COMPRA] ✅ Pago Stripe exitoso - Transaction ID: {stripe_transaction.id}")
                         transaccion.cambiar_estado('pagada', observacion='Pago con Stripe procesado exitosamente', usuario=request.user)
+                        
+                        # NUEVO: Crear reservas de denominaciones
+                        reservas_ok, reservas_msg = _crear_reservas_denominaciones_compra(transaccion)
+                        if reservas_ok:
+                            logger.info(f"✅ {reservas_msg}")
+                        else:
+                            logger.warning(f"⚠️ {reservas_msg}")
+                        
                         messages.success(request, f'¡Pago procesado exitosamente con Stripe! ID: {stripe_transaction.payment_intent_id}')
                     else:
                         logger.error(f"[COMPRA] ❌ Pago Stripe fallido: {error}")
@@ -1228,6 +1296,14 @@ def crear_transaccion_desde_compra(request):
                 )
                 if resultado.get('ok'):
                     transaccion.cambiar_estado('pagada', observacion='Pago automático desde billetera recibido', usuario=request.user)
+                    
+                    # NUEVO: Crear reservas de denominaciones
+                    reservas_ok, reservas_msg = _crear_reservas_denominaciones_compra(transaccion)
+                    if reservas_ok:
+                        logger.info(f"✅ {reservas_msg}")
+                    else:
+                        logger.warning(f"⚠️ {reservas_msg}")
+                    
                     messages.success(request, f"Pago exitoso desde billetera. Comprobante: {resultado.get('comprobante')}")
                 else:
                     logger.warning(f"[COMPRA] Pago billetera fallido: {resultado}")
@@ -1244,6 +1320,14 @@ def crear_transaccion_desde_compra(request):
                 if resultado.get('ok'):
                     tipo_tarjeta = resultado.get('tipo_tarjeta', 'tarjeta')
                     transaccion.cambiar_estado('pagada', observacion=f'Pago automático con tarjeta de {tipo_tarjeta} recibido', usuario=request.user)
+                    
+                    # NUEVO: Crear reservas de denominaciones
+                    reservas_ok, reservas_msg = _crear_reservas_denominaciones_compra(transaccion)
+                    if reservas_ok:
+                        logger.info(f"✅ {reservas_msg}")
+                    else:
+                        logger.warning(f"⚠️ {reservas_msg}")
+                    
                     messages.success(request, f"Pago exitoso con tarjeta de {tipo_tarjeta}. Comprobante: {resultado.get('comprobante')}")
                 else:
                     logger.warning(f"[COMPRA] Pago con tarjeta fallido: {resultado}")
@@ -1274,6 +1358,14 @@ def crear_transaccion_desde_compra(request):
                     )
                     if resultado.get('ok'):
                         transaccion.cambiar_estado('pagada', observacion='Pago automático recibido', usuario=request.user)
+                        
+                        # NUEVO: Crear reservas de denominaciones
+                        reservas_ok, reservas_msg = _crear_reservas_denominaciones_compra(transaccion)
+                        if reservas_ok:
+                            logger.info(f"✅ {reservas_msg}")
+                        else:
+                            logger.warning(f"⚠️ {reservas_msg}")
+                        
                         messages.success(request, 'Transferencia recibida: operación pagada.')
                     else:
                         logger.warning(f"[COMPRA] Transferencia fallida: {resultado}")
@@ -1290,6 +1382,62 @@ def crear_transaccion_desde_compra(request):
         logger.error(f"Error al crear transacción de compra: {e}")
         messages.error(request, f"Error al procesar la transacción: {str(e)}")
         return redirect('operacion_divisas:compra_sumario')
+
+
+def _crear_reservas_denominaciones_compra(transaccion):
+    """
+    Función auxiliar para crear reservas de denominaciones después de confirmar pago.
+    Solo para transacciones de compra en estado 'pagada'.
+    
+    :param transaccion: Objeto Transaccion
+    :return: tuple (success: bool, message: str)
+    """
+    try:
+        # Verificar que sea una compra pagada
+        if transaccion.tipo_operacion != 'compra':
+            return False, "Solo se crean reservas para compras"
+        
+        if transaccion.estado != 'pagada':
+            return False, "La transacción debe estar pagada para crear reservas"
+        
+        # Obtener info del tauser desde medio_pago_datos
+        medio_datos = transaccion.get_medio_pago_info() or {}
+        tauser_info = medio_datos.get('tauser')
+        
+        if not tauser_info:
+            logger.warning(f"No se encontró info de tauser en transacción {transaccion.numero_transaccion}")
+            return False, "No se encontró información del tauser seleccionado"
+        
+        # Obtener el terminal
+        from tauser.models import Terminal
+        terminal_id = tauser_info.get('id')
+        
+        if not terminal_id:
+            return False, "No se encontró ID del terminal"
+        
+        try:
+            terminal = Terminal.objects.get(id=terminal_id, is_activa=True)
+        except Terminal.DoesNotExist:
+            return False, f"Terminal {terminal_id} no encontrada o inactiva"
+        
+        # Crear las reservas
+        success, message, reservas = crear_reservas_para_transaccion(transaccion, terminal)
+        
+        if success:
+            logger.info(
+                f"✅ Reservas creadas para transacción {transaccion.numero_transaccion}: "
+                f"{len(reservas)} denominaciones reservadas en {terminal.nombre}"
+            )
+        else:
+            logger.error(
+                f"❌ Error al crear reservas para transacción {transaccion.numero_transaccion}: {message}"
+            )
+        
+        return success, message
+        
+    except Exception as e:
+        logger.error(f"Error en _crear_reservas_denominaciones_compra: {e}", exc_info=True)
+        return False, f"Error al crear reservas: {str(e)}"
 
 
 def preparar_datos_medio(medio_inst):

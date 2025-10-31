@@ -4,6 +4,7 @@ from . import views
 from .views import (
     VentaDivisaView, VentaConfirmacionView
 )
+from .views_seleccionar_tauser import SeleccionarTauserCompraView
 
 app_name = 'operacion_divisas'
 urlpatterns = [
@@ -16,6 +17,10 @@ urlpatterns = [
     #Venta de divisas
     path('compra/', views.CompraDivisaView.as_view(), name='compra'),
     path('compra/confirmacion/', views.CompraConfirmacionView.as_view(), name='compra_confirmacion'),
+    
+    # Seleccionar tauser para compra (NUEVO)
+    path('compra/seleccionar-tauser/', SeleccionarTauserCompraView.as_view(), name='seleccionar_tauser_compra'),
+    
     path('compra/sumario/', views.SumarioCompraView.as_view(), name='compra_sumario'),
     
     # MFA para confirmación de compra

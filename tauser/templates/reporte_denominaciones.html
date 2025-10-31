@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load humanize %}
+{% load tauser_filters %}
 
 {% block title %}Reporte de Denominaciones - {{ terminal.nombre }}{% endblock %}
 
@@ -191,7 +192,7 @@
                                                 <strong>{{ item.nombre }}</strong>
                                                 <br>
                                                 <small class="text-muted">
-                                                    {{ divisa_code }} {{ item.valor|floatformat:2 }}
+                                                    {{ divisa_code }} {{ item.valor|currency }}
                                                 </small>
                                             </td>
                                             <td class="text-center">
@@ -263,7 +264,7 @@
                                                 <strong>{{ item.nombre }}</strong>
                                                 <br>
                                                 <small class="text-muted">
-                                                    {{ divisa_code }} {{ item.valor|floatformat:2 }}
+                                                    {{ divisa_code }} {{ item.valor|currency }}
                                                 </small>
                                             </td>
                                             <td class="text-center">

@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load humanize %}
+{% load tauser_filters %}
 
 {% block title %}Inventario de Denominaciones - {{ terminal.nombre }}{% endblock %}
 
@@ -124,7 +125,7 @@
                     <small class="text-muted">
                         {{ divisa_data.inventarios|length }} denominación{{ divisa_data.inventarios|length|pluralize:"es" }} | 
                         {{ divisa_data.total_billetes }} billete{{ divisa_data.total_billetes|pluralize }} | 
-                        Valor total: {{ divisa_data.divisa.simbolo }}{{ divisa_data.valor_total|floatformat:2|intcomma }}
+                        Valor total: {{ divisa_data.divisa.simbolo }}{{ divisa_data.valor_total|currency }}
                     </small>
                 </div>
                 {% if divisa_data.alertas > 0 %}
@@ -171,7 +172,7 @@
                             <div class="mb-2">
                                 <small class="text-muted d-block">Valor en inventario:</small>
                                 <strong class="text-success">
-                                    {{ inventario.denominacion.divisa.simbolo }}{{ inventario.valor_total|floatformat:2|intcomma }}
+                                    {{ inventario.denominacion.divisa.simbolo }}{{ inventario.valor_total|currency }}
                                 </strong>
                             </div>
 

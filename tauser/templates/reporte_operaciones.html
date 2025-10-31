@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load humanize %}
+{% load tauser_filters %}
 
 {% block title %}Reporte de Operaciones - {{ terminal.nombre }}{% endblock %}
 
@@ -253,10 +254,10 @@
                                 <span class="badge bg-warning text-dark">{{ data.pagos }}</span>
                             </td>
                             <td class="text-end text-danger">
-                                -{{ data.monto_retiros|floatformat:2|intcomma }}
+                                -{{ data.monto_retiros|currency }}
                             </td>
                             <td class="text-end text-success">
-                                +{{ data.monto_pagos|floatformat:2|intcomma }}
+                                +{{ data.monto_pagos|currency }}
                             </td>
                             <td class="text-end">
                                 {% widthratio data.monto_pagos 1 1 as pagos_int %}
@@ -264,7 +265,7 @@
                                 {% widthratio pagos_int 1 1 as neto_calc %}
                                 {% widthratio retiros_int 1 1 as neto_calc2 %}
                                 <strong class="{% if pagos_int > retiros_int %}text-success{% else %}text-danger{% endif %}">
-                                    {{ data.monto_pagos|add:"-"|add:data.monto_retiros|floatformat:2|intcomma }}
+                                    {{ data.monto_pagos|add:"-"|add:data.monto_retiros|currency }}
                                 </strong>
                             </td>
                         </tr>
@@ -331,7 +332,7 @@
                             </td>
                             <td class="text-end">
                                 {% if reg.monto_operacion %}
-                                    {{ reg.monto_operacion|floatformat:2|intcomma }}
+                                    {{ reg.monto_operacion|currency }}
                                 {% else %}
                                     <em class="text-muted">-</em>
                                 {% endif %}

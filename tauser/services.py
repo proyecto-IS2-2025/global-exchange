@@ -233,3 +233,133 @@ def generar_resumen_desglose(desglose: Dict) -> List[Dict]:
         })
     
     return resumen
+
+
+def crear_reservas_para_transaccion(transaccion, terminal):
+    """
+    Crea las reservas de denominaciones para una transacción de compra.
+    
+    :param transaccion: Objeto Transaccion
+    :param terminal: Objeto Terminal donde se retirará la divisa
+    :return: tuple (success: bool, message: str, reservas: list)
+    """
+    from decimal import Decimal
+    from tauser.models import ReservaDenominacion, InventarioDenominacionTerminal
+    from django.db import transaction as db_transaction
+    
+    if transaccion.tipo_operacion != 'compra':
+        return False, "Solo se pueden crear reservas para transacciones de compra", []
+    
+    if transaccion.estado != 'pagada':
+        return False, "La transacción debe estar en estado 'pagada' para crear reservas", []
+    
+    # Verificar si ya hay reservas para esta transacción
+    if transaccion.reservas_denominaciones.filter(estado='reservada').exists():
+        return False, "Ya existen reservas para esta transacción", []
+    
+    # Obtener divisa destino (la que se comprará)
+    divisa_destino = transaccion.divisa_destino
+    monto_divisa = transaccion.monto_destino
+    
+    try:
+        with db_transaction.atomic():
+            # Calcular desglose con disponibilidad
+            puede_entregar, desglose, disponibilidad = terminal.tiene_denominaciones_disponibles_para_retiro(
+                divisa_destino, monto_divisa
+            )
+            
+            if not puede_entregar:
+                return False, f"El terminal {terminal.nombre} no tiene stock disponible para {monto_divisa} {divisa_destino.code}", []
+            
+            # Crear las reservas
+            reservas_creadas = []
+            for inv_id, datos in desglose.items():
+                inventario = datos['inventario']
+                cantidad_a_reservar = datos['cantidad']
+                
+                reserva = ReservaDenominacion.objects.create(
+                    transaccion=transaccion,
+                    terminal=terminal,
+                    inventario_denominacion=inventario,
+                    cantidad_reservada=cantidad_a_reservar,
+                    estado='reservada'
+                )
+                reservas_creadas.append(reserva)
+                
+                logger.info(
+                    f"Reserva creada: {cantidad_a_reservar}x {inventario.denominacion} "
+                    f"para transacción {transaccion.numero_transaccion}"
+                )
+            
+            return True, f"Se crearon {len(reservas_creadas)} reservas exitosamente", reservas_creadas
+            
+    except Exception as e:
+        logger.error(f"Error al crear reservas: {e}", exc_info=True)
+        return False, f"Error al crear reservas: {str(e)}", []
+
+
+def liberar_reservas_transaccion(transaccion):
+    """
+    Libera todas las reservas de una transacción (cuando se cancela).
+    
+    :param transaccion: Objeto Transaccion
+    :return: tuple (success: bool, message: str)
+    """
+    from tauser.models import ReservaDenominacion
+    from django.db import transaction as db_transaction
+    
+    try:
+        with db_transaction.atomic():
+            reservas = transaccion.reservas_denominaciones.filter(estado='reservada')
+            
+            if not reservas.exists():
+                return True, "No hay reservas para liberar"
+            
+            count = 0
+            for reserva in reservas:
+                reserva.liberar_reserva()
+                count += 1
+                logger.info(
+                    f"Reserva liberada: {reserva.cantidad_reservada}x {reserva.inventario_denominacion.denominacion} "
+                    f"de transacción {transaccion.numero_transaccion}"
+                )
+            
+            return True, f"Se liberaron {count} reservas exitosamente"
+            
+    except Exception as e:
+        logger.error(f"Error al liberar reservas: {e}", exc_info=True)
+        return False, f"Error al liberar reservas: {str(e)}"
+
+
+def confirmar_retiro_reservas(transaccion):
+    """
+    Confirma el retiro de las reservas (descuenta del inventario).
+    Se llama cuando el cliente retira físicamente la divisa del tauser.
+    
+    :param transaccion: Objeto Transaccion
+    :return: tuple (success: bool, message: str)
+    """
+    from tauser.models import ReservaDenominacion
+    from django.db import transaction as db_transaction
+    
+    try:
+        with db_transaction.atomic():
+            reservas = transaccion.reservas_denominaciones.filter(estado='reservada')
+            
+            if not reservas.exists():
+                return False, "No hay reservas para confirmar"
+            
+            count = 0
+            for reserva in reservas:
+                reserva.confirmar_retiro()
+                count += 1
+                logger.info(
+                    f"Retiro confirmado: {reserva.cantidad_reservada}x {reserva.inventario_denominacion.denominacion} "
+                    f"descontado del inventario (transacción {transaccion.numero_transaccion})"
+                )
+            
+            return True, f"Se confirmaron {count} retiros exitosamente"
+            
+    except Exception as e:
+        logger.error(f"Error al confirmar retiros: {e}", exc_info=True)
+        return False, f"Error al confirmar retiros: {str(e)}"

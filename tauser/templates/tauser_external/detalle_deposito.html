@@ -1,5 +1,6 @@
 {% extends 'base_tauser.html' %}
 {% load static %}
+{% load tauser_filters %}
 
 {% block title %}Depósito de Divisas - {{ terminal.nombre }}{% endblock %}
 
@@ -287,7 +288,7 @@
                     Monto a Depositar
                 </div>
                 <div class="value">
-                    {{ transaccion.monto_origen|floatformat:2 }}
+                    {{ transaccion.monto_origen|currency }}
                     <span class="currency">{{ transaccion.divisa_origen.code }}</span>
                 </div>
             </div>
@@ -338,7 +339,7 @@
                     <div class="info-item">
                         <div class="info-item-label">Tasa de Cambio</div>
                         <div class="info-item-value">
-                            {{ transaccion.tasa_aplicada|floatformat:2 }}
+                            {{ transaccion.tasa_aplicada|currency }}
                         </div>
                     </div>
                     <div class="info-item">
@@ -421,7 +422,7 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
 
         const confirmed = confirm(
-            '¿Confirma que tiene preparado el monto de {{ transaccion.monto_origen|floatformat:2 }} {{ transaccion.divisa_origen.code }} para depositar?\n\n' +
+            '¿Confirma que tiene preparado el monto de {{ transaccion.monto_origen|currency }} {{ transaccion.divisa_origen.code }} para depositar?\n\n' +
             'Una vez confirmado, se abrirá el compartimento de depósito.'
         );
         

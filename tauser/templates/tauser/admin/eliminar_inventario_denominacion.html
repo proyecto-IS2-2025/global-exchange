@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load tauser_filters %}
 
 {% block title %}Eliminar Denominación - Terminal {{ terminal.codigo }}{% endblock %}
 
@@ -57,7 +58,7 @@
                             <strong>Tipo:</strong> {{ object.denominacion.get_tipo_display|title }}
                         </p>
                         <p class="mb-1">
-                            <strong>Valor:</strong> {{ object.denominacion.divisa.symbol }}{{ object.denominacion.valor|floatformat:2 }}
+                            <strong>Valor:</strong> {{ object.denominacion.divisa.symbol }}{{ object.denominacion.valor|currency }}
                         </p>
                         <p class="mb-1">
                             <strong>Cantidad Actual:</strong> 
@@ -66,7 +67,7 @@
                         <p class="mb-0">
                             <strong>Valor Total en Inventario:</strong> 
                             <span class="badge bg-danger fs-6">
-                                {{ object.denominacion.divisa.symbol }}{{ object.valor_total|floatformat:2 }}
+                                {{ object.denominacion.divisa.symbol }}{{ object.valor_total|currency }}
                             </span>
                         </p>
                     </div>
@@ -80,7 +81,7 @@
                         <ul class="mb-0 small">
                             <li>Se eliminará permanentemente esta denominación del inventario de la terminal.</li>
                             <li>Se perderá el registro de las {{ object.cantidad }} unidades existentes.</li>
-                            <li>El valor total de {{ object.denominacion.divisa.symbol }}{{ object.valor_total|floatformat:2 }} dejará de contabilizarse.</li>
+                            <li>El valor total de {{ object.denominacion.divisa.symbol }}{{ object.valor_total|currency }} dejará de contabilizarse.</li>
                             <li>Esta acción no se puede deshacer.</li>
                         </ul>
                     </div>

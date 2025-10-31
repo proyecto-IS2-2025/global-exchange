@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load humanize %}
+{% load tauser_filters %}
 
 {% block title %}Historial de Denominaciones - {{ terminal.nombre }}{% endblock %}
 
@@ -277,7 +278,7 @@
                                                             {% endif %}
                                                         </td>
                                                         <td class="text-end">
-                                                            <strong>{{ desglose.denominacion.divisa.simbolo }}{{ desglose.subtotal|floatformat:2 }}</strong>
+                                                            <strong>{{ desglose.denominacion.divisa.simbolo }}{{ desglose.subtotal|currency }}</strong>
                                                         </td>
                                                     </tr>
                                                     {% endfor %}

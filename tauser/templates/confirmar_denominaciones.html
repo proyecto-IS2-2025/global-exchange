@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load humanize %}
+{% load tauser_filters %}
 
 {% block title %}Confirmar Venta{% endblock %}
 
@@ -67,7 +68,7 @@
                                         <span class="badge bg-info">{{ item.cantidad }}</span>
                                     </td>
                                     <td class="text-end">
-                                        {{ item.denominacion.divisa.simbolo }}{{ item.subtotal|floatformat:2 }}
+                                        {{ item.denominacion.divisa.simbolo }}{{ item.subtotal|currency }}
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -77,7 +78,7 @@
                                     <td colspan="2" class="text-end"><strong>Total a entregar:</strong></td>
                                     <td class="text-end">
                                         <strong class="text-primary">
-                                            {{ transaccion.divisa_origen.simbolo }}{{ total|floatformat:2 }}
+                                            {{ transaccion.divisa_origen.simbolo }}{{ total|currency }}
                                         </strong>
                                     </td>
                                 </tr>
@@ -100,7 +101,7 @@
                                 <strong>Guaraníes (PYG):</strong>
                             </div>
                             <div class="h4 mb-0">
-                                <strong>₱{{ transaccion.monto_destino|floatformat:0|intcomma }}</strong>
+                                <strong>₱{{ transaccion.monto_destino|currency }}</strong>
                             </div>
                         </div>
                         <small class="text-muted d-block mt-2">
@@ -163,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
             '¿Confirma que tiene los billetes listos y desea proceder?\n\n' +
             'Total a depositar: {{ total }} {{ transaccion.divisa_origen.code }}\n' +
             'Billetes: {{ total_billetes }}\n' +
-            'Recibirá: ₱{{ transaccion.monto_destino|floatformat:0|intcomma }}'
+            'Recibirá: ₱{{ transaccion.monto_destino|currency }}'
         );
         
         if (confirmado) {

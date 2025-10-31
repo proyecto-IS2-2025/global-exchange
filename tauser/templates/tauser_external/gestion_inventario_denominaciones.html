@@ -1,5 +1,6 @@
 {% extends 'base_tauser.html' %}
 {% load static %}
+{% load tauser_filters %}
 
 {% block title %}Gestión de Inventario por Denominaciones - Terminal {{ terminal.codigo }}{% endblock %}
 
@@ -103,7 +104,7 @@
                     {% for item in inventario_alertas %}
                     <li>
                         <strong>{{ item.denominacion.divisa.code }}</strong> - 
-                        {{ item.denominacion.get_tipo_display }} {{ item.denominacion.valor }}:
+                        {{ item.denominacion.get_tipo_display }} {{ item.denominacion.valor_formateado }}:
                         <span class="text-danger fw-bold">{{ item.cantidad }}</span> unidades
                         (Mínimo: {{ item.cantidad_minima }})
                     </li>
@@ -128,7 +129,7 @@
                     <div class="text-end">
                         <div class="fs-6">Valor Total del Inventario</div>
                         <div class="fs-4 fw-bold">
-                            {{ data.divisa.symbol }}{{ data.valor_total|floatformat:2 }}
+                            {{ data.divisa.symbol }}{{ data.valor_total|currency }}
                         </div>
                     </div>
                 </div>
@@ -154,7 +155,7 @@
                                     {{ item.denominacion.get_tipo_display|title }}
                                 </td>
                                 <td class="fw-bold">
-                                    {{ data.divisa.symbol }}{{ item.denominacion.valor|floatformat:2 }}
+                                    {{ data.divisa.symbol }}{{ item.denominacion.valor|currency }}
                                 </td>
                                 <td class="text-center">
                                     <span class="badge {% if item.cantidad < item.cantidad_minima %}bg-warning text-dark{% else %}bg-primary{% endif %} fs-6">
@@ -165,7 +166,7 @@
                                     {{ item.cantidad_minima }}
                                 </td>
                                 <td class="text-end fw-bold">
-                                    {{ data.divisa.symbol }}{{ item.valor_total|floatformat:2 }}
+                                    {{ data.divisa.symbol }}{{ item.valor_total|currency }}
                                 </td>
                                 <td class="text-center">
                                     {% if item.cantidad == 0 %}
@@ -188,7 +189,7 @@
                         <tfoot class="table-light fw-bold">
                             <tr>
                                 <td colspan="4" class="text-end">Total {{ divisa_code }}:</td>
-                                <td class="text-end">{{ data.divisa.symbol }}{{ data.valor_total|floatformat:2 }}</td>
+                                <td class="text-end">{{ data.divisa.symbol }}{{ data.valor_total|currency }}</td>
                                 <td></td>
                             </tr>
                         </tfoot>

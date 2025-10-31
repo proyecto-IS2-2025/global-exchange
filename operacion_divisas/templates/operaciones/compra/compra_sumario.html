@@ -70,6 +70,39 @@
 
       <hr>
 
+      <!-- Terminal TAUSER -->
+      <h5 class="mb-3">
+        <i class="fas fa-terminal me-2"></i>Terminal de Retiro
+      </h5>
+      {% if tauser %}
+        <div class="alert alert-info">
+          <div class="d-flex align-items-start">
+            <i class="fas fa-map-marker-alt fa-2x me-3 text-primary"></i>
+            <div class="flex-grow-1">
+              <h6 class="mb-1">{{ tauser.nombre }}</h6>
+              <p class="mb-1">
+                <strong>Ubicación:</strong> {{ tauser.ubicacion }}
+              </p>
+              <p class="mb-0">
+                <strong>Código:</strong> <code>{{ tauser.codigo }}</code>
+              </p>
+              <small class="text-muted">
+                <i class="fas fa-info-circle me-1"></i>
+                Podrá retirar su divisa en este terminal usando el código de su transacción.
+              </small>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <div class="alert alert-warning">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          No se ha seleccionado un terminal TAUSER. 
+          <a href="{% url 'operacion_divisas:seleccionar_tauser_compra' %}" class="alert-link">Seleccionar terminal</a>
+        </div>
+      {% endif %}
+
+      <hr>
+
       <!-- Medio de pago -->
       <h5 class="mb-3">Medio de Pago</h5>
       {% with medio_ses=request.session.medio_pago_seleccionado %}
@@ -125,8 +158,11 @@
 
     </div>
     <div class="card-footer text-end">
+      <a href="{% url 'operacion_divisas:seleccionar_tauser_compra' %}" class="btn btn-outline-secondary me-2">
+        <i class="bi bi-arrow-left"></i> Cambiar Terminal
+      </a>
       <a href="{% url 'clientes:seleccionar_medio_pago' %}" class="btn btn-outline-secondary me-2">
-        <i class="bi bi-arrow-left"></i> Volver
+        <i class="bi bi-credit-card"></i> Cambiar Medio de Pago
       </a>
       
 

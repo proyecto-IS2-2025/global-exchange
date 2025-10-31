@@ -1,5 +1,6 @@
 {% extends 'base_tauser.html' %}
 {% load static %}
+{% load tauser_filters %}
 
 {% block title %}Retiro Exitoso - {{ terminal.nombre }}{% endblock %}
 
@@ -273,7 +274,7 @@
                     <i class="fas fa-money-bill-wave me-2"></i>Monto Retirado
                 </div>
                 <div class="amount-value">
-                    {{ retiro.divisa_simbolo }}{{ retiro.monto|floatformat:2 }}
+                    {{ retiro.divisa_simbolo }}{{ retiro.monto|currency }}
                     <span class="amount-currency">{{ retiro.divisa_code }}</span>
                 </div>
             </div>

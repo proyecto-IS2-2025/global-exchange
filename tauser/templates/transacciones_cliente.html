@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load humanize %}
+{% load tauser_filters %}
 
 {% block title %}Transacciones - {{ cliente.nombre_completo }}{% endblock %}
 
@@ -96,14 +97,14 @@
                                         </td>
                                         <td>
                                             <span class="badge bg-info">
-                                                {{ trans.monto_origen|floatformat:2 }} {{ trans.divisa_origen.code }}
+                                                {{ trans.monto_origen|currency }} {{ trans.divisa_origen.code }}
                                                 <i class="fas fa-arrow-right mx-1"></i>
-                                                {{ trans.monto_destino|floatformat:2 }} {{ trans.divisa_destino.code }}
+                                                {{ trans.monto_destino|currency }} {{ trans.divisa_destino.code }}
                                             </span>
                                         </td>
                                         <td class="text-end">
                                             <strong class="text-success">
-                                                {{ trans.monto_destino|floatformat:2 }} {{ trans.divisa_destino.simbolo }}
+                                                {{ trans.monto_destino|currency }} {{ trans.divisa_destino.simbolo }}
                                             </strong>
                                         </td>
                                         <td class="text-center">
@@ -123,7 +124,7 @@
                                                     {% csrf_token %}
                                                     <input type="hidden" name="tipo_operacion" value="RETIRO">
                                                     <button type="submit" class="btn btn-success btn-sm" 
-                                                            onclick="return confirm('¿Confirma el retiro de {{ trans.monto_destino|floatformat:2 }} {{ trans.divisa_destino.code }}?')">
+                                                            onclick="return confirm('¿Confirma el retiro de {{ trans.monto_destino|currency }} {{ trans.divisa_destino.code }}?')">
                                                         <i class="fas fa-hand-holding-usd me-1"></i> Retirar
                                                     </button>
                                                 </form>
@@ -199,14 +200,14 @@
                                     </td>
                                     <td>
                                         <span class="badge bg-info">
-                                            {{ trans.monto_origen|floatformat:2 }} {{ trans.divisa_origen.code }}
+                                            {{ trans.monto_origen|currency }} {{ trans.divisa_origen.code }}
                                             <i class="fas fa-arrow-right mx-1"></i>
-                                            {{ trans.monto_destino|floatformat:0|intcomma }} {{ trans.divisa_destino.code }}
+                                            {{ trans.monto_destino|currency }} {{ trans.divisa_destino.code }}
                                         </span>
                                     </td>
                                     <td class="text-end">
                                         <strong class="text-success">
-                                            ₲{{ trans.monto_destino|floatformat:0|intcomma }}
+                                            ₲{{ trans.monto_destino|currency }}
                                         </strong>
                                     </td>
                                     <td class="text-center">
@@ -221,7 +222,7 @@
                                             {% csrf_token %}
                                             <input type="hidden" name="tipo_operacion" value="PAGO">
                                             <button type="submit" class="btn btn-warning btn-sm" 
-                                                    onclick="return confirm('¿Confirma recibir ₲{{ trans.monto_destino|floatformat:0|intcomma }} por transferencia bancaria?')">
+                                                    onclick="return confirm('¿Confirma recibir ₲{{ trans.monto_destino|currency }} por transferencia bancaria?')">
                                                 <i class="fas fa-mobile-alt me-1"></i> Recibir Pago Digital
                                             </button>
                                         </form>

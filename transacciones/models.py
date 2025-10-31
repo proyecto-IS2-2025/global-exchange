@@ -153,6 +153,16 @@ class Transaccion(models.Model):
         db_index=True,
         help_text='Código alfanumérico de 8 caracteres para acceso en terminal'
     )
+    
+    # Terminal TAUSER asignado (solo para compras)
+    tauser_terminal = models.ForeignKey(
+        'tauser.Terminal',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='transacciones_asignadas',
+        help_text='Terminal TAUSER donde el cliente debe retirar la divisa (solo compras)'
+    )
 
     class Meta:
         verbose_name = 'Transacción'

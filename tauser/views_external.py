@@ -590,11 +590,22 @@ def verificar_codigo_tauser(request, terminal_codigo):
     # Buscar transacción por código
     try:
         transaccion = Transaccion.objects.select_related(
-            'cliente', 'divisa_origen', 'divisa_destino'
+            'cliente', 'divisa_origen', 'divisa_destino', 'tauser_terminal'
         ).get(tauser_code=tauser_code)
     except Transaccion.DoesNotExist:
         messages.error(request, f'❌ Código TAUSER "{tauser_code}" no encontrado.')
         return redirect('tauser_external:menu_tauser', terminal_codigo=terminal_codigo)
+    
+    # NUEVO: Verificar que el código solo sea válido en el terminal asignado (solo para compras)
+    if transaccion.tipo_operacion == 'compra' and transaccion.tauser_terminal:
+        if transaccion.tauser_terminal.codigo != terminal_codigo:
+            messages.error(
+                request,
+                f'❌ Este código TAUSER solo es válido en el terminal: '
+                f'{transaccion.tauser_terminal.nombre} ({transaccion.tauser_terminal.codigo}). '
+                f'Por favor, dirígete al terminal correcto para retirar tu divisa.'
+            )
+            return redirect('tauser_external:menu_tauser', terminal_codigo=terminal_codigo)
     
     # Verificar estado de la transacción
     if transaccion.tipo_operacion == 'compra':

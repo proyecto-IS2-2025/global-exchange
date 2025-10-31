@@ -58,6 +58,112 @@ class Terminal(models.Model):
         
         resultado = calcular_desglose_optimo(inventarios, monto_total)
         return resultado['posible'], resultado.get('desglose', {})
+    
+    def tiene_denominaciones_disponibles_para_retiro(self, divisa, monto_total):
+        """
+        Verifica si hay denominaciones disponibles (descontando reservas) 
+        para entregar el monto solicitado.
+        Retorna (bool, dict, dict) donde los dicts contienen el desglose sugerido 
+        y las cantidades disponibles considerando reservas.
+        """
+        from django.db.models import Sum, Q
+        
+        # Obtener inventarios con cantidades disponibles (real - reservado)
+        inventarios = InventarioDenominacionTerminal.objects.filter(
+            terminal=self,
+            denominacion__divisa=divisa,
+            denominacion__is_active=True,
+            cantidad__gt=0
+        ).select_related('denominacion')
+        
+        if not inventarios.exists():
+            return False, {}, {}
+        
+        # Calcular cantidades reservadas para cada inventario
+        inventarios_con_disponible = []
+        for inventario in inventarios:
+            # Sumar cantidades reservadas (solo estado 'reservada')
+            cantidad_reservada = inventario.reservas.filter(
+                estado='reservada'
+            ).aggregate(
+                total_reservado=Sum('cantidad_reservada')
+            )['total_reservado'] or 0
+            
+            cantidad_disponible = inventario.cantidad - cantidad_reservada
+            
+            if cantidad_disponible > 0:
+                # Crear objeto temporal con cantidad disponible
+                inventario.cantidad_disponible_real = cantidad_disponible
+                inventarios_con_disponible.append(inventario)
+        
+        if not inventarios_con_disponible:
+            return False, {}, {}
+        
+        # Usar el algoritmo de desglose pero con las cantidades disponibles
+        # Creamos una lista temporal modificando 'cantidad' por 'cantidad_disponible_real'
+        resultado = self._calcular_desglose_con_disponibles(
+            inventarios_con_disponible, 
+            monto_total
+        )
+        
+        return resultado['posible'], resultado.get('desglose', {}), resultado.get('disponibilidad', {})
+    
+    def _calcular_desglose_con_disponibles(self, inventarios, monto_total):
+        """
+        Calcula desglose usando las cantidades disponibles reales (descontando reservas).
+        Similar a calcular_desglose_optimo pero usa cantidad_disponible_real.
+        """
+        from decimal import Decimal
+        
+        monto_pendiente = Decimal(str(monto_total))
+        desglose = {}
+        disponibilidad = {}
+        
+        # Ordenar por valor descendente
+        inventarios_ordenados = sorted(
+            inventarios,
+            key=lambda x: x.denominacion.valor,
+            reverse=True
+        )
+        
+        for inventario in inventarios_ordenados:
+            if monto_pendiente <= 0:
+                break
+            
+            valor_billete = inventario.denominacion.valor
+            cantidad_disponible = inventario.cantidad_disponible_real
+            
+            # Calcular cuántos billetes se necesitan
+            cantidad_necesaria = int(monto_pendiente / valor_billete)
+            
+            if cantidad_necesaria > 0:
+                cantidad_a_usar = min(cantidad_necesaria, cantidad_disponible)
+                
+                if cantidad_a_usar > 0:
+                    desglose[inventario.id] = {
+                        'inventario': inventario,
+                        'cantidad': cantidad_a_usar,
+                        'valor_unitario': valor_billete,
+                        'subtotal': valor_billete * cantidad_a_usar
+                    }
+                    
+                    disponibilidad[inventario.id] = {
+                        'cantidad_total': inventario.cantidad,
+                        'cantidad_disponible': cantidad_disponible,
+                        'cantidad_a_reservar': cantidad_a_usar
+                    }
+                    
+                    monto_pendiente -= (valor_billete * cantidad_a_usar)
+        
+        posible = (monto_pendiente == 0)
+        
+        return {
+            'posible': posible,
+            'desglose': desglose,
+            'disponibilidad': disponibilidad,
+            'sobrante': monto_pendiente,
+            'monto_cubierto': monto_total - monto_pendiente
+        }
 
 class InventarioDivisaTerminal(models.Model):
     """Inventario (stock) de una divisa en una terminal específica."""
@@ -430,3 +536,98 @@ class LogRecargaInventario(models.Model):
         if not self.valor_total_agregado:
             self.valor_total_agregado = self.cantidad_agregada * self.denominacion.valor
         super().save(*args, **kwargs)
+
+
+class ReservaDenominacion(models.Model):
+    """
+    Representa la reserva de denominaciones en un tauser para una transacción.
+    Las denominaciones reservadas no se descuentan del inventario, pero tampoco
+    están disponibles para nuevas transacciones hasta que se liberen o confirmen.
+    """
+    ESTADO_CHOICES = [
+        ('reservada', 'Reservada'),
+        ('confirmada', 'Confirmada (Retirada)'),
+        ('liberada', 'Liberada (Cancelada)'),
+    ]
+    
+    transaccion = models.ForeignKey(
+        Transaccion,
+        on_delete=models.CASCADE,
+        related_name='reservas_denominaciones',
+        verbose_name='Transacción'
+    )
+    terminal = models.ForeignKey(
+        Terminal,
+        on_delete=models.PROTECT,
+        related_name='reservas_denominaciones',
+        verbose_name='Terminal'
+    )
+    inventario_denominacion = models.ForeignKey(
+        InventarioDenominacionTerminal,
+        on_delete=models.PROTECT,
+        related_name='reservas',
+        verbose_name='Inventario de Denominación'
+    )
+    cantidad_reservada = models.PositiveIntegerField(
+        verbose_name='Cantidad Reservada',
+        help_text='Cantidad de billetes reservados'
+    )
+    estado = models.CharField(
+        max_length=15,
+        choices=ESTADO_CHOICES,
+        default='reservada',
+        verbose_name='Estado'
+    )
+    fecha_reserva = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Fecha de Reserva'
+    )
+    fecha_confirmacion = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Fecha de Confirmación/Liberación'
+    )
+    
+    class Meta:
+        verbose_name = 'Reserva de Denominación'
+        verbose_name_plural = 'Reservas de Denominaciones'
+        ordering = ['-fecha_reserva']
+        indexes = [
+            models.Index(fields=['transaccion', 'estado']),
+            models.Index(fields=['terminal', 'estado']),
+        ]
+    
+    def __str__(self):
+        return f"Reserva {self.id} - {self.cantidad_reservada}x {self.inventario_denominacion.denominacion} ({self.estado})"
+    
+    @property
+    def valor_total_reservado(self):
+        """Calcula el valor total reservado"""
+        return self.inventario_denominacion.denominacion.valor * self.cantidad_reservada
+    
+    def confirmar_retiro(self):
+        """Confirma el retiro y descuenta del inventario"""
+        from django.utils import timezone
+        
+        if self.estado != 'reservada':
+            raise ValueError(f"La reserva debe estar en estado 'reservada', no '{self.estado}'")
+        
+        # Descontar del inventario
+        self.inventario_denominacion.descontar(self.cantidad_reservada)
+        
+        # Cambiar estado
+        self.estado = 'confirmada'
+        self.fecha_confirmacion = timezone.now()
+        self.save()
+    
+    def liberar_reserva(self):
+        """Libera la reserva sin descontar del inventario"""
+        from django.utils import timezone
+        
+        if self.estado != 'reservada':
+            raise ValueError(f"La reserva debe estar en estado 'reservada', no '{self.estado}'")
+        
+        # Solo cambiar estado, no tocar inventario
+        self.estado = 'liberada'
+        self.fecha_confirmacion = timezone.now()
+        self.save()
