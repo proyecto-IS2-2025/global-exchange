@@ -330,10 +330,11 @@ def obtener_proximo_numero_factura():
     Obtiene automáticamente el próximo número de factura disponible.
     
     Esta función:
-    1. Consulta el último número usado en la base de datos
-    2. Verifica que esté dentro del rango asignado al desarrollador
-    3. Retorna el siguiente número disponible
-    4. Es thread-safe (usa select_for_update)
+    1. Consulta el SQL Proxy para obtener el último número usado (sincronizado entre todos)
+    2. Si no hay conexión, usa la base de datos local como fallback
+    3. Verifica que esté dentro del rango asignado al desarrollador
+    4. Retorna el siguiente número disponible
+    5. Es thread-safe (usa select_for_update)
     
     Returns:
         str: Número de factura en formato "001-003-0000083"
@@ -349,39 +350,59 @@ def obtener_proximo_numero_factura():
     """
     from django.db.models import Max
     from django.db import transaction
+    import logging
     
+    logger = logging.getLogger(__name__)
     config = obtener_configuracion_facturacion()
     
     with transaction.atomic():
-        # Obtener el último número de factura en la base de datos
-        # Usar select_for_update() para evitar race conditions
-        ultima_factura = FacturaElectronica.objects.select_for_update().aggregate(
-            Max('numero_factura')
-        )['numero_factura__max']
+        # PASO 1: Intentar obtener el último número desde SQL Proxy (sincronizado)
+        proximo_numero = None
+        try:
+            from .services import SQLProxyService
+            service = SQLProxyService()
+            if service.conectar():
+                ultimo_numero_sql_proxy = service.obtener_ultimo_numero_desde_sql_proxy()
+                service.desconectar()
+                
+                if ultimo_numero_sql_proxy is not None:
+                    proximo_numero = ultimo_numero_sql_proxy + 1
+                    logger.info(f"[FACTURA] Número obtenido desde SQL Proxy: {proximo_numero}")
+        except Exception as e:
+            logger.warning(f"[FACTURA] No se pudo consultar SQL Proxy: {e}")
         
-        if ultima_factura:
-            # Extraer el número de la última factura
-            ultimo_numero = extraer_numero_de_factura(ultima_factura)
-            proximo_numero = ultimo_numero + 1
-        else:
-            # No hay facturas, usar el número inicial del rango
-            proximo_numero = config['numero_inicial']
+        # PASO 2: Fallback - usar la base de datos local si SQL Proxy no está disponible
+        if proximo_numero is None:
+            ultima_factura = FacturaElectronica.objects.select_for_update().aggregate(
+                Max('numero_factura')
+            )['numero_factura__max']
+            
+            if ultima_factura:
+                ultimo_numero = extraer_numero_de_factura(ultima_factura)
+                proximo_numero = ultimo_numero + 1
+                logger.info(f"[FACTURA] Número obtenido desde BD local: {proximo_numero}")
+            else:
+                # No hay facturas, usar el número inicial del rango
+                proximo_numero = config['numero_inicial']
+                logger.info(f"[FACTURA] No hay facturas previas, usando número inicial: {proximo_numero}")
         
-        # Verificar que el número esté dentro del rango asignado
+        # PASO 3: Verificar que el número esté dentro del rango asignado
         if proximo_numero < config['numero_inicial']:
-            # El siguiente número es menor al rango inicial
-            # Saltar al inicio del rango
+            logger.warning(f"[FACTURA] Número {proximo_numero} menor al inicial {config['numero_inicial']}, ajustando...")
             proximo_numero = config['numero_inicial']
         
         if proximo_numero > config['numero_final']:
             raise ValueError(
                 f"⚠️ LÍMITE DE RANGO ALCANZADO\n"
                 f"Has usado todas las facturas de tu rango ({config['numero_inicial']}-{config['numero_final']}).\n"
+                f"El siguiente número sería {proximo_numero}, pero está fuera de tu rango.\n"
                 f"Coordina un nuevo rango con tu equipo y actualiza las variables de entorno:\n"
                 f"  FACTURACION_NUMERO_INICIAL\n"
                 f"  FACTURACION_NUMERO_FINAL\n"
                 f"\nEjecuta: poetry run python obtener_proximo_numero.py"
             )
+        
+        logger.info(f"[FACTURA] Próximo número a usar: {proximo_numero}")
         
         # Formatear y retornar
         return formatear_numero_factura(

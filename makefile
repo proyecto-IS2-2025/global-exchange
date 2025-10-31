@@ -35,15 +35,8 @@ PROD_EXEC = docker compose -p $(PROD_PROJECT_NAME) -f docker-compose.prod.yml ex
 load-prod:
 	@echo "Cargando datos iniciales en el entorno de producción..."
 	# Carga de fixtures (datos)
-	$(PROD_EXEC) python manage.py loaddata roles_data.json
-	$(PROD_EXEC) python manage.py loaddata users_data.json
-	$(PROD_EXEC) python manage.py loaddata clientes_data.json
-	$(PROD_EXEC) python manage.py loaddata divisas_data.json
-	$(PROD_EXEC) python manage.py loaddata bancos_data.json
-	# Fixtures faltantes añadidas:
-	$(PROD_EXEC) python manage.py loaddata denominaciones_data.json
-	$(PROD_EXEC) python manage.py loaddata billetera_data.json
-	
+	$(PROD_EXEC) python scripts/setup_system.py
+
 	@echo "Sincronizando permisos y roles de producción..."
 	# Configuración de permisos añadida:
 	$(PROD_EXEC) python manage.py sync_permissions

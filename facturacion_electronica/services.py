@@ -2,6 +2,7 @@
 Servicio para conectarse al SQL Proxy y generar facturas electrónicas
 """
 import psycopg2
+import os
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
 from .config import (
@@ -10,8 +11,30 @@ from .config import (
     TIMBRADO_CONFIG, 
     FACTURACION_CONFIG,
     ACTIVIDADES_ECONOMICAS,
-    ESI_CONFIG
+    ESI_CONFIG,
+    KUDE_CONFIG
 )
+
+
+def convertir_a_url_publica(url_interna):
+    """
+    Convierte URLs internas (host.docker.internal) a URLs públicas (localhost)
+    para que sean accesibles desde el navegador del usuario
+    """
+    if not url_interna:
+        return url_interna
+    
+    # Obtener URL pública de variables de entorno o usar localhost por defecto
+    url_publica_base = os.getenv('KUDE_PUBLIC_URL', 'http://localhost:40080/kude/')
+    
+    # Si la URL interna contiene host.docker.internal, reemplazar
+    if 'host.docker.internal' in url_interna:
+        # Extraer la parte después de /kude/
+        if '/kude/' in url_interna:
+            path_relativo = url_interna.split('/kude/', 1)[1]
+            return f"{url_publica_base}{path_relativo}"
+    
+    return url_interna
 
 
 class SQLProxyService:
@@ -26,6 +49,10 @@ class SQLProxyService:
     def conectar(self):
         """Establece conexión con la base de datos del SQL Proxy"""
         try:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(f"[SQL_PROXY] Intentando conectar con: host={SQL_PROXY_CONFIG['host']}, port={SQL_PROXY_CONFIG['port']}, db={SQL_PROXY_CONFIG['database']}, user={SQL_PROXY_CONFIG['user']}")
+            
             self.connection = psycopg2.connect(
                 host=SQL_PROXY_CONFIG['host'],
                 port=SQL_PROXY_CONFIG['port'],
@@ -34,10 +61,13 @@ class SQLProxyService:
                 password=SQL_PROXY_CONFIG['password']
             )
             self.cursor = self.connection.cursor(cursor_factory=RealDictCursor)
-            print("✓ Conectado al SQL Proxy de Factura Segura")
+            logger.info("✓ Conectado al SQL Proxy de Factura Segura")
             return True
         except (Exception, psycopg2.Error) as error:
-            print(f"✗ Error al conectar al SQL Proxy: {error}")
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"✗ Error al conectar al SQL Proxy: {error}")
+            logger.error(f"✗ Configuración usada: {SQL_PROXY_CONFIG}")
             return False
     
     def desconectar(self):
@@ -57,6 +87,122 @@ class SQLProxyService:
         except (Exception, psycopg2.Error) as error:
             print(f"✗ Error al verificar ESI: {error}")
             return False
+    
+    def obtener_ultimo_numero_desde_sql_proxy(self):
+        """
+        Consulta el SQL Proxy para obtener el último número de factura usado.
+        Esto sincroniza con todas las facturas de todos los desarrolladores.
+        
+        Returns:
+            int: Número de la última factura, o None si no hay facturas
+        """
+        try:
+            import logging
+            logger = logging.getLogger(__name__)
+            
+            # Consultar el último número de factura en el SQL Proxy
+            query = """
+            SELECT MAX(CAST(dnumdoc AS INTEGER)) as ultimo_numero 
+            FROM public.de 
+            WHERE dpunexp = %s AND dest = %s
+            """
+            
+            self.cursor.execute(query, (
+                TIMBRADO_CONFIG['punto_expedicion'],
+                TIMBRADO_CONFIG['establecimiento']
+            ))
+            
+            result = self.cursor.fetchone()
+            
+            if result and result['ultimo_numero']:
+                logger.info(f"[SQL_PROXY] Último número de factura en SQL Proxy: {result['ultimo_numero']}")
+                return int(result['ultimo_numero'])
+            else:
+                logger.info(f"[SQL_PROXY] No hay facturas previas en SQL Proxy")
+                return None
+                
+        except (Exception, psycopg2.Error) as error:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"[SQL_PROXY] Error al consultar último número: {error}")
+            return None
+    
+    def buscar_pdf_en_kude(self, numero_factura, fecha_emision):
+        """
+        Busca el PDF de una factura en el servidor KuDE.
+        
+        Args:
+            numero_factura: Número completo de la factura (ej: '001-003-0000087')
+            fecha_emision: Fecha de emisión de la factura (datetime object)
+            
+        Returns:
+            str: URL completa del PDF si se encuentra, None si no existe
+        """
+        try:
+            import urllib.request
+            import urllib.error
+            import base64
+            from html.parser import HTMLParser
+            import logging
+            
+            logger = logging.getLogger(__name__)
+            
+            # Construir URL del directorio (formato YYYYMM)
+            fecha_dir = fecha_emision.strftime('%Y%m')
+            dir_url = f"{KUDE_CONFIG['url']}{fecha_dir}/"
+            
+            logger.info(f"[KUDE] Buscando PDF en: {dir_url}")
+            
+            # Preparar autenticación
+            credentials = f"{KUDE_CONFIG['username']}:{KUDE_CONFIG['password']}"
+            encoded = base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
+            
+            # Parsear HTML para buscar el archivo
+            class LinkParser(HTMLParser):
+                def __init__(self):
+                    super().__init__()
+                    self.links = []
+                
+                def handle_starttag(self, tag, attrs):
+                    if tag == 'a':
+                        for attr, value in attrs:
+                            if attr == 'href':
+                                self.links.append(value)
+            
+            # Listar directorio
+            req = urllib.request.Request(dir_url)
+            req.add_header('Authorization', f'Basic {encoded}')
+            
+            with urllib.request.urlopen(req, timeout=5) as response:
+                content = response.read().decode('utf-8')
+                parser = LinkParser()
+                parser.feed(content)
+                
+                # Buscar archivo que contenga el número de factura
+                numero_sin_guiones = numero_factura.replace('-', '-')  # Mantener formato
+                pdfs = [link for link in parser.links 
+                       if numero_factura in link and '.pdf' in link.lower()]
+                
+                if pdfs:
+                    pdf_name = pdfs[0]  # Tomar el primero
+                    pdf_url = f"{dir_url}{pdf_name}"
+                    logger.info(f"[KUDE] ✅ PDF encontrado: {pdf_url}")
+                    
+                    # Convertir a URL pública para que sea accesible desde el navegador
+                    pdf_url_publica = convertir_a_url_publica(pdf_url)
+                    logger.info(f"[KUDE] URL pública: {pdf_url_publica}")
+                    
+                    return pdf_url_publica
+                else:
+                    logger.warning(f"[KUDE] ⚠️ PDF no encontrado para {numero_factura}")
+                    return None
+                    
+        except urllib.error.HTTPError as e:
+            logger.warning(f"[KUDE] HTTP Error {e.code}: {e.reason}")
+            return None
+        except Exception as e:
+            logger.error(f"[KUDE] Error buscando PDF: {e}")
+            return None
     
     def inicializar_esi(self):
         """

@@ -157,10 +157,10 @@ start_global_exchange() {
     cd "$GLOBAL_EXCHANGE_DIR"
     
     # Verificar si ya está corriendo
-    if container_running "global-exchange-local-prod-web-1"; then
+    if container_running "glx-web-prod"; then
         print_warning "Global Exchange ya está corriendo"
         print_step "Verificando estado..."
-        docker ps --filter "name=global-exchange-local-prod" --format "table {{.Names}}\t{{.Status}}"
+        docker ps --filter "name=glx" --format "table {{.Names}}\t{{.Status}}"
     else
         print_step "Levantando contenedores de Global Exchange..."
         make prod-up
@@ -169,7 +169,7 @@ start_global_exchange() {
         sleep 10
         
         # Verificar que los contenedores estén corriendo
-        if container_running "global-exchange-local-prod-web-1"; then
+        if container_running "glx-web-prod"; then
             print_success "Global Exchange iniciado correctamente"
         else
             print_error "Global Exchange no inició correctamente"
@@ -184,15 +184,28 @@ load_fixtures() {
     
     cd "$GLOBAL_EXCHANGE_DIR"
     
-    print_step "Verificando si las fixtures ya fueron cargadas..."
+    print_step "Esperando a que la base de datos esté completamente lista..."
+    sleep 5
     
-    # Intentar cargar fixtures (si ya existen, Django lo detectará)
-    print_step "Ejecutando: make load-prod"
-    if make load-prod; then
-        print_success "Fixtures y configuración cargadas correctamente"
+    print_step "Cargando fixtures iniciales del sistema..."
+    docker compose -p global-exchange-local-prod -f docker-compose.prod.yml exec web python scripts/setup_system.py
+    
+    if [ $? -eq 0 ]; then
+        print_success "Fixtures cargados correctamente"
     else
-        print_warning "Algunas fixtures pueden ya estar cargadas (esto es normal)"
+        print_error "Error al cargar fixtures"
+        return 1
     fi
+    
+    print_step "Sincronizando permisos y roles..."
+    docker compose -p global-exchange-local-prod -f docker-compose.prod.yml exec web python manage.py sync_permissions
+    docker compose -p global-exchange-local-prod -f docker-compose.prod.yml exec web python manage.py setup_test_roles --verbose
+    docker compose -p global-exchange-local-prod -f docker-compose.prod.yml exec web python manage.py sync_role_status
+    
+    print_step "Creando usuario administrador de desarrollo..."
+    docker compose -p global-exchange-local-prod -f docker-compose.prod.yml exec web python manage.py create_dev_user
+    
+    print_success "Sistema inicializado correctamente con todos los datos y permisos"
 }
 
 # Verificar estado final
@@ -204,7 +217,7 @@ verify_system() {
     
     echo ""
     print_step "Estado de contenedores Global Exchange:"
-    docker ps --filter "name=global-exchange-local-prod" --format "  ✓ {{.Names}}: {{.Status}}"
+    docker ps --filter "name=glx" --format "  ✓ {{.Names}}: {{.Status}}"
     
     echo ""
     print_step "URLs del sistema:"
@@ -258,7 +271,7 @@ main() {
     echo -e "  ${YELLOW}cd $SQL_PROXY_DIR && docker compose -f docker-compose.test.yml down${NC}"
     echo ""
     echo -e "${CYAN}Para ver logs:${NC}"
-    echo -e "  ${YELLOW}docker logs -f global-exchange-local-prod-web-1${NC}"
+    echo -e "  ${YELLOW}docker logs -f glx-web-prod${NC}"
     echo -e "  ${YELLOW}docker logs -f sql-proxy01-web-1${NC}"
     echo ""
     

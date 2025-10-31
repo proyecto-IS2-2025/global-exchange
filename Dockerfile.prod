@@ -11,10 +11,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Instala Gunicorn y las dependencias de Poetry
+# Instala Gunicorn, Poetry y las dependencias necesarias para PostgreSQL
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     ca-certificates \
+    gcc \
+    postgresql-client \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir gunicorn "poetry==${POETRY_VERSION}"
 
@@ -28,6 +31,12 @@ RUN python manage.py collectstatic --noinput
 
 # --- Etapa 2: Final (la imagen ligera de producción) ---
 FROM python:3.13-slim
+
+# Instala las dependencias de runtime para PostgreSQL
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Crea el usuario de la aplicación
 RUN useradd --create-home --shell /bin/bash appuser
