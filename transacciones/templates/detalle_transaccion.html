@@ -69,6 +69,10 @@
                         <span class="badge bg-warning status-badge">
                             <i class="bi bi-clock-history me-1"></i>{{ transaccion.get_estado_display }}
                         </span>
+                    {% elif transaccion.estado == 'requiere_confirmacion' %}
+                        <span class="badge status-badge" style="background-color: #fd7e14; color: white;">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ transaccion.get_estado_display }}
+                        </span>
                     {% elif transaccion.estado == 'cancelada' %}
                         <span class="badge bg-danger status-badge">
                             <i class="bi bi-x-circle me-1"></i>{{ transaccion.get_estado_display }}
@@ -431,7 +435,16 @@
                 <div class="card-body">
                     <!-- Acciones para el cliente -->
                     {% if not es_admin %}
-                        {% if puede_cancelar %}
+                        {% if transaccion.estado == 'requiere_confirmacion' %}
+                        <div class="alert alert-warning mb-3">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>Esta transacción requiere su confirmación debido a un cambio en la tasa de cambio.</strong>
+                        </div>
+                        <a href="{% url 'transacciones:confirmar_nueva_tasa' numero_transaccion=transaccion.numero_transaccion %}" 
+                           class="btn btn-warning btn-sm w-100 mb-2">
+                            <i class="bi bi-check-circle me-2"></i>Confirmar o Cancelar Transacción
+                        </a>
+                        {% elif puede_cancelar %}
                         <a href="{% url 'transacciones:cancelar' numero_transaccion=transaccion.numero_transaccion %}" 
                            class="btn btn-outline-danger btn-sm w-100 mb-2">
                             <i class="bi bi-x-circle me-2"></i>Cancelar Transacción

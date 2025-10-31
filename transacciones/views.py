@@ -1972,3 +1972,110 @@ def cancelar_transaccion(request, numero_transaccion):
     return render(request, 'confirmar_cancelacion.html', {
         'transaccion': transaccion
     })
+
+
+# ═══════════════════════════════════════════════════════════════════
+# VISTA: Confirmar Transacción con Nueva Tasa
+# ═══════════════════════════════════════════════════════════════════
+
+@login_required
+@require_permission("transacciones.cancel_propias_transacciones")  # ✅ SIN check_client_assignment
+def confirmar_transaccion_nueva_tasa(request, numero_transaccion):
+    """
+    🔐 PROTEGIDA: transacciones.cancel_propias_transacciones
+    Vista para que el cliente decida qué hacer con una transacción que requiere confirmación
+    debido a un cambio de tasa.
+    """
+    # ✅ Validar cliente activo
+    cliente_id = request.session.get('cliente_id')
+    if not cliente_id:
+        messages.error(request, "Debes tener un cliente seleccionado para confirmar transacciones")
+        return redirect('clientes:seleccionar_cliente')
+    
+    transaccion = get_object_or_404(Transaccion, numero_transaccion=numero_transaccion)
+    
+    # ✅ Validación adicional: el cliente solo maneja sus propias transacciones
+    if not request.user.is_staff:
+        if str(transaccion.cliente.id) != str(cliente_id):
+            messages.error(request, "No tiene permisos para modificar esta transacción.")
+            return redirect('transacciones:historial_cliente')
+    
+    # Verificar que la transacción esté en estado 'requiere_confirmacion'
+    if transaccion.estado != 'requiere_confirmacion':
+        messages.error(request, "Esta transacción no requiere confirmación.")
+        return redirect('transacciones:detalle', numero_transaccion=numero_transaccion)
+    
+    # Calcular nuevos montos con la tasa actual
+    nuevos_datos = None
+    error_calculo = None
+    try:
+        nuevos_datos = transaccion.recalcular_montos_con_tasa_actual()
+    except Exception as e:
+        logger.error(f'Error al recalcular montos para transacción {numero_transaccion}: {e}')
+        error_calculo = str(e)
+    
+    if request.method == 'POST':
+        accion = request.POST.get('accion')
+        
+        try:
+            if accion == 'recalcular':
+                # Opción 1: Recalcular con la nueva tasa
+                if not nuevos_datos:
+                    messages.error(request, "No se pudo recalcular los montos. Por favor, intente más tarde.")
+                    return redirect('transacciones:detalle', numero_transaccion=numero_transaccion)
+                
+                # Actualizar la transacción con los nuevos valores
+                transaccion.tasa_de_cambio_aplicada = nuevos_datos['nueva_tasa']
+                transaccion.monto_origen = nuevos_datos['nuevo_monto_origen']
+                transaccion.monto_destino = nuevos_datos['nuevo_monto_destino']
+                
+                # Cambiar estado de vuelta a pendiente
+                transaccion.cambiar_estado(
+                    nuevo_estado='pendiente',
+                    observacion=(
+                        f"Transacción actualizada con nueva tasa: {nuevos_datos['nueva_tasa']}. "
+                        f"Tasa anterior: {nuevos_datos['tasa_anterior']}"
+                    ),
+                    usuario=request.user
+                )
+                
+                messages.success(
+                    request,
+                    f'Transacción {numero_transaccion} actualizada con la nueva tasa de cambio.'
+                )
+                return redirect('transacciones:detalle', numero_transaccion=numero_transaccion)
+                
+            elif accion == 'cancelar':
+                # Opción 2: Cancelar la transacción
+                razon_cancelacion = request.POST.get('razon_cancelacion', '').strip()
+                
+                observacion = 'Transacción cancelada por el cliente debido a cambio de tasa'
+                if razon_cancelacion:
+                    observacion += f'. Razón: {razon_cancelacion}'
+                
+                transaccion.cambiar_estado(
+                    nuevo_estado='cancelada',
+                    observacion=observacion,
+                    usuario=request.user
+                )
+                
+                messages.success(
+                    request,
+                    f'Transacción {numero_transaccion} cancelada exitosamente.'
+                )
+                return redirect('transacciones:historial_cliente')
+            else:
+                messages.error(request, "Acción no válida.")
+                return redirect('transacciones:detalle', numero_transaccion=numero_transaccion)
+                
+        except Exception as e:
+            logger.error(f'Error al procesar confirmación de transacción {numero_transaccion}: {e}')
+            messages.error(request, f'Error al procesar la solicitud: {str(e)}')
+            return redirect('transacciones:detalle', numero_transaccion=numero_transaccion)
+    
+    # GET request - mostrar página de confirmación con las opciones
+    return render(request, 'confirmar_transaccion_nueva_tasa.html', {
+        'transaccion': transaccion,
+        'nuevos_datos': nuevos_datos,
+        'error_calculo': error_calculo,
+    })

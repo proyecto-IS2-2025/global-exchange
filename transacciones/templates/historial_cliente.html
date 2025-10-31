@@ -34,6 +34,7 @@
     font-weight: 600;
 }
 .status-pendiente { background-color: #ffc107; color: #000; } /* Amarillo - Pendiente */
+.status-requiere_confirmacion { background-color: #fd7e14; color: #fff; } /* Naranja - Requiere Confirmación */
 .status-pagada { background-color: #28a745; color: #fff; } /* Verde - Pagada */
 .status-completado { background-color: #198754; color: #fff; } /* Verde oscuro - Completado */
 .status-cancelada { background-color: #dc3545; color: #fff; } /* Rojo */
@@ -88,6 +89,11 @@
 .badge.status-pendiente {
     background-color: #ffc107; /* Amarillo - Pendiente */
     color: #000 !important; /* Texto negro para mejor contraste */
+}
+
+.badge.status-requiere_confirmacion {
+    background-color: #fd7e14; /* Naranja - Requiere Confirmación */
+    color: white !important;
 }
 
 .badge.status-pagada {
@@ -333,7 +339,12 @@
                                         <i class="bi bi-eye me-1"></i>Ver Detalle
                                     </a>
                                     
-                                    {% if transaccion.puede_cancelarse %}
+                                    {% if transaccion.estado == 'requiere_confirmacion' %}
+                                        <a href="{% url 'transacciones:confirmar_nueva_tasa' numero_transaccion=transaccion.numero_transaccion %}" 
+                                           class="btn btn-warning btn-sm">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i>Confirmar
+                                        </a>
+                                    {% elif transaccion.puede_cancelarse %}
                                         <a href="{% url 'transacciones:cancelar' numero_transaccion=transaccion.numero_transaccion %}" 
                                            class="btn btn-outline-danger btn-sm">
                                             <i class="bi bi-x-circle me-1"></i>Cancelar
