@@ -69,7 +69,8 @@ dependencies = [
     "zope-hookable (==8.0)",
     "zope-interface (==8.0.1)",
     "zope-lifecycleevent (==6.0)",
-    "zope-proxy (==7.0)"
+    "zope-proxy (==7.0)",
+    "celery (>=5.5.3,<6.0.0)"
 ]
 
 

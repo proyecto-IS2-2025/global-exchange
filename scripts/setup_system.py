@@ -229,7 +229,7 @@ def main():
     print_info("  6. Verificación de usuarios")
     print_info("  7. Resumen del sistema")
     
-    input(f"\n{Colors.WARNING}Presiona ENTER para continuar...{Colors.ENDC}")
+    #input(f"\n{Colors.WARNING}Presiona ENTER para continuar...{Colors.ENDC}")
     
     # 1. Verificar conexión a la base de datos
     print_header("PASO 1: VERIFICACIÓN DE BASE DE DATOS")
