@@ -25,18 +25,37 @@ def divisa_format(valor, codigo_divisa=None):
     O simplemente: {{ monto|divisa_format }}
     """
     try:
-        # Convertir a Decimal si no lo es
-        if not isinstance(valor, Decimal):
-            valor = Decimal(str(valor))
+        # Validar que el valor no sea None o vacío
+        if valor is None or valor == '':
+            return '0'
+        
+        # Si ya es Decimal, usarlo directamente
+        if isinstance(valor, Decimal):
+            valor_decimal = valor
+        else:
+            # Intentar convertir a string primero, luego a Decimal
+            valor_str = str(valor).strip()
+            
+            # Si el string está vacío después del strip, retornar 0
+            if not valor_str:
+                return '0'
+            
+            # Convertir a Decimal
+            valor_decimal = Decimal(valor_str)
         
         # Redondear a entero
-        valor_entero = int(round(valor))
+        valor_entero = int(round(float(valor_decimal)))
         
         # Formatear con separadores de miles usando intcomma
         return intcomma(valor_entero)
         
-    except (ValueError, TypeError, AttributeError):
-        return valor
+    except (ValueError, TypeError, AttributeError, Exception) as e:
+        # Si hay cualquier error, intentar retornar el valor original
+        # o '0' si no se puede
+        try:
+            return str(valor) if valor is not None else '0'
+        except:
+            return '0'
 
 
 @register.filter(name='divisa_format_with_symbol')
@@ -71,5 +90,7 @@ def currency(valor):
     
     Uso: {{ monto|currency }}
     """
+    if valor is None or valor == '':
+        return '0'
     return divisa_format(valor)
 
