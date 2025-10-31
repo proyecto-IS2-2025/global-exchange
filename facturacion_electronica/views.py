@@ -31,8 +31,9 @@ logger = logging.getLogger(__name__)
 def lista_facturas(request):
     """
     Lista todas las facturas del sistema (solo para staff con permisos)
+    Permite filtrar por estado y cliente, ordenadas de más nueva a más vieja
     """
-    facturas = FacturaElectronica.objects.all().select_related('transaccion').order_by('-fecha_emision')
+    facturas = FacturaElectronica.objects.all().select_related('transaccion', 'transaccion__cliente').order_by('-fecha_emision')
     
     # ═══ AUTO-SINCRONIZAR FACTURAS PENDIENTES ═══
     # Buscar facturas sin CDC válido o en estado pendiente
@@ -61,20 +62,34 @@ def lista_facturas(request):
                 logger.warning(f"Error buscando PDF para {factura.numero_factura}: {e}")
     
     # Refrescar la consulta después de las actualizaciones
-    facturas = FacturaElectronica.objects.all().select_related('transaccion').order_by('-fecha_emision')
+    facturas = FacturaElectronica.objects.all().select_related('transaccion', 'transaccion__cliente').order_by('-fecha_emision')
     
-    # Filtros
+    # ═══ FILTROS ═══
+    # Filtro por estado
     estado = request.GET.get('estado')
     if estado:
         facturas = facturas.filter(estado=estado)
     
+    # Filtro por cliente
+    cliente_id = request.GET.get('cliente')
+    if cliente_id:
+        facturas = facturas.filter(transaccion__cliente_id=cliente_id)
+    
+    # Búsqueda por texto
     busqueda = request.GET.get('q')
     if busqueda:
         facturas = facturas.filter(
             Q(numero_factura__icontains=busqueda) |
             Q(cdc__icontains=busqueda) |
-            Q(transaccion__numero_transaccion__icontains=busqueda)
+            Q(transaccion__numero_transaccion__icontains=busqueda) |
+            Q(transaccion__cliente__nombre_completo__icontains=busqueda)
         )
+    
+    # Obtener lista de clientes para el filtro
+    from clientes.models import Cliente
+    clientes = Cliente.objects.filter(
+        transaccion__factura_electronica__isnull=False
+    ).distinct().order_by('nombre_completo')
     
     # Paginación
     paginator = Paginator(facturas, 20)
@@ -84,6 +99,7 @@ def lista_facturas(request):
     context = {
         'facturas': facturas_page,
         'total_facturas': facturas.count(),
+        'clientes': clientes,
         'titulo': 'Facturas Electrónicas'
     }
     return render(request, 'facturacion/lista_facturas.html', context)

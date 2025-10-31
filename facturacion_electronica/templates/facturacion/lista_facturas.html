@@ -4,26 +4,9 @@
 {% block content %}
 <div class="container mt-4">
     <div class="row mb-4">
-        <div class="col-md-8">
+        <div class="col-md-12">
             <h2><i class="fas fa-file-invoice"></i> {{ titulo }}</h2>
-            <p class="text-muted">Listado de facturas electrónicas del sistema</p>
-        </div>
-        <div class="col-md-4 text-end">
-            <a href="{% url 'facturacion:reporte' %}" class="btn btn-info">
-                <i class="fas fa-chart-bar"></i> Ver Reporte
-            </a>
-        </div>
-    </div>
-
-    <!-- Estadísticas -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card border-primary">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Total Facturas</h5>
-                    <h2 class="text-primary">{{ total_facturas }}</h2>
-                </div>
-            </div>
+            <p class="text-muted">Listado completo de facturas electrónicas - Agrupadas por cliente</p>
         </div>
     </div>
 
@@ -31,23 +14,38 @@
     <div class="card mb-4">
         <div class="card-body">
             <form method="get" class="row g-3">
-                <div class="col-md-4">
-                    <input type="text" name="q" class="form-control" placeholder="Buscar por número, CDC..." value="{{ request.GET.q }}">
+                <div class="col-md-3">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="q" class="form-control" placeholder="Número, CDC..." value="{{ request.GET.q }}">
                 </div>
                 <div class="col-md-3">
+                    <label class="form-label">Estado</label>
                     <select name="estado" class="form-select">
                         <option value="">Todos los estados</option>
                         <option value="borrador" {% if request.GET.estado == 'borrador' %}selected{% endif %}>Borrador</option>
                         <option value="confirmado" {% if request.GET.estado == 'confirmado' %}selected{% endif %}>Confirmado</option>
-                        <option value="procesando" {% if request.GET.estado == 'procesando' %}selected{% endif %}>Procesando</option>
                         <option value="aprobado" {% if request.GET.estado == 'aprobado' %}selected{% endif %}>Aprobado</option>
                         <option value="rechazado" {% if request.GET.estado == 'rechazado' %}selected{% endif %}>Rechazado</option>
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
+                    <label class="form-label">Cliente</label>
+                    <select name="cliente" class="form-select">
+                        <option value="">Todos los clientes</option>
+                        {% for cliente in clientes %}
+                        <option value="{{ cliente.id }}" {% if request.GET.cliente == cliente.id|stringformat:"s" %}selected{% endif %}>
+                            {{ cliente.nombre_completo }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary w-100">
                         <i class="fas fa-search"></i> Buscar
                     </button>
+                    <a href="{% url 'facturacion:lista' %}" class="btn btn-secondary ms-2">
+                        <i class="fas fa-times"></i>
+                    </a>
                 </div>
             </form>
         </div>
@@ -76,13 +74,13 @@
                             <td>
                                 <strong>{{ factura.numero_factura }}</strong>
                             </td>
-                            <td>{{ factura.fecha_emision|date:"d/m/Y" }}</td>
+                            <td>{{ factura.fecha_emision|date:"d/m/Y H:i" }}</td>
                             <td>
                                 <a href="{% url 'transacciones:detalle' factura.transaccion.numero_transaccion %}" target="_blank">
                                     {{ factura.transaccion.numero_transaccion }}
                                 </a>
                             </td>
-                            <td>{{ factura.transaccion.usuario.get_full_name|default:factura.transaccion.usuario.username }}</td>
+                            <td>{{ factura.transaccion.cliente.nombre_completo }}</td>
                             <td>
                                 {% if factura.estado == 'aprobado' %}
                                     <span class="badge bg-success">Aprobado</span>
