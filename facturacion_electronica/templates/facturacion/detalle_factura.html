@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2><i class="fas fa-file-invoice"></i> {{ titulo }}</h2>
+            <p class="text-muted">Detalle completo de la factura electrónica</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Información Principal -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Información de la Factura</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Número de Factura:</strong>
+                            <p class="mb-0 text-primary fs-4">{{ factura.numero_factura }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Estado:</strong>
+                            <p class="mb-0">
+                                {% if factura.estado == 'aprobado' %}
+                                    <span class="badge bg-success fs-6"><i class="fas fa-check-circle"></i> APROBADO</span>
+                                {% elif factura.estado == 'rechazado' %}
+                                    <span class="badge bg-danger fs-6"><i class="fas fa-times-circle"></i> RECHAZADO</span>
+                                {% elif factura.estado == 'confirmado' or factura.estado == 'borrador' %}
+                                    <span class="badge bg-warning text-dark fs-6"><i class="fas fa-hourglass-half"></i> PROCESANDO EN SIFEN</span>
+                                {% elif factura.estado == 'procesando' %}
+                                    <span class="badge bg-warning text-dark fs-6"><i class="fas fa-hourglass-half"></i> PROCESANDO</span>
+                                {% else %}
+                                    <span class="badge bg-secondary fs-6">{{ factura.estado|upper }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <strong>Fecha de Emisión:</strong>
+                            <p>{{ factura.fecha_emision|date:"d/m/Y H:i" }}</p>
+                        </div>
+                        {% if factura.fecha_aprobacion %}
+                        <div class="col-md-6">
+                            <strong>Fecha de Aprobación:</strong>
+                            <p>{{ factura.fecha_aprobacion|date:"d/m/Y H:i" }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if factura.cdc %}
+                    <div class="row mb-2">
+                        <div class="col-md-12">
+                            <strong>CDC (Código de Control):</strong>
+                            <p class="font-monospace small">{{ factura.cdc }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if factura.estado_sifen %}
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <strong>Estado SIFEN:</strong>
+                            <p>{{ factura.estado_sifen }}</p>
+                        </div>
+                        {% if factura.descripcion_sifen %}
+                        <div class="col-md-6">
+                            <strong>Descripción SIFEN:</strong>
+                            <p>{{ factura.descripcion_sifen }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Alerta de procesamiento -->
+                    {% if factura.estado == 'confirmado' or factura.estado == 'borrador' or factura.estado_sifen == 'Procesando' or factura.estado_sifen == 'Sol.Aprobacion' or not factura.cdc %}
+                    <div class="alert alert-warning" role="alert">
+                        <h5><i class="fas fa-hourglass-half fa-spin"></i> Procesando en SIFEN</h5>
+                        <p>La factura está siendo procesada por el sistema SIFEN del Ministerio de Hacienda.</p>
+                        <p><strong>Tiempo estimado:</strong> 30-60 segundos</p>
+                        <p class="mb-2">
+                            <a href="{% url 'facturacion:actualizar_estado' factura.id %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-sync"></i> Actualizar Estado Ahora
+                            </a>
+                        </p>
+                        <hr>
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> 
+                            Espere 30-60 segundos y presione <kbd>F5</kbd> o use el botón "Actualizar Estado" para verificar si la factura fue aprobada.
+                        </small>
+                    </div>
+                    {% endif %}
+
+                    {% if factura.error_sifen %}
+                    <div class="alert alert-danger" role="alert">
+                        <strong><i class="fas fa-exclamation-triangle"></i> Error SIFEN:</strong>
+                        <p class="mb-0">{{ factura.error_sifen }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Información de la Transacción -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-exchange-alt"></i> Transacción Asociada</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Número de Transacción:</strong> {{ factura.transaccion.numero_transaccion }}</p>
+                    <p><strong>Cliente:</strong> {{ factura.transaccion.cliente.nombre_completo }}</p>
+                    <p><strong>Tipo de Operación:</strong> {{ factura.transaccion.get_tipo_operacion_display }}</p>
+                    <p class="mb-0">
+                        <a href="{% url 'transacciones:detalle' factura.transaccion.numero_transaccion %}" class="btn btn-sm btn-info" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> Ver Transacción Completa
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acciones y Documentos -->
+        <div class="col-md-4">
+            <!-- Documentos KuDE -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-download"></i> Documentos</h5>
+                </div>
+                <div class="card-body">
+                    {# Botón PDF - Solo activo si tiene CDC válido Y URL completa con .pdf #}
+                    {% if perms.facturacion_electronica.download_kude_pdf %}
+                        {% if factura.estado == 'aprobado' and factura.cdc and factura.cdc != '0' and factura.url_kude_pdf and '.pdf' in factura.url_kude_pdf %}
+                        <a href="{% url 'facturacion:descargar_pdf' factura.id %}" class="btn btn-success btn-block w-100 mb-2" target="_blank">
+                            <i class="fas fa-file-pdf"></i> Descargar PDF
+                        </a>
+                        {% elif not factura.cdc or factura.cdc == '0' or factura.estado == 'confirmado' or factura.estado == 'borrador' %}
+                        <button class="btn btn-warning text-dark btn-block w-100 mb-2" disabled title="Esperando CDC de SIFEN. Presione F5 para actualizar.">
+                            <i class="fas fa-hourglass-half fa-spin"></i> Esperando aprobación SIFEN...
+                        </button>
+                        <small class="text-muted d-block text-center">
+                            <i class="fas fa-info-circle"></i> Espere 30-60 seg y presione <kbd>F5</kbd>
+                        </small>
+                        {% elif factura.estado == 'aprobado' and factura.cdc and factura.cdc != '0' %}
+                        <button class="btn btn-warning text-dark btn-block w-100 mb-2" disabled title="PDF generándose en el servidor. Presione F5 para actualizar.">
+                            <i class="fas fa-hourglass-half"></i> PDF generándose...
+                        </button>
+                        <small class="text-muted d-block text-center">
+                            <i class="fas fa-sync-alt"></i> Presione <kbd>F5</kbd> para verificar si está listo
+                        </small>
+                        {% else %}
+                        <button class="btn btn-secondary btn-block w-100 mb-2" disabled>
+                            <i class="fas fa-file-pdf"></i> PDF no disponible
+                        </button>
+                        {% endif %}
+                    {% endif %}
+
+                    {% if perms.facturacion_electronica.download_kude_xml %}
+                        {% if factura.estado == 'aprobado' and factura.url_kude_xml %}
+                        <a href="{% url 'facturacion:descargar_xml' factura.id %}" class="btn btn-info btn-block w-100" target="_blank">
+                            <i class="fas fa-file-code"></i> Descargar XML
+                        </a>
+                        {% elif factura.estado == 'confirmado' or factura.estado == 'borrador' or factura.estado_sifen == 'Procesando' or factura.estado_sifen == 'Sol.Aprobacion' or factura.estado_sifen == 'Confirmado' %}
+                        <button class="btn btn-warning text-dark btn-block w-100" disabled>
+                            <i class="fas fa-hourglass-half fa-spin"></i> XML procesándose...
+                        </button>
+                        <small class="text-muted d-block text-center">Espere 30-60 seg y presione <kbd>F5</kbd></small>
+                        {% else %}
+                        <button class="btn btn-secondary btn-block w-100" disabled>
+                            <i class="fas fa-file-code"></i> XML no disponible
+                        </button>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Acciones (Solo Staff) -->
+            {% if user.is_staff %}
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="fas fa-cog"></i> Acciones</h5>
+                </div>
+                <div class="card-body">
+                    {% if perms.facturacion_electronica.sync_sifen %}
+                    <a href="{% url 'facturacion:actualizar_estado' factura.id %}" class="btn btn-primary btn-block w-100 mb-2">
+                        <i class="fas fa-sync"></i> Actualizar Estado
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

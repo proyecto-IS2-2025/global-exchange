@@ -165,6 +165,7 @@ db-init:
 	poetry run python manage.py loaddata users_data.json
 	poetry run python manage.py loaddata clientes_data.json
 	poetry run python manage.py loaddata divisas_data.json
+	
 	@echo "Datos cargados."
 
 test-medios-acreditacion:
@@ -193,17 +194,14 @@ reset-db:
 	poetry run python manage.py loaddata clientes_data.json
 	poetry run python manage.py loaddata divisas_data.json
 	poetry run python manage.py loaddata bancos_data.json
+	poetry run python manage.py loaddata denominaciones_data.json
+	poetry run python manage.py loaddata billetera_data.json
 
 	@echo "Configurando roles de prueba..."
 	poetry run python manage.py sync_permissions
 	poetry run python manage.py setup_test_roles --verbose
 	poetry run python manage.py sync_role_status
 	poetry run python manage.py create_dev_user
-	
-	poetry run python manage.py loaddata denominaciones_data.json
-	poetry run python manage.py loaddata bancos_data.json
-	poetry run python manage.py loaddata billetera_data.json
-
 	
 	@echo "Base de datos reiniciada y datos cargados."
 
@@ -222,3 +220,7 @@ check:
 	@echo "Verificando el estado del proyecto..."
 	poetry run python manage.py check
 	@echo "Verificación completada."
+test-fact:
+	@echo "Ejecutando pruebas de facturación electrónica..."
+	poetry run python manage.py test facturacion_electronica.tests
+	@echo "Pruebas de facturación electrónica completadas."

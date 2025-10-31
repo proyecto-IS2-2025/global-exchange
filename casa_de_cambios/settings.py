@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'autenticacion',
     'interfaz',
     'stripe_payments',
+    'facturacion_electronica',  # ✅ Facturación Electrónica
 ]
 
 # ═════════════════════════════════════════════════════════════════════

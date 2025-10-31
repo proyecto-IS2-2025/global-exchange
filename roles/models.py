@@ -69,6 +69,7 @@ class PermissionMetadata(models.Model):
         ('divisas', 'Operaciones de Divisas'),
         ('medios_pago', 'Medios de Pago'),
         ('transacciones', 'Transacciones'),
+        ('facturacion', 'Facturación Electrónica'),
         ('usuarios', 'Gestión de Usuarios'),
         ('reportes', 'Reportes y Exportaciones'),
         ('configuracion', 'Configuración del Sistema'),

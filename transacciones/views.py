@@ -1264,6 +1264,30 @@ def crear_transaccion_desde_compra(request):
             logger.error(f"[COMPRA] Error post-transferencia: {e}", exc_info=True)
             messages.warning(request, "Ocurrió un error al procesar la transferencia desde el cliente.")
 
+        # ═══════════════════════════════════════════════════════════════════
+        # 🆕 GENERAR FACTURA AUTOMÁTICAMENTE (para TODOS los medios de pago)
+        # ═══════════════════════════════════════════════════════════════════
+        # Refrescar la transacción para obtener el estado más reciente
+        transaccion.refresh_from_db()
+        
+        if transaccion.estado == 'pagada':
+            logger.info(f"[FACTURA_AUTO] Transacción {transaccion.numero_transaccion} está pagada, generando factura...")
+            try:
+                from facturacion_electronica.services import generar_factura_automatica
+                success_fact, factura, error_fact = generar_factura_automatica(transaccion)
+                
+                if success_fact:
+                    logger.info(f"✅ Factura generada: {factura.numero_factura}")
+                    messages.success(request, f"¡Factura {factura.numero_factura} generada exitosamente!")
+                else:
+                    logger.warning(f"⚠️ Error generando factura: {error_fact}")
+                    messages.warning(request, "La compra fue exitosa pero hubo un problema al generar la factura.")
+            except Exception as e:
+                logger.error(f"Error al generar factura automática: {e}", exc_info=True)
+                messages.warning(request, "No se pudo generar la factura electrónica automáticamente.")
+        else:
+            logger.info(f"[FACTURA_AUTO] Transacción {transaccion.numero_transaccion} no está pagada (estado: {transaccion.estado}), no se genera factura")
+
         # <-- RESTAURADO: siempre retornar una respuesta HTTP
         messages.success(request, f'Transacción {transaccion.numero_transaccion} creada exitosamente.')
         return redirect('transacciones:confirmacion_operacion', numero_transaccion=transaccion.numero_transaccion)

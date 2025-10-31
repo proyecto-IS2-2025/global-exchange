@@ -802,6 +802,31 @@ def compra_mfa_verify_view(request):
             if success:
                 logger.info(f"✅ Pago exitoso - Transaction ID: {transaction.id}")
                 
+                # GENERAR FACTURA AUTOMÁTICAMENTE para transacción de Stripe
+                try:
+                    # Buscar la transacción Django asociada
+                    from transacciones.models import Transaccion
+                    transaccion_django = Transaccion.objects.filter(
+                        cliente=request.user.clienteactivo_set.first().cliente,
+                        estado='pagada',
+                        monto_origen=operacion.get('monto_guaranies')
+                    ).order_by('-fecha_creacion').first()
+                    
+                    if transaccion_django:
+                        logger.info(f"[STRIPE] Generando factura para transacción {transaccion_django.numero_transaccion}...")
+                        from facturacion_electronica.services import generar_factura_automatica
+                        success_fact, factura, error_fact = generar_factura_automatica(transaccion_django)
+                        
+                        if success_fact:
+                            logger.info(f"✅ Factura {factura.numero_factura} generada para pago Stripe")
+                            messages.success(request, f"¡Factura {factura.numero_factura} generada exitosamente!")
+                        else:
+                            logger.warning(f"⚠️ No se pudo generar factura: {error_fact}")
+                    else:
+                        logger.warning(f"[STRIPE] No se encontró transacción Django para generar factura")
+                except Exception as e:
+                    logger.error(f"Error al generar factura para Stripe: {e}", exc_info=True)
+                
                 # Limpiar sesión
                 request.session.pop('operacion', None)
                 request.session.pop('medio_pago_seleccionado', None)
@@ -878,8 +903,45 @@ def compra_mfa_verify_view(request):
         request.POST = request.POST.copy()
         messages.info(request, "Verificación MFA desactivada. Procesando tu compra...")
         
+        logger.info(f"[COMPRA_SIN_MFA] Llamando a crear_transaccion_desde_compra...")
+        
         from transacciones.views import crear_transaccion_desde_compra
-        return crear_transaccion_desde_compra(request)
+        response = crear_transaccion_desde_compra(request)
+        
+        logger.info(f"[COMPRA_SIN_MFA] Response: status={response.status_code}, type={type(response).__name__}")
+        if hasattr(response, 'url'):
+            logger.info(f"[COMPRA_SIN_MFA] URL: {response.url}")
+        
+        # NUEVO: Generar factura automáticamente
+        if response.status_code == 302 and 'confirmacion' in response.url:
+            logger.info(f"[COMPRA_SIN_MFA] ✅ Condición cumplida, generando factura...")
+            try:
+                from transacciones.models import Transaccion
+                numero_transaccion = response.url.split('/')[-2]
+                logger.info(f"[COMPRA_SIN_MFA] Número transacción extraído: {numero_transaccion}")
+                
+                transaccion = Transaccion.objects.get(numero_transaccion=numero_transaccion)
+                logger.info(f"[COMPRA_SIN_MFA] Transacción encontrada, estado: {transaccion.estado}")
+                
+                if transaccion.estado == 'pagada':
+                    logger.info(f"[COMPRA_SIN_MFA] Estado=pagada, llamando a generar_factura_automatica...")
+                    from facturacion_electronica.services import generar_factura_automatica
+                    success, factura, error = generar_factura_automatica(transaccion)
+                    
+                    if success:
+                        logger.info(f"✅ Factura generada (MFA off): {factura.numero_factura}")
+                        messages.success(request, f"¡Factura {factura.numero_factura} generada exitosamente!")
+                    else:
+                        logger.warning(f"⚠️ Error generando factura (MFA off): {error}")
+                        messages.warning(request, "La compra fue exitosa pero hubo un problema al generar la factura.")
+                else:
+                    logger.warning(f"[COMPRA_SIN_MFA] ⚠️ Transacción NO está pagada: {transaccion.estado}")
+            except Exception as e:
+                logger.error(f"Error al generar factura (MFA off): {e}", exc_info=True)
+        else:
+            logger.warning(f"[COMPRA_SIN_MFA] ❌ NO cumple condición para facturación")
+        
+        return response
     
     # Verificar que existan los datos de operación y medio
     operacion = request.session.get("operacion")
@@ -901,6 +963,8 @@ def compra_mfa_verify_view(request):
         elif len(entered_code) != 6 or not entered_code.isdigit():
             messages.error(request, "El código debe tener exactamente 6 dígitos.")
         elif check_otp_validity(request.user, entered_code):
+            logger.info(f"[MFA] ✅ Código OTP válido para {request.user.email}")
+            
             # Código válido - limpiar flags de MFA y proceder a crear transacción
             if 'mfa_compra_pending' in request.session:
                 del request.session['mfa_compra_pending']
@@ -915,9 +979,50 @@ def compra_mfa_verify_view(request):
             
             messages.success(request, "Código verificado. Procesando tu compra...")
             
+            logger.info(f"[MFA] Llamando a crear_transaccion_desde_compra...")
+            
             # Importar y llamar directamente a la vista
             from transacciones.views import crear_transaccion_desde_compra
-            return crear_transaccion_desde_compra(request)
+            response = crear_transaccion_desde_compra(request)
+            
+            logger.info(f"[MFA] Response recibida: status={response.status_code}, type={type(response).__name__}")
+            if hasattr(response, 'url'):
+                logger.info(f"[MFA] Response URL: {response.url}")
+            
+            # NUEVO: Generar factura automáticamente después de crear la transacción
+            # Obtener la transacción creada desde la URL de redirección
+            logger.info(f"[FACTURA_AUTO] Response status: {response.status_code}, URL: {response.url if hasattr(response, 'url') else 'N/A'}")
+            
+            if response.status_code == 302 and 'confirmacion' in response.url:
+                try:
+                    # Extraer número de transacción de la URL
+                    from transacciones.models import Transaccion
+                    numero_transaccion = response.url.split('/')[-2]
+                    logger.info(f"[FACTURA_AUTO] Buscando transacción: {numero_transaccion}")
+                    transaccion = Transaccion.objects.get(numero_transaccion=numero_transaccion)
+                    logger.info(f"[FACTURA_AUTO] Transacción encontrada, estado: {transaccion.estado}")
+                    
+                    # Generar factura si la transacción está pagada
+                    if transaccion.estado == 'pagada':
+                        logger.info(f"[FACTURA_AUTO] Generando factura para {transaccion.numero_transaccion}...")
+                        from facturacion_electronica.services import generar_factura_automatica
+                        success, factura, error = generar_factura_automatica(transaccion)
+                        
+                        if success:
+                            logger.info(f"✅ Factura {factura.numero_factura} generada para transacción {transaccion.numero_transaccion}")
+                            messages.success(request, f"¡Factura {factura.numero_factura} generada exitosamente!")
+                        else:
+                            logger.warning(f"⚠️ No se pudo generar factura para {transaccion.numero_transaccion}: {error}")
+                            messages.warning(request, "La compra fue exitosa pero hubo un problema al generar la factura. Contacte a soporte.")
+                    else:
+                        logger.warning(f"[FACTURA_AUTO] Transacción NO está pagada, estado: {transaccion.estado}")
+                except Exception as e:
+                    logger.error(f"Error al generar factura automática: {e}", exc_info=True)
+                    # No fallar la operación si falla la facturación
+            else:
+                logger.warning(f"[FACTURA_AUTO] NO entra al bloque de generación. Status={response.status_code}")
+            
+            return response
         else:
             messages.error(request, "El código es incorrecto o ha expirado. Por favor, intenta nuevamente.")
     

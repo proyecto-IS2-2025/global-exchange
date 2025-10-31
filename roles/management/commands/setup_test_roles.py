@@ -196,8 +196,25 @@ class Command(BaseCommand):
             # ═══════════════════════════════════════════════════════════════
             'view_catalogo_medios_pago',
             'manage_catalogo_medios_pago',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # FACTURACIÓN ELECTRÓNICA (13 custom - TODOS)
+            # ═══════════════════════════════════════════════════════════════
+            'view_facturas_propias',
+            'view_facturas_asignadas',
+            'view_todas_facturas',
+            'generar_factura',
+            'generar_factura_manual',
+            'cancelar_factura',
+            'inutilizar_numero',
+            'download_kude_pdf',
+            'download_kude_xml',
+            'view_reporte_facturacion',
+            'export_reporte_facturacion',
+            'manage_config_facturacion',
+            'sync_sifen',
         ]
-        # Total: 44 permisos custom (35 anteriores + 9 de roles)
+        # Total: 57 permisos custom (44 anteriores + 13 de facturación)
         
         self._assign_permissions('dev', codenames, verbose)
 
@@ -276,8 +293,25 @@ class Command(BaseCommand):
             # ═══════════════════════════════════════════════════════════════
             'view_catalogo_medios_pago',
             'manage_catalogo_medios_pago',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # FACTURACIÓN ELECTRÓNICA (12 custom - sin generación manual)
+            # ═══════════════════════════════════════════════════════════════
+            'view_facturas_propias',
+            'view_facturas_asignadas',
+            'view_todas_facturas',
+            'generar_factura',
+            # 'generar_factura_manual',  # ❌ Solo dev
+            'cancelar_factura',
+            'inutilizar_numero',
+            'download_kude_pdf',
+            'download_kude_xml',
+            'view_reporte_facturacion',
+            'export_reporte_facturacion',
+            'manage_config_facturacion',  # ✅ Configurar sistema
+            'sync_sifen',
         ]
-        # Total: 43 permisos custom (34 anteriores + 9 de roles)
+        # Total: 55 permisos custom (43 anteriores + 12 de facturación)
         
         self._assign_permissions('administrador', codenames, verbose)
 
@@ -321,8 +355,17 @@ class Command(BaseCommand):
             # MEDIOS DE PAGO (1 custom)
             # ═══════════════════════════════════════════════════════════════
             'view_catalogo_medios_pago',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # FACTURACIÓN ELECTRÓNICA (5 custom - consulta y generación)
+            # ═══════════════════════════════════════════════════════════════
+            'view_facturas_asignadas',
+            'view_todas_facturas',
+            'generar_factura',
+            'download_kude_pdf',
+            'view_reporte_facturacion',
         ]
-        # Total: 16 permisos custom (14 anteriores + 2 de roles)
+        # Total: 21 permisos custom (16 anteriores + 5 de facturación)
         
         self._assign_permissions('operador', codenames, verbose)
 
@@ -362,8 +405,14 @@ class Command(BaseCommand):
             # CLIENTES (1 custom - consulta)
             # ═══════════════════════════════════════════════════════════════
             'view_assigned_clientes',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # FACTURACIÓN ELECTRÓNICA (2 custom - solo propias)
+            # ═══════════════════════════════════════════════════════════════
+            'view_facturas_propias',
+            'download_kude_pdf',
         ]
-        # Total: 8 permisos custom (sin cambios, no necesita acceso a roles)
+        # Total: 10 permisos custom (8 anteriores + 2 de facturación)
         
         self._assign_permissions('cliente', codenames, verbose)
 
@@ -404,11 +453,10 @@ class Command(BaseCommand):
             'view_historial_descuentos',
             
             # ═══════════════════════════════════════════════════════════════
-            # TRANSACCIONES (3 custom - lectura)
+            # TRANSACCIONES (2 custom - SOLO lectura)
             # ═══════════════════════════════════════════════════════════════
             'view_transacciones_globales',
             'view_historial_transacciones',
-            'export_transacciones',
             
             # ═══════════════════════════════════════════════════════════════
             # DIVISAS (3 custom - lectura)
@@ -427,8 +475,15 @@ class Command(BaseCommand):
             # USUARIOS (1 custom - lectura)
             # ═══════════════════════════════════════════════════════════════
             'view_all_usuarios',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # FACTURACIÓN ELECTRÓNICA (3 custom - SOLO LECTURA)
+            # ═══════════════════════════════════════════════════════════════
+            'view_todas_facturas',
+            'download_kude_pdf',
+            'view_reporte_facturacion',
         ]
-        # Total: 17 permisos custom (12 anteriores + 5 de roles)
+        # Total: 19 permisos custom (17 anteriores - 1 transacción + 3 de facturación)
         
         self._assign_permissions('observador', codenames, verbose)
 
