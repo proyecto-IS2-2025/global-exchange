@@ -1,7 +1,8 @@
 from django.contrib import admin
 from .models import (
     Terminal, RegistroTransaccionTerminal,
-    InventarioDenominacionTerminal, DesgloseDenominacionOperacion
+    InventarioDenominacionTerminal, DesgloseDenominacionOperacion,
+    LogRecargaInventario
 )
 
 @admin.register(InventarioDenominacionTerminal)
@@ -115,3 +116,45 @@ class RegistroTransaccionTerminalAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+
+@admin.register(LogRecargaInventario)
+class LogRecargaInventarioAdmin(admin.ModelAdmin):
+    list_display = [
+        'id', 'terminal', 'denominacion', 'cantidad_agregada',
+        'cantidad_anterior', 'cantidad_nueva', 'valor_total_agregado',
+        'usuario', 'fecha'
+    ]
+    list_filter = [
+        'terminal', 'denominacion__divisa', 'usuario', 'fecha'
+    ]
+    search_fields = [
+        'terminal__nombre', 'terminal__codigo',
+        'denominacion__nombre', 'usuario__username',
+        'observaciones'
+    ]
+    readonly_fields = [
+        'fecha', 'valor_total_agregado', 'cantidad_anterior',
+        'cantidad_nueva'
+    ]
+    
+    fieldsets = (
+        ('Informacion Principal', {
+            'fields': ('terminal', 'denominacion', 'usuario')
+        }),
+        ('Cantidades', {
+            'fields': (
+                'cantidad_agregada', 'cantidad_anterior',
+                'cantidad_nueva', 'valor_total_agregado'
+            )
+        }),
+        ('Detalles', {
+            'fields': ('observaciones', 'fecha')
+        }),
+    )
+    
+    def has_add_permission(self, request):
+        return False
+    
+    def has_delete_permission(self, request, obj=None):
+        return False

@@ -21,16 +21,28 @@
               <td class="text-capitalize">{{ operacion.tipo|default:"-" }}</td>
             </tr>
             <tr>
-              <th scope="row">Divisa</th>
+              <th scope="row">Divisa a comprar</th>
               <td>{{ operacion.divisa }} - {{ operacion.divisa_nombre }}</td>
             </tr>
-            <tr>
-              <th scope="row">Monto base (Gs.)</th>
-              <td>{{ operacion.monto_guaranies|floatformat:0|intcomma }}</td>
+            <tr class="table-success">
+              <th scope="row"><strong>Cantidad de divisa extranjera a recibir</strong></th>
+              <td>
+                <strong class="text-success fs-5">
+                  {% if operacion.divisa == "PYG" %}
+                    {{ operacion.monto_divisa|floatformat:0|intcomma }} {{ operacion.divisa }}
+                  {% else %}
+                    {{ operacion.monto_divisa|floatformat:2|intcomma }} {{ operacion.divisa }}
+                  {% endif %}
+                </strong>
+              </td>
             </tr>
             <tr>
               <th scope="row">Tasa de cambio aplicada</th>
-              <td>{{ operacion.tasa_cambio|floatformat:0|intcomma }}</td>
+              <td>1 {{ operacion.divisa }} = Gs. {{ operacion.tasa_cambio|floatformat:0|intcomma }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Monto base (Gs.)</th>
+              <td>{{ monto_base|floatformat:0|intcomma }} Gs.</td>
             </tr>
             <tr>
               <th scope="row">Comisión del medio de pago</th>
@@ -43,22 +55,10 @@
               </td>
             </tr>
             <tr class="table-warning">
-              <th scope="row"><strong>Total a pagar (Gs.)</strong></th>
+              <th scope="row"><strong>Total a pagar en Guaraníes</strong></th>
               <td>
                 <strong class="text-danger fs-5">
                   {{ monto_total|floatformat:0|intcomma }} Gs.
-                </strong>
-              </td>
-            </tr>
-            <tr class="table-success">
-              <th scope="row">Monto a recibir</th>
-              <td>
-                <strong>
-                  {% if operacion.divisa == "PYG" %}
-                    {{ operacion.monto_divisa|floatformat:0|intcomma }} {{ operacion.divisa }}
-                  {% else %}
-                    {{ operacion.monto_divisa|floatformat:2|intcomma }} {{ operacion.divisa }}
-                  {% endif %}
                 </strong>
               </td>
             </tr>

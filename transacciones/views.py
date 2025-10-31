@@ -855,7 +855,8 @@ def crear_transaccion_desde_venta(request):
 
     try:
         operacion = request.session.get("operacion")
-        medio_inst = get_medio_pago_seleccionado(request)
+        # CORRECCIÓN: En VENTA usamos medio de acreditación (donde se deposita al cliente)
+        medio_inst = get_medio_acreditacion_seleccionado(request)
         
         if not operacion:
             messages.error(request, "No se encontró información de la operación.")
@@ -1057,8 +1058,11 @@ def crear_transaccion_desde_compra(request):
         if not ok:
             messages.error(request, msg)
             return redirect('operacion_divisas:compra_sumario')
-        # Preparar datos del medio de pago
+        
+        # Preparar datos del medio de pago y obtener comisión
         medio_datos = {}
+        comision_porcentaje = Decimal('0')
+        
         if isinstance(medio_inst, dict) and medio_inst.get("id"):
             try:
                 from clientes.models import ClienteMedioDePago
@@ -1078,11 +1082,17 @@ def crear_transaccion_desde_compra(request):
                     api_info = medio_model.get_api_info()
                     tipo_label = api_info.get("nombre_usuario", "No definido")
                 
+                # Obtener comisión como Decimal
+                try:
+                    comision_porcentaje = Decimal(str(medio_model.comision_porcentaje))
+                except (ValueError, TypeError):
+                    comision_porcentaje = Decimal('0')
+                
                 medio_datos = {
                     'id': medio_inst.get("id"),
                     'nombre': medio_model.nombre,
                     'tipo': tipo_label,
-                    'comision': f"{medio_model.comision_porcentaje:.2f}%",
+                    'comision': f"{comision_porcentaje:.2f}%",
                     'datos_campos': medio_real.datos_campos or {},
                     'es_principal': medio_real.es_principal,
                 }
@@ -1100,12 +1110,20 @@ def crear_transaccion_desde_compra(request):
         decimales_origen = determinar_decimales_divisa(divisa_origen.code)
         decimales_destino = determinar_decimales_divisa(divisa_destino.code)
         
-        monto_origen = redondear(monto_origen, decimales_origen)  # según divisa origen
+        monto_origen_base = redondear(monto_origen, decimales_origen)  # monto base sin comisión
         monto_destino = redondear(monto_destino, decimales_destino)  # según divisa destino
         tasa_cambio = redondear(tasa_cambio, 2)  # tasa siempre con 2 decimales
-
-        # Preparar datos del medio
-        medio_datos = preparar_datos_medio(medio_inst)
+        
+        # 💰 Calcular el monto total incluyendo comisión del medio de pago
+        comision_monto = (monto_origen_base * comision_porcentaje / Decimal('100')).quantize(
+            Decimal('1'), rounding=ROUND_HALF_UP
+        )
+        monto_origen_total = monto_origen_base + comision_monto  # Total a pagar por el cliente
+        # 💰 Calcular el monto total incluyendo comisión del medio de pago
+        comision_monto = (monto_origen_base * comision_porcentaje / Decimal('100')).quantize(
+            Decimal('1'), rounding=ROUND_HALF_UP
+        )
+        monto_origen_total = monto_origen_base + comision_monto  # Total a pagar por el cliente
         
         # Crear la transacción
         with transaction.atomic():
@@ -1114,13 +1132,13 @@ def crear_transaccion_desde_compra(request):
                 cliente=cliente,
                 divisa_origen=divisa_origen,
                 divisa_destino=divisa_destino,
-                monto_origen=monto_origen,
+                monto_origen=monto_origen_total,  # 💰 Usar el total con comisión
                 monto_destino=monto_destino,
                 tasa_de_cambio_aplicada=tasa_cambio,
                 estado='pendiente',
                 medio_pago_datos=medio_datos,
                 procesado_por=request.user,
-                observaciones=f"Transacción creada desde compra de {divisa_destino.code} por {monto_origen} Gs."
+                observaciones=f"Transacción creada desde compra de {divisa_destino.code}. Monto base: {monto_origen_base} Gs. + Comisión: {comision_monto} Gs. = Total: {monto_origen_total} Gs."
             )
             
             # Crear historial inicial

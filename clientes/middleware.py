@@ -46,6 +46,10 @@ class ClienteActivoMiddleware:
         if path.startswith('/static/') or path.startswith('/media/'):
             return self.get_response(request)
 
+        # Excluir rutas de TAUSER y Banco (sistemas independientes)
+        if path.startswith('/tauser/') or path.startswith('/banco/'):
+            return self.get_response(request)
+
         # Si estamos ya en la página de selección o login, no redirigir
         if path in self.exempt_paths:
             return self.get_response(request)

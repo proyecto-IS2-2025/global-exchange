@@ -362,3 +362,71 @@ class RegistroTransaccionTerminal(models.Model):
     
     def __str__(self):
         return f"{self.tipo_operacion} - {self.cliente.nombre_completo} - {self.fecha_operacion}"
+
+
+class LogRecargaInventario(models.Model):
+    """
+    Registro histórico de cada recarga de inventario realizada.
+    Permite trazabilidad completa de quién recargó qué y cuándo.
+    """
+    terminal = models.ForeignKey(
+        Terminal,
+        on_delete=models.CASCADE,
+        related_name='historial_recargas',
+        verbose_name='Terminal'
+    )
+    usuario = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='recargas_realizadas',
+        verbose_name='Usuario que realizó la recarga'
+    )
+    fecha = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Fecha y hora'
+    )
+    denominacion = models.ForeignKey(
+        Denominacion,
+        on_delete=models.CASCADE,
+        verbose_name='Denominación'
+    )
+    cantidad_agregada = models.IntegerField(
+        verbose_name='Cantidad agregada',
+        validators=[MinValueValidator(1)]
+    )
+    cantidad_anterior = models.IntegerField(
+        verbose_name='Cantidad antes de la recarga'
+    )
+    cantidad_nueva = models.IntegerField(
+        verbose_name='Cantidad después de la recarga'
+    )
+    valor_total_agregado = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        verbose_name='Valor total agregado',
+        help_text='Cantidad agregada × Valor denominación'
+    )
+    observaciones = models.TextField(
+        blank=True,
+        default='',
+        verbose_name='Observaciones'
+    )
+    
+    class Meta:
+        verbose_name = "Log de Recarga de Inventario"
+        verbose_name_plural = "Logs de Recargas de Inventario"
+        ordering = ['-fecha']
+        indexes = [
+            models.Index(fields=['terminal', '-fecha']),
+            models.Index(fields=['usuario', '-fecha']),
+        ]
+    
+    def __str__(self):
+        return f"{self.denominacion} +{self.cantidad_agregada} - {self.terminal.nombre} ({self.fecha.strftime('%d/%m/%Y %H:%M')})"
+    
+    def save(self, *args, **kwargs):
+        """Calcular valor total agregado antes de guardar"""
+        if not self.valor_total_agregado:
+            self.valor_total_agregado = self.cantidad_agregada * self.denominacion.valor
+        super().save(*args, **kwargs)

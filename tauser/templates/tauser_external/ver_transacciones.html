@@ -1,0 +1,189 @@
+{% extends 'tauser_external/base_external.html' %}
+{% load static %}
+
+{% block title %}TAUSER - Transacciones{% endblock %}
+
+{% block header_actions %}
+<div class="d-flex align-items-center">
+    <span class="text-white me-3">
+        <i class="fas fa-user-circle me-2"></i>
+        <strong>{{ cliente.nombre_completo }}</strong>
+    </span>
+    <a href="{% url 'tauser_external:cerrar_sesion' terminal.codigo %}" 
+       class="btn btn-sm btn-outline-light">
+        <i class="fas fa-sign-out-alt me-1"></i>
+        Salir
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="card shadow mb-4" style="background: rgba(255,255,255,0.95);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-1">
+                                <i class="fas fa-list text-primary"></i>
+                                Transacciones Pendientes
+                            </h3>
+                            <p class="text-muted mb-0">
+                                Terminal: <strong>{{ terminal.nombre }}</strong>
+                            </p>
+                        </div>
+                        <a href="{% url 'tauser_external:menu_tauser' terminal.codigo %}" 
+                           class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Volver al Menú
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transacciones de Retiro -->
+            {% if transacciones_retiro %}
+                <div class="card shadow mb-4" style="background: rgba(255,255,255,0.95);">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-hand-holding-usd me-2"></i>
+                            Retiros Pendientes ({{ transacciones_retiro|length }})
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Transacción</th>
+                                        <th>Divisa</th>
+                                        <th class="text-end">Monto</th>
+                                        <th class="text-center">Estado</th>
+                                        <th class="text-center">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in transacciones_retiro %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ item.transaccion.numero_transaccion }}</strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                    {{ item.transaccion.fecha_creacion|date:"d/m/Y H:i" }}
+                                                </small>
+                                            </td>
+                                            <td>{{ item.transaccion.divisa_destino.nombre }}</td>
+                                            <td class="text-end">
+                                                <strong>{{ item.transaccion.monto_destino }}</strong>
+                                                {{ item.transaccion.divisa_destino.code }}
+                                            </td>
+                                            <td class="text-center">
+                                                {% if item.disponible %}
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check"></i> Disponible
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="fas fa-exclamation-triangle"></i>
+                                                        No disponible
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-center">
+                                                {% if item.disponible %}
+                                                    <a href="{% url 'tauser_external:procesar_retiro' terminal.codigo item.transaccion.id %}"
+                                                       class="btn btn-sm btn-success">
+                                                        <i class="fas fa-hand-holding-usd"></i>
+                                                        Retirar
+                                                    </a>
+                                                {% else %}
+                                                    <button class="btn btn-sm btn-secondary" disabled>
+                                                        No disponible
+                                                    </button>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Transacciones de Pago -->
+            {% if transacciones_pago %}
+                <div class="card shadow mb-4" style="background: rgba(255,255,255,0.95);">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-money-bill-wave me-2"></i>
+                            Pagos Pendientes ({{ transacciones_pago|length }})
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Transacción</th>
+                                        <th>Divisa Origen</th>
+                                        <th class="text-end">Monto a Pagar (PYG)</th>
+                                        <th class="text-center">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for trans in transacciones_pago %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ trans.numero_transaccion }}</strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                    {{ trans.fecha_creacion|date:"d/m/Y H:i" }}
+                                                </small>
+                                            </td>
+                                            <td>
+                                                {{ trans.divisa_origen.nombre }}
+                                                ({{ trans.monto_origen }} {{ trans.divisa_origen.code }})
+                                            </td>
+                                            <td class="text-end">
+                                                <strong>₲{{ trans.monto_destino|floatformat:0 }}</strong>
+                                            </td>
+                                            <td class="text-center">
+                                                <a href="{% url 'tauser_external:procesar_pago' terminal.codigo trans.id %}"
+                                                   class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-money-check-alt"></i>
+                                                    Procesar Pago
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Sin transacciones -->
+            {% if not transacciones_retiro and not transacciones_pago %}
+                <div class="card shadow" style="background: rgba(255,255,255,0.95);">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-inbox fa-5x text-muted mb-4"></i>
+                        <h4 class="text-muted">No hay transacciones pendientes</h4>
+                        <p class="text-muted">
+                            Todas sus transacciones han sido completadas.
+                        </p>
+                        <a href="{% url 'tauser_external:menu_tauser' terminal.codigo %}" 
+                           class="btn btn-primary mt-3">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Volver al Menú
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

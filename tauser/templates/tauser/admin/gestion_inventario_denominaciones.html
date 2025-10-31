@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestión de Inventario por Denominaciones - Terminal {{ terminal.codigo }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dropdown-menu {
+        min-width: 320px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .dropdown-item {
+        padding: 0.75rem 1.25rem;
+        line-height: 1.4;
+    }
+    .dropdown-item:hover {
+        background-color: #f8f9fa;
+    }
+    .dropdown-item i {
+        width: 24px;
+        margin-right: 8px;
+    }
+    .dropdown-header {
+        font-weight: 600;
+        color: #495057;
+        padding: 0.5rem 1.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1">
+                        <i class="fas fa-money-bill-wave text-primary me-2"></i>
+                        Inventario por Denominaciones
+                    </h1>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-desktop me-1"></i>
+                        Terminal: <strong>{{ terminal.nombre }}</strong> ({{ terminal.codigo }})
+                        <span class="ms-3">
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            {{ terminal.ubicacion }}
+                        </span>
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'tauser:terminal_detail' terminal.pk %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Volver al Terminal
+                    </a>
+                    <!-- Botón Unificado: Reponer Stock -->
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-box-open me-1"></i> Reponer Stock
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <h6 class="dropdown-header"><i class="fas fa-chart-line"></i> Consultas y Análisis</h6>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'tauser_external:dashboard_inventario' terminal.codigo %}">
+                                    <i class="fas fa-tachometer-alt text-info"></i> Dashboard de Inventario
+                                    <br><small class="text-muted ms-4">Ver alertas y estadísticas</small>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'tauser_external:historial_recargas' terminal.codigo %}">
+                                    <i class="fas fa-history text-secondary"></i> Historial de Recargas
+                                    <br><small class="text-muted ms-4">Ver todas las recargas realizadas</small>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <h6 class="dropdown-header"><i class="fas fa-plus-circle"></i> Acciones de Reposición</h6>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'tauser_external:recarga_masiva' terminal.codigo %}">
+                                    <i class="fas fa-layer-group text-success"></i> Recarga Masiva
+                                    <br><small class="text-muted ms-4">Recargar múltiples denominaciones</small>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="return false;" data-bs-toggle="collapse" data-bs-target=".ajuste-individual">
+                                    <i class="fas fa-sliders-h text-primary"></i> Ajustar Individual
+                                    <br><small class="text-muted ms-4">Ver formularios de ajuste abajo</small>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'tauser:agregar_denominacion_inventario' terminal.pk %}">
+                                    <i class="fas fa-plus-square text-warning"></i> Agregar Denominación
+                                    <br><small class="text-muted ms-4">Agregar nueva denominación al inventario</small>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertas de inventario bajo -->
+    {% if inventario_alertas %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <h5 class="alert-heading">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Alertas de Inventario Bajo ({{ inventario_alertas|length }})
+                </h5>
+                <ul class="mb-0">
+                    {% for item in inventario_alertas %}
+                    <li>
+                        <strong>{{ item.denominacion.divisa.code }}</strong> - 
+                        {{ item.denominacion.get_tipo_display }} {{ item.denominacion.valor }}:
+                        <span class="text-danger fw-bold">{{ item.cantidad }}</span> unidades
+                        (Mínimo: {{ item.cantidad_minima }})
+                    </li>
+                    {% endfor %}
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Inventario agrupado por divisa -->
+    {% if inventario_por_divisa %}
+        {% for divisa_code, data in inventario_por_divisa.items %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-gradient-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-coins me-2"></i>
+                        {{ data.divisa.name }} ({{ divisa_code }})
+                    </h5>
+                    <div class="text-end">
+                        <div class="fs-6">Valor Total del Inventario</div>
+                        <div class="fs-4 fw-bold">
+                            {{ data.divisa.symbol }}{{ data.valor_total|floatformat:2 }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Valor Unitario</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-center">Cant. Mínima</th>
+                                <th class="text-end">Valor Total</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in data.inventarios %}
+                            <tr {% if item.cantidad < item.cantidad_minima %}class="table-warning"{% endif %}>
+                                <td>
+                                    <i class="fas {% if item.denominacion.tipo == 'billete' %}fa-money-bill{% else %}fa-coins{% endif %} me-2"></i>
+                                    {{ item.denominacion.get_tipo_display|title }}
+                                </td>
+                                <td class="fw-bold">
+                                    {{ data.divisa.symbol }}{{ item.denominacion.valor|floatformat:2 }}
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge {% if item.cantidad < item.cantidad_minima %}bg-warning text-dark{% else %}bg-primary{% endif %} fs-6">
+                                        {{ item.cantidad }}
+                                    </span>
+                                </td>
+                                <td class="text-center text-muted">
+                                    {{ item.cantidad_minima }}
+                                </td>
+                                <td class="text-end fw-bold">
+                                    {{ data.divisa.symbol }}{{ item.valor_total|floatformat:2 }}
+                                </td>
+                                <td class="text-center">
+                                    {% if item.cantidad == 0 %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times-circle me-1"></i>Sin Stock
+                                        </span>
+                                    {% elif item.cantidad < item.cantidad_minima %}
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>Bajo
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle me-1"></i>Normal
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <!-- Botón Ajustar -->
+                                        <button type="button" 
+                                                class="btn btn-outline-primary" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#modalAjustar{{ item.id }}"
+                                                title="Ajustar cantidad">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        
+                                        <!-- Botón Eliminar -->
+                                        <a href="{% url 'tauser:eliminar_inventario_denominacion' terminal.pk item.id %}" 
+                                           class="btn btn-outline-danger"
+                                           title="Eliminar"
+                                           onclick="return confirm('¿Está seguro de eliminar esta denominación del inventario?');">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Modal para ajustar cantidad -->
+                            <div class="modal fade" id="modalAjustar{{ item.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <form method="post" action="{% url 'tauser:ajustar_inventario_denominacion_admin' terminal.pk item.id %}">
+                                            {% csrf_token %}
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">
+                                                    Ajustar Inventario - {{ item.denominacion.divisa.code }} {{ item.denominacion.valor }}
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="alert alert-info">
+                                                    <strong>Cantidad actual:</strong> {{ item.cantidad }} unidades
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="cantidad{{ item.id }}" class="form-label">Nueva Cantidad *</label>
+                                                    <input type="number" 
+                                                           class="form-control" 
+                                                           id="cantidad{{ item.id }}" 
+                                                           name="cantidad" 
+                                                           value="{{ item.cantidad }}" 
+                                                           min="0" 
+                                                           required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="motivo{{ item.id }}" class="form-label">Motivo del Ajuste (opcional)</label>
+                                                    <input type="text" 
+                                                           class="form-control" 
+                                                           id="motivo{{ item.id }}" 
+                                                           name="motivo" 
+                                                           placeholder="Ej: Reposición, Ajuste por inventario físico">
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fas fa-save me-1"></i> Guardar Cambios
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light fw-bold">
+                            <tr>
+                                <td colspan="4" class="text-end">Total {{ divisa_code }}:</td>
+                                <td class="text-end">{{ data.divisa.symbol }}{{ data.valor_total|floatformat:2 }}</td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <!-- Sin inventario -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">No hay denominaciones en el inventario</h4>
+                    <p class="text-muted">Comience agregando denominaciones al inventario de esta terminal.</p>
+                    <a href="{% url 'tauser:agregar_denominacion_inventario' terminal.pk %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i> Agregar Primera Denominación
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+</style>
+{% endblock %}

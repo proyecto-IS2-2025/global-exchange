@@ -142,6 +142,17 @@ class Transaccion(models.Model):
         blank=True,
         related_name='transacciones_procesadas'
     )
+    
+    # Código Tauser: generado para compras pagadas y todas las ventas
+    tauser_code = models.CharField(
+        'Código Tauser',
+        max_length=8,
+        unique=True,
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text='Código alfanumérico de 8 caracteres para acceso en terminal'
+    )
 
     class Meta:
         verbose_name = 'Transacción'
@@ -241,6 +252,9 @@ class Transaccion(models.Model):
         if not getattr(self, 'numero_transaccion', None):
             self.numero_transaccion = self._generar_numero_transaccion()
         
+        # Asignar código tauser si corresponde (ventas siempre, compras pagadas)
+        self.asignar_tauser_code_si_corresponde()
+        
         # Aplicar redondeo antes de cualquier validación
         self.aplicar_redondeo_montos()
         
@@ -257,6 +271,40 @@ class Transaccion(models.Model):
         hoy = timezone.now().strftime('%Y%m%d')
         random = uuid.uuid4().hex[:6].upper()
         return f'TRX-{hoy}-{random}'
+    
+    def _generar_tauser_code(self):
+        """Generar código tauser único de 8 caracteres alfanuméricos"""
+        import random
+        import string
+        
+        caracteres = string.ascii_uppercase + string.digits
+        while True:
+            codigo = ''.join(random.choices(caracteres, k=8))
+            # Verificar que sea único
+            if not Transaccion.objects.filter(tauser_code=codigo).exists():
+                return codigo
+    
+    def asignar_tauser_code_si_corresponde(self):
+        """
+        Asigna código tauser si:
+        - Es una compra con estado 'pagada' 
+        - Es una venta (cualquier estado inicial)
+        Y aún no tiene código asignado
+        """
+        if not self.tauser_code:
+            debe_tener_codigo = False
+            
+            # Compras: solo si está en estado 'pagada'
+            if self.tipo_operacion == 'compra' and self.estado == 'pagada':
+                debe_tener_codigo = True
+            
+            # Ventas: siempre (desde cualquier estado)
+            if self.tipo_operacion == 'venta':
+                debe_tener_codigo = True
+            
+            if debe_tener_codigo:
+                self.tauser_code = self._generar_tauser_code()
+                logger.info(f"✅ Código Tauser '{self.tauser_code}' asignado a transacción {self.numero_transaccion}")
 
     def __str__(self):
         return f"{self.numero_transaccion} - {self.cliente.nombre_completo} - {self.get_tipo_operacion_display()}"
@@ -353,7 +401,12 @@ class Transaccion(models.Model):
 
         # Persistir cambio
         self.estado = nuevo_estado
-        self.save(update_fields=['estado'])
+        
+        # Si es compra y pasa a 'pagada', asignar código tauser
+        if self.tipo_operacion == 'compra' and nuevo_estado == 'pagada':
+            self.asignar_tauser_code_si_corresponde()
+        
+        self.save(update_fields=['estado', 'tauser_code'] if self.tauser_code else ['estado'])
 
         # Registrar en historial
         try:

@@ -33,7 +33,77 @@ from .services import (  # ✅ NUEVO
     generar_resumen_desglose
 )
 
+# ==================== VISTAS ADMINISTRATIVAS ADICIONALES ====================
+from .views_admin_denominaciones import (
+    GestionInventarioDenominacionesView,
+    AgregarDenominacionInventarioView,
+    AjustarInventarioDenominacionAdminView,
+    EliminarInventarioDenominacionView,
+    DashboardInventarioView,
+    RecargaMasivaView,
+    HistorialRecargasView
+)
+
 logger = logging.getLogger(__name__)
+
+
+# ==================== PÁGINA PRINCIPAL EXTERNA ====================
+
+def tauser_home(request):
+    """
+    Vista principal externa de /tauser/ que muestra todos los tausers
+    activos como tarjetas con su stock.
+    NO requiere autenticación.
+    """
+    terminales = Terminal.objects.filter(is_activa=True).prefetch_related(
+        'inventario_denominaciones__denominacion__divisa'
+    ).order_by('nombre')
+    
+    # Calcular stock total por terminal
+    terminales_con_stock = []
+    for terminal in terminales:
+        inventarios = terminal.inventario_denominaciones.filter(
+            denominacion__is_active=True
+        ).select_related('denominacion__divisa')
+        
+        # Agrupar por divisa
+        stock_por_divisa = {}
+        for inv in inventarios:
+            divisa_code = inv.denominacion.divisa.code
+            divisa_nombre = inv.denominacion.divisa.nombre
+            if divisa_code not in stock_por_divisa:
+                stock_por_divisa[divisa_code] = {
+                    'nombre': divisa_nombre,
+                    'total': Decimal('0')
+                }
+            stock_por_divisa[divisa_code]['total'] += inv.valor_total
+        
+        terminales_con_stock.append({
+            'terminal': terminal,
+            'stock_por_divisa': stock_por_divisa
+        })
+    
+    context = {
+        'terminales_con_stock': terminales_con_stock,
+        'titulo': 'Terminales TAUSER'
+    }
+    
+    return render(request, 'tauser_external/home.html', context)
+
+
+def menu_cliente_tauser(request, terminal_codigo):
+    """
+    Menú donde el cliente ingresa el código tauser de su transacción.
+    NO requiere autenticación.
+    """
+    terminal = get_object_or_404(Terminal, codigo=terminal_codigo, is_activa=True)
+    
+    context = {
+        'terminal': terminal,
+        'titulo': f'Terminal {terminal.nombre}'
+    }
+    
+    return render(request, 'tauser_external/menu_cliente.html', context)
 
 
 # ==================== HELPERS ====================
@@ -1063,7 +1133,9 @@ class TerminalListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        queryset = Terminal.objects.select_related('usuario_responsable').prefetch_related('inventario__divisa')
+        queryset = Terminal.objects.select_related('usuario_responsable').prefetch_related(
+            'inventario_denominaciones__denominacion__divisa'
+        )
         
         # Filtros
         buscar = self.request.GET.get('buscar')
@@ -1086,6 +1158,16 @@ class TerminalListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['total_terminales'] = Terminal.objects.count()
         context['terminales_activas'] = Terminal.objects.filter(is_activa=True).count()
+        
+        # Calcular cantidad de divisas por terminal
+        divisas_por_terminal = {}
+        for terminal in context['terminales']:
+            divisas = terminal.inventario_denominaciones.values_list(
+                'denominacion__divisa', flat=True
+            ).distinct()
+            divisas_por_terminal[terminal.pk] = divisas.count()
+        
+        context['divisas_por_terminal'] = divisas_por_terminal
         return context
 
 
@@ -1144,16 +1226,49 @@ class TerminalDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView
 
 
 class TerminalDetailView(LoginRequiredMixin, PermissionRequiredMixin, View):
-    """Detalle de una terminal con su inventario"""
+    """Detalle de una terminal con su inventario por denominaciones"""
     permission_required = 'tauser.view_terminal'
     template_name = 'terminal_detail.html'
 
     def get(self, request, pk):
         terminal = get_object_or_404(Terminal.objects.prefetch_related('inventario__divisa'), pk=pk)
         
-        # Obtener inventario con alertas
-        inventarios = terminal.inventario.all()
-        inventarios_con_alerta = [inv for inv in inventarios if inv.necesita_reposicion]
+        # Obtener inventario de denominaciones agrupado por divisa
+        inventarios = InventarioDenominacionTerminal.objects.filter(
+            terminal=terminal
+        ).select_related('denominacion__divisa').order_by(
+            'denominacion__divisa__code',
+            '-denominacion__valor'
+        )
+        
+        # Agrupar por divisa
+        inventarios_por_divisa = {}
+        totales_globales = {
+            'total_billetes': 0,
+            'total_alertas': 0,
+            'divisas_count': 0
+        }
+        
+        for inv in inventarios:
+            divisa_code = inv.denominacion.divisa.code
+            if divisa_code not in inventarios_por_divisa:
+                inventarios_por_divisa[divisa_code] = {
+                    'divisa': inv.denominacion.divisa,
+                    'inventarios': [],
+                    'valor_total': 0,
+                    'total_billetes': 0,
+                    'alertas': 0
+                }
+                totales_globales['divisas_count'] += 1
+            
+            inventarios_por_divisa[divisa_code]['inventarios'].append(inv)
+            inventarios_por_divisa[divisa_code]['valor_total'] += inv.valor_total
+            inventarios_por_divisa[divisa_code]['total_billetes'] += inv.cantidad
+            totales_globales['total_billetes'] += inv.cantidad
+            
+            if inv.necesita_reposicion:
+                inventarios_por_divisa[divisa_code]['alertas'] += 1
+                totales_globales['total_alertas'] += 1
         
         # Obtener últimas operaciones
         ultimas_operaciones = RegistroTransaccionTerminal.objects.filter(
@@ -1173,8 +1288,9 @@ class TerminalDetailView(LoginRequiredMixin, PermissionRequiredMixin, View):
         
         context = {
             'terminal': terminal,
-            'inventarios': inventarios,
-            'inventarios_con_alerta': inventarios_con_alerta,
+            'inventario_por_divisa': inventarios_por_divisa,
+            'totales_globales': totales_globales,
+            'tiene_inventario': inventarios.exists(),
             'ultimas_operaciones': ultimas_operaciones,
             'operaciones_exitosas': operaciones_exitosas,
             'operaciones_fallidas': operaciones_fallidas,

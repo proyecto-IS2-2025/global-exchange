@@ -1,6 +1,7 @@
 """
 Configuración de Django para el proyecto Casa de Cambios.
 """
+
 from pathlib import Path
 import os
 from dotenv import load_dotenv

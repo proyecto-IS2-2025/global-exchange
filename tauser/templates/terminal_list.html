@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load tauser_filters %}
 
 {% block content %}
 <div class="row">
@@ -64,7 +65,6 @@
                                 <th><i class="fas fa-barcode me-1"></i> Código</th>
                                 <th><i class="fas fa-desktop me-1"></i> Nombre</th>
                                 <th><i class="fas fa-map-marker-alt me-1"></i> Ubicación</th>
-                                <th><i class="fas fa-user me-1"></i> Responsable</th>
                                 <th class="text-center"><i class="fas fa-box me-1"></i> Inventario</th>
                                 <th class="text-center"><i class="fas fa-power-off me-1"></i> Estado</th>
                                 <th class="text-center"><i class="fas fa-cog me-1"></i> Acciones</th>
@@ -85,23 +85,11 @@
                                         {{ terminal.ubicacion }}
                                     </small>
                                 </td>
-                                <td>
-                                    {% if terminal.usuario_responsable %}
-                                        <span class="badge bg-info">
-                                            <i class="fas fa-user-tie me-1"></i>
-                                            {{ terminal.usuario_responsable.username }}
-                                        </span>
-                                    {% else %}
-                                        <span class="text-muted">Sin asignar</span>
-                                    {% endif %}
-                                </td>
                                 <td class="text-center">
-                                    {% with inventarios_alerta=terminal.inventario.all|length %}
                                     <a href="{% url 'tauser:terminal_detail' pk=terminal.pk %}" class="btn btn-sm btn-outline-secondary">
                                         <i class="fas fa-boxes-stacked me-1"></i>
-                                        {{ terminal.inventario.count }} divisas
+                                        {{ divisas_por_terminal|get_item:terminal.pk }} divisas
                                     </a>
-                                    {% endwith %}
                                 </td>
                                 <td class="text-center">
                                     {% if terminal.is_activa %}

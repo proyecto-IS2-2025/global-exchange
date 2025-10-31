@@ -1,0 +1,392 @@
+{% extends 'base_tauser.html' %}
+{% load static %}
+
+{% block title %}Retiro de Divisas - {{ terminal.nombre }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+
+    .detalle-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .detalle-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .card-header-custom {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .card-header-custom h2 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+
+    .card-body-custom {
+        padding: 2rem;
+    }
+
+    .info-section {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-section h4 {
+        font-size: 1rem;
+        color: #64748b;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .info-item {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+    }
+
+    .info-item-label {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-bottom: 0.25rem;
+    }
+
+    .info-item-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .monto-destacado {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .monto-destacado .label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-bottom: 0.5rem;
+    }
+
+    .monto-destacado .value {
+        font-size: 2.5rem;
+        font-weight: 700;
+    }
+
+    .monto-destacado .currency {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        margin-left: 0.5rem;
+    }
+
+    .denominaciones-list {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .denominaciones-list h4 {
+        font-size: 1rem;
+        color: #64748b;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .denominacion-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+    }
+
+    .denominacion-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .denom-valor {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .denom-stock {
+        font-size: 0.9rem;
+        color: #64748b;
+    }
+
+    .denom-stock.low {
+        color: #dc3545;
+    }
+
+    .alert-custom {
+        border-radius: 10px;
+        border: none;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .alert-success-custom {
+        background: #d1fae5;
+        color: #065f46;
+        border-left: 4px solid #10b981;
+    }
+
+    .alert-warning-custom {
+        background: #fef3c7;
+        color: #92400e;
+        border-left: 4px solid #f59e0b;
+    }
+
+    .btn-retirar {
+        width: 100%;
+        padding: 1.25rem;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-retirar:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-retirar:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .btn-cancelar {
+        width: 100%;
+        padding: 1rem;
+        background: white;
+        color: #dc3545;
+        border: 2px solid #dc3545;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+    }
+
+    .btn-cancelar:hover {
+        background: #dc3545;
+        color: white;
+    }
+
+    .estado-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .estado-pagada {
+        background: #d1fae5;
+        color: #065f46;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detalle-container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="detalle-card">
+        <div class="card-header-custom">
+            <i class="fas fa-cash-register fa-2x mb-2"></i>
+            <h2>Retiro de Divisas</h2>
+            <p class="mb-0">{{ terminal.nombre }}</p>
+        </div>
+
+        <div class="card-body-custom">
+            <!-- Monto a retirar -->
+            <div class="monto-destacado">
+                <div class="label">
+                    <i class="fas fa-money-bill-wave me-2"></i>
+                    Monto a Retirar
+                </div>
+                <div class="value">
+                    {{ transaccion.monto_destino|floatformat:2 }}
+                    <span class="currency">{{ transaccion.divisa_destino.code }}</span>
+                </div>
+            </div>
+
+            <!-- Información de la transacción -->
+            <div class="info-section">
+                <h4><i class="fas fa-info-circle me-2"></i>Información de la Transacción</h4>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-item-label">Número de Transacción</div>
+                        <div class="info-item-value font-monospace">{{ transaccion.numero_transaccion }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-item-label">Código TAUSER</div>
+                        <div class="info-item-value font-monospace">{{ transaccion.tauser_code }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-item-label">Estado</div>
+                        <div class="info-item-value">
+                            <span class="estado-badge estado-pagada">
+                                <i class="fas fa-check-circle me-1"></i>
+                                {{ transaccion.get_estado_display }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-item-label">Fecha</div>
+                        <div class="info-item-value">{{ transaccion.fecha_creacion|date:"d/m/Y H:i" }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detalles de la operación -->
+            <div class="info-section">
+                <h4><i class="fas fa-exchange-alt me-2"></i>Detalles de la Compra</h4>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-item-label">Pagaste</div>
+                        <div class="info-item-value">
+                            {{ transaccion.monto_origen|floatformat:0 }} {{ transaccion.divisa_origen.code }}
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-item-label">Tasa de Cambio</div>
+                        <div class="info-item-value">
+                            {{ transaccion.tasa_aplicada|floatformat:2 }}
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-item-label">Cliente</div>
+                        <div class="info-item-value">
+                            {{ transaccion.cliente.nombre_completo }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock disponible en el terminal -->
+            <div class="denominaciones-list">
+                <h4><i class="fas fa-layer-group me-2"></i>Denominaciones Disponibles</h4>
+                {% if denominaciones %}
+                    {% for item in denominaciones %}
+                        <div class="denominacion-item">
+                            <div>
+                                <span class="denom-valor">
+                                    {{ item.denominacion.valor|floatformat:0 }} {{ item.denominacion.divisa.code }}
+                                </span>
+                            </div>
+                            <div>
+                                <span class="denom-stock {% if item.cantidad < 10 %}low{% endif %}">
+                                    <i class="fas fa-boxes me-1"></i>
+                                    Stock: {{ item.cantidad }} unidades
+                                </span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted mb-0">No hay denominaciones disponibles.</p>
+                {% endif %}
+            </div>
+
+            <!-- Alertas de stock -->
+            {% if puede_retirar %}
+                <div class="alert-custom alert-success-custom">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Stock suficiente:</strong> Puede proceder con el retiro.
+                </div>
+            {% else %}
+                <div class="alert-custom alert-warning-custom">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Stock insuficiente:</strong> El terminal no tiene suficiente stock para completar esta operación.
+                    Disponible: {{ stock_total }} {{ transaccion.divisa_destino.code }}
+                </div>
+            {% endif %}
+
+            <!-- Botón de acción -->
+            <form method="POST" action="{% url 'tauser_external:procesar_retiro' terminal_codigo=terminal_codigo transaccion_id=transaccion.id %}" id="retiro-form">
+                {% csrf_token %}
+                <button type="submit" class="btn-retirar" {% if not puede_retirar %}disabled{% endif %}>
+                    <i class="fas fa-hand-holding-usd me-2"></i>
+                    Procesar Retiro
+                </button>
+            </form>
+
+            <a href="{% url 'tauser_external:menu_tauser' terminal_codigo=terminal_codigo %}" class="btn-cancelar">
+                <i class="fas fa-times me-2"></i>
+                Cancelar
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('retiro-form');
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    form.addEventListener('submit', function(e) {
+        if (submitBtn.disabled) {
+            e.preventDefault();
+            return;
+        }
+
+        const confirmed = confirm('¿Confirma que desea procesar el retiro de {{ transaccion.monto_destino|floatformat:2 }} {{ transaccion.divisa_destino.code }}?');
+        
+        if (confirmed) {
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Procesando...';
+            submitBtn.disabled = true;
+        } else {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}
+

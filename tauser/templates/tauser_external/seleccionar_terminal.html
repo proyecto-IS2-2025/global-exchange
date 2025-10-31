@@ -1,0 +1,86 @@
+{% extends 'tauser_external/base_external.html' %}
+{% load static %}
+
+{% block title %}TAUSER - Seleccionar Terminal{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'tauser_external:home' %}">
+                            <i class="fas fa-home"></i> TAUSER
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active">Seleccionar Terminal</li>
+                </ol>
+            </nav>
+
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-desktop text-primary"></i>
+                    Seleccionar Terminal
+                </h2>
+            </div>
+
+            <!-- Lista de terminales -->
+            {% if terminales %}
+                <div class="row">
+                    {% for terminal in terminales %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <h5 class="card-title mb-0">
+                                            <i class="fas fa-desktop text-primary"></i>
+                                            {{ terminal.nombre }}
+                                        </h5>
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i> Activo
+                                        </span>
+                                    </div>
+                                    
+                                    <p class="card-text text-muted">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        {{ terminal.ubicacion }}
+                                    </p>
+                                    
+                                    <p class="card-text">
+                                        <small class="text-muted">
+                                            Código: <strong>{{ terminal.codigo }}</strong>
+                                        </small>
+                                    </p>
+                                </div>
+                                <div class="card-footer bg-transparent">
+                                    <a href="{% url 'tauser_external:acceso_terminal' terminal.codigo %}" 
+                                       class="btn btn-primary w-100">
+                                        <i class="fas fa-sign-in-alt me-2"></i>
+                                        Acceder
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    No hay terminales activos disponibles en este momento.
+                </div>
+            {% endif %}
+
+            <!-- Volver -->
+            <div class="mt-4">
+                <a href="{% url 'tauser_external:home' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Volver
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

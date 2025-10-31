@@ -270,6 +270,11 @@
                                     <tr class="transaction-row">
                                         <td>
                                             <div class="font-monospace fw-bold">{{ transaccion.numero_transaccion }}</div>
+                                            {% if transaccion.tauser_code %}
+                                            <small class="text-info font-monospace fw-bold d-block" style="letter-spacing: 1px;">
+                                                <i class="bi bi-key-fill"></i> {{ transaccion.tauser_code }}
+                                            </small>
+                                            {% endif %}
                                         </td>
                                         <td>
                                             <div class="fw-bold">{{ transaccion.cliente.nombre_completo }}</div>

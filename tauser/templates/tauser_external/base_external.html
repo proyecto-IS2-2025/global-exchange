@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  {% load static %}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Sistema TAUSER{% endblock %}</title>
+
+  <!-- Bootstrap CSS (CDN) -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* Layout sticky footer */
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    main {
+      flex: 1;
+    }
+    footer {
+      margin-top: auto;
+    }
+
+    /* Header personalizado TAUSER */
+    .tauser-header {
+      background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      padding: 1rem 0;
+    }
+    
+    .tauser-brand {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+    }
+    
+    .tauser-brand i {
+      font-size: 2rem;
+      margin-right: 0.5rem;
+      color: #667eea;
+    }
+    
+    .tauser-brand:hover {
+      color: #667eea;
+    }
+
+    /* Cards con efecto */
+    .card {
+      border-radius: 15px;
+      border: none;
+    }
+
+    /* Botones personalizados */
+    .btn {
+      border-radius: 10px;
+      padding: 0.5rem 1.5rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    /* Footer personalizado */
+    .tauser-footer {
+      background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%);
+      color: #fff;
+      padding: 2rem 0;
+      margin-top: 3rem;
+    }
+
+    /* Animaciones */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    /* Mensajes de alerta mejorados */
+    .alert {
+      border-radius: 10px;
+      border: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+  </style>
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <!-- HEADER INDEPENDIENTE TAUSER -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <header class="tauser-header">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center">
+        <a class="tauser-brand" href="{% url 'tauser_external:home' %}">
+          <i class="fas fa-desktop"></i>
+          <span>TAUSER</span>
+        </a>
+        
+        {% block header_actions %}
+        {% endblock %}
+      </div>
+    </div>
+  </header>
+
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <!-- MENSAJES -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  {% if messages %}
+    <div class="container mt-3">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show fade-in" role="alert">
+          {% if message.tags == 'error' %}
+            <i class="fas fa-exclamation-circle me-2"></i>
+          {% elif message.tags == 'success' %}
+            <i class="fas fa-check-circle me-2"></i>
+          {% elif message.tags == 'warning' %}
+            <i class="fas fa-exclamation-triangle me-2"></i>
+          {% else %}
+            <i class="fas fa-info-circle me-2"></i>
+          {% endif %}
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <!-- CONTENIDO PRINCIPAL -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <main class="py-4">
+    {% block content %}
+    {% endblock %}
+  </main>
+
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <!-- FOOTER -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <footer class="tauser-footer">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6">
+          <h5>
+            <i class="fas fa-desktop me-2"></i>
+            Sistema TAUSER
+          </h5>
+          <p class="text-muted mb-0">
+            Terminal de Autoservicio para Usuarios<br>
+            <small>Global Exchange © 2025</small>
+          </p>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <p class="mb-2">
+            <i class="fas fa-shield-alt me-2"></i>
+            Sistema Seguro y Confiable
+          </p>
+          <p class="text-muted mb-0">
+            <small>
+              Operando 24/7 para su comodidad
+            </small>
+          </p>
+        </div>
+      </div>
+      <hr class="my-3" style="border-color: rgba(255,255,255,0.1);">
+      <div class="row">
+        <div class="col-12 text-center">
+          <small class="text-muted">
+            <i class="fas fa-code me-1"></i>
+            Desarrollado por Global Exchange - Todos los derechos reservados
+          </small>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <!-- SCRIPTS -->
+  <!-- ═════════════════════════════════════════════════════════════ -->
+  <!-- Bootstrap JS (CDN) -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous"
+  ></script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

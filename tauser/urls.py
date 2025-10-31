@@ -4,6 +4,18 @@ from . import views
 app_name = 'tauser'
 
 urlpatterns = [
+    # ==================== PÁGINA PRINCIPAL EXTERNA ====================
+    path(
+        '',
+        views.tauser_home,
+        name='home'
+    ),
+    path(
+        'terminal/<str:terminal_codigo>/cliente/',
+        views.menu_cliente_tauser,
+        name='menu_cliente'
+    ),
+    
     # ==================== ACCESO Y SESIÓN ====================
     path(
         'terminales-cliente/',
@@ -88,10 +100,42 @@ urlpatterns = [
         views.toggle_terminal_activa,
         name='terminal_toggle'
     ),
+    # ==================== GESTIÓN DE INVENTARIO POR DENOMINACIONES ====================
     path(
-        'terminales/<int:terminal_pk>/inventario/',
-        views.InventarioTerminalView.as_view(),
-        name='inventario_terminal'
+        'terminales/<int:terminal_pk>/inventario-denominaciones/',
+        views.GestionInventarioDenominacionesView.as_view(),
+        name='gestion_inventario_denominaciones'
+    ),
+    path(
+        'terminales/<int:terminal_pk>/inventario-denominaciones/agregar/',
+        views.AgregarDenominacionInventarioView.as_view(),
+        name='agregar_denominacion_inventario'
+    ),
+    path(
+        'terminales/<int:terminal_pk>/inventario-denominaciones/<int:inventario_pk>/ajustar/',
+        views.AjustarInventarioDenominacionAdminView.as_view(),
+        name='ajustar_inventario_denominacion_admin'
+    ),
+    path(
+        'terminales/<int:terminal_pk>/inventario-denominaciones/<int:inventario_pk>/eliminar/',
+        views.EliminarInventarioDenominacionView.as_view(),
+        name='eliminar_inventario_denominacion'
+    ),
+    # Nuevas rutas para mejoras de UI
+    path(
+        'terminales/<int:terminal_pk>/dashboard-inventario/',
+        views.DashboardInventarioView.as_view(),
+        name='dashboard_inventario'
+    ),
+    path(
+        'terminales/<int:terminal_pk>/recarga-masiva/',
+        views.RecargaMasivaView.as_view(),
+        name='recarga_masiva'
+    ),
+    path(
+        'terminales/<int:terminal_pk>/historial-recargas/',
+        views.HistorialRecargasView.as_view(),
+        name='historial_recargas'
     ),
     
     # ==================== INVENTARIO DE DENOMINACIONES ====================

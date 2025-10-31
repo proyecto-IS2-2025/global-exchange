@@ -142,10 +142,12 @@ def calcular_simulacion_api(request):
         comision_aplicada = Decimal('0.00')
 
         if tipo_operacion == 'compra':  # Cliente compra divisa (negocio vende)
+            # CAMBIO: monto es cantidad de divisa extranjera que quiere comprar
+            # Necesitamos calcular cuántos Gs debe pagar
             tasa_aplicada = cotizacion.valor_venta_unit
-            resultado = monto / tasa_aplicada  # Monto en Gs → Divisa extranjera
-            # Redondear hacia ABAJO para que el cliente reciba menos (empresa gana)
-            resultado = resultado.quantize(Decimal('0.01'), rounding=ROUND_DOWN)
+            resultado = monto * tasa_aplicada  # Divisa extranjera → Gs a pagar
+            # Redondear hacia ARRIBA para que el cliente pague más (empresa gana)
+            resultado = resultado.quantize(Decimal('0.01'), rounding=ROUND_UP)
             comision_aplicada = cotizacion.comision_venta_ajustada
         else:  # venta - Cliente vende divisa (negocio compra)
             tasa_aplicada = cotizacion.valor_compra_unit

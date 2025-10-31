@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Agregar Denominación - Terminal {{ terminal.codigo }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-plus-circle text-success me-2"></i>
+                    Agregar Denominación al Inventario
+                </h1>
+                <a href="{% url 'tauser:gestion_inventario_denominaciones' terminal.pk %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Volver
+                </a>
+            </div>
+
+            <!-- Info del terminal -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body bg-light">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1">
+                                <i class="fas fa-desktop text-primary me-2"></i>
+                                <strong>Terminal:</strong> {{ terminal.nombre }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1">
+                                <i class="fas fa-barcode text-primary me-2"></i>
+                                <strong>Código:</strong> {{ terminal.codigo }}
+                            </p>
+                        </div>
+                        <div class="col-12">
+                            <p class="mb-0">
+                                <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                <strong>Ubicación:</strong> {{ terminal.ubicacion }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulario -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-money-bill-wave me-2"></i>
+                        Datos de la Denominación
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            {{ form.non_field_errors }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endif %}
+
+                        <!-- Denominación -->
+                        <div class="mb-4">
+                            <label for="{{ form.denominacion.id_for_label }}" class="form-label fw-bold">
+                                {{ form.denominacion.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.denominacion }}
+                            {% if form.denominacion.help_text %}
+                            <div class="form-text">{{ form.denominacion.help_text }}</div>
+                            {% endif %}
+                            {% if form.denominacion.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.denominacion.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Cantidad Inicial -->
+                        <div class="mb-4">
+                            <label for="{{ form.cantidad.id_for_label }}" class="form-label fw-bold">
+                                {{ form.cantidad.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.cantidad }}
+                            {% if form.cantidad.help_text %}
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                {{ form.cantidad.help_text }}
+                            </div>
+                            {% endif %}
+                            {% if form.cantidad.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.cantidad.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Cantidad Mínima -->
+                        <div class="mb-4">
+                            <label for="{{ form.cantidad_minima.id_for_label }}" class="form-label fw-bold">
+                                {{ form.cantidad_minima.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.cantidad_minima }}
+                            {% if form.cantidad_minima.help_text %}
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                {{ form.cantidad_minima.help_text }}
+                            </div>
+                            {% endif %}
+                            {% if form.cantidad_minima.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.cantidad_minima.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Info adicional -->
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                Información Importante
+                            </h6>
+                            <ul class="mb-0 small">
+                                <li>La <strong>cantidad inicial</strong> es el número de billetes o monedas que se agregarán al inventario.</li>
+                                <li>La <strong>cantidad mínima</strong> sirve para generar alertas cuando el stock esté bajo.</li>
+                                <li>No puede agregar la misma denominación dos veces para la misma terminal.</li>
+                                <li>El valor total se calculará automáticamente: <code>Cantidad × Valor de Denominación</code></li>
+                            </ul>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'tauser:gestion_inventario_denominaciones' terminal.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-1"></i> Agregar Denominación
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Ayuda adicional -->
+            <div class="card shadow-sm mt-4 border-info">
+                <div class="card-body">
+                    <h6 class="text-info">
+                        <i class="fas fa-question-circle me-2"></i>
+                        ¿Qué son las denominaciones?
+                    </h6>
+                    <p class="small mb-0">
+                        Las denominaciones representan los billetes o monedas específicos de cada divisa. 
+                        Por ejemplo, para USD pueden existir billetes de $1, $5, $10, $20, $50 y $100. 
+                        Este sistema permite un control detallado del inventario físico de cada terminal.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control:focus, .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+</style>
+{% endblock %}

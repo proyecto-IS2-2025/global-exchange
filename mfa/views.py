@@ -45,6 +45,13 @@ def mfa_config_view(request):
             status = "activado" if config.mfa_compra_enabled else "desactivado"
             messages.success(request, f"MFA en Compra {status} exitosamente.")
         
+        elif action == 'toggle_tauser':
+            config.mfa_tauser_enabled = not config.mfa_tauser_enabled
+            config.updated_by = request.user
+            config.save()
+            status = "activado" if config.mfa_tauser_enabled else "desactivado"
+            messages.success(request, f"MFA en Tausers {status} exitosamente.")
+        
         return redirect('mfa:config')
     
     context = {

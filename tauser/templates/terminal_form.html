@@ -58,20 +58,6 @@
                         {% endif %}
                     </div>
 
-                    <!-- Usuario Responsable -->
-                    <div class="mb-3">
-                        <label for="{{ form.usuario_responsable.id_for_label }}" class="form-label fw-bold">
-                            <i class="fas fa-user-tie me-1"></i> {{ form.usuario_responsable.label }}
-                        </label>
-                        {{ form.usuario_responsable }}
-                        <small class="form-text text-muted">Opcional: Usuario encargado de esta terminal</small>
-                        {% if form.usuario_responsable.errors %}
-                            <div class="invalid-feedback d-block">
-                                {{ form.usuario_responsable.errors }}
-                            </div>
-                        {% endif %}
-                    </div>
-
                     <!-- Estado Activa -->
                     <div class="mb-4">
                         <div class="form-check">

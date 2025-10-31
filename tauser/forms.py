@@ -1,6 +1,6 @@
-from django import forms
-from .models import Terminal, InventarioDivisaTerminal
-from divisas.models import Divisa
+﻿from django import forms
+from .models import Terminal, InventarioDivisaTerminal, InventarioDenominacionTerminal
+from divisas.models import Divisa, Denominacion
 from users.models import CustomUser
 
 
@@ -9,7 +9,7 @@ class TerminalForm(forms.ModelForm):
     
     class Meta:
         model = Terminal
-        fields = ['nombre', 'codigo', 'ubicacion', 'usuario_responsable', 'is_activa']
+        fields = ['nombre', 'codigo', 'ubicacion', 'is_activa']
         widgets = {
             'nombre': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -23,9 +23,6 @@ class TerminalForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Ej: Av. España c/ Brasil'
             }),
-            'usuario_responsable': forms.Select(attrs={
-                'class': 'form-select'
-            }),
             'is_activa': forms.CheckboxInput(attrs={
                 'class': 'form-check-input'
             }),
@@ -34,15 +31,8 @@ class TerminalForm(forms.ModelForm):
             'nombre': 'Nombre de la Terminal',
             'codigo': 'Código Único',
             'ubicacion': 'Ubicación',
-            'usuario_responsable': 'Usuario Responsable',
             'is_activa': '¿Terminal Activa?',
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Filtrar solo usuarios activos para el responsable
-        self.fields['usuario_responsable'].queryset = CustomUser.objects.filter(is_active=True)
-        self.fields['usuario_responsable'].required = False
 
 
 class InventarioDivisaTerminalForm(forms.ModelForm):
@@ -74,11 +64,9 @@ class InventarioDivisaTerminalForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Solo mostrar divisas activas
         self.fields['divisa'].queryset = Divisa.objects.filter(is_active=True)
 
 
-# Formset para gestión masiva de inventario
 from django.forms import inlineformset_factory
 
 InventarioDivisaTerminalFormSet = inlineformset_factory(
@@ -88,3 +76,5 @@ InventarioDivisaTerminalFormSet = inlineformset_factory(
     extra=1,
     can_delete=True
 )
+
+from .forms_denominaciones import InventarioDenominacionTerminalForm, AjusteInventarioDenominacionForm

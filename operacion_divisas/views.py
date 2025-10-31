@@ -495,12 +495,15 @@ class CompraConfirmacionView(LoginRequiredMixin, TemplateView):
             messages.error(request, "No hay simulación para confirmar.")
             return redirect("operacion_divisas:compra")
 
+        # IMPORTANTE: Con el nuevo flujo de compra:
+        # - monto_original = cantidad de divisa extranjera ingresada por el usuario
+        # - monto_resultado = guaraníes a pagar (calculados)
         operacion = {
             "tipo": "compra",
             "divisa": (resultado.get("moneda_code") or "").strip().upper(),
             "divisa_nombre": resultado.get("moneda_nombre"),
-            "monto_guaranies": str(redondear(resultado.get("monto_original"), 0)),
-            "monto_divisa": str(redondear(resultado.get("monto_resultado"), 2)),
+            "monto_guaranies": str(redondear(resultado.get("monto_resultado"), 0)),  # Guaraníes a pagar
+            "monto_divisa": str(redondear(resultado.get("monto_original"), 2)),      # Divisa a recibir
             "tasa_cambio": str(redondear(resultado.get("tasa_aplicada"), 2)),
             "comision": resultado.get("comision_aplicada"),
         }

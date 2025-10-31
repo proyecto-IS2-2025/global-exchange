@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Historial de Recargas - {{ terminal.nombre }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-card {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .stat-mini {
+        text-align: center;
+        padding: 1rem;
+        border-radius: 8px;
+        background-color: white;
+        border: 2px solid #dee2e6;
+    }
+    .stat-mini .value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #0d6efd;
+    }
+    .stat-mini .label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        text-transform: uppercase;
+    }
+    .table-logs {
+        font-size: 0.9rem;
+    }
+    .badge-divisa {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.6rem;
+    }
+    .cantidad-badge {
+        background-color: #d4edda;
+        color: #155724;
+        padding: 0.3rem 0.6rem;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    .no-data {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+    }
+    .btn-filter {
+        min-width: 100px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-history"></i> Historial de Recargas</h2>
+            <p class="text-muted">
+                <strong>Terminal:</strong> {{ terminal.nombre }} ({{ terminal.codigo }})
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'tauser:dashboard_inventario' terminal.pk %}" class="btn btn-secondary">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </a>
+            <a href="{% url 'tauser:recarga_masiva' terminal.pk %}" class="btn btn-success">
+                <i class="fas fa-plus-circle"></i> Nueva Recarga
+            </a>
+        </div>
+    </div>
+
+    <!-- Estadísticas del Período Filtrado -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stat-mini">
+                <div class="label">Total de Recargas</div>
+                <div class="value">{{ estadisticas.total_recargas|default:0 }}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-mini">
+                <div class="label">Total de Billetes</div>
+                <div class="value">{{ estadisticas.total_billetes|default:0 }}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-mini">
+                <div class="label">Valor Total</div>
+                <div class="value">${{ estadisticas.valor_total|default:0|floatformat:2 }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filter-card">
+        <form method="get" class="row g-3" id="filterForm">
+            <div class="col-md-3">
+                <label class="form-label"><i class="fas fa-coins"></i> Divisa</label>
+                <select name="divisa" class="form-select">
+                    <option value="">Todas las divisas</option>
+                    {% for divisa in divisas_disponibles %}
+                    <option value="{{ divisa }}" {% if divisa == divisa_filtro %}selected{% endif %}>
+                        {{ divisa }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <label class="form-label"><i class="fas fa-user"></i> Usuario</label>
+                <select name="usuario" class="form-select">
+                    <option value="">Todos los usuarios</option>
+                    {% for user in usuarios_disponibles %}
+                    <option value="{{ user.id }}" {% if user.id|stringformat:"s" == usuario_filtro %}selected{% endif %}>
+                        {{ user.username }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label"><i class="fas fa-calendar"></i> Desde</label>
+                <input type="date" name="fecha_desde" class="form-control" value="{{ fecha_desde }}">
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label"><i class="fas fa-calendar"></i> Hasta</label>
+                <input type="date" name="fecha_hasta" class="form-control" value="{{ fecha_hasta }}">
+            </div>
+            
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary btn-filter me-2">
+                    <i class="fas fa-filter"></i> Filtrar
+                </button>
+                <a href="{% url 'tauser:historial_recargas' terminal.pk %}" class="btn btn-outline-secondary btn-filter">
+                    <i class="fas fa-redo"></i> Limpiar
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabla de Historial -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-list"></i> Registros de Recargas
+                {% if page_obj.paginator.count %}
+                <span class="badge bg-light text-dark float-end">{{ page_obj.paginator.count }} registros</span>
+                {% endif %}
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            {% if page_obj.object_list %}
+            <div class="table-responsive">
+                <table class="table table-hover table-logs mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha y Hora</th>
+                            <th>Denominación</th>
+                            <th>Cantidad</th>
+                            <th>Stock Anterior</th>
+                            <th>Stock Nuevo</th>
+                            <th>Valor Total</th>
+                            <th>Usuario</th>
+                            <th>Observaciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in page_obj %}
+                        <tr>
+                            <td><small class="text-muted">#{{ log.id }}</small></td>
+                            <td>
+                                <div>{{ log.fecha|date:"d/m/Y" }}</div>
+                                <small class="text-muted">{{ log.fecha|date:"H:i:s" }}</small>
+                            </td>
+                            <td>
+                                <span class="badge badge-divisa bg-primary">
+                                    {{ log.denominacion.divisa.code }} {{ log.denominacion.valor }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="cantidad-badge">
+                                    <i class="fas fa-plus"></i> {{ log.cantidad_agregada }}
+                                </span>
+                            </td>
+                            <td class="text-center">{{ log.cantidad_anterior }}</td>
+                            <td class="text-center">
+                                <strong class="text-success">{{ log.cantidad_nueva }}</strong>
+                            </td>
+                            <td>
+                                <strong>${{ log.valor_total_agregado|floatformat:2 }}</strong>
+                            </td>
+                            <td>
+                                <small>
+                                    <i class="fas fa-user-circle"></i> 
+                                    {{ log.usuario.username|default:"Sistema" }}
+                                </small>
+                            </td>
+                            <td>
+                                {% if log.observaciones %}
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-info" 
+                                        data-bs-toggle="tooltip" 
+                                        data-bs-placement="left" 
+                                        title="{{ log.observaciones }}">
+                                    <i class="fas fa-comment"></i>
+                                </button>
+                                {% else %}
+                                <small class="text-muted">-</small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            {% if page_obj.has_other_pages %}
+            <div class="pagination-wrapper">
+                <nav>
+                    <ul class="pagination">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if divisa_filtro %}&divisa={{ divisa_filtro }}{% endif %}{% if usuario_filtro %}&usuario={{ usuario_filtro }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if divisa_filtro %}&divisa={{ divisa_filtro }}{% endif %}{% if usuario_filtro %}&usuario={{ usuario_filtro }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if divisa_filtro %}&divisa={{ divisa_filtro }}{% endif %}{% if usuario_filtro %}&usuario={{ usuario_filtro }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}">
+                                {{ num }}
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if divisa_filtro %}&divisa={{ divisa_filtro }}{% endif %}{% if usuario_filtro %}&usuario={{ usuario_filtro }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if divisa_filtro %}&divisa={{ divisa_filtro }}{% endif %}{% if usuario_filtro %}&usuario={{ usuario_filtro }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <div class="no-data">
+                <i class="fas fa-inbox fa-3x mb-3"></i>
+                <h5>No se encontraron recargas</h5>
+                <p class="text-muted">
+                    {% if divisa_filtro or usuario_filtro or fecha_desde or fecha_hasta %}
+                    Intente ajustar los filtros de búsqueda
+                    {% else %}
+                    Aún no se han registrado recargas para este terminal
+                    {% endif %}
+                </p>
+                <a href="{% url 'tauser:recarga_masiva' terminal.pk %}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle"></i> Realizar Primera Recarga
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Información Adicional -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> 
+                <strong>Nota:</strong> Este historial muestra todas las recargas realizadas al inventario del terminal. 
+                Los registros son permanentes y no pueden ser eliminados (auditoría). 
+                Cada recarga queda asociada al usuario que la realizó y la fecha exacta.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar tooltips de Bootstrap
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Highlight de la fila actual
+    const rows = document.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#e7f3ff';
+        });
+        row.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+        });
+    });
+});
+</script>
+{% endblock %}
