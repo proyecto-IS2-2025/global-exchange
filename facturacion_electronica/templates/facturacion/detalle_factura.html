@@ -135,7 +135,8 @@
                 </div>
                 <div class="card-body">
                     {# Botón PDF - Solo activo si tiene CDC válido Y URL completa con .pdf #}
-                    {% if perms.facturacion_electronica.download_kude_pdf %}
+                    {# TODO: Restaurar verificación de permisos cuando se configuren correctamente #}
+                    {% comment %}{% if perms.facturacion_electronica.download_kude_pdf %}{% endcomment %}
                         {% if factura.estado == 'aprobado' and factura.cdc and factura.cdc != '0' and factura.url_kude_pdf and '.pdf' in factura.url_kude_pdf %}
                         <a href="{% url 'facturacion:descargar_pdf' factura.id %}" class="btn btn-success btn-block w-100 mb-2" target="_blank">
                             <i class="fas fa-file-pdf"></i> Descargar PDF
@@ -159,9 +160,10 @@
                             <i class="fas fa-file-pdf"></i> PDF no disponible
                         </button>
                         {% endif %}
-                    {% endif %}
+                    {% comment %}{% endif %}{% endcomment %}
 
-                    {% if perms.facturacion_electronica.download_kude_xml %}
+                    {# TODO: Restaurar verificación de permisos cuando se configuren correctamente #}
+                    {% comment %}{% if perms.facturacion_electronica.download_kude_xml %}{% endcomment %}
                         {% if factura.estado == 'aprobado' and factura.url_kude_xml %}
                         <a href="{% url 'facturacion:descargar_xml' factura.id %}" class="btn btn-info btn-block w-100" target="_blank">
                             <i class="fas fa-file-code"></i> Descargar XML
@@ -176,7 +178,7 @@
                             <i class="fas fa-file-code"></i> XML no disponible
                         </button>
                         {% endif %}
-                    {% endif %}
+                    {% comment %}{% endif %}{% endcomment %}
                 </div>
             </div>
 
