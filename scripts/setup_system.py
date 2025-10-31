@@ -9,6 +9,10 @@ import os
 import sys
 import django
 
+# Agregar el directorio raíz del proyecto al PYTHONPATH
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, BASE_DIR)
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'casa_de_cambios.settings')
 django.setup()
 
@@ -229,7 +233,7 @@ def main():
     print_info("  6. Verificación de usuarios")
     print_info("  7. Resumen del sistema")
     
-    input(f"\n{Colors.WARNING}Presiona ENTER para continuar...{Colors.ENDC}")
+    #input(f"\n{Colors.WARNING}Presiona ENTER para continuar...{Colors.ENDC}")
     
     # 1. Verificar conexión a la base de datos
     print_header("PASO 1: VERIFICACIÓN DE BASE DE DATOS")

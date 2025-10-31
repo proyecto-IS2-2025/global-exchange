@@ -2,15 +2,16 @@
 Configuración para la integración con SQL Proxy de Factura Segura
 Datos proporcionados por el profesor para el Equipo 7
 """
+import os
 
 # Configuración del SQL Proxy
 SQL_PROXY_CONFIG = {
-    'host': 'localhost',
-    'port': 45432,
-    'database': 'fs_proxy_bd',
-    'user': 'fs_proxy_user',
-    'password': 'p123456',
-    'kude_url': 'http://localhost:40080/kude'  # URL para acceder a los PDFs y XMLs generados
+    'host': os.getenv('SQL_PROXY_DB_HOST', 'localhost'),
+    'port': int(os.getenv('SQL_PROXY_DB_PORT', '45432')),
+    'database': os.getenv('SQL_PROXY_DB_NAME', 'fs_proxy_bd'),
+    'user': os.getenv('SQL_PROXY_DB_USER', 'fs_proxy_user'),
+    'password': os.getenv('SQL_PROXY_DB_PASSWORD', 'p123456'),
+    'kude_url': os.getenv('SQL_PROXY_KUDE_URL', f"http://{os.getenv('SQL_PROXY_HOST', 'localhost')}:{os.getenv('SQL_PROXY_PORT', '40080')}/kude")
 }
 
 # Configuración del ESI (Equipo 7)
@@ -69,7 +70,9 @@ ACTIVIDADES_ECONOMICAS = [
 
 # URL para acceder a los KuDE (PDF y XML)
 KUDE_CONFIG = {
-    'url': 'http://localhost:40080/kude/',
-    'username': 'sqlproxy',
-    'password': 'kude1234'
+    # Leer configuración de KuDE (PDF/XML) desde variables de entorno para
+    # que cada máquina pueda apuntar al mismo servicio sin cambiar el código.
+    'url': os.getenv('SQL_PROXY_KUDE_URL', f"http://{os.getenv('SQL_PROXY_HOST','localhost')}:{os.getenv('SQL_PROXY_PORT','40080')}/kude/"),
+    'username': os.getenv('KUDE_USERNAME', 'sqlproxy'),
+    'password': os.getenv('KUDE_PASSWORD', 'kude1234')
 }

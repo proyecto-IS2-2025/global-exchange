@@ -40,7 +40,6 @@ dependencies = [
     "pipx (==1.7.1)",
     "platformdirs (==4.4.0)",
     "plumber (==1.7)",
-    "psycopg2 (==2.9.10)",
     "pycparser (==2.23)",
     "pygments (==2.19.2)",
     "python-http-client (==3.3.7)",
@@ -69,7 +68,8 @@ dependencies = [
     "zope-hookable (==8.0)",
     "zope-interface (==8.0.1)",
     "zope-lifecycleevent (==6.0)",
-    "zope-proxy (==7.0)"
+    "zope-proxy (==7.0)",
+    "celery (>=5.5.3,<6.0.0)"
 ]
 
 

@@ -5,37 +5,6 @@
 DEV_PROJECT_NAME = global-exchange-local-dev
 PROD_PROJECT_NAME = global-exchange-local-prod
 
-#------------------ Operaciones del Entorno de Desarrollo (Docker) ------------------#
-
-dev-up:
-	@echo "Levantando el entorno de desarrollo..."
-	docker compose -p $(DEV_PROJECT_NAME) up --build
-	@echo "Entorno de desarrollo levantado. Accede en http://localhost:8000"
-
-dev-down:
-	@echo "Deteniendo y limpiando el entorno de desarrollo..."
-	docker compose -p $(DEV_PROJECT_NAME) down -v --remove-orphans
-	@echo "Entorno de desarrollo detenido y limpiado."
-
-docker-exec-dev:
-	@echo "Ejecutando un comando en el contenedor web de desarrollo..."
-	docker compose -p $(DEV_PROJECT_NAME) exec web sh
-
-docker-migrate-dev:
-	@echo "Aplicando migraciones en el entorno de desarrollo..."
-	docker compose -p $(DEV_PROJECT_NAME) exec web python manage.py migrate
-	@echo "Migraciones aplicadas."
-
-loaddata-dev:
-	@echo "Cargando datos iniciales en el entorno de desarrollo..."
-	docker compose -p $(DEV_PROJECT_NAME) exec web python manage.py loaddata roles_data.json
-	docker compose -p $(DEV_PROJECT_NAME) exec web python manage.py loaddata users_data.json
-	docker compose -p $(DEV_PROJECT_NAME) exec web python manage.py loaddata clientes_data.json
-	docker compose -p $(DEV_PROJECT_NAME) exec web python manage.py loaddata divisas_initial_data.json
-	@echo "Datos iniciales cargados en desarrollo."
-
-init-db: docker-migrate-dev docker-loaddata-dev
-	@echo "Base de datos de desarrollo inicializada y con datos de ejemplo."
 
 #------------------ Operaciones del Entorno de Producción (Docker) ------------------#
 
@@ -66,15 +35,8 @@ PROD_EXEC = docker compose -p $(PROD_PROJECT_NAME) -f docker-compose.prod.yml ex
 load-prod:
 	@echo "Cargando datos iniciales en el entorno de producción..."
 	# Carga de fixtures (datos)
-	$(PROD_EXEC) python manage.py loaddata roles_data.json
-	$(PROD_EXEC) python manage.py loaddata users_data.json
-	$(PROD_EXEC) python manage.py loaddata clientes_data.json
-	$(PROD_EXEC) python manage.py loaddata divisas_data.json
-	$(PROD_EXEC) python manage.py loaddata bancos_data.json
-	# Fixtures faltantes añadidas:
-	$(PROD_EXEC) python manage.py loaddata denominaciones_data.json
-	$(PROD_EXEC) python manage.py loaddata billetera_data.json
-	
+	$(PROD_EXEC) python scripts/setup_system.py
+
 	@echo "Sincronizando permisos y roles de producción..."
 	# Configuración de permisos añadida:
 	$(PROD_EXEC) python manage.py sync_permissions
@@ -109,22 +71,10 @@ migrations:
 	fi
 	@echo "Migraciones creadas correctamente"
 
-migrate:
 	@echo "Migrando la base de datos (local)..."
 	poetry run python manage.py migrate
-
-loaddata:
-	@echo "Cargando datos iniciales (local)..."
-	poetry run python manage.py loaddata roles_data.json
-	poetry run python manage.py loaddata users_data.json
-	poetry run python manage.py loaddata clientes_data.json
-	poetry run python manage.py loaddata divisas_data.json
-	poetry run python manage.py loaddata denominaciones_data.json
-	poetry run python manage.py loaddata bancos_data.json
-	poetry run python manage.py loaddata billetera_data.json
-	poetry run python manage.py loaddata mediosfinancieros_data.json
-	poetry run python manage.py loaddata mediosfinancieroscliente_data.json
-	@echo "Datos iniciales cargados (local)."
+	@echo "Migraciones aplicadas."
+	
 
 docs:
 	@echo "Generando documentación con Sphinx..."
@@ -148,30 +98,10 @@ test-simulador:
 	python manage.py test simulador
 	@echo "Pruebas de simulador completadas."
 
-cargar-datos:
-	@echo "Cargando datos iniciales..."
-	python manage.py loaddata roles_data.json
-	python manage.py loaddata users_data.json
-	python manage.py loaddata clientes_data.json
-	python manage.py loaddata divisas_data.json
-	python manage.py loaddata medios_data.json
-	@echo "Datos iniciales cargados."
-
 run:
 	@echo "Ejecutando el servidor de desarrollo con recarga automática..."
 	poetry run python manage.py runserver 
 	@echo "Servidor detenido."
-
-db-init:
-	@echo "Inicializando la base de datos..."
-	poetry run python manage.py makemigrations
-	poetry run python manage.py migrate
-	poetry run python manage.py loaddata roles_data.json
-	poetry run python manage.py loaddata users_data.json
-	poetry run python manage.py loaddata clientes_data.json
-	poetry run python manage.py loaddata divisas_data.json
-	
-	@echo "Datos cargados."
 
 test-medios-acreditacion:
 	@echo "Ejecutando pruebas de medios de acreditación..."
@@ -180,8 +110,7 @@ test-medios-acreditacion:
 
 delete-migrations:
 	@echo "Eliminando archivos de migraciones..."
-	find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
-	find . -path "*/migrations/*.pyc" -delete
+	poetry run python scripts/delete_migrations.py
 	@echo "Archivos de migraciones eliminados."
 
 reset-db:
@@ -194,13 +123,7 @@ reset-db:
 	poetry run python scripts/delete_migrations.py
 	poetry run python manage.py makemigrations	
 	poetry run python manage.py migrate
-	poetry run python manage.py loaddata roles_data.json
-	poetry run python manage.py loaddata users_data.json
-	poetry run python manage.py loaddata clientes_data.json
-	poetry run python manage.py loaddata divisas_data.json
-	poetry run python manage.py loaddata bancos_data.json
-	poetry run python manage.py loaddata denominaciones_data.json
-	poetry run python manage.py loaddata billetera_data.json
+	poetry run python scripts/setup_system.py
 
 	@echo "Configurando roles de prueba..."
 	poetry run python manage.py sync_permissions
@@ -210,34 +133,12 @@ reset-db:
 	
 	@echo "Base de datos reiniciada y datos cargados."
 
-migraWin:
-	@echo "Realizando migraciones en Windows..."
-	poetry run python manage.py makemigrations
-	poetry run python manage.py migrate
-	@echo "Migraciones realizadas en Windows."
-
-sync:
-	@echo "Sincronizando repositorio local con el remoto..."
-	 poetry run python manage.py sync_permissions
-	@echo "Repositorio sincronizado."
-
 check:
 	@echo "Verificando el estado del proyecto..."
 	poetry run python manage.py check
 	@echo "Verificación completada."
 
-
-roles:
-	@echo "Sincronizando roles y permisos..."
-	python manage.py sync_permissions
-	python manage.py setup_test_roles --verbose
-	python manage.py sync_role_status
-	python manage.py create_dev_user
-	@echo "Roles y permisos sincronizados."
-
 test-fact:
 	@echo "Ejecutando pruebas de facturación electrónica..."
 	poetry run python manage.py test facturacion_electronica.tests
 	@echo "Pruebas de facturación electrónica completadas."
-
-

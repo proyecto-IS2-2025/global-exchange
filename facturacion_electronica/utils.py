@@ -264,3 +264,198 @@ def generar_facturas_pendientes():
             })
     
     return resultados
+
+
+# ============================================================================
+# FUNCIONES PARA GESTIÓN AUTOMÁTICA DE NÚMEROS DE FACTURA
+# ============================================================================
+
+def obtener_configuracion_facturacion():
+    """
+    Obtiene la configuración de facturación desde las variables de entorno.
+    
+    Returns:
+        dict con la configuración:
+            - numero_inicial: Primer número del rango asignado
+            - numero_final: Último número del rango asignado
+            - establecimiento: Código de establecimiento
+            - punto_expedicion: Código de punto de expedición
+    """
+    import os
+    return {
+        'numero_inicial': int(os.getenv('FACTURACION_NUMERO_INICIAL', '51')),
+        'numero_final': int(os.getenv('FACTURACION_NUMERO_FINAL', '100')),
+        'establecimiento': os.getenv('FACTURACION_ESTABLECIMIENTO', '001'),
+        'punto_expedicion': os.getenv('FACTURACION_PUNTO_EXPEDICION', '003')
+    }
+
+
+def extraer_numero_de_factura(numero_completo):
+    """
+    Extrae solo la parte numérica de un número de factura.
+    
+    Args:
+        numero_completo: str en formato "001-003-0000083" o "0000083"
+    
+    Returns:
+        int con el número extraído (ejemplo: 83)
+    """
+    if '-' in numero_completo:
+        # Formato: "001-003-0000083"
+        partes = numero_completo.split('-')
+        return int(partes[2])
+    else:
+        # Formato: "0000083"
+        return int(numero_completo)
+
+
+def formatear_numero_factura(numero, establecimiento='001', punto_expedicion='003'):
+    """
+    Formatea un número de factura al formato completo.
+    
+    Args:
+        numero: int o str con el número de factura (ejemplo: 83)
+        establecimiento: Código de establecimiento (default: '001')
+        punto_expedicion: Código de punto de expedición (default: '003')
+    
+    Returns:
+        str en formato "001-003-0000083"
+    """
+    numero_str = str(numero).zfill(7)
+    return f"{establecimiento}-{punto_expedicion}-{numero_str}"
+
+
+def obtener_proximo_numero_factura():
+    """
+    Obtiene automáticamente el próximo número de factura disponible.
+    
+    Esta función:
+    1. Consulta el SQL Proxy para obtener el último número usado (sincronizado entre todos)
+    2. Si no hay conexión, usa la base de datos local como fallback
+    3. Verifica que esté dentro del rango asignado al desarrollador
+    4. Retorna el siguiente número disponible
+    5. Es thread-safe (usa select_for_update)
+    
+    Returns:
+        str: Número de factura en formato "001-003-0000083"
+    
+    Raises:
+        ValueError: Si se alcanzó el límite del rango asignado
+        ValueError: Si el próximo número está fuera del rango permitido
+    
+    Example:
+        >>> numero = obtener_proximo_numero_factura()
+        >>> print(numero)
+        '001-003-0000083'
+    """
+    from django.db.models import Max
+    from django.db import transaction
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    config = obtener_configuracion_facturacion()
+    
+    with transaction.atomic():
+        # PASO 1: Intentar obtener el último número desde SQL Proxy (sincronizado)
+        proximo_numero = None
+        try:
+            from .services import SQLProxyService
+            service = SQLProxyService()
+            if service.conectar():
+                ultimo_numero_sql_proxy = service.obtener_ultimo_numero_desde_sql_proxy()
+                service.desconectar()
+                
+                if ultimo_numero_sql_proxy is not None:
+                    proximo_numero = ultimo_numero_sql_proxy + 1
+                    logger.info(f"[FACTURA] Número obtenido desde SQL Proxy: {proximo_numero}")
+        except Exception as e:
+            logger.warning(f"[FACTURA] No se pudo consultar SQL Proxy: {e}")
+        
+        # PASO 2: Fallback - usar la base de datos local si SQL Proxy no está disponible
+        if proximo_numero is None:
+            ultima_factura = FacturaElectronica.objects.select_for_update().aggregate(
+                Max('numero_factura')
+            )['numero_factura__max']
+            
+            if ultima_factura:
+                ultimo_numero = extraer_numero_de_factura(ultima_factura)
+                proximo_numero = ultimo_numero + 1
+                logger.info(f"[FACTURA] Número obtenido desde BD local: {proximo_numero}")
+            else:
+                # No hay facturas, usar el número inicial del rango
+                proximo_numero = config['numero_inicial']
+                logger.info(f"[FACTURA] No hay facturas previas, usando número inicial: {proximo_numero}")
+        
+        # PASO 3: Verificar que el número esté dentro del rango asignado
+        if proximo_numero < config['numero_inicial']:
+            logger.warning(f"[FACTURA] Número {proximo_numero} menor al inicial {config['numero_inicial']}, ajustando...")
+            proximo_numero = config['numero_inicial']
+        
+        if proximo_numero > config['numero_final']:
+            raise ValueError(
+                f"⚠️ LÍMITE DE RANGO ALCANZADO\n"
+                f"Has usado todas las facturas de tu rango ({config['numero_inicial']}-{config['numero_final']}).\n"
+                f"El siguiente número sería {proximo_numero}, pero está fuera de tu rango.\n"
+                f"Coordina un nuevo rango con tu equipo y actualiza las variables de entorno:\n"
+                f"  FACTURACION_NUMERO_INICIAL\n"
+                f"  FACTURACION_NUMERO_FINAL\n"
+                f"\nEjecuta: poetry run python obtener_proximo_numero.py"
+            )
+        
+        logger.info(f"[FACTURA] Próximo número a usar: {proximo_numero}")
+        
+        # Formatear y retornar
+        return formatear_numero_factura(
+            proximo_numero,
+            config['establecimiento'],
+            config['punto_expedicion']
+        )
+
+
+def obtener_estadisticas_rango():
+    """
+    Obtiene estadísticas de uso del rango asignado.
+    
+    Returns:
+        dict con:
+            - total_rango: Total de números en el rango
+            - usadas: Cantidad de facturas generadas en el rango
+            - disponibles: Cantidad de números disponibles
+            - porcentaje_usado: Porcentaje de uso del rango
+            - numero_inicial: Primer número del rango
+            - numero_final: Último número del rango
+            - proximo_numero: Próximo número que se usará
+    """
+    config = obtener_configuracion_facturacion()
+    
+    # Total de números en el rango
+    total_rango = config['numero_final'] - config['numero_inicial'] + 1
+    
+    # Contar facturas en el rango
+    rango_inicio_str = formatear_numero_factura(config['numero_inicial'])
+    rango_fin_str = formatear_numero_factura(config['numero_final'])
+    
+    usadas = FacturaElectronica.objects.filter(
+        numero_factura__gte=rango_inicio_str,
+        numero_factura__lte=rango_fin_str
+    ).count()
+    
+    # Calcular disponibles
+    disponibles = total_rango - usadas
+    porcentaje_usado = (usadas / total_rango) * 100 if total_rango > 0 else 0
+    
+    # Próximo número
+    try:
+        proximo = obtener_proximo_numero_factura()
+    except ValueError:
+        proximo = "Rango completo"
+    
+    return {
+        'total_rango': total_rango,
+        'usadas': usadas,
+        'disponibles': disponibles,
+        'porcentaje_usado': round(porcentaje_usado, 1),
+        'numero_inicial': config['numero_inicial'],
+        'numero_final': config['numero_final'],
+        'proximo_numero': proximo
+    }
