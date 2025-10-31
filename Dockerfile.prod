@@ -11,10 +11,16 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Instala Gunicorn y las dependencias de Poetry
+# Instala dependencias del sistema necesarias para compilar psycopg2
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     ca-certificates \
+    gcc \
+    g++ \
+    make \
+    libc6-dev \
+    libpq-dev \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir gunicorn "poetry==${POETRY_VERSION}"
 
@@ -28,6 +34,12 @@ RUN python manage.py collectstatic --noinput
 
 # --- Etapa 2: Final (la imagen ligera de producción) ---
 FROM python:3.13-slim
+
+# Instala las dependencias de runtime necesarias para psycopg2
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Crea el usuario de la aplicación
 RUN useradd --create-home --shell /bin/bash appuser

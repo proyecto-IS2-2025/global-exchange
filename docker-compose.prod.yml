@@ -23,6 +23,8 @@ services:
       - SECURE_SSL_REDIRECT=False
       - SESSION_COOKIE_SECURE=False
       - CSRF_COOKIE_SECURE=False
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       db:
         condition: service_healthy

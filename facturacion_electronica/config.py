@@ -5,12 +5,12 @@ Datos proporcionados por el profesor para el Equipo 7
 
 # Configuración del SQL Proxy
 SQL_PROXY_CONFIG = {
-    'host': 'localhost',
+    'host': 'host.docker.internal',  # Usar host.docker.internal para acceder desde Docker
     'port': 45432,
     'database': 'fs_proxy_bd',
     'user': 'fs_proxy_user',
     'password': 'p123456',
-    'kude_url': 'http://localhost:40080/kude'  # URL para acceder a los PDFs y XMLs generados
+    'kude_url': 'http://host.docker.internal:40080/kude'  # URL para acceder a los PDFs y XMLs generados
 }
 
 # Configuración del ESI (Equipo 7)
@@ -49,10 +49,10 @@ TIMBRADO_CONFIG = {
 
 # Rango de numeración asignado al equipo 7
 FACTURACION_CONFIG = {
-    'numero_inicial': 51,
+    'numero_inicial': 83,  # CAMBIADO: Empezar desde 83 porque 51-82 ya fueron usados por compañeros
     'numero_final': 100,
-    'numero_actual': 51,  # Se irá incrementando con cada factura
-    'formato_numero': '0000051'  # Formato de 7 dígitos con ceros a la izquierda
+    'numero_actual': 83,  # Actualizado: últimas facturas usadas por compañeros fueron hasta 082
+    'formato_numero': '0000083'  # Formato de 7 dígitos con ceros a la izquierda - próxima factura será 083
 }
 
 # Actividades Económicas (según XML del profesor)

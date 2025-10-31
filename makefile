@@ -1,4 +1,4 @@
-.PHONY: dev-up dev-down prod-up prod-down docker-loaddata-dev docker-load-prod docker-exec-dev docker-exec-prod docker-migrate-dev docker-migrate-prod docs test-medios-pago test-divisas test-simulador local-loaddata local-migrate help
+.PHONY: dev-up dev-down prod-up prod-up-foreground prod-logs prod-down docker-loaddata-dev docker-load-prod docker-exec-dev docker-exec-prod docker-migrate-dev docker-migrate-prod docs test-medios-pago test-divisas test-simulador local-loaddata local-migrate help
 #Variables de los nombres de proyecto para mantener los entornos separados
 #Cada miembro del equipo usará el mismo nombre de proyecto, eliminando conflictos.
 
@@ -43,6 +43,15 @@ prod-up:
 	@echo "Levantando el entorno de producción..."
 	docker compose -p $(PROD_PROJECT_NAME) -f docker-compose.prod.yml up --build -d
 	@echo "Entorno de producción levantado. Accede en http://localhost"
+
+prod-up-foreground:
+	@echo "Levantando el entorno de producción en primer plano (ver logs en terminal)..."
+	@echo "Presiona Ctrl+C para detener los contenedores."
+	docker compose -p $(PROD_PROJECT_NAME) -f docker-compose.prod.yml up --build
+
+prod-logs:
+	@echo "Siguiendo logs del entorno de producción..."
+	docker compose -p $(PROD_PROJECT_NAME) -f docker-compose.prod.yml logs -f --tail=200
 
 prod-down:
 	@echo "Deteniendo y limpiando el entorno de producción..."

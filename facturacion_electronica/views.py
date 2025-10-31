@@ -238,14 +238,13 @@ def detalle_factura(request, factura_id):
     
     # AUTO-SINCRONIZAR: Si la factura está en estado procesando o sin CDC válido, actualizar desde SQL Proxy
     if factura.estado in ['confirmado', 'borrador'] or not factura.cdc or factura.cdc == '0':
+        logger = logging.getLogger(__name__)  # Definir logger ANTES de usarlo
         try:
             from .utils import actualizar_estado_factura
             actualizar_estado_factura(factura)
             factura.refresh_from_db()
             logger.info(f"🔄 Factura {factura.numero_factura} sincronizada - Estado: {factura.estado}, CDC: {factura.cdc[:20] if factura.cdc and factura.cdc != '0' else 'pendiente'}...")
         except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
             logger.warning(f"No se pudo sincronizar factura {factura.numero_factura}: {e}")
     
     # AUTO-BUSCAR PDF: Si está aprobada pero no tiene URL del PDF completa, buscar en filesystem
