@@ -63,14 +63,13 @@
     "pk": 4,
     "fields": {
       "cliente": 1,
-      "medio_de_pago": 2,
+      "medio_de_pago": 1,
       "datos_campos": {
+        "RUC": "12345678",
+        "CBU/CVU": "4222-2222-2222-2222-0000-00",
         "Entidad": "Banco Guaraní",
-        "Mes de vencimiento": "06",
-        "Número de tarjeta": "4222 2222 2222 2222",
-        "Año de vencimiento": "2026",
-        "Código de seguridad": "456",
-        "Nombre en la tarjeta": "Tarjeta de Débito Banco Guaraní"
+        "Número de cuenta": "4222 2222 2222 2222",
+        "Titular de la cuenta": "María - Tarjeta de Débito"
       },
       "es_activo": true,
       "es_principal": false,
@@ -84,14 +83,13 @@
     "pk": 5,
     "fields": {
       "cliente": 1,
-      "medio_de_pago": 2,
+      "medio_de_pago": 1,
       "datos_campos": {
+        "RUC": "12345678",
+        "CBU/CVU": "4444-4444-4444-4444-0000-00",
         "Entidad": "Banco Guaraní",
-        "Mes de vencimiento": "05",
-        "Número de tarjeta": "4444 4444 4444 4444",
-        "Año de vencimiento": "2029",
-        "Código de seguridad": "321",
-        "Nombre en la tarjeta": "Tarjeta de Crédito Banco Guaraní"
+        "Número de cuenta": "4444 4444 4444 4444",
+        "Titular de la cuenta": "María - Tarjeta de Crédito"
       },
       "es_activo": true,
       "es_principal": false,
