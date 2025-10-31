@@ -165,6 +165,7 @@ db-init:
 	poetry run python manage.py loaddata users_data.json
 	poetry run python manage.py loaddata clientes_data.json
 	poetry run python manage.py loaddata divisas_data.json
+	
 	@echo "Datos cargados."
 
 test-medios-acreditacion:
