@@ -21,9 +21,11 @@
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <strong>{{ factura.numero_factura }}</strong>
                             {% if factura.estado == 'aprobado' %}
-                                <span class="badge bg-success">Aprobado</span>
+                                <span class="badge bg-success"><i class="fas fa-check-circle"></i> Aprobado</span>
                             {% elif factura.estado == 'rechazado' %}
-                                <span class="badge bg-danger">Rechazado</span>
+                                <span class="badge bg-danger"><i class="fas fa-times-circle"></i> Rechazado</span>
+                            {% elif factura.estado == 'confirmado' or factura.estado == 'borrador' %}
+                                <span class="badge bg-warning text-dark"><i class="fas fa-hourglass-half"></i> Procesando</span>
                             {% else %}
                                 <span class="badge bg-secondary">{{ factura.estado|title }}</span>
                             {% endif %}
@@ -37,18 +39,41 @@
                             </p>
                             {% if factura.cdc %}
                             <p class="mb-2">
-                                <strong>CDC:</strong> <small>{{ factura.cdc }}</small>
+                                <strong>CDC:</strong> <small class="font-monospace">{{ factura.cdc }}</small>
                             </p>
+                            {% endif %}
+                            
+                            {# Mensaje de procesamiento #}
+                            {% if factura.estado == 'confirmado' or factura.estado == 'borrador' %}
+                            <div class="alert alert-warning p-2 mb-0 mt-2">
+                                <small>
+                                    <i class="fas fa-spinner fa-spin"></i> 
+                                    <strong>Procesando en SIFEN...</strong><br>
+                                    Espere 30-60 segundos y presione <kbd>F5</kbd> para actualizar
+                                </small>
+                            </div>
                             {% endif %}
                         </div>
                         <div class="card-footer">
                             <a href="{% url 'facturacion:detalle_factura' factura.id %}" class="btn btn-sm btn-primary">
                                 <i class="fas fa-eye"></i> Ver Detalle
                             </a>
-                            {% if factura.url_kude_pdf %}
-                            <a href="{% url 'facturacion:descargar_pdf' factura.id %}" class="btn btn-sm btn-success" target="_blank">
-                                <i class="fas fa-file-pdf"></i> Descargar PDF
-                            </a>
+                            
+                            {# Botón PDF - Solo activo si tiene CDC válido Y está aprobado #}
+                            {% if factura.estado == 'aprobado' and factura.cdc and factura.cdc != '0' %}
+                                {% if factura.url_kude_pdf %}
+                                <a href="{% url 'facturacion:descargar_pdf' factura.id %}" class="btn btn-sm btn-success" target="_blank">
+                                    <i class="fas fa-file-pdf"></i> Descargar PDF
+                                </a>
+                                {% else %}
+                                <button class="btn btn-sm btn-secondary" disabled title="PDF generándose...">
+                                    <i class="fas fa-file-pdf"></i> PDF pendiente
+                                </button>
+                                {% endif %}
+                            {% elif factura.estado == 'confirmado' or factura.estado == 'borrador' or not factura.cdc or factura.cdc == '0' %}
+                                <button class="btn btn-sm btn-warning text-dark" disabled title="Esperando aprobación de SIFEN. Presione F5 para actualizar.">
+                                    <i class="fas fa-hourglass-half"></i> Procesando...
+                                </button>
                             {% endif %}
                         </div>
                     </div>

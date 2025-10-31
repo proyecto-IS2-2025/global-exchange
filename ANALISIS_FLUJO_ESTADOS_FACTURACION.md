@@ -1,0 +1,242 @@
+# 🔍 Análisis del Flujo de Estados de Facturación
+
+## 📊 Flujo Actual del Sistema
+
+### 1️⃣ Generación Inicial de Factura
+**Función:** `generar_factura_automatica()` en `services.py`
+
+```python
+# PASO 1: Se crea el documento en SQL Proxy con estado "Confirmado"
+UPDATE public.de
+SET estado = 'Confirmado'
+WHERE id = {de_id};
+
+# PASO 2: Se crea el registro en Django con estado "confirmado"
+factura = FacturaElectronica.objects.create(
+    estado='confirmado',  # ← Estado en Django
+    estado_sifen='Procesando',  # ← Estado inicial de SIFEN
+    descripcion_sifen='Factura enviada al SIFEN para procesamiento...'
+)
+```
+
+**Estados iniciales:**
+- ✅ SQL Proxy (tabla `de`): `estado = 'Confirmado'`
+- ✅ Django (tabla `FacturaElectronica`): `estado = 'confirmado'`
+- ⏳ SIFEN: No procesado aún
+
+---
+
+### 2️⃣ Procesamiento por SQL Proxy Scheduler
+
+**¿Qué hace el scheduler del SQL Proxy?**
+
+El SQL Proxy tiene un **proceso automático** (scheduler) que:
+
+1. **Busca** documentos electrónicos con `estado = 'Confirmado'`
+2. **Envía** esos documentos al SIFEN mediante API
+3. **Actualiza** el estado en la tabla `de` según la respuesta de SIFEN:
+   - `estado_sifen = 'Aprobado'` → SIFEN aceptó la factura
+   - `cdc = 'XXXXXXXXX'` → Código de Control único
+   - `desc_sifen = 'Aprobado por SIFEN'`
+   - **Genera** el archivo PDF/XML en `/volumes/web/kude/YYYYMM/`
+
+**⏱️ Tiempo estimado:** 30-60 segundos
+
+**Evidencia en código:**
+```python
+# services.py línea 269
+# Actualizar estado a "Confirmado" para que el scheduler lo procese
+```
+
+---
+
+### 3️⃣ Sincronización con Django
+
+**Función:** `actualizar_estado_factura()` en `services.py`
+
+Esta función se ejecuta:
+- ✅ **Automáticamente** cada 30 segundos (comando `sincronizar_facturas --loop`)
+- ✅ **Manualmente** cuando el usuario visita `/facturacion/mis-facturas/`
+- ✅ **Al descargar** un PDF/XML
+
+**Proceso:**
+```python
+# 1. Consulta el estado en SQL Proxy
+estado_sql = service.consultar_estado_factura(numero_documento)
+
+# 2. Actualiza el registro en Django
+factura.estado_sifen = estado_sql.get('estado_sifen', '')  # 'Aprobado'
+factura.cdc = estado_sql.get('cdc', '')  # CDC único
+
+# 3. Si SIFEN aprobó, cambia el estado Django
+if 'aprobado' in estado_sifen_lower:
+    factura.estado = 'aprobado'  # ← AQUÍ SE APRUEBA
+    factura.fecha_aprobacion = datetime.now()
+```
+
+---
+
+## 🎯 Respuesta a tu Pregunta
+
+### ¿El sistema confirma automáticamente después de que se aprobó?
+
+**SÍ, PERO HAY UNA CONFUSIÓN DE TÉRMINOS:**
+
+1. **"Confirmado"** ≠ **"Aprobado"**
+
+2. **Flujo correcto:**
+   ```
+   CREACIÓN (instantáneo)
+   └─ estado = 'confirmado' (Django)
+   └─ estado = 'Confirmado' (SQL Proxy)
+   
+   ↓ (30-60 segundos - Scheduler del SQL Proxy envía a SIFEN)
+   
+   APROBACIÓN (cuando SIFEN responde OK)
+   └─ estado_sifen = 'Aprobado' (SQL Proxy)
+   └─ cdc = 'XXXX' (SQL Proxy)
+   └─ Genera PDF/XML
+   
+   ↓ (siguiente sincronización - cada 30 seg o al consultar)
+   
+   SINCRONIZACIÓN (Django se entera)
+   └─ estado = 'aprobado' (Django)
+   └─ fecha_aprobacion = now()
+   ```
+
+3. **Estados en Django:**
+   - `confirmado` = Factura creada, enviada a SQL Proxy, esperando respuesta SIFEN
+   - `aprobado` = SIFEN aceptó la factura, tiene CDC, PDF disponible
+   - `rechazado` = SIFEN rechazó la factura (error en datos)
+
+---
+
+## ⚠️ El Problema que Detectaste
+
+### Lo que NO tiene sentido:
+
+Actualmente cuando se genera una factura:
+```python
+estado='confirmado',  # ← Se marca como "confirmado" INMEDIATAMENTE
+estado_sifen='Procesando',  # ← Pero SIFEN no ha procesado aún
+```
+
+**Esto es CORRECTO** porque:
+- ✅ "Confirmado" significa: "confirmado para enviar a SIFEN"
+- ✅ NO significa "aprobado por SIFEN"
+- ✅ Es el estado que el scheduler del SQL Proxy necesita ver para procesar
+
+### Lo que SÍ tiene sentido verificar:
+
+**¿Cuándo se marca como `aprobado` en Django?**
+
+Solo cuando `actualizar_estado_factura()` detecta que:
+```python
+if 'aprobado' in estado_sifen_lower:  # SIFEN respondió "Aprobado"
+    factura.estado = 'aprobado'  # ← SOLO AQUÍ
+```
+
+---
+
+## 🔧 ¿Dónde se Confirma el Estado?
+
+### Caso 1: Sincronización Automática (Recomendado)
+
+**Comando:**
+```bash
+python manage.py sincronizar_facturas --loop
+```
+
+**Proceso:**
+- Cada 30 segundos busca facturas con `estado='confirmado'`
+- Consulta SQL Proxy si SIFEN ya respondió
+- Si `estado_sifen='Aprobado'` → actualiza Django a `estado='aprobado'`
+
+**¿Está corriendo este comando?** 🤔
+
+---
+
+### Caso 2: Sincronización Manual (Vista)
+
+**Archivo:** `facturacion_electronica/views.py`
+
+```python
+# En la vista de "Mis Facturas" (líneas 40-50)
+facturas_pendientes = FacturaElectronica.objects.filter(
+    Q(cdc__isnull=True) | Q(estado__in=['confirmado', 'borrador'])
+)
+for factura in facturas_pendientes:
+    actualizar_estado_factura(factura)  # ← Actualiza al cargar la página
+```
+
+**¿Funciona esto?** SÍ, pero el usuario tiene que **esperar 30-60 segundos** y **recargar la página**
+
+---
+
+### Caso 3: Al Descargar PDF (Vista de descarga)
+
+```python
+# En descargar_pdf (líneas 290-298)
+if factura.estado != 'aprobado':
+    # Intentar actualizar antes de descargar
+    actualizar_estado_factura(factura)
+    factura.refresh_from_db()
+    
+    if factura.estado != 'aprobado':
+        # Todavía no está aprobado
+        return render(request, 'facturacion_electronica/factura_pendiente.html')
+```
+
+---
+
+## 🎯 Conclusión
+
+### El flujo ACTUAL es:
+
+1. ✅ **Usuario compra divisa** → Transacción exitosa
+2. ✅ **Se genera factura automáticamente** → `estado='confirmado'`
+3. ⏳ **SQL Proxy scheduler procesa** (30-60 seg) → Envía a SIFEN
+4. ✅ **SIFEN aprueba** → SQL Proxy recibe CDC, genera PDF
+5. ⏳ **Sincronización detecta** (siguiente loop o carga de página)
+6. ✅ **Django se actualiza** → `estado='aprobado'`
+
+### ¿Es correcto? 🤔
+
+**DEPENDE:**
+
+- ✅ **Lógicamente correcto:** El estado "confirmado" significa "listo para enviar"
+- ✅ **Técnicamente correcto:** El scheduler del SQL Proxy se encarga del envío
+- ⚠️ **UX mejorable:** El usuario ve "Procesando" durante 30-60 segundos
+
+### Recomendación:
+
+El flujo está **BIEN DISEÑADO**, pero deberías:
+
+1. **Verificar que corra el sincronizador:**
+   ```bash
+   python manage.py sincronizar_facturas --loop
+   ```
+
+2. **Mejorar la UI para mostrar:**
+   - ⏳ "Factura en procesamiento (30-60 seg)"
+   - 🔄 Auto-refresh cada 10 segundos
+   - ✅ "Factura aprobada - Descargar PDF"
+
+3. **NO cambiar la lógica de estados** (está correcta)
+
+---
+
+## 🔍 Para Verificar
+
+**Pregunta clave:** ¿Está corriendo el comando de sincronización?
+
+```bash
+# Ver procesos
+ps aux | grep sincronizar_facturas
+
+# Si NO está corriendo, ejecutar:
+cd /home/jose/proyecto_is2/global-exchange
+poetry run python manage.py sincronizar_facturas --loop &
+```
+
+**Sin este comando, las facturas quedan en "confirmado" para siempre** hasta que el usuario recargue la página de "Mis Facturas".

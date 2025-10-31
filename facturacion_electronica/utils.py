@@ -148,9 +148,10 @@ def actualizar_estado_factura(factura):
             factura.descripcion_sifen = estado.get('desc_sifen', '')
             factura.error_sifen = estado.get('error_sifen', '')
             
-            # Si tiene CDC, actualizar
-            if estado.get('cdc'):
-                factura.cdc = estado['cdc']
+            # ⭐ Si tiene CDC VÁLIDO (no '0'), actualizar
+            cdc_recibido = estado.get('cdc', '')
+            if cdc_recibido and cdc_recibido != '0':
+                factura.cdc = cdc_recibido
                 factura.estado = 'aprobado'
                 factura.fecha_aprobacion = timezone.now()
                 

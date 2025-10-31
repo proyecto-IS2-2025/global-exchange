@@ -102,12 +102,12 @@ class SQLProxyService:
         try:
             # Buscar el último número usado en la base de datos
             self.cursor.execute(f"""
-                SELECT MAX(CAST(dNumDoc AS INTEGER)) as max_num
+                SELECT MAX(CAST(dnumdoc AS INTEGER)) as max_num
                 FROM public.de
-                WHERE dEst = '{TIMBRADO_CONFIG['establecimiento']}'
-                AND dPunExp = '{TIMBRADO_CONFIG['punto_expedicion']}'
-                AND CAST(dNumDoc AS INTEGER) >= {FACTURACION_CONFIG['numero_inicial']}
-                AND CAST(dNumDoc AS INTEGER) <= {FACTURACION_CONFIG['numero_final']}
+                WHERE dest = '{TIMBRADO_CONFIG['establecimiento']}'
+                AND dpunexp = '{TIMBRADO_CONFIG['punto_expedicion']}'
+                AND CAST(dnumdoc AS INTEGER) >= {FACTURACION_CONFIG['numero_inicial']}
+                AND CAST(dnumdoc AS INTEGER) <= {FACTURACION_CONFIG['numero_final']}
             """)
             result = self.cursor.fetchone()
             
@@ -150,29 +150,29 @@ class SQLProxyService:
             # Insertar el documento electrónico
             insert_de_query = f"""
             INSERT INTO public.de
-            (iTiDE, dFeEmiDE, dEst, dPunExp, dNumDoc, CDC, dSerieNum, estado, 
+            (itide, dfeemide, dest, dpunexp, dnumdoc, cdc, dserienum, estado, 
             estado_sifen, desc_sifen, error_sifen, fch_sifen, 
             estado_can, desc_can, error_can, fch_can, 
             estado_inu, desc_inu, error_inu, fch_inu, 
-            iTipEmi, dNumTim, dFeIniT, iTipTra, iTImp, cMoneOpe, dTiCam, dInfoFisc, 
-            dRucEm, dDVEmi, iTipCont, dNomEmi, dDirEmi, dNumCas, 
-            cDepEmi, dDesDepEmi, cCiuEmi, dDesCiuEmi, dTelEmi, dEmailE, 
-            iNatRec, iTiOpe, cPaisRec, iTiContRec, dRucRec, dDVRec, 
-            iTipIDRec, dDTipIDRec, dNumIDRec, dNomRec, dEmailRec, 
-            dDirRec, dNumCasRec, cDepRec, dDesDepRec, cCiuRec, dDesCiuRec, 
-            iNatVen, iTipIDVen, dNumIDVen, dNomVen, dDirVen, dNumCasVen, 
-            cDepVen, dDesDepVen, cCiuVen, dDesCiuVen, 
-            dDirProv, cDepProv, dDesDepProv, cCiuProv, dDesCiuProv, 
-            iMotEmi, iIndPres, iCondOpe, dPlazoCre, 
-            dModCont, dEntCont, dAnoCont, dSecCont, dFeCodCont, 
-            dSisFact, dInfAdic, 
-            iMotEmiNR, iRespEmiNR, 
-            iTipTrans, iModTrans, iRespFlete, dIniTras, dFinTras, 
-            dDirLocSal, dNumCasSal, cDepSal, dDesDepSal, cCiuSal, dDesCiuSal, 
-            dDirLocEnt, dNumCasEnt, cDepEnt, dDesDepEnt, cCiuEnt, dDesCiuEnt, 
-            dTiVehTras, dMarVeh, dTipIdenVeh, dNroIDVeh, dNroMatVeh, 
-            iNatTrans, dNomTrans, dRucTrans, dDVTrans, iTipIDTrans, dNumIDTrans, 
-            dNumIDChof, dNomChof, 
+            itipemi, dnumtim, dfeinit, itiptra, itimp, cmoneope, dticam, dinfofisc, 
+            drucem, ddvemi, itipcont, dnomemi, ddiremi, dnumcas, 
+            cdepemi, ddesdepemi, cciuemi, ddesciuemi, dtelemi, demaile, 
+            inatrec, itiope, cpaisrec, iticontrec, drucrec, ddvrec, 
+            itipidrec, ddtipidrec, dnumidrec, dnomrec, demailrec, 
+            ddirrec, dnumcasrec, cdeprec, ddesdeprec, cciurec, ddesciurec, 
+            inatven, itipidven, dnumidven, dnomven, ddirven, dnumcasven, 
+            cdepven, ddesdepven, cciuven, ddesciuven, 
+            ddirprov, cdepprov, ddesdepprov, cciuprov, ddesciuprov, 
+            imotemi, iindpres, icondope, dplazocre, 
+            dmodcont, dentcont, danocont, dseccont, dfecodcont, 
+            dsisfact, dinfadic, 
+            imoteminr, irespeminr, 
+            itiptrans, imodtrans, irespflete, dinitras, dfintras, 
+            ddirlocsal, dnumcassal, cdepsal, ddesdepsal, cciusal, ddesciusal, 
+            ddirlocent, dnumcasent, cdepent, ddesdepent, cciuent, ddesciuent, 
+            dtivehtras, dmarveh, dtipidenveh, dnroidveh, dnromatveh, 
+            inattrans, dnomtrans, dructrans, ddvtrans, itipidtrans, dnumidtrans, 
+            dnumidchof, dnomchof, 
             fch_ins, fch_upd)
             VALUES(
                 '1', '{fecha_emision}', '{TIMBRADO_CONFIG['establecimiento']}', 
@@ -305,7 +305,7 @@ class SQLProxyService:
             SELECT id, dnumdoc, estado, estado_sifen, desc_sifen, 
                    error_sifen, fch_sifen, cdc
             FROM public.de
-            WHERE dNumDoc = '{numero_factura}'
+            WHERE dnumdoc = '{numero_factura}'
             ORDER BY id DESC
             LIMIT 1;
             """
@@ -353,29 +353,29 @@ class SQLProxyService:
         try:
             insert_query = f"""
             INSERT INTO public.de
-            (iTiDE, dFeEmiDE, dEst, dPunExp, dNumDoc, CDC, dSerieNum, estado, 
+            (itide, dfeemide, dest, dpunexp, dnumdoc, cdc, dserienum, estado, 
             estado_sifen, desc_sifen, error_sifen, fch_sifen, 
             estado_can, desc_can, error_can, fch_can, 
             estado_inu, desc_inu, error_inu, fch_inu, 
-            iTipEmi, dNumTim, dFeIniT, iTipTra, iTImp, cMoneOpe, dTiCam, dInfoFisc, 
-            dRucEm, dDVEmi, iTipCont, dNomEmi, dDirEmi, dNumCas, 
-            cDepEmi, dDesDepEmi, cCiuEmi, dDesCiuEmi, dTelEmi, dEmailE, 
-            iNatRec, iTiOpe, cPaisRec, iTiContRec, dRucRec, dDVRec, 
-            iTipIDRec, dDTipIDRec, dNumIDRec, dNomRec, dEmailRec, 
-            dDirRec, dNumCasRec, cDepRec, dDesDepRec, cCiuRec, dDesCiuRec, 
-            iNatVen, iTipIDVen, dNumIDVen, dNomVen, dDirVen, dNumCasVen, 
-            cDepVen, dDesDepVen, cCiuVen, dDesCiuVen, 
-            dDirProv, cDepProv, dDesDepProv, cCiuProv, dDesCiuProv, 
-            iMotEmi, iIndPres, iCondOpe, dPlazoCre, 
-            dModCont, dEntCont, dAnoCont, dSecCont, dFeCodCont, 
-            dSisFact, dInfAdic, 
-            iMotEmiNR, iRespEmiNR, 
-            iTipTrans, iModTrans, iRespFlete, dIniTras, dFinTras, 
-            dDirLocSal, dNumCasSal, cDepSal, dDesDepSal, cCiuSal, dDesCiuSal, 
-            dDirLocEnt, dNumCasEnt, cDepEnt, dDesDepEnt, cCiuEnt, dDesCiuEnt, 
-            dTiVehTras, dMarVeh, dTipIdenVeh, dNroIDVeh, dNroMatVeh, 
-            iNatTrans, dNomTrans, dRucTrans, dDVTrans, iTipIDTrans, dNumIDTrans, 
-            dNumIDChof, dNomChof, 
+            itipemi, dnumtim, dfeinit, itiptra, itimp, cmoneope, dticam, dinfofisc, 
+            drucem, ddvemi, itipcont, dnomemi, ddiremi, dnumcas, 
+            cdepemi, ddesdepemi, cciuemi, ddesciuemi, dtelemi, demaile, 
+            inatrec, itiope, cpaisrec, iticontrec, drucrec, ddvrec, 
+            itipidrec, ddtipidrec, dnumidrec, dnomrec, demailrec, 
+            ddirrec, dnumcasrec, cdeprec, ddesdeprec, cciurec, ddesciurec, 
+            inatven, itipidven, dnumidven, dnomven, ddirven, dnumcasven, 
+            cdepven, ddesdepven, cciuven, ddesciuven, 
+            ddirprov, cdepprov, ddesdepprov, cciuprov, ddesciuprov, 
+            imotemi, iindpres, icondope, dplazocre, 
+            dmodcont, dentcont, danocont, dseccont, dfecodcont, 
+            dsisfact, dinfadic, 
+            imoteminr, irespeminr, 
+            itiptrans, imodtrans, irespflete, dinitras, dfintras, 
+            ddirlocsal, dnumcassal, cdepsal, ddesdepsal, cciusal, ddesciusal, 
+            ddirlocent, dnumcasent, cdepent, ddesdepent, cciuent, ddesciuent, 
+            dtivehtras, dmarveh, dtipidenveh, dnroidveh, dnromatveh, 
+            inattrans, dnomtrans, dructrans, ddvtrans, itipidtrans, dnumidtrans, 
+            dnumidchof, dnomchof, 
             fch_ins, fch_upd)
             VALUES(
                 '1', '', '{TIMBRADO_CONFIG['establecimiento']}', 
@@ -473,6 +473,8 @@ def generar_factura_automatica(transaccion):
             #     cliente_dv = '0'
             
             # Preparar items de la factura
+            # ✅ IMPORTANTE: La compraventa de divisas es EXENTA de IVA según la ley paraguaya
+            # Por lo tanto, afectacion_iva='3' (EXENTO), tasa_iva='0', proporcion_iva='0'
             descripcion = f"Compra de {transaccion.monto_destino} {transaccion.divisa_destino.code}"
             monto_pyg = float(transaccion.monto_origen)  # Monto en guaraníes
             
@@ -481,9 +483,9 @@ def generar_factura_automatica(transaccion):
                 'cantidad': 1,
                 'precio_unitario': monto_pyg,
                 'descuento': 0,
-                'afectacion_iva': '1',  # Gravado
-                'proporcion_iva': '100',
-                'tasa_iva': '10'  # IVA 10%
+                'afectacion_iva': '3',  # ✅ EXENTO (compraventa de divisas)
+                'proporcion_iva': '0',  # ✅ 0% de proporción gravada
+                'tasa_iva': '0'  # ✅ Sin IVA
             }]
             
             # Datos para el SQL Proxy

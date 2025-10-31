@@ -35,14 +35,13 @@ def lista_facturas(request):
     facturas = FacturaElectronica.objects.all().select_related('transaccion').order_by('-fecha_emision')
     
     # ═══ AUTO-SINCRONIZAR FACTURAS PENDIENTES ═══
-    # Buscar facturas sin CDC o sin PDF
+    # Buscar facturas sin CDC válido o en estado pendiente
     facturas_pendientes = FacturaElectronica.objects.filter(
-        Q(cdc__isnull=True) | Q(estado__in=['confirmado', 'borrador'])
+        Q(cdc__isnull=True) | Q(cdc='0') | Q(estado__in=['confirmado', 'borrador'])
     )
     facturas_sin_pdf = FacturaElectronica.objects.filter(
-        estado='aprobado',
-        cdc__isnull=False
-    ).exclude(url_kude_pdf__contains='.pdf')
+        estado='aprobado'
+    ).exclude(cdc__isnull=True).exclude(cdc='0').exclude(url_kude_pdf__contains='.pdf')
     
     # Sincronizar estados desde SQL Proxy
     for factura in facturas_pendientes:
@@ -117,14 +116,13 @@ def mis_facturas(request):
     ).select_related('transaccion').order_by('-fecha_emision')
     
     # ═══ AUTO-SINCRONIZAR FACTURAS PENDIENTES ═══
-    # Buscar facturas sin CDC o sin PDF (solo las del usuario)
+    # Buscar facturas sin CDC válido o en estado pendiente
     facturas_pendientes = facturas.filter(
-        Q(cdc__isnull=True) | Q(estado__in=['confirmado', 'borrador'])
+        Q(cdc__isnull=True) | Q(cdc='0') | Q(estado__in=['confirmado', 'borrador'])
     )
     facturas_sin_pdf = facturas.filter(
-        estado='aprobado',
-        cdc__isnull=False
-    ).exclude(url_kude_pdf__contains='.pdf')
+        estado='aprobado'
+    ).exclude(cdc__isnull=True).exclude(cdc='0').exclude(url_kude_pdf__contains='.pdf')
     
     # Sincronizar estados desde SQL Proxy
     for factura in facturas_pendientes:
@@ -185,12 +183,13 @@ def detalle_factura(request, factura_id):
         pk=factura_id
     )
     
-    # AUTO-SINCRONIZAR: Si la factura está en estado procesando y no tiene CDC, actualizar desde SQL Proxy
-    if factura.estado in ['confirmado', 'borrador'] and not factura.cdc:
+    # AUTO-SINCRONIZAR: Si la factura está en estado procesando o sin CDC válido, actualizar desde SQL Proxy
+    if factura.estado in ['confirmado', 'borrador'] or not factura.cdc or factura.cdc == '0':
         try:
             from .utils import actualizar_estado_factura
             actualizar_estado_factura(factura)
             factura.refresh_from_db()
+            logger.info(f"🔄 Factura {factura.numero_factura} sincronizada - Estado: {factura.estado}, CDC: {factura.cdc[:20] if factura.cdc and factura.cdc != '0' else 'pendiente'}...")
         except Exception as e:
             import logging
             logger = logging.getLogger(__name__)
