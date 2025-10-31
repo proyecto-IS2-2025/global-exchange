@@ -142,3 +142,7 @@ check:
 	poetry run python manage.py check
 	@echo "Verificación completada."
 
+test-fact:
+	@echo "Ejecutando pruebas de facturación electrónica..."
+	poetry run python manage.py test facturacion_electronica.tests
+	@echo "Pruebas de facturación electrónica completadas."

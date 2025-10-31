@@ -142,6 +142,7 @@ def lista_facturas(request):
 
 
 @login_required
+@require_permission('facturacion_electronica.view_facturas_propias')
 def mis_facturas(request):
     """
     Lista las facturas del cliente actual
@@ -213,7 +214,23 @@ def detalle_factura(request, factura_id):
     Muestra el detalle de una factura
     - Clientes solo pueden ver sus propias facturas
     - Staff con permisos puede ver todas
+    
+    Requiere uno de estos permisos:
+    - view_facturas_propias (clientes)
+    - view_facturas_asignadas (operadores)
+    - view_todas_facturas (administradores)
     """
+    # Verificar permisos
+    tiene_permiso = (
+        request.user.has_perm('facturacion_electronica.view_facturas_propias') or
+        request.user.has_perm('facturacion_electronica.view_facturas_asignadas') or
+        request.user.has_perm('facturacion_electronica.view_todas_facturas')
+    )
+    
+    if not tiene_permiso:
+        messages.error(request, 'No tiene permisos para ver facturas electrónicas.')
+        return redirect('interfaz:home')
+    
     factura = get_object_or_404(
         FacturaElectronica.objects.select_related('transaccion'),
         pk=factura_id
@@ -306,6 +323,7 @@ def generar_factura(request, transaccion_id):
 # ═══════════════════════════════════════════════════════════════════════════
 
 @login_required
+@require_permission('facturacion_electronica.download_kude_pdf')
 def descargar_pdf(request, factura_id):
     """
     Redirige a la URL del PDF en KuDE

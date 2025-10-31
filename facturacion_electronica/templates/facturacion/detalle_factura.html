@@ -135,28 +135,30 @@
                 </div>
                 <div class="card-body">
                     {# Botón PDF - Solo activo si tiene CDC válido Y URL completa con .pdf #}
-                    {% if factura.estado == 'aprobado' and factura.cdc and factura.cdc != '0' and factura.url_kude_pdf and '.pdf' in factura.url_kude_pdf %}
-                    <a href="{% url 'facturacion:descargar_pdf' factura.id %}" class="btn btn-success btn-block w-100 mb-2" target="_blank">
-                        <i class="fas fa-file-pdf"></i> Descargar PDF
-                    </a>
-                    {% elif not factura.cdc or factura.cdc == '0' or factura.estado == 'confirmado' or factura.estado == 'borrador' %}
-                    <button class="btn btn-warning text-dark btn-block w-100 mb-2" disabled title="Esperando CDC de SIFEN. Presione F5 para actualizar.">
-                        <i class="fas fa-hourglass-half fa-spin"></i> Esperando aprobación SIFEN...
-                    </button>
-                    <small class="text-muted d-block text-center">
-                        <i class="fas fa-info-circle"></i> Espere 30-60 seg y presione <kbd>F5</kbd>
-                    </small>
-                    {% elif factura.estado == 'aprobado' and factura.cdc and factura.cdc != '0' %}
-                    <button class="btn btn-warning text-dark btn-block w-100 mb-2" disabled title="PDF generándose en el servidor. Presione F5 para actualizar.">
-                        <i class="fas fa-hourglass-half"></i> PDF generándose...
-                    </button>
-                    <small class="text-muted d-block text-center">
-                        <i class="fas fa-sync-alt"></i> Presione <kbd>F5</kbd> para verificar si está listo
-                    </small>
-                    {% else %}
-                    <button class="btn btn-secondary btn-block w-100 mb-2" disabled>
-                        <i class="fas fa-file-pdf"></i> PDF no disponible
-                    </button>
+                    {% if perms.facturacion_electronica.download_kude_pdf %}
+                        {% if factura.estado == 'aprobado' and factura.cdc and factura.cdc != '0' and factura.url_kude_pdf and '.pdf' in factura.url_kude_pdf %}
+                        <a href="{% url 'facturacion:descargar_pdf' factura.id %}" class="btn btn-success btn-block w-100 mb-2" target="_blank">
+                            <i class="fas fa-file-pdf"></i> Descargar PDF
+                        </a>
+                        {% elif not factura.cdc or factura.cdc == '0' or factura.estado == 'confirmado' or factura.estado == 'borrador' %}
+                        <button class="btn btn-warning text-dark btn-block w-100 mb-2" disabled title="Esperando CDC de SIFEN. Presione F5 para actualizar.">
+                            <i class="fas fa-hourglass-half fa-spin"></i> Esperando aprobación SIFEN...
+                        </button>
+                        <small class="text-muted d-block text-center">
+                            <i class="fas fa-info-circle"></i> Espere 30-60 seg y presione <kbd>F5</kbd>
+                        </small>
+                        {% elif factura.estado == 'aprobado' and factura.cdc and factura.cdc != '0' %}
+                        <button class="btn btn-warning text-dark btn-block w-100 mb-2" disabled title="PDF generándose en el servidor. Presione F5 para actualizar.">
+                            <i class="fas fa-hourglass-half"></i> PDF generándose...
+                        </button>
+                        <small class="text-muted d-block text-center">
+                            <i class="fas fa-sync-alt"></i> Presione <kbd>F5</kbd> para verificar si está listo
+                        </small>
+                        {% else %}
+                        <button class="btn btn-secondary btn-block w-100 mb-2" disabled>
+                            <i class="fas fa-file-pdf"></i> PDF no disponible
+                        </button>
+                        {% endif %}
                     {% endif %}
 
                     {% if perms.facturacion_electronica.download_kude_xml %}

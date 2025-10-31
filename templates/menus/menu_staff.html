@@ -100,7 +100,7 @@
   </div>
   {% endif %}
 
-  {% if perms.facturacion_electronica.view_todas_facturas or perms.facturacion_electronica.view_facturas_asignadas %}
+  {% if perms.facturacion_electronica.view_todas_facturas or perms.facturacion_electronica.view_facturas_asignadas or perms.facturacion_electronica.view_facturas_propias %}
   <div class="col">
     <div class="card opcion_admin text-center border-0 rounded-4 h-100 p-4 shadow-hover animate-stagger delay-11">
       <div class="display-3 mb-3"><i class="fas fa-file-invoice"></i></div>
