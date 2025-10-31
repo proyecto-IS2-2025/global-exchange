@@ -19,6 +19,10 @@ services:
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_PORT=5432
+      # Desactivar SSL para entorno local de producción
+      - SECURE_SSL_REDIRECT=False
+      - SESSION_COOKIE_SECURE=False
+      - CSRF_COOKIE_SECURE=False
     depends_on:
       db:
         condition: service_healthy
