@@ -1,28 +1,51 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Seleccionar Terminal TAUSER - Compra de Divisas{% endblock %}
-
-{% block extra_css %}
+{% block content %}
+<!-- Estilos específicos para esta página -->
 <style>
     .tauser-card {
-        border: 2px solid #e0e0e0;
-        border-radius: 10px;
+        border: 3px solid #e0e0e0;
+        border-radius: 12px;
         transition: all 0.3s ease;
         cursor: pointer;
         height: 100%;
+        background-color: white;
+        position: relative;
+        overflow: hidden;
     }
     
     .tauser-card:hover {
         border-color: #007bff;
-        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
-        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 123, 255, 0.25);
+        transform: translateY(-3px);
     }
     
     .tauser-card.selected {
         border-color: #28a745;
-        background-color: #f0f8f4;
-        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        border-width: 4px;
+        background-color: #e8f5e9;
+        box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
+        transform: scale(1.02);
+    }
+    
+    .tauser-card.selected::before {
+        content: "✓ SELECCIONADO";
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #28a745;
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.75rem;
+        z-index: 10;
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.5);
+    }
+    
+    .tauser-card.selected .tauser-header {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
     }
     
     .tauser-header {
@@ -34,24 +57,35 @@
     
     .stock-badge {
         font-size: 0.9rem;
-        padding: 0.4rem 0.8rem;
-        border-radius: 20px;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 600;
     }
     
     .stock-disponible {
         background-color: #d4edda;
         color: #155724;
+        border: 2px solid #28a745;
     }
     
     .stock-reservado {
         background-color: #fff3cd;
         color: #856404;
+        border: 2px solid #ffc107;
     }
     
     .desglose-item {
-        border-left: 3px solid #007bff;
+        border-left: 4px solid #007bff;
         padding-left: 1rem;
         margin-bottom: 0.5rem;
+        background-color: #f8f9fa;
+        padding: 0.5rem 0.5rem 0.5rem 1rem;
+        border-radius: 4px;
+    }
+    
+    .tauser-card.selected .desglose-item {
+        border-left-color: #28a745;
+        background-color: #d4edda;
     }
     
     .no-tausers-message {
@@ -61,10 +95,23 @@
         border-radius: 15px;
         text-align: center;
     }
+    
+    .btn-seleccionar-tauser {
+        transition: all 0.3s ease;
+    }
+    
+    .tauser-card.selected .btn-seleccionar-tauser {
+        background-color: #28a745;
+        border-color: #28a745;
+        color: white;
+    }
+    
+    .tauser-card.selected .btn-seleccionar-tauser:hover {
+        background-color: #218838;
+        border-color: #1e7e34;
+    }
 </style>
-{% endblock %}
 
-{% block content %}
 <div class="container py-4">
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb">
@@ -214,12 +261,12 @@
     {% endif %}
 </div>
 
-{% endblock %}
-
-{% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let terminalSeleccionada = null;
+    const btnContinuar = document.getElementById('btn-continuar');
+    const terminalIdInput = document.getElementById('terminal_id_input');
+    const formSeleccionar = document.getElementById('form-seleccionar-tauser');
 
     // Agregar event listeners a todos los botones de selección
     document.querySelectorAll('.btn-seleccionar-tauser').forEach(function(btn) {
@@ -235,7 +282,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // También permitir click en la tarjeta completa
     document.querySelectorAll('.tauser-card').forEach(function(card) {
         card.addEventListener('click', function(e) {
-            // Solo si no se clickeó el botón
+            // Solo si no se clickeó directamente el botón
             if (!e.target.closest('.btn-seleccionar-tauser')) {
                 const terminalId = this.getAttribute('data-terminal-id');
                 seleccionarTauser(terminalId);
@@ -244,32 +291,64 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function seleccionarTauser(terminalId) {
-        // Remover selección anterior
-        document.querySelectorAll('.tauser-card').forEach(card => {
-            card.classList.remove('selected');
-        });
-        
-        // Agregar selección a la tarjeta clickeada
+        // Si se clickea la misma tarjeta, deseleccionar
         const card = document.querySelector(`.tauser-card[data-terminal-id="${terminalId}"]`);
-        if (card) {
+        
+        if (terminalSeleccionada === terminalId) {
+            // Deseleccionar
+            card.classList.remove('selected');
+            terminalSeleccionada = null;
+            terminalIdInput.value = '';
+            btnContinuar.disabled = true;
+            
+            // Cambiar texto del botón de vuelta a "Seleccionar"
+            const btn = card.querySelector('.btn-seleccionar-tauser');
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-hand-pointer me-1"></i> Seleccionar';
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-primary');
+            }
+        } else {
+            // Remover selección anterior
+            document.querySelectorAll('.tauser-card').forEach(c => {
+                c.classList.remove('selected');
+                const b = c.querySelector('.btn-seleccionar-tauser');
+                if (b) {
+                    b.innerHTML = '<i class="fas fa-hand-pointer me-1"></i> Seleccionar';
+                    b.classList.remove('btn-success');
+                    b.classList.add('btn-outline-primary');
+                }
+            });
+            
+            // Agregar selección a la tarjeta clickeada
             card.classList.add('selected');
             terminalSeleccionada = terminalId;
+            terminalIdInput.value = terminalId;
+            btnContinuar.disabled = false;
             
-            // Actualizar input hidden
-            document.getElementById('terminal_id_input').value = terminalId;
+            // Cambiar el botón de la tarjeta seleccionada
+            const btn = card.querySelector('.btn-seleccionar-tauser');
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-check-circle me-1"></i> Seleccionado';
+                btn.classList.remove('btn-outline-primary');
+                btn.classList.add('btn-success');
+            }
             
-            // Habilitar botón continuar
-            document.getElementById('btn-continuar').disabled = false;
+            // Scroll suave hacia el botón continuar
+            btnContinuar.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
     }
 
     // Validar antes de enviar
-    document.getElementById('form-seleccionar-tauser').addEventListener('submit', function(e) {
-        if (!terminalSeleccionada) {
-            e.preventDefault();
-            alert('Por favor, seleccione una terminal TAUSER.');
-        }
-    });
+    if (formSeleccionar) {
+        formSeleccionar.addEventListener('submit', function(e) {
+            if (!terminalSeleccionada) {
+                e.preventDefault();
+                alert('Por favor, seleccione una terminal TAUSER antes de continuar.');
+                return false;
+            }
+        });
+    }
 });
 </script>
 {% endblock %}
