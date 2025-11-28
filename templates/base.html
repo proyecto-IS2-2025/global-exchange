@@ -42,15 +42,16 @@
   <!-- ═════════════════════════════════════════════════════════════ -->
   <!-- NAVBAR -->
   <!-- ═════════════════════════════════════════════════════════════ -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
     <div class="container">
-      <!-- Brand con icono y badge de rol -->
-      <a class="navbar-brand fw-bold d-flex align-items-center" href="{% url 'inicio' %}">
-        <i class="fas fa-house me-2"></i> Global Exchange 
+      <!-- Brand mejorado -->
+      <a class="navbar-brand fw-bold d-flex align-items-center py-2" href="{% url 'inicio' %}" style="letter-spacing: 0.5px;">
+        <i class="fas fa-exchange-alt me-2" style="font-size: 1.2rem;"></i>
+        <span>Global Exchange</span>
       </a>
 
       <button
-        class="navbar-toggler"
+        class="navbar-toggler border-0"
         type="button"
         data-bs-toggle="collapse"
         data-bs-target="#navbarMain"
@@ -61,58 +62,135 @@
       </button>
 
       <div class="collapse navbar-collapse" id="navbarMain">
-        <ul class="navbar-nav ms-auto">
+        <ul class="navbar-nav ms-auto align-items-lg-center gap-2">
            {% if user.is_authenticated %}
-
-
-            <li class="nav-item me-3">
-                <span class="nav-link text-white">
-                    <i class="fas fa-user-circle me-1"></i>
-                    Bienvenido, <strong>{{ user.username }}</strong>
+            <!-- Usuario autenticado -->
+            <li class="nav-item">
+                <span class="nav-link d-flex align-items-center px-3" style="color: rgba(255,255,255,0.85);">
+                    <i class="fas fa-user-circle me-2" style="font-size: 1.1rem;"></i>
+                    <span class="d-none d-lg-inline">{{ user.username }}</span>
                 </span>
             </li>
-              {% if not usuario_es_staff %}
-                {% include "partials/notificaciones_dropdown.html" %}
-              {% endif %}
+
+            {% if not usuario_es_staff %}
+              {% include "partials/notificaciones_dropdown.html" %}
+            {% endif %}
+
+            {# Menú "Opciones" solo para NO staff #}
+            {% if not usuario_es_staff %}
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle d-flex align-items-center px-3" 
+                   href="#" 
+                   role="button"
+                   data-bs-toggle="dropdown" 
+                   aria-expanded="false"
+                   style="transition: all 0.2s ease;">
+                  <i class="fas fa-cog me-2" style="font-size: 1rem;"></i>
+                  <span>Opciones</span>
+                </a>
+                {% include "partials/navbar_opciones.html" %}
+              </li>
+            {% endif %}
+
             <!-- Botón Cerrar Sesión -->
-            <li class="nav-item d-flex align-items-center">
-                <form method="post" action="{% url 'logout' %}" class="m-0 p-0">
+            <li class="nav-item">
+                <form method="post" action="{% url 'logout' %}" class="m-0">
                     {% csrf_token %}
-                    <button type="submit" class="nav-link btn btn-link text-white px-0" style="text-decoration: none;">
-                        <i class="fas fa-sign-out-alt me-1"></i> Cerrar sesión
+                    <button type="submit" 
+                            class="nav-link btn btn-link text-white d-flex align-items-center px-3" 
+                            style="text-decoration: none; transition: all 0.2s ease; border: none;">
+                        <i class="fas fa-sign-out-alt me-2" style="font-size: 1rem;"></i>
+                        <span>Salir</span>
                     </button>
                 </form>
             </li>
         {% else %}
             <!-- Links para usuarios no autenticados -->
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'login' %}">
-                <i class="fas fa-sign-in-alt me-1"></i> Iniciar sesión
+              <a class="nav-link d-flex align-items-center px-3" 
+                 href="{% url 'login' %}"
+                 style="transition: all 0.2s ease;">
+                <i class="fas fa-sign-in-alt me-2" style="font-size: 1rem;"></i>
+                <span>Iniciar sesión</span>
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'registro' %}">
-                <i class="fas fa-user-plus me-1"></i> Registrarse
+              <a class="nav-link d-flex align-items-center px-3" 
+                 href="{% url 'registro' %}"
+                 style="transition: all 0.2s ease;">
+                <i class="fas fa-user-plus me-2" style="font-size: 1rem;"></i>
+                <span>Registrarse</span>
               </a>
-            </li>
-          {% endif %}
-
-          {# ✅ Menú "Opciones" solo para NO staff #}
-          {# Staff (admin/operador) NO ve este menú #}
-          {# Operadores de cuenta, usuarios registrados y anónimos SÍ lo ven #}
-          {% if not usuario_es_staff %}
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" role="button"
-                 data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="fas fa-bars me-1"></i> Opciones
-              </a>
-              {% include "partials/navbar_opciones.html" %}
             </li>
           {% endif %}
         </ul>
       </div>
     </div>
   </nav>
+
+  <style>
+    /* Estilos del navbar mejorado */
+    .navbar {
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .navbar-brand {
+      transition: opacity 0.2s ease;
+    }
+    
+    .navbar-brand:hover {
+      opacity: 0.85;
+    }
+    
+    .nav-link {
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+    
+    .nav-link:hover {
+      background-color: rgba(255,255,255,0.1);
+    }
+    
+    .nav-link i {
+      opacity: 0.9;
+    }
+    
+    .dropdown-menu {
+      border: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border-radius: 8px;
+      margin-top: 0.5rem;
+    }
+    
+    .dropdown-item {
+      padding: 0.6rem 1.2rem;
+      transition: all 0.2s ease;
+    }
+    
+    .dropdown-item:hover {
+      background-color: rgba(0,0,0,0.05);
+      padding-left: 1.5rem;
+    }
+    
+    .dropdown-item i {
+      width: 20px;
+      text-align: center;
+    }
+    
+    .navbar-toggler:focus {
+      box-shadow: none;
+    }
+    
+    @media (max-width: 991.98px) {
+      .navbar-nav {
+        padding: 1rem 0;
+      }
+      
+      .nav-item {
+        margin: 0.25rem 0;
+      }
+    }
+  </style>
 
 
   <!-- MENSAJES DJANGO -->

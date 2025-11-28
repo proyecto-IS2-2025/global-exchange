@@ -24,20 +24,4 @@
   {% include "simulador/simulador_conversion.html" %}
 </div>
 
-{# Acceso rápido a historial si tiene permiso #}
-{% if permisos_clave.puede_ver_transacciones_asignadas %}
-<div class="text-center mt-5">
-  <a href="{% url 'transacciones:historial_cliente' %}" class="btn btn-outline-primary">
-    <i class="fas fa-history me-2"></i>
-    Ver Mi Historial de Transacciones
-  </a>
-</div>
-{% endif %}
 
-{# Acceso a Mis Facturas Electrónicas #}
-<div class="text-center mt-3">
-  <a href="{% url 'facturacion:mis_facturas' %}" class="btn btn-outline-success">
-    <i class="fas fa-receipt me-2"></i>
-    Mis Facturas Electrónicas
-  </a>
-</div>

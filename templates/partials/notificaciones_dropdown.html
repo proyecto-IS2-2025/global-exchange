@@ -1,59 +1,65 @@
-<li class="nav-item dropdown me-3" style="position: relative;">
-  <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-    <i class="fas fa-bell"></i>
+<li class="nav-item dropdown" style="position: relative;">
+  <a class="nav-link position-relative d-flex align-items-center px-3" 
+     href="#" 
+     role="button" 
+     data-bs-toggle="dropdown" 
+     aria-expanded="false"
+     style="transition: all 0.2s ease;">
+    <i class="fas fa-bell" style="font-size: 1.1rem;"></i>
     {% if notificaciones_count > 0 %}
-    <span class="position-absolute top-50 translate-middle bg-primary rounded-circle" style="width: 8px; height: 8px;"></span>
+    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
+          style="font-size: 0.65rem; padding: 0.25em 0.5em;">
+      {{ notificaciones_count }}
+    </span>
     {% endif %}
   </a>
 
-  <ul class="dropdown-menu dropdown-menu-end shadow-lg notificaciones-panel"
-      style="width: 450px; right: -450px; padding: 0; border-radius: 8px; border: 1px solid #e0e0e0;">
+  <ul class="dropdown-menu dropdown-menu-end shadow notificaciones-panel"
+      style="width: 420px; padding: 0; border-radius: 10px; border: none;">
     
-    <!-- Header moderno con acciones -->
-    <li class="d-flex justify-content-between align-items-center px-3 py-3" style="background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0;">
-      <h6 class="mb-0 fw-bold" style="color: #212529;">Notificaciones</h6>
+    <!-- Header limpio con acciones -->
+    <li class="d-flex justify-content-between align-items-center px-4 py-3" 
+        style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 1px solid #dee2e6; border-radius: 10px 10px 0 0;">
+      <h6 class="mb-0 fw-semibold" style="color: #495057; font-size: 0.95rem;">Notificaciones</h6>
       <div class="d-flex gap-2">
         {% if notificaciones_count > 0 %}
         <!-- Botón marcar todas como leídas -->
         <button type="button" 
-                class="btn btn-sm btn-light btn-limpiar-todo rounded-circle p-0" 
+                class="btn btn-sm btn-notif-action rounded-circle p-0 btn-limpiar-todo" 
                 data-url="{% url 'notificaciones:limpiar_todas' %}"
-                title="Marcar todas como leídas"
-                style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 1px solid #dee2e6;">
-          <i class="fas fa-eye" style="font-size: 14px; color: #6c757d;"></i>
+                title="Marcar todas como leídas">
+          <i class="fas fa-check-double"></i>
         </button>
         {% endif %}
         
-        <!-- Botón abrir en nueva ventana -->
+        <!-- Botón ver historial -->
         <a href="{% url 'notificaciones:historial' %}" 
-           class="btn btn-sm btn-light rounded-circle p-0"
-           title="Ver todas las notificaciones"
-           style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 1px solid #dee2e6;">
-          <i class="fas fa-external-link-alt" style="font-size: 12px; color: #6c757d;"></i>
+           class="btn btn-sm btn-notif-action rounded-circle p-0"
+           title="Ver historial completo">
+          <i class="fas fa-history"></i>
         </a>
         
         <!-- Botón de configuración -->
         <a href="{% url 'notificaciones:gestion_notificaciones' %}"
-           class="btn btn-sm btn-light rounded-circle p-0"
-           title="Configuración de notificaciones"
-           style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 1px solid #dee2e6;">
-          <i class="fas fa-cog" style="font-size: 14px; color: #6c757d;"></i>
+           class="btn btn-sm btn-notif-action rounded-circle p-0"
+           title="Configuración">
+          <i class="fas fa-cog"></i>
         </a>
       </div>
     </li>
 
     <!-- Contenedor scrolleable de notificaciones -->
-    <div id="notificaciones-container" style="max-height: 400px; overflow-y: auto; padding: 0;">
+    <div id="notificaciones-container" style="max-height: 420px; overflow-y: auto; padding: 0;">
       {% if notificaciones_header %}
         {% for n in notificaciones_header %}
-        <li class="notificacion-item px-3 py-2 d-flex align-items-start gap-2 {% if n.estado_lectura == 'pendiente' %}notificacion-no-leida{% endif %}" 
-            style="list-style: none; transition: all 0.3s ease; opacity: 1; transform: translateX(0); border-bottom: 1px solid #f0f0f0; cursor: pointer;"
+        <li class="notificacion-item d-flex align-items-start gap-3 px-4 py-3 {% if n.estado_lectura == 'pendiente' %}notificacion-no-leida{% endif %}" 
+            style="list-style: none; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background-color 0.2s ease;"
             data-notif-id="{{ n.id }}">
           
-          <!-- Indicador de no leída (punto azul) -->
+          <!-- Indicador de no leída -->
           {% if n.estado_lectura == 'pendiente' %}
           <div class="flex-shrink-0 mt-1">
-            <span class="badge bg-primary rounded-circle p-0" style="width: 8px; height: 8px;"></span>
+            <span class="bg-primary rounded-circle d-block" style="width: 8px; height: 8px;"></span>
           </div>
           {% else %}
           <div class="flex-shrink-0 mt-1" style="width: 8px;"></div>
@@ -61,30 +67,31 @@
           
           <!-- Contenido de la notificación -->
           <div class="flex-grow-1" style="min-width: 0;">
-            <div class="d-flex justify-content-between align-items-start mb-1">
-              <small class="text-muted" style="font-size: 0.75rem;">{{ n.fecha_creacion|date:"d/m/Y H:i" }}</small>
-            </div>
-            <p class="mb-0" style="font-size: 0.9rem; color: #212529; line-height: 1.4;">{{ n.mensaje }}</p>
+            <small class="text-muted d-block mb-1" style="font-size: 0.75rem;">
+              {{ n.fecha_creacion|date:"d/m/Y H:i" }}
+            </small>
+            <p class="mb-0" style="font-size: 0.875rem; color: #495057; line-height: 1.5;">
+              {{ n.mensaje }}
+            </p>
           </div>
 
           <!-- Botón de marcar como leída -->
           {% if n.estado_lectura == 'pendiente' %}
           <div class="flex-shrink-0">
             <button type="button" 
-                    class="btn btn-sm btn-marcar-leida rounded-circle p-0" 
+                    class="btn btn-sm btn-notif-check rounded-circle p-0 btn-marcar-leida" 
                     data-url="{% url 'notificaciones:marcar_leida' n.id %}"
-                    title="Marcar como leída"
-                    style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: 1px solid #dee2e6; background-color: white;">
-              <i class="fas fa-check" style="font-size: 10px; color: #28a745;"></i>
+                    title="Marcar como leída">
+              <i class="fas fa-check"></i>
             </button>
           </div>
           {% endif %}
         </li>
         {% endfor %}
       {% else %}
-        <li class="px-3 py-5 text-center text-muted" style="list-style: none;" id="sin-notificaciones">
-          <i class="fas fa-bell-slash mb-2" style="font-size: 2rem; opacity: 0.3;"></i>
-          <p class="mb-0">Sin notificaciones nuevas</p>
+        <li class="px-4 py-5 text-center text-muted" style="list-style: none;" id="sin-notificaciones">
+          <i class="fas fa-bell-slash mb-3 d-block" style="font-size: 2.5rem; opacity: 0.2;"></i>
+          <p class="mb-0" style="font-size: 0.9rem;">No hay notificaciones nuevas</p>
         </li>
       {% endif %}
     </div>
@@ -92,14 +99,50 @@
 </li>
 
 <style>
-  /* Animación de slide-out */
-  .notificacion-item.slide-out {
-    opacity: 0 !important;
-    transform: translateX(100%) !important;
-    max-height: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    overflow: hidden !important;
+  /* Botones de acción en el header */
+  .btn-notif-action {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #dee2e6;
+    background-color: white;
+    color: #6c757d;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-notif-action:hover {
+    background-color: #f8f9fa;
+    border-color: #adb5bd;
+    color: #495057;
+    transform: translateY(-1px);
+  }
+  
+  .btn-notif-action i {
+    font-size: 0.75rem;
+  }
+  
+  /* Botón de check en notificación */
+  .btn-notif-check {
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #28a745;
+    background-color: white;
+    color: #28a745;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-notif-check:hover {
+    background-color: #28a745;
+    color: white;
+  }
+  
+  .btn-notif-check i {
+    font-size: 0.7rem;
   }
   
   /* Efecto hover en notificaciones */
@@ -112,27 +155,38 @@
     background-color: #f0f7ff;
   }
   
-  /* Efecto hover en botones del header */
-  .notificaciones-panel .btn-light:hover {
-    background-color: #e9ecef !important;
+  /* Animación de slide-out */
+  .notificacion-item.slide-out {
+    opacity: 0 !important;
+    transform: translateX(100%) !important;
+    max-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    transition: all 0.3s ease;
   }
   
-  /* Scrollbar personalizada */
+  /* Scrollbar personalizada minimalista */
   #notificaciones-container::-webkit-scrollbar {
-    width: 6px;
+    width: 5px;
   }
   
   #notificaciones-container::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: transparent;
   }
   
   #notificaciones-container::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
+    background: #dee2e6;
+    border-radius: 10px;
   }
   
   #notificaciones-container::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
+    background: #adb5bd;
+  }
+  
+  /* Ajustes para el panel */
+  .notificaciones-panel {
+    margin-top: 0.5rem;
   }
 </style>
 
