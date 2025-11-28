@@ -23,6 +23,7 @@ urlpatterns = [
     
     # Sincronización
     path('<int:factura_id>/actualizar-estado/', views.actualizar_estado, name='actualizar_estado'),
+    path('<int:factura_id>/verificar-pdf/', views.verificar_pdf_disponible, name='verificar_pdf'),
     
     # Anulación
     path('<int:factura_id>/cancelar/', views.cancelar_factura, name='cancelar'),
