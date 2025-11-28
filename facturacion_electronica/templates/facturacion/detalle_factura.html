@@ -149,11 +149,13 @@
                             <i class="fas fa-info-circle"></i> Espere 30-60 seg y presione <kbd>F5</kbd>
                         </small>
                         {% elif factura.estado == 'aprobado' and factura.cdc and factura.cdc != '0' %}
-                        <button class="btn btn-warning text-dark btn-block w-100 mb-2" disabled title="PDF generándose en el servidor. Presione F5 para actualizar.">
-                            <i class="fas fa-hourglass-half"></i> PDF generándose...
+                        <button id="btn-verificar-pdf-{{ factura.id }}" class="btn btn-warning text-dark btn-block w-100 mb-2" 
+                                onclick="verificarPDF({{ factura.id }})" 
+                                title="El PDF se está generando. Click para verificar.">
+                            <i class="fas fa-hourglass-half fa-spin"></i> <span id="texto-pdf-{{ factura.id }}">PDF generándose...</span>
                         </button>
                         <small class="text-muted d-block text-center">
-                            <i class="fas fa-sync-alt"></i> Presione <kbd>F5</kbd> para verificar si está listo
+                            <i class="fas fa-sync-alt"></i> Click en el botón para verificar si está listo
                         </small>
                         {% else %}
                         <button class="btn btn-secondary btn-block w-100 mb-2" disabled>
@@ -200,4 +202,81 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function verificarPDF(facturaId) {
+    const boton = document.getElementById('btn-verificar-pdf-' + facturaId);
+    const texto = document.getElementById('texto-pdf-' + facturaId);
+    
+    // Deshabilitar botón mientras verifica
+    boton.disabled = true;
+    texto.textContent = 'Verificando...';
+    
+    fetch(`/facturacion/${facturaId}/verificar-pdf/`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.disponible) {
+            // PDF encontrado, recargar página para mostrar botón de descarga
+            location.reload();
+        } else {
+            // PDF aún no disponible
+            boton.disabled = false;
+            texto.textContent = 'PDF generándose...';
+            alert(data.mensaje || 'PDF aún no disponible. Intente nuevamente en unos segundos.');
+        }
+    })
+    .catch(error => {
+        console.error('Error al verificar PDF:', error);
+        boton.disabled = false;
+        texto.textContent = 'PDF generándose...';
+        alert('Error al verificar PDF. Intente nuevamente.');
+    });
+}
+
+// Auto-verificar cada 5 segundos si hay botón de verificación
+document.addEventListener('DOMContentLoaded', function() {
+    const botonVerificar = document.querySelector('[id^="btn-verificar-pdf-"]');
+    if (botonVerificar) {
+        const facturaId = botonVerificar.id.split('-').pop();
+        let intentos = 0;
+        const maxIntentos = 12; // 12 intentos x 5 segundos = 1 minuto
+        
+        const intervalo = setInterval(function() {
+            intentos++;
+            
+            // Verificar si el PDF ya está disponible (botón cambió)
+            const botonActual = document.getElementById('btn-verificar-pdf-' + facturaId);
+            if (!botonActual || intentos >= maxIntentos) {
+                clearInterval(intervalo);
+                return;
+            }
+            
+            // Hacer verificación automática
+            fetch(`/facturacion/${facturaId}/verificar-pdf/`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.disponible) {
+                    clearInterval(intervalo);
+                    location.reload(); // Recargar para mostrar botón de descarga
+                }
+            })
+            .catch(error => {
+                console.error('Error en verificación automática:', error);
+            });
+        }, 5000); // Verificar cada 5 segundos
+    }
+});
+</script>
 {% endblock %}
