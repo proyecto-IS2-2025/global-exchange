@@ -43,9 +43,9 @@ def generar_factura_desde_transaccion(transaccion):
     
     # Preparar descripción del servicio
     if transaccion.tipo_operacion == 'compra':
-        descripcion = f"COMPRA DE {transaccion.divisa_destino.code} - VENTA DE {transaccion.divisa_origen.code}"
+        descripcion = f"Compra de Divisas - {transaccion.divisa_destino.code}"
     else:  # venta
-        descripcion = f"VENTA DE {transaccion.divisa_origen.code} - COMPRA DE {transaccion.divisa_destino.code}"
+        descripcion = f"Venta de Divisas - {transaccion.divisa_origen.code}"
     
     # Calcular monto para la factura
     # En Paraguay, las facturas deben estar en Guaraníes (PYG)

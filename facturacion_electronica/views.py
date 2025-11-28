@@ -330,11 +330,6 @@ def descargar_pdf(request, factura_id):
     - Clientes pueden descargar sus propias facturas
     - Staff con permiso puede descargar todas
     """
-    import urllib.request
-    import urllib.error
-    import base64
-    from django.http import HttpResponse
-    
     factura = get_object_or_404(FacturaElectronica, pk=factura_id)
     
     # Verificar permisos
@@ -361,11 +356,11 @@ def descargar_pdf(request, factura_id):
             messages.warning(request, 'La factura aún no está aprobada por SIFEN. Por favor espere.')
             return redirect('facturacion:detalle_factura', factura_id=factura_id)
     
-    # Si ya tiene URL completa con .pdf, redirigir directamente
+    # Si ya tiene URL completa con .pdf, usarla directamente
     if factura.url_kude_pdf and '.pdf' in factura.url_kude_pdf:
         pdf_url = factura.url_kude_pdf
     else:
-        # Si no tiene URL o solo tiene directorio, intentar buscar el PDF en KuDE
+        # Si no tiene URL o solo tiene directorio, buscar el PDF en KuDE
         from .services import SQLProxyService
         service = SQLProxyService()
         pdf_url = service.buscar_pdf_en_kude(factura.numero_factura, factura.fecha_emision)
@@ -386,6 +381,10 @@ def descargar_pdf(request, factura_id):
     # Descargar PDF desde KuDE con autenticación y servirlo al usuario
     try:
         from .config import KUDE_CONFIG
+        import urllib.request
+        import urllib.error
+        import base64
+        from django.http import HttpResponse
         
         # Convertir URL pública a URL interna si es necesario
         pdf_url_interna = pdf_url.replace('localhost', 'host.docker.internal')
@@ -411,6 +410,8 @@ def descargar_pdf(request, factura_id):
         messages.error(request, f'Error al descargar PDF: {e.code} {e.reason}')
         return redirect('facturacion:detalle_factura', factura_id=factura_id)
     except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
         logger.error(f"[PDF] Error descargando PDF: {e}")
         messages.error(request, 'Error al descargar el PDF. Intente nuevamente.')
         return redirect('facturacion:detalle_factura', factura_id=factura_id)
@@ -507,6 +508,37 @@ def cancelar_factura(request, factura_id):
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# VERIFICACIÓN DE PDF
+# ═══════════════════════════════════════════════════════════════════════════
+
+@login_required
+def verificar_pdf_disponible(request, factura_id):
+    """
+    Endpoint AJAX para verificar si el PDF ya está disponible en KuDE
+    Retorna JSON con el estado
+    """
+    from django.http import JsonResponse
+    from .utils import buscar_y_actualizar_pdf
+    
+    factura = get_object_or_404(FacturaElectronica, pk=factura_id)
+    
+    # Verificar permisos
+    if not request.user.is_staff:
+        from clientes.models import Cliente
+        clientes_usuario = Cliente.objects.filter(usuarios=request.user)
+        if not clientes_usuario.filter(id=factura.transaccion.cliente.id).exists():
+            return JsonResponse({'error': 'No tiene permisos para ver esta factura'}, status=403)
+    
+    # Intentar buscar y actualizar el PDF
+    pdf_encontrado = buscar_y_actualizar_pdf(factura)
+    
+    return JsonResponse({
+        'disponible': pdf_encontrado,
+        'url_pdf': factura.url_kude_pdf if pdf_encontrado else None
+    })
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # REPORTES
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -548,56 +580,3 @@ def reporte_facturacion(request):
         'titulo': 'Reporte de Facturación'
     }
     return render(request, 'facturacion/reporte.html', context)
-
-
-@login_required
-def verificar_pdf_disponible(request, factura_id):
-    """
-    Endpoint AJAX para verificar si el PDF de una factura está disponible en KuDE.
-    Actualiza la URL del PDF si lo encuentra.
-    
-    Returns:
-        JSON con {disponible: true/false, url: string}
-    """
-    try:
-        factura = get_object_or_404(FacturaElectronica, id=factura_id)
-        
-        # Si ya tiene URL válida con .pdf, retornar
-        if factura.url_kude_pdf and '.pdf' in factura.url_kude_pdf:
-            return JsonResponse({
-                'disponible': True,
-                'url': factura.url_kude_pdf,
-                'mensaje': 'PDF ya disponible'
-            })
-        
-        # Buscar PDF en KuDE
-        service = SQLProxyService()
-        pdf_url = service.buscar_pdf_en_kude(
-            factura.numero_factura,
-            factura.fecha_emision
-        )
-        
-        if pdf_url:
-            # Actualizar la factura
-            factura.url_kude_pdf = pdf_url
-            factura.save(update_fields=['url_kude_pdf'])
-            
-            logger.info(f"[PDF] ✅ PDF encontrado y actualizado para {factura.numero_factura}")
-            
-            return JsonResponse({
-                'disponible': True,
-                'url': pdf_url,
-                'mensaje': 'PDF encontrado y actualizado'
-            })
-        else:
-            return JsonResponse({
-                'disponible': False,
-                'mensaje': 'PDF aún no está disponible. Intente en unos segundos.'
-            })
-            
-    except Exception as e:
-        logger.error(f"[PDF] Error verificando PDF: {e}")
-        return JsonResponse({
-            'disponible': False,
-            'error': str(e)
-        }, status=500)
