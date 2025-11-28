@@ -10,8 +10,10 @@
   {# ═══════════════════════════════════════════════════════════════ #}
   {% if not usuario_es_staff %}
     <div class="text-center mb-5">
-      
-      <h1 class="h3">Bienvenido a Global Exchange</h1>
+      <div class="bienvenida-hero">
+        <h1 class="titulo-bienvenida">Bienvenido a Global Exchange</h1>
+        <p class="subtitulo-bienvenida">Explora nuestras opciones en el menú superior</p>
+      </div>
       
       {% if usuario_es_registrado %}
         {# ⏳ Usuario registrado sin clientes #}
@@ -21,8 +23,6 @@
           <br>
           Un administrador debe asignarte clientes para que puedas realizar operaciones.
         </div>
-      {% else %}
-        <p class="text-muted mt-3">Explora nuestras opciones en el menú superior</p>
       {% endif %}
     </div>
     
@@ -96,6 +96,30 @@
 {# ESTILOS GLOBALES                                                #}
 {# ═══════════════════════════════════════════════════════════════ #}
 <style>
+  /* Sección de bienvenida elegante */
+  .bienvenida-hero {
+    padding: 3rem 2rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    margin-bottom: 2rem;
+  }
+  
+  .titulo-bienvenida {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: #0d47a1;
+    margin-bottom: 1rem;
+    letter-spacing: -0.5px;
+  }
+  
+  .subtitulo-bienvenida {
+    font-size: 1.1rem;
+    color: #6b6b6b;
+    margin: 0;
+    font-weight: 400;
+  }
+
   /* Botón de operación con animación */
   .btn-operacion {
     position: relative;

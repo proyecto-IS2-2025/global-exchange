@@ -2,26 +2,171 @@
 {# MENÚ CLIENTE - Para operadores de cuenta con clientes asignados   #}
 {# ═══════════════════════════════════════════════════════════════════ #}
 
-{# Visualizador de tasas públicas #}
-<div class="mb-5">
-  {% include "partials/visualizador.html" %}
+<style>
+    :root {
+        --primary-dark: #0d47a1;
+        --primary-darker: #0a3d91;
+        --text-main: #1a1a1a;
+        --text-muted: #6b6b6b;
+        --border-light: #e0e0e0;
+        --bg-light: #fafafa;
+    }
+
+    .menu-cliente-wrapper {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 3rem 1rem;
+    }
+
+    /* Section Headers - Minimal */
+    .section-header-minimal {
+        margin-bottom: 2rem;
+        padding-bottom: 0.8rem;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .section-title-minimal {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin: 0;
+        letter-spacing: -0.3px;
+    }
+
+    /* Tasas Card - Minimal */
+    .tasas-card-minimal {
+        background: #ffffff;
+        border: 1px solid var(--border-light);
+        border-radius: 8px;
+        padding: 2.5rem;
+        margin-bottom: 4rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        transition: box-shadow 0.3s ease;
+    }
+
+    .tasas-card-minimal:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Main Action Button - Minimal & Elegant */
+    .btn-action-minimal {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 1.2rem 3rem;
+        background: var(--primary-dark);
+        border: none;
+        border-radius: 4px;
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        text-decoration: none;
+        box-shadow: 0 2px 12px rgba(13, 71, 161, 0.25);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-action-minimal::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-action-minimal:hover::before {
+        left: 100%;
+    }
+
+    .btn-action-minimal:hover {
+        background: var(--primary-darker);
+        box-shadow: 0 4px 20px rgba(13, 71, 161, 0.35);
+        transform: translateY(-2px);
+        color: #ffffff;
+    }
+
+    .btn-action-minimal:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(13, 71, 161, 0.3);
+    }
+
+    .btn-action-minimal i {
+        font-size: 1.1rem;
+    }
+
+    .btn-action-minimal i:last-child {
+        transition: transform 0.3s ease;
+    }
+
+    .btn-action-minimal:hover i:last-child {
+        transform: translateX(4px);
+    }
+
+    /* Simulador Card - Minimal */
+    .simulador-card-minimal {
+        background: #ffffff;
+        border: 1px solid var(--border-light);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        transition: box-shadow 0.3s ease;
+    }
+
+    .simulador-card-minimal:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .menu-cliente-wrapper {
+            padding: 2rem 1rem;
+        }
+
+        .btn-action-minimal {
+            width: 100%;
+            padding: 1rem 2rem;
+        }
+
+        .tasas-card-minimal {
+            padding: 1.5rem;
+        }
+    }
+</style>
+
+<div class="menu-cliente-wrapper">
+    {# Visualizador de tasas públicas #}
+    <div>
+        <div class="section-header-minimal">
+            <h2 class="section-title-minimal">Tasas de Cambio</h2>
+        </div>
+        <div class="tasas-card-minimal">
+            {% include "partials/visualizador.html" %}
+        </div>
+    </div>
+
+    {# Botón principal de operación #}
+    <div class="text-center my-5">
+        <a href="{% url 'operacion_divisas:seleccionar_operacion' %}" class="btn-action-minimal">
+            <i class="fa-solid fa-money-bill-transfer"></i>
+            <span>Realizar Operación</span>
+            <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+
+    {# Simulador de conversión #}
+    <div>
+        <div class="section-header-minimal">
+            <h2 class="section-title-minimal"></h2>
+        </div>
+        <div class="simulador-card-minimal">
+            {% include "simulador/simulador_conversion.html" %}
+        </div>
+    </div>
 </div>
-
-{# Botón principal de operación #}
-<div class="text-center my-5">
-  <a href="{% url 'operacion_divisas:seleccionar_operacion' %}" class="btn-operacion">
-    <span class="btn-operacion-content">
-      <i class="fa-solid"></i>
-      <span class="btn-text">Realizar Operación</span>
-      <i class="fas fa-arrow-right ms-2"></i>
-    </span>
-  </a>
-
-</div>
-
-{# Simulador de conversión #}
-<div class="mt-5">
-  {% include "simulador/simulador_conversion.html" %}
-</div>
-
 

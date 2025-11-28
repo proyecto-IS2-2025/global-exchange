@@ -4,9 +4,10 @@
 {% block title %}Detalle de Transacción - {{ transaccion.numero_transaccion }}{% endblock %}
 
 {% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 .transaction-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #4a5fc1 0%, #5a3a82 100%);
 }
 .info-card {
     transition: transform 0.2s ease-in-out;
@@ -37,11 +38,58 @@
 .timeline-item.timeline-active::before {
     background: #28a745;
 }
+.copy-button {
+    transition: all 0.3s ease;
+}
+.copy-button:active {
+    transform: scale(0.95);
+}
+/* Botón Premium - Estilo mejorado */
+.btn-premium {
+    color: #ffffff !important;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3);
+    background: linear-gradient(90deg, #0d6efd, #0056b3);
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+.btn-premium:hover {
+    background: linear-gradient(90deg, #0056b3, #003a75);
+    box-shadow: 0 6px 15px rgba(13, 110, 253, 0.5);
+    transform: translateY(-2px);
+}
+.btn-premium:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(13, 110, 253, 0.3);
+}
+.btn-premium .fas {
+    font-size: 1.2rem;
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
+    <!-- Botón de regreso al historial -->
+    {% if user.is_staff %}
+        <a href="{% url 'transacciones:historial_admin' %}"
+           class="btn d-inline-flex align-items-center btn-premium mb-3">
+            <i class="fas fa-arrow-left me-2" aria-hidden="true"></i>
+            Volver al Historial
+        </a>
+    {% else %}
+        <a href="{% url 'transacciones:historial_cliente' %}"
+           class="btn d-inline-flex align-items-center btn-premium mb-3">
+            <i class="fas fa-arrow-left me-2" aria-hidden="true"></i>
+            Volver al Historial
+        </a>
+    {% endif %}
+    
     <!-- Encabezado -->
     <div class="card mb-4 border-0 shadow">
         <div class="card-header bg-primary transaction-header text-white py-4">
@@ -388,10 +436,10 @@
                             <span class="badge bg-info text-dark fs-6 font-monospace" style="letter-spacing: 2px;">
                                 {{ transaccion.tauser_code }}
                             </span>
-                            <button class="btn btn-sm btn-outline-secondary ms-2" 
-                                    onclick="copyTauserCode('{{ transaccion.tauser_code }}')"
-                                    title="Copiar código">
-                                <i class="bi bi-clipboard"></i>
+                            <button class="btn btn-sm btn-outline-primary ms-2 copy-button" 
+                                    onclick="copyTauserCode(event, this, '{{ transaccion.tauser_code }}')"
+                                    title="Copiar código TAUSER">
+                                <i class="bi bi-clipboard me-1"></i>Copiar
                             </button>
                         </p>
                         <small class="text-muted">
@@ -419,6 +467,7 @@
             </div>
 
             <!-- Acciones -->
+            {% if es_admin or transaccion.estado == 'requiere_confirmacion' or puede_cancelar %}
             <div class="card info-card shadow-sm mb-4">
                 <div class="card-header bg-light">
                     <h5 class="mb-0">
@@ -473,6 +522,7 @@
                     {% endif %}
                 </div>
             </div>
+            {% endif %}
         </div>
     </div>
 
@@ -519,22 +569,33 @@
 
 <script>
 // Función para copiar código TAUSER
-function copyTauserCode(code) {
+function copyTauserCode(event, button, code) {
+    event.preventDefault();
+    
     navigator.clipboard.writeText(code).then(function() {
-        // Crear notificación temporal
-        const btn = event.target.closest('button');
-        const originalIcon = btn.innerHTML;
-        btn.innerHTML = '<i class="bi bi-check"></i>';
-        btn.classList.add('btn-success');
-        btn.classList.remove('btn-outline-secondary');
+        // Guardar estado original
+        const originalHTML = button.innerHTML;
+        const originalClasses = button.className;
         
+        // Aplicar animación de éxito
+        button.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Copiado';
+        button.className = 'btn btn-sm btn-success ms-2 copy-button';
+        button.disabled = true;
+        
+        // Restaurar estado original después de 2 segundos
         setTimeout(() => {
-            btn.innerHTML = originalIcon;
-            btn.classList.remove('btn-success');
-            btn.classList.add('btn-outline-secondary');
+            button.innerHTML = originalHTML;
+            button.className = originalClasses;
+            button.disabled = false;
         }, 2000);
     }).catch(function(err) {
-        alert('Error al copiar: ' + err);
+        console.error('Error al copiar:', err);
+        button.classList.add('btn-danger');
+        button.innerHTML = '<i class="bi bi-x-circle-fill me-1"></i>Error';
+        setTimeout(() => {
+            button.innerHTML = '<i class="bi bi-clipboard me-1"></i>Copiar';
+            button.classList.remove('btn-danger');
+        }, 2000);
     });
 }
 
