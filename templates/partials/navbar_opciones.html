@@ -1,41 +1,55 @@
-<ul class="dropdown-menu dropdown-menu-end">
+<ul class="dropdown-menu dropdown-menu-end shadow">
+  <!-- Contacto siempre visible -->
   <li>
-    <a class="dropdown-item" href="{% url 'contacto' %}">
-      <i class="fas fa-envelope me-2"></i> Contacto
+    <a class="dropdown-item d-flex align-items-center" href="{% url 'contacto' %}">
+      <i class="fas fa-envelope me-3"></i>
+      <span>Contacto</span>
     </a>
   </li>
 
   {% if user.is_authenticated %}
 
     {% if cliente_activo %}
-      <li><hr class="dropdown-divider"></li>
+      <li><hr class="dropdown-divider my-2"></li>
+      
+      <!-- Sección de usuario -->
+      <li class="dropdown-header text-muted" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px;">
+        MI CUENTA
+      </li>
+      
       <li>
-        <a class="dropdown-item fw-bold text-secondary" href="{% url 'users:perfil_usuario' %}">
-          Mi perfil
+        <a class="dropdown-item d-flex align-items-center" href="{% url 'users:perfil_usuario' %}">
+          <i class="fas fa-user me-3"></i>
+          <span>Mi perfil</span>
         </a>
       </li>
       <li>
-        <a class="dropdown-item fw-bold text-secondary" href="{% url 'clientes:seleccionar_cliente' %}">
-          Seleccionar Cliente
+        <a class="dropdown-item d-flex align-items-center" href="{% url 'clientes:seleccionar_cliente' %}">
+          <i class="fas fa-exchange-alt me-3"></i>
+          <span>Seleccionar Cliente</span>
         </a>
       </li> 
       <li>
-        <a class="dropdown-item fw-bold text-secondary" href="{% url 'notificaciones:gestion_notificaciones' %}">
-          Configurar notificaciones
+        <a class="dropdown-item d-flex align-items-center" href="{% url 'notificaciones:gestion_notificaciones' %}">
+          <i class="fas fa-bell me-3"></i>
+          <span>Configurar notificaciones</span>
         </a>
-      </li>         
+      </li>         
     {% endif %} 
     
     {% else %}
-    <li><hr class="dropdown-divider"></li>
+    <!-- Usuario no autenticado -->
+    <li><hr class="dropdown-divider my-2"></li>
     <li>
-      <a class="dropdown-item" href="{% url 'login' %}">
-        <i class="fas fa-sign-in-alt me-2"></i> Iniciar sesión
+      <a class="dropdown-item d-flex align-items-center" href="{% url 'login' %}">
+        <i class="fas fa-sign-in-alt me-3"></i>
+        <span>Iniciar sesión</span>
       </a>
     </li>
     <li>
-      <a class="dropdown-item" href="{% url 'registro' %}">
-        <i class="fas fa-user-plus me-2"></i> Registrarse
+      <a class="dropdown-item d-flex align-items-center" href="{% url 'registro' %}">
+        <i class="fas fa-user-plus me-3"></i>
+        <span>Registrarse</span>
       </a>
     </li>
   {% endif %}

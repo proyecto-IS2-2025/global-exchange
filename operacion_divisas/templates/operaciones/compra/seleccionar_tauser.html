@@ -169,37 +169,6 @@
                     </div>
                     
                     <div class="card-body">
-                        <!-- Stock Disponible -->
-                        <div class="mb-3">
-                            <h6 class="text-muted mb-2">Stock Disponible:</h6>
-                            <div class="d-flex justify-content-between">
-                                <span class="stock-badge stock-disponible">
-                                    <i class="fas fa-check-circle me-1"></i>
-                                    {{ item.stock_disponible|floatformat:2 }} {{ divisa.code }}
-                                </span>
-                                {% if item.stock_reservado > 0 %}
-                                <span class="stock-badge stock-reservado">
-                                    <i class="fas fa-lock me-1"></i>
-                                    Reservado: {{ item.stock_reservado|floatformat:2 }}
-                                </span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <!-- Desglose de Denominaciones -->
-                        <div class="mb-3">
-                            <h6 class="text-muted mb-2">Desglose para su retiro:</h6>
-                            {% for inv_id, datos in item.desglose.items %}
-                            <div class="desglose-item">
-                                <small>
-                                    <strong>{{ datos.cantidad }}x</strong> 
-                                    {{ datos.inventario.denominacion.valor_formateado }}
-                                    <span class="text-muted">= {{ datos.subtotal|floatformat:2 }} {{ divisa.code }}</span>
-                                </small>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        
                         <div class="text-center mt-3">
                             <button type="button" class="btn btn-sm btn-outline-primary btn-seleccionar-tauser" data-terminal-id="{{ item.terminal.id }}">
                                 <i class="fas fa-hand-pointer me-1"></i>

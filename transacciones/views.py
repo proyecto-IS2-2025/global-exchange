@@ -1278,13 +1278,13 @@ def crear_transaccion_desde_compra(request):
                         messages.success(request, f'¡Pago procesado exitosamente con Stripe! ID: {stripe_transaction.payment_intent_id}')
                     else:
                         logger.error(f"[COMPRA] ❌ Pago Stripe fallido: {error}")
+                        transaccion.cambiar_estado('anulada', observacion=f'Pago con Stripe fallido: {error}', usuario=request.user)
                         messages.error(request, f'Error al procesar el pago con Stripe: {error}')
-                        # Mantener transacción en pendiente
                         
                 except Exception as e:
                     logger.error(f"[COMPRA] Error al procesar pago con Stripe: {e}", exc_info=True)
+                    transaccion.cambiar_estado('anulada', observacion=f'Error inesperado al procesar pago con Stripe: {str(e)}', usuario=request.user)
                     messages.error(request, f'Error inesperado al procesar el pago: {str(e)}')
-                    # Mantener transacción en pendiente
             
             # Verificar si es billetera electrónica
             elif 'billetera' in tipo_medio or tipo_medio == 'billetera electrónica':
@@ -1307,7 +1307,9 @@ def crear_transaccion_desde_compra(request):
                     messages.success(request, f"Pago exitoso desde billetera. Comprobante: {resultado.get('comprobante')}")
                 else:
                     logger.warning(f"[COMPRA] Pago billetera fallido: {resultado}")
-                    messages.warning(request, f"No se pudo procesar el pago desde billetera: {resultado.get('message')} (código {resultado.get('code')})")
+                    detalle_error = f"{resultado.get('message')} (código {resultado.get('code')})"
+                    transaccion.cambiar_estado('anulada', observacion=f'Pago desde billetera fallido: {detalle_error}', usuario=request.user)
+                    messages.error(request, f"No se pudo procesar el pago desde billetera: {detalle_error}")
             
             # Verificar si es tarjeta de crédito/débito (pero NO Stripe)
             elif ('tarjeta' in tipo_medio or 'crédito' in tipo_medio or 'débito' in tipo_medio) and 'stripe' not in tipo_medio:
@@ -1331,7 +1333,9 @@ def crear_transaccion_desde_compra(request):
                     messages.success(request, f"Pago exitoso con tarjeta de {tipo_tarjeta}. Comprobante: {resultado.get('comprobante')}")
                 else:
                     logger.warning(f"[COMPRA] Pago con tarjeta fallido: {resultado}")
-                    messages.warning(request, f"No se pudo procesar el pago con tarjeta: {resultado.get('message')} (código {resultado.get('code')})")
+                    detalle_error = f"{resultado.get('message')} (código {resultado.get('code')})"
+                    transaccion.cambiar_estado('anulada', observacion=f'Pago con tarjeta fallido: {detalle_error}', usuario=request.user)
+                    messages.error(request, f"No se pudo procesar el pago con tarjeta: {detalle_error}")
             
             else:
                 # Proceso normal con cuenta bancaria
@@ -1343,10 +1347,12 @@ def crear_transaccion_desde_compra(request):
                 # Validar que se tengan todos los datos necesarios
                 if not ent_cli_hint or not cta_cli:
                     logger.warning(f"[COMPRA] Faltan datos del cliente: entidad='{ent_cli_hint}', cuenta='{cta_cli}'")
-                    messages.warning(request, "No se encontró información bancaria del cliente en el medio de pago seleccionado. La transacción quedó pendiente.")
+                    transaccion.cambiar_estado('anulada', observacion='Datos bancarios del cliente incompletos o no encontrados en el medio de pago', usuario=request.user)
+                    messages.error(request, "No se encontró información bancaria del cliente en el medio de pago seleccionado. La transacción ha sido anulada.")
                 elif not ent_emp or not cta_emp:
                     logger.error(f"[COMPRA] Faltan datos de la empresa: entidad='{ent_emp}', cuenta='{cta_emp}'")
-                    messages.warning(request, "Error de configuración: no se encontró la cuenta bancaria de la empresa. Contacte al administrador.")
+                    transaccion.cambiar_estado('anulada', observacion='Error de configuración: cuenta bancaria de la empresa no encontrada', usuario=request.user)
+                    messages.error(request, "Error de configuración: no se encontró la cuenta bancaria de la empresa. Contacte al administrador.")
                 else:
                     resultado = realizar_transferencia_bancaria(
                         entidad_src=ent_cli_hint,
@@ -1369,10 +1375,13 @@ def crear_transaccion_desde_compra(request):
                         messages.success(request, 'Transferencia recibida: operación pagada.')
                     else:
                         logger.warning(f"[COMPRA] Transferencia fallida: {resultado}")
-                        messages.warning(request, f"No se pudo recibir la transferencia: {resultado.get('message')} (código {resultado.get('code')})")
+                        detalle_error = f"{resultado.get('message')} (código {resultado.get('code')})"
+                        transaccion.cambiar_estado('anulada', observacion=f'Transferencia bancaria fallida: {detalle_error}', usuario=request.user)
+                        messages.error(request, f"No se pudo recibir la transferencia: {detalle_error}")
         except Exception as e:
             logger.error(f"[COMPRA] Error post-transferencia: {e}", exc_info=True)
-            messages.warning(request, "Ocurrió un error al procesar la transferencia desde el cliente.")
+            transaccion.cambiar_estado('anulada', observacion=f'Error inesperado al procesar transferencia: {str(e)}', usuario=request.user)
+            messages.error(request, "Ocurrió un error al procesar la transferencia desde el cliente.")
 
         # ═══════════════════════════════════════════════════════════════════
         # 🆕 GENERAR FACTURA AUTOMÁTICAMENTE (para TODOS los medios de pago)

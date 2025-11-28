@@ -3,260 +3,524 @@
 
 {% block content %}
 <style>
-/* Estado inicial invisible */
-.fade-in, 
-.slide-in-up {
-    opacity: 0;
-}
+    :root {
+        --primary-soft: #e3f2fd;
+        --primary-color: #1976d2;
+        --success-soft: #e8f5e9;
+        --success-color: #2e7d32;
+        --warning-soft: #fff3e0;
+        --warning-color: #ef6c00;
+        --text-main: #2c3e50;
+        --text-muted: #6c757d;
+    }
 
-/* Animaciones */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+        min-height: 100vh;
+    }
 
-@keyframes slideInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
+    .page-header {
+        margin-bottom: 3rem;
+        text-align: center;
+        padding: 2rem 0;
+        position: relative;
+    }
 
-.fade-in {
-    animation: fadeIn 0.8s ease-out forwards;
-}
+    .page-header::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+    }
 
-.slide-in-up {
-    animation: slideInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-}
+    .page-title {
+        font-weight: 800;
+        color: var(--text-main);
+        margin-bottom: 0.8rem;
+        font-size: 2.5rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
 
-/* Escalonar animación */
-.slide-in-up.card-1 { animation-delay: 0.1s; }
-.slide-in-up.card-2 { animation-delay: 0.2s; }
-.slide-in-up.card-3 { animation-delay: 0.3s; }
+    .page-subtitle {
+        color: var(--text-muted);
+        font-weight: 500;
+        font-size: 1.1rem;
+    }
 
-/* Pulso para botones */
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.02); }
-    100% { transform: scale(1); }
-}
+    /* Cards */
+    .profile-card {
+        background: #ffffff;
+        border: 1px solid rgba(0,0,0,0.08);
+        border-radius: 0;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+        overflow: hidden;
+        position: relative;
+    }
 
-.pulse-btn { 
-    animation: pulse 2s infinite; 
-}
+    .profile-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+        z-index: 1;
+    }
 
-/* Nuevos estilos para botones de acción */
-.action-card {
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
-}
+    .profile-card.theme-success::before {
+        background: linear-gradient(135deg, #2e7d32 0%, #66bb6a 100%);
+    }
 
-.action-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 25px rgba(0,0,0,0.15) !important;
-}
+    .profile-card.theme-warning::before {
+        background: linear-gradient(135deg, #ef6c00 0%, #ffa726 100%);
+    }
 
-.action-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    margin: 0 auto 1rem;
-}
+    .profile-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+    }
 
-.btn-action {
-    border-radius: 12px;
-    padding: 12px 20px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
-}
+    .card-header-custom {
+        padding: 2rem 1.5rem 1.5rem;
+        background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+        border-bottom: 2px solid rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        margin-top: 6px;
+    }
 
-.btn-action:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-}
+    .header-icon {
+        width: 65px;
+        height: 65px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        margin-bottom: 1rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
 
-.gradient-bg-info {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-}
+    .profile-card:hover .header-icon {
+        transform: scale(1.15);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
 
-/* Mejoras visuales generales */
-.card {
-    border: none;
-    border-radius: 20px;
-}
+    .header-title {
+        font-weight: 700;
+        font-size: 1.15rem;
+        color: var(--text-main);
+        margin: 0;
+        letter-spacing: 0.3px;
+    }
 
-.card-header {
-    border-radius: 20px 20px 0 0 !important;
-    border: none;
-}
+    .card-body-custom {
+        padding: 2rem 1.5rem;
+        background: #ffffff;
+    }
 
-.stats-badge {
-    font-size: 0.85rem;
-    padding: 8px 12px;
-    border-radius: 10px;
-}
+    /* Info Items */
+    .info-item {
+        display: flex;
+        align-items: center;
+        padding: 1.2rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #fcfcfc 0%, #f8f9fa 100%);
+        border: 1px solid #e8e8e8;
+        border-left: 3px solid var(--primary-color);
+        border-radius: 0;
+        transition: all 0.3s ease;
+    }
 
-.feature-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 15px;
-}
+    .info-item:hover {
+        background: linear-gradient(135deg, #f8f9fa 0%, #f0f0f0 100%);
+        border-left-width: 5px;
+        transform: translateX(3px);
+        box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    }
+
+    .info-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1.2rem;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .info-content small {
+        display: block;
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 4px;
+        font-weight: 600;
+    }
+
+    .info-content span {
+        font-weight: 600;
+        color: var(--text-main);
+        font-size: 1rem;
+    }
+
+    /* Colors */
+    .theme-primary .header-icon { background-color: var(--primary-soft); color: var(--primary-color); }
+    .theme-primary .info-icon { background-color: var(--primary-soft); color: var(--primary-color); }
+    
+    .theme-success .header-icon { background-color: var(--success-soft); color: var(--success-color); }
+    .theme-success .info-icon { background-color: var(--success-soft); color: var(--success-color); }
+    
+    .theme-warning .header-icon { background-color: var(--warning-soft); color: var(--warning-color); }
+    .theme-warning .info-icon { background-color: var(--warning-soft); color: var(--warning-color); }
+
+    /* Action Buttons */
+    .action-btn {
+        display: flex;
+        align-items: center;
+        padding: 1.2rem;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        border: 1px solid #e0e0e0;
+        border-left: 3px solid #ef6c00;
+        border-radius: 0;
+        color: var(--text-main);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        margin-bottom: 1rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .action-btn::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .action-btn:hover::after {
+        left: 100%;
+    }
+
+    .action-btn:hover {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e8e8e8 100%);
+        border-left-width: 5px;
+        transform: translateX(5px);
+        color: var(--text-main);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .action-btn-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1.2rem;
+        font-size: 1.3rem;
+        transition: transform 0.3s ease;
+        flex-shrink: 0;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    .action-btn:hover .action-btn-icon {
+        transform: scale(1.15);
+    }
+
+    .action-btn-content h6 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.05rem;
+        letter-spacing: 0.2px;
+    }
+
+    .action-btn-content small {
+        color: var(--text-muted);
+        font-size: 0.82rem;
+    }
+
+    .action-arrow {
+        margin-left: auto;
+        color: #ccc;
+        transition: color 0.3s ease;
+    }
+
+    .action-btn:hover .action-arrow {
+        color: var(--text-main);
+    }
+
+    /* Badges */
+    .custom-badge {
+        padding: 0.35em 1em;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        display: inline-block;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        color: #ffffff !important;
+    }
+
+    .custom-badge::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .custom-badge:hover::before {
+        left: 100%;
+    }
+
+    .custom-badge:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    
+    .badge-active { 
+        background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%); 
+        color: #ffffff !important;
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+    .badge-inactive { 
+        background: linear-gradient(135deg, #c62828 0%, #e53935 100%); 
+        color: #ffffff !important;
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+    .badge-role { 
+        background: linear-gradient(135deg, #7b1fa2 0%, #9c27b0 100%); 
+        color: #ffffff !important;
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+    .badge-segment { 
+        background: linear-gradient(135deg, #1565c0 0%, #2196f3 100%); 
+        color: #ffffff !important;
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    /* Animations */
+    .fade-in-up {
+        animation: fadeInUp 0.6s ease-out forwards;
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+
+    /* Rounded Buttons */
+    .btn-rounded {
+        border-radius: 50px !important;
+        padding: 0.8rem 2rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        font-size: 0.85rem !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        border: 2px solid transparent !important;
+    }
+
+    .btn-rounded::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-rounded:hover::before {
+        left: 100%;
+    }
+
+    .btn-rounded:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    }
+
+    .btn-outline-success.btn-rounded {
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        border-color: #2e7d32 !important;
+        color: #2e7d32;
+    }
+
+    .btn-outline-success.btn-rounded:hover {
+        background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+        border-color: #2e7d32 !important;
+        color: #ffffff;
+    }
+
+    .btn-success.btn-rounded {
+        background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+        border: 2px solid rgba(255,255,255,0.3) !important;
+    }
+
+    .btn-success.btn-rounded:hover {
+        background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+        transform: translateY(-3px);
+    }
+
 </style>
 
 <div class="container py-5">
-    <!-- Header Principal -->
-    <div class="text-center mb-5 fade-in">
-        <h1 class="display-5 fw-bold text-primary mb-3">
-            <i class="fa-solid fa-id-card-clip me-3"></i>Dashboard de Usuario
-        </h1>
-        <p class="lead text-muted">Gestiona tu información personal y accede a las funcionalidades del sistema</p>
+    <!-- Header -->
+    <div class="page-header fade-in-up">
+        <h1 class="page-title">Mi Perfil</h1>
+        <p class="page-subtitle">Gestiona tu información personal y preferencias</p>
     </div>
 
     <div class="row g-4">
-        <!-- Tarjeta de Información de Usuario -->
-        <div class="col-lg-4">
-            <div class="card shadow-lg rounded-4 border-0 slide-in-up card-1 h-100">
-                <div class="card-header bg-primary text-white text-center py-4">
-                    <h5 class="mb-0 fw-bold"><i class="fa-solid fa-user-gear me-2"></i> Mi Cuenta</h5>
+        <!-- Columna 1: Información de Usuario -->
+        <div class="col-lg-4 fade-in-up delay-1">
+            <div class="profile-card theme-primary">
+                <div class="card-header-custom">
+                    <div class="header-icon">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <h5 class="header-title">Cuenta de Usuario</h5>
                 </div>
-                <div class="card-body p-4">
-                    <div class="d-flex flex-column h-100">
-                        <div class="flex-grow-1">
-                            <div class="row g-3">
-                                <div class="col-12">
-                                    <div class="d-flex align-items-center p-3 bg-light rounded-3">
-                                        <div class="feature-icon bg-primary text-white">
-                                            <i class="fa-solid fa-user-tag"></i>
-                                        </div>
-                                        <div>
-                                            <small class="text-muted d-block">Usuario</small>
-                                            <span class="fw-bold fs-6">{{ user.username }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <div class="d-flex align-items-center p-3 bg-light rounded-3">
-                                        <div class="feature-icon bg-primary text-white">
-                                            <i class="fa-solid fa-envelope"></i>
-                                        </div>
-                                        <div>
-                                            <small class="text-muted d-block">Email</small>
-                                            <span class="fw-bold fs-6">{{ user.email }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <div class="d-flex align-items-center p-3 bg-light rounded-3">
-                                        <div class="feature-icon bg-primary text-white">
-                                            <i class="fa-solid fa-circle-check"></i>
-                                        </div>
-                                        <div>
-                                            <small class="text-muted d-block">Estado</small>
-                                            {% if user.is_active %}
-                                                <span class="badge bg-success stats-badge">Activo</span>
-                                            {% else %}
-                                                <span class="badge bg-danger stats-badge">Inactivo</span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <div class="d-flex align-items-center p-3 bg-light rounded-3">
-                                        <div class="feature-icon bg-primary text-white">
-                                            <i class="fa-solid fa-users"></i>
-                                        </div>
-                                        <div>
-                                            <small class="text-muted d-block">Rol</small>
-                                            <span class="badge bg-secondary stats-badge">{{ tipo_usuario|default:"Sin rol" }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                <div class="card-body-custom">
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fa-solid fa-at"></i>
+                        </div>
+                        <div class="info-content">
+                            <small>Usuario</small>
+                            <span>{{ user.username }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fa-solid fa-envelope"></i>
+                        </div>
+                        <div class="info-content">
+                            <small>Email</small>
+                            <span>{{ user.email }}</span>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fa-solid fa-toggle-on"></i>
+                        </div>
+                        <div class="info-content">
+                            <small>Estado</small>
+                            {% if user.is_active %}
+                                <span class="custom-badge badge-active">Activo</span>
+                            {% else %}
+                                <span class="custom-badge badge-inactive">Inactivo</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <div class="info-content">
+                            <small>Rol</small>
+                            <span class="custom-badge badge-role">{{ tipo_usuario|default:"Sin rol" }}</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Tarjeta de Cliente Activo -->
-        <div class="col-lg-4">
-            <div class="card shadow-lg rounded-4 border-0 slide-in-up card-2 h-100">
-                <div class="card-header bg-success text-white text-center py-4">
-                    <h5 class="mb-0 fw-bold"><i class="fa-solid fa-address-card me-2"></i> Cliente Activo</h5>
+        <!-- Columna 2: Cliente Activo -->
+        <div class="col-lg-4 fade-in-up delay-2">
+            <div class="profile-card theme-success">
+                <div class="card-header-custom">
+                    <div class="header-icon">
+                        <i class="fa-solid fa-id-card"></i>
+                    </div>
+                    <h5 class="header-title">Cliente Seleccionado</h5>
                 </div>
-                <div class="card-body p-4">
+                <div class="card-body-custom">
                     {% if cliente_activo %}
-                        <div class="d-flex flex-column h-100">
-                            <div class="flex-grow-1">
-                                <div class="row g-3">
-                                    <div class="col-12">
-                                        <div class="d-flex align-items-center p-3 bg-light rounded-3">
-                                            <div class="feature-icon bg-success text-white">
-                                                <i class="fa-solid fa-user-tie"></i>
-                                            </div>
-                                            <div>
-                                                <small class="text-muted d-block">Nombre</small>
-                                                <span class="fw-bold fs-6">{{ cliente_activo.nombre_completo }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-12">
-                                        <div class="d-flex align-items-center p-3 bg-light rounded-3">
-                                            <div class="feature-icon bg-success text-white">
-                                                <i class="fa-solid fa-id-card"></i>
-                                            </div>
-                                            <div>
-                                                <small class="text-muted d-block">Cédula</small>
-                                                <span class="fw-bold fs-6">{{ cliente_activo.cedula }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-12">
-                                        <div class="d-flex align-items-center p-3 bg-light rounded-3">
-                                            <div class="feature-icon bg-success text-white">
-                                                <i class="fa-solid fa-layer-group"></i>
-                                            </div>
-                                            <div>
-                                                <small class="text-muted d-block">Segmento</small>
-                                                <span class="badge bg-secondary text-white stats-badge">{{ cliente_activo.segmento.name }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-12">
-                                        <div class="d-flex align-items-center p-3 bg-light rounded-3">
-                                            <div class="feature-icon bg-success text-white">
-                                                <i class="fa-solid fa-user-gear"></i>
-                                            </div>
-                                            <div>
-                                                <small class="text-muted d-block">Tipo</small>
-                                                <span class="badge bg-secondary text-white stats-badge">{{ cliente_activo.tipo_cliente }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fa-solid fa-user-tie"></i>
                             </div>
-                            <div class="mt-auto pt-3">
-                                <a href="{% url 'clientes:seleccionar_cliente' %}" class="btn btn-outline-success w-100 btn-action fw-semibold">
-                                    <i class="fa-solid fa-arrows-rotate me-2"></i> Cambiar Cliente
-                                </a>
+                            <div class="info-content">
+                                <small>Nombre</small>
+                                <span>{{ cliente_activo.nombre_completo }}</span>
                             </div>
                         </div>
-                    {% else %}
-                        <div class="text-center d-flex flex-column justify-content-center h-100">
-                            <div class="mb-4">
-                                <i class="fa-solid fa-user-xmark fs-1 text-danger mb-3"></i>
-                                <p class="text-muted mb-4">No hay un cliente activo seleccionado.</p>
+
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fa-solid fa-fingerprint"></i>
                             </div>
-                            <a href="{% url 'clientes:seleccionar_cliente' %}" class="btn btn-success fw-semibold pulse-btn btn-action">
-                                <i class="fa-solid fa-user-plus me-2"></i> Seleccionar Cliente
+                            <div class="info-content">
+                                <small>Cédula</small>
+                                <span>{{ cliente_activo.cedula }}</span>
+                            </div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fa-solid fa-layer-group"></i>
+                            </div>
+                            <div class="info-content">
+                                <small>Segmento</small>
+                                <span class="custom-badge badge-segment">{{ cliente_activo.segmento.name }}</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <a href="{% url 'clientes:seleccionar_cliente' %}" class="btn btn-outline-success btn-rounded w-100">
+                                <i class="fa-solid fa-repeat me-2"></i>Cambiar Cliente
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <div class="mb-3 text-muted opacity-50">
+                                <i class="fa-solid fa-user-slash fa-3x"></i>
+                            </div>
+                            <p class="text-muted mb-4">No has seleccionado ningún cliente para operar.</p>
+                            <a href="{% url 'clientes:seleccionar_cliente' %}" class="btn btn-success btn-rounded w-100">
+                                <i class="fa-solid fa-plus me-2"></i>Seleccionar Cliente
                             </a>
                         </div>
                     {% endif %}
@@ -264,95 +528,69 @@
             </div>
         </div>
 
-        <!-- Tarjeta de Acciones Rápidas -->
-        <div class="col-lg-4">
-            <div class="card shadow-lg rounded-4 border-0 slide-in-up card-3 h-100">
-                <div class="card-header bg-warning text-white text-center py-4">
-                    <h5 class="mb-0 fw-bold"><i class="fa-solid fa-bolt me-2"></i> Acciones Rápidas</h5>
+        <!-- Columna 3: Acciones -->
+        <div class="col-lg-4 fade-in-up delay-3">
+            <div class="profile-card theme-warning">
+                <div class="card-header-custom">
+                    <div class="header-icon">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <h5 class="header-title">Acciones Rápidas</h5>
                 </div>
-                <div class="card-body p-4">
-                    <div class="d-flex flex-column h-100">
-                        <div class="flex-grow-1">
-                            <div class="row g-3">
-                                <div class="col-12">
-                                    <a href="{% url 'clientes:medios_pago_cliente' %}" class="btn btn-primary w-100 btn-action text-start p-3">
-                                        <div class="d-flex align-items-center">
-                                            <div class="action-icon bg-white text-primary me-3">
-                                                <i class="fa-solid fa-credit-card"></i>
-                                            </div>
-                                            <div class="text-start">
-                                                <h6 class="mb-1 fw-bold">Medios de Pago</h6>
-                                                <small class="text-white-50">Gestionar formas de pago</small>
-                                            </div>
-                                            <i class="fa-solid fa-chevron-right ms-auto"></i>
-                                        </div>
-                                    </a>
-                                </div>
-
-                                <div class="col-12">
-                                    <a href="{% url 'transacciones:historial_cliente' %}" class="btn btn-warning w-100 btn-action text-start p-3">
-                                        <div class="d-flex align-items-center">
-                                            <div class="action-icon bg-white text-warning me-3">
-                                                <i class="fa-solid fa-clock-rotate-left"></i>
-                                            </div>
-                                            <div class="text-start">
-                                                <h6 class="mb-1 fw-bold">Historial</h6>
-                                                <small class="text-white-50">Ver transacciones anteriores</small>
-                                            </div>
-                                            <i class="fa-solid fa-chevron-right ms-auto"></i>
-                                        </div>
-                                    </a>
-                                </div>
-
-                                <div class="col-12">
-                                    <a href="{% url 'operacion_divisas:seleccionar_operacion' %}" class="btn btn-success w-100 btn-action text-start p-3">
-                                        <div class="d-flex align-items-center">
-                                            <div class="action-icon bg-white text-success me-3">
-                                                <i class="fa-solid fa-exchange-alt"></i>
-                                            </div>
-                                            <div class="text-start">
-                                                <h6 class="mb-1 fw-bold">Nueva Operación</h6>
-                                                <small class="text-white-50">Realizar compra/venta</small>
-                                            </div>
-                                            <i class="fa-solid fa-chevron-right ms-auto"></i>
-                                        </div>
-                                    </a>
-                                </div>
-                            </div>
+                <div class="card-body-custom">
+                    <a href="{% url 'clientes:medios_pago_cliente' %}" class="action-btn">
+                        <div class="action-btn-icon" style="background-color: #e3f2fd; color: #1976d2;">
+                            <i class="fa-solid fa-credit-card"></i>
                         </div>
-
-                        <div class="mt-4 pt-3 border-top">
-                            <div class="text-center">
-                                <small class="text-muted">
-                                    <i class="fa-solid fa-shield-alt me-1"></i>
-                                    Sesión activa desde: {{ user.last_login|date:"d/m/Y H:i" }}
-                                </small>
-                            </div>
+                        <div class="action-btn-content">
+                            <h6>Medios de Pago</h6>
+                            <small>Gestionar tarjetas y cuentas</small>
                         </div>
+                        <i class="fa-solid fa-chevron-right action-arrow"></i>
+                    </a>
+
+                    <a href="{% url 'transacciones:historial_cliente' %}" class="action-btn">
+                        <div class="action-btn-icon" style="background-color: #fff3e0; color: #ef6c00;">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </div>
+                        <div class="action-btn-content">
+                            <h6>Historial</h6>
+                            <small>Ver movimientos pasados</small>
+                        </div>
+                        <i class="fa-solid fa-chevron-right action-arrow"></i>
+                    </a>
+
+                    <a href="{% url 'operacion_divisas:seleccionar_operacion' %}" class="action-btn">
+                        <div class="action-btn-icon" style="background-color: #e8f5e9; color: #2e7d32;">
+                            <i class="fa-solid fa-money-bill-transfer"></i>
+                        </div>
+                        <div class="action-btn-content">
+                            <h6>Nueva Operación</h6>
+                            <small>Compra y venta de divisas</small>
+                        </div>
+                        <i class="fa-solid fa-chevron-right action-arrow"></i>
+                    </a>
+
+                    <a href="{% url 'facturacion:mis_facturas' %}" class="action-btn">
+                        <div class="action-btn-icon" style="background-color: #f3e5f5; color: #7b1fa2;">
+                            <i class="fa-solid fa-file-invoice"></i>
+                        </div>
+                        <div class="action-btn-content">
+                            <h6>Mis Facturas Electrónicas</h6>
+                            <small>Ver y descargar facturas</small>
+                        </div>
+                        <i class="fa-solid fa-chevron-right action-arrow"></i>
+                    </a>
+
+                    <div class="text-center mt-4 pt-3 border-top border-light">
+                        <small class="text-muted">
+                            <i class="fa-regular fa-clock me-1"></i>
+                            Último acceso: {{ user.last_login|date:"d/m/Y H:i" }}
+                        </small>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 </div>
-
-<script>
-// Efectos visuales
-document.addEventListener('DOMContentLoaded', function() {
-    // Efectos de hover para action cards
-    const actionCards = document.querySelectorAll('.action-card');
-    actionCards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-5px)';
-        });
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-        });
-    });
-
-    // Smooth scroll al cargar
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-});
-</script>
 {% endblock %}

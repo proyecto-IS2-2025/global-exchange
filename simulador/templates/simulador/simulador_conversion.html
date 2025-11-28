@@ -1,59 +1,268 @@
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-lg border-0 rounded-4">
-                <div class="card-header bg-primary text-white text-center rounded-top-4">
-                    <h4 class="mb-0"><i class="bi bi-cash-coin me-2"></i> Simulador de Divisas</h4>
-                    {% if user.is_authenticated %}
-                    <small>Conectado como: {{ user.username }} - Segmento: {{ segmento_usuario }}</small>
-                    {% endif %}
+<style>
+    :root {
+        --primary-dark: #0d47a1;
+        --primary-darker: #0a3d91;
+        --success-dark: #1b5e20;
+        --error-dark: #b71c1c;
+        --text-main: #1a1a1a;
+        --text-muted: #6b6b6b;
+        --border-light: #e0e0e0;
+        --bg-light: #fafafa;
+    }
+
+    .simulador-minimal-container {
+        padding: 0;
+    }
+
+    .simulador-minimal-header {
+        background: var(--primary-dark);
+        color: #ffffff;
+        padding: 2rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .simulador-minimal-header h4 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.4rem;
+        font-weight: 600;
+        letter-spacing: -0.3px;
+    }
+
+    .simulador-minimal-header h4 i {
+        margin-right: 0.6rem;
+        opacity: 0.9;
+    }
+
+    .simulador-minimal-header small {
+        font-size: 0.875rem;
+        opacity: 0.85;
+        font-weight: 400;
+    }
+
+    .simulador-minimal-body {
+        padding: 2.5rem 2rem;
+        background: #ffffff;
+    }
+
+    /* Form Fields - Minimal */
+    .form-group-minimal {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group-minimal label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+        letter-spacing: 0.1px;
+    }
+
+    .form-group-minimal label i {
+        margin-right: 0.4rem;
+        color: var(--primary-dark);
+        font-size: 0.9rem;
+    }
+
+    .form-control-minimal,
+    .form-select-minimal {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        font-size: 1rem;
+        border: 1px solid var(--border-light);
+        border-radius: 4px;
+        background: #ffffff;
+        color: var(--text-main);
+        transition: all 0.2s ease;
+    }
+
+    .form-control-minimal:focus,
+    .form-select-minimal:focus {
+        outline: none;
+        border-color: var(--primary-dark);
+        box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.1);
+    }
+
+    .form-control-minimal::placeholder {
+        color: #aaa;
+    }
+
+    /* Button - Minimal */
+    .btn-calcular-minimal {
+        width: 100%;
+        padding: 1rem 2rem;
+        background: var(--primary-dark);
+        border: none;
+        border-radius: 4px;
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(13, 71, 161, 0.2);
+    }
+
+    .btn-calcular-minimal:hover {
+        background: var(--primary-darker);
+        box-shadow: 0 4px 16px rgba(13, 71, 161, 0.3);
+        transform: translateY(-1px);
+    }
+
+    .btn-calcular-minimal:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 6px rgba(13, 71, 161, 0.25);
+    }
+
+    .btn-calcular-minimal i {
+        margin-right: 0.5rem;
+    }
+
+    /* Results - Minimal */
+    .resultado-minimal {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        border-radius: 4px;
+        border-left: 4px solid;
+    }
+
+    .resultado-minimal.success {
+        background: #f1f8f4;
+        border-left-color: var(--success-dark);
+        color: var(--success-dark);
+    }
+
+    .resultado-minimal.error {
+        background: #fef1f1;
+        border-left-color: var(--error-dark);
+        color: var(--error-dark);
+    }
+
+    .resultado-minimal .resultado-heading {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .resultado-minimal .resultado-item {
+        margin-bottom: 0.6rem;
+        font-size: 0.95rem;
+    }
+
+    .resultado-minimal .resultado-item strong {
+        font-weight: 600;
+        margin-right: 0.5rem;
+    }
+
+    .resultado-minimal .resultado-main {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+        font-size: 1.3rem;
+        font-weight: 700;
+    }
+
+    .resultado-minimal .resultado-sub {
+        font-size: 0.85rem;
+        opacity: 0.7;
+        margin-top: 0.3rem;
+    }
+
+    /* Loading - Minimal */
+    .loading-minimal {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .spinner-minimal {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(13, 71, 161, 0.1);
+        border-top-color: var(--primary-dark);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .loading-minimal p {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    /* Badge */
+    .badge-minimal {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        background: var(--primary-dark);
+        color: #ffffff;
+        border-radius: 3px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+</style>
+
+<div class="simulador-minimal-container">
+    <div class="simulador-minimal-header">
+        <h4><i class="bi bi-cash-coin"></i>Simulador de Divisas</h4>
+        {% if user.is_authenticated %}
+        <small>Conectado como: {{ user.username }} - Segmento: {{ segmento_usuario }}</small>
+        {% endif %}
+    </div>
+    <div class="simulador-minimal-body">
+        <form id="simulador-form" class="needs-validation" novalidate>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group-minimal">
+                        <label for="tipoOperacion">
+                            <i class="bi bi-arrows-exchange"></i>Tipo de operación
+                        </label>
+                        <select class="form-select-minimal" id="tipoOperacion" required>
+                            <option value="compra">Quiero comprar</option>
+                            <option value="venta">Quiero vender</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="card-body bg-light">
-                    <form id="simulador-form" class="needs-validation" novalidate>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-floating mb-3">
-                                    <select class="form-select" id="tipoOperacion" required>
-                                        <option value="compra">Quiero comprar</option>
-                                        <option value="venta">Quiero vender</option>
-                                    </select>
-                                    <label for="tipoOperacion"><i class="bi bi-arrows-exchange me-2 text-primary"></i> Tipo de operación</label>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-floating mb-3">
-                                    <select class="form-select" id="moneda" required>
-                                        {% for d in divisas_list %}
-                                            {% if d.code != 'PYG' %}
-                                            <option value="{{ d.code }}">{{ d.nombre }} ({{ d.simbolo }})</option>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </select>
-                                    <label for="moneda"><i class="bi bi-currency-exchange me-2 text-primary"></i> Seleccionar divisa</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-floating mb-3">
-                            <input type="number" class="form-control" id="monto" placeholder="Ingrese el monto" step="0.01" min="0" required>
-                            <label id="monto-label" for="monto"><i class="bi bi-123 me-2 text-primary"></i> Ingrese el monto</label>
-                        </div>
-
-                        <div class="d-grid mb-3">
-                            <button type="submit" class="btn btn-primary btn-lg rounded-pill">
-                                <i class="bi bi-calculator me-2"></i>Calcular
-                            </button>
-                        </div>
-                    </form>
-
-                    <div id="resultado-box" class="alert d-none mt-4"></div>
-                    <div id="loading" class="text-center d-none">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Calculando...</span>
-                        </div>
+                <div class="col-md-6">
+                    <div class="form-group-minimal">
+                        <label for="moneda">
+                            <i class="bi bi-currency-exchange"></i>Seleccionar divisa
+                        </label>
+                        <select class="form-select-minimal" id="moneda" required>
+                            {% for d in divisas_list %}
+                                {% if d.code != 'PYG' %}
+                                <option value="{{ d.code }}">{{ d.nombre }} ({{ d.simbolo }})</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
                     </div>
                 </div>
             </div>
+
+            <div class="form-group-minimal">
+                <label id="monto-label" for="monto">
+                    <i class="bi bi-123"></i>Ingrese el monto
+                </label>
+                <input type="number" class="form-control-minimal" id="monto" placeholder="Ingrese el monto" step="0.01" min="0" required>
+            </div>
+
+            <button type="submit" class="btn-calcular-minimal">
+                <i class="bi bi-calculator"></i>Calcular
+            </button>
+        </form>
+
+        <div id="resultado-box" class="d-none"></div>
+        <div id="loading" class="d-none loading-minimal">
+            <div class="spinner-minimal"></div>
+            <p>Calculando...</p>
         </div>
     </div>
 </div>
@@ -74,10 +283,10 @@
             const monedaSimbolo = monedaOption.text.match(/\(([^)]+)\)/)[1];
             
             if (tipo === 'compra') {
-                montoLabel.innerHTML = '<i class="bi bi-123 me-2 text-primary"></i> Ingrese el monto en Gs.';
+                montoLabel.innerHTML = '<i class="bi bi-123"></i>Ingrese el monto en Gs.';
                 montoInput.placeholder = 'Ej: 100000';
             } else {
-                montoLabel.innerHTML = `<i class="bi bi-123 me-2 text-primary"></i> Ingrese el monto en ${monedaSimbolo}`;
+                montoLabel.innerHTML = `<i class="bi bi-123"></i>Ingrese el monto en ${monedaSimbolo}`;
                 montoInput.placeholder = `Ej: 100`;
             }
         }
@@ -95,7 +304,7 @@
             }
             
             resultadoBox.classList.add('d-none');
-            resultadoBox.classList.remove('alert-success', 'alert-danger');
+            resultadoBox.className = 'd-none';
             loading.classList.remove('d-none');
 
             const tipoOperacion = tipoOperacionSelect.value;
@@ -103,16 +312,16 @@
             const moneda = monedaSelect.value;
 
             if (moneda === 'PYG') {
-                resultadoBox.classList.add('alert-danger');
-                resultadoBox.innerHTML = 'No se permiten operaciones con Guaraní (PYG) en el simulador.';
+                resultadoBox.className = 'resultado-minimal error';
+                resultadoBox.innerHTML = '<strong>Error:</strong> No se permiten operaciones con Guaraní (PYG) en el simulador.';
                 resultadoBox.classList.remove('d-none');
                 loading.classList.add('d-none');
                 return;
             }
 
             if (isNaN(monto) || monto <= 0) {
-                resultadoBox.classList.add('alert-danger');
-                resultadoBox.innerHTML = "Por favor, ingrese un monto válido mayor a cero.";
+                resultadoBox.className = 'resultado-minimal error';
+                resultadoBox.innerHTML = "<strong>Error:</strong> Por favor, ingrese un monto válido mayor a cero.";
                 resultadoBox.classList.remove("d-none");
                 loading.classList.add('d-none');
                 return;
@@ -157,42 +366,36 @@
                     let resultadoFinalHtml = '';
                     if (tipoOperacion === 'compra') {
                         resultadoFinalHtml = `
-                            <h5 class="alert-heading">Resultado de la operación</h5>
-                            <div class="text-start">
-                                <div><strong>Segmento:</strong> ${segmento}</div>
-                                <div><strong>Descuento aplicado:</strong> ${porcentaje_descuento}%</div>
-                                <div><strong>Tasa aplicada:</strong> ${tasa_aplicada} PYG/${data.moneda_simbolo}</div>
-                                <hr>
-                                <div class="fw-bold fs-5">Recibirás: ${resultado} ${data.moneda_simbolo}</div>
-                                <div class="small text-muted">Por ${data.monto_original} PYG</div>
-                            </div>
+                            <div class="resultado-heading">Resultado de la operación</div>
+                            <div class="resultado-item"><strong>Segmento:</strong> <span class="badge-minimal">${segmento}</span></div>
+                            <div class="resultado-item"><strong>Descuento aplicado:</strong> ${porcentaje_descuento}%</div>
+                            <div class="resultado-item"><strong>Tasa aplicada:</strong> ${tasa_aplicada} PYG/${data.moneda_simbolo}</div>
+                            <div class="resultado-main">Recibirás: ${resultado} ${data.moneda_simbolo}</div>
+                            <div class="resultado-sub">Por ${data.monto_original} PYG</div>
                         `;
                     } else {
                         resultadoFinalHtml = `
-                            <h5 class="alert-heading">Resultado de la operación</h5>
-                            <div class="text-start">
-                                <div><strong>Segmento:</strong> ${segmento}</div>
-                                <div><strong>Descuento aplicado:</strong> ${porcentaje_descuento}%</div>
-                                <div><strong>Tasa aplicada:</strong> ${tasa_aplicada} PYG/${data.moneda_simbolo}</div>
-                                <hr>
-                                <div class="fw-bold fs-5">Recibirás: ${resultado} PYG</div>
-                                <div class="small text-muted">Por ${data.monto_original} ${data.moneda_simbolo}</div>
-                            </div>
+                            <div class="resultado-heading">Resultado de la operación</div>
+                            <div class="resultado-item"><strong>Segmento:</strong> <span class="badge-minimal">${segmento}</span></div>
+                            <div class="resultado-item"><strong>Descuento aplicado:</strong> ${porcentaje_descuento}%</div>
+                            <div class="resultado-item"><strong>Tasa aplicada:</strong> ${tasa_aplicada} PYG/${data.moneda_simbolo}</div>
+                            <div class="resultado-main">Recibirás: ${resultado} PYG</div>
+                            <div class="resultado-sub">Por ${data.monto_original} ${data.moneda_simbolo}</div>
                         `;
                     }
 
-                    resultadoBox.classList.add('alert-success');
+                    resultadoBox.className = 'resultado-minimal success';
                     resultadoBox.innerHTML = resultadoFinalHtml;
                     resultadoBox.classList.remove("d-none");
                 } else {
-                    resultadoBox.classList.add('alert-danger');
+                    resultadoBox.className = 'resultado-minimal error';
                     resultadoBox.innerHTML = `<strong>Error:</strong> ${data.error}`;
                     resultadoBox.classList.remove("d-none");
                 }
 
             } catch (error) {
                 console.error("Error en la solicitud:", error);
-                resultadoBox.classList.add('alert-danger');
+                resultadoBox.className = 'resultado-minimal error';
                 resultadoBox.innerHTML = "<strong>Error:</strong> Ocurrió un error al procesar la solicitud.";
                 resultadoBox.classList.remove("d-none");
             } finally {

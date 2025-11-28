@@ -24,21 +24,37 @@
             {% csrf_token %}
             
             <div class="row g-4">
-              <!-- Campos del formulario con mejor presentación -->
-              {% for field in form %}
+              <!-- Divisa a comprar -->
               <div class="col-md-6">
-                <div class="form-floating">
-                  {{ field }}
-                  <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                  {% if field.help_text %}
-                  <div class="form-text">{{ field.help_text }}</div>
+                <label class="form-label fw-bold">Divisa a comprar</label>
+                {% for field in form %}
+                  {% if 'divisa' in field.name %}
+                    {{ field }}
+                    {% if field.help_text %}
+                    <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% for error in field.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
                   {% endif %}
-                  {% for error in field.errors %}
-                  <div class="invalid-feedback d-block">{{ error }}</div>
-                  {% endfor %}
-                </div>
+                {% endfor %}
               </div>
-              {% endfor %}
+              
+              <!-- Cantidad -->
+              <div class="col-md-6">
+                <label class="form-label fw-bold">Cantidad</label>
+                {% for field in form %}
+                  {% if 'cantidad' in field.name or 'monto' in field.name %}
+                    {{ field }}
+                    {% if field.help_text %}
+                    <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% for error in field.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                  {% endif %}
+                {% endfor %}
+              </div>
             </div>
 
             <!-- Resultado de la conversión (si está disponible) -->
@@ -70,27 +86,40 @@
     padding: 1rem;
     height: calc(3.5rem + 2px);
   }
+  
   .form-control:focus {
     box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.15);
     border-color: #86dfb0;
   }
-  .form-floating {
-    position: relative;
+  
+  .form-label {
+    color: #495057;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
   }
-  .form-floating > label {
-    left: 12px;
-    color: #6c757d;
+  
+  select.form-control {
+    height: calc(3.5rem + 2px);
+    padding: 0.75rem 1rem;
   }
+  
+  input.form-control {
+    height: calc(3.5rem + 2px);
+  }
+  
   .card {
     overflow: hidden;
   }
+  
   .btn {
     transition: all 0.2s ease;
   }
+  
   .btn-success {
     background: linear-gradient(to right, #198754, #0f6848);
     border: none;
   }
+  
   .btn-success:hover {
     background: linear-gradient(to right, #0f6848, #094c34);
     transform: translateY(-2px);

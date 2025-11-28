@@ -46,6 +46,7 @@ PERMISOS_POR_GRUPO = {
         'transacciones.change_transaccion',
         'transacciones.delete_transaccion',
         'transacciones.view_transaccion',
+        'transacciones.view_transacciones_asignadas',
         'transacciones.view_transacciones_globales',
         'transacciones.manage_estados_transacciones',
         'transacciones.manage_reversiones_transacciones',
