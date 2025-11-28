@@ -463,7 +463,7 @@ class MedioDePago(models.Model):
         
         return template
 
-    def aplicar_template(self, template_key):
+    def aplicar_template(self, template_key, crear_campos=True):
         """
         Aplica un template predefinido o personalizado al medio de pago,
         creando automáticamente los campos necesarios y estableciendo el tipo_medio.
@@ -489,20 +489,21 @@ class MedioDePago(models.Model):
         
         self.save()
         
-        # Crear campos del template
-        for field_key in template['fields']:
-            if field_key in PREDEFINED_FIELDS:
-                field_def = PREDEFINED_FIELDS[field_key]
-                CampoMedioDePago.objects.get_or_create(
-                    medio_de_pago=self,
-                    campo_api=field_key,
-                    defaults={
-                        'nombre_campo': field_def['label'],
-                        'tipo_dato': field_def['type'],
-                        'is_required': field_def['required'],
-                        'descripcion': field_def['description']
-                    }
-                )
+        if crear_campos:
+            # Crear campos del template
+            for field_key in template['fields']:
+                if field_key in PREDEFINED_FIELDS:
+                    field_def = PREDEFINED_FIELDS[field_key]
+                    CampoMedioDePago.objects.get_or_create(
+                        medio_de_pago=self,
+                        campo_api=field_key,
+                        defaults={
+                            'nombre_campo': field_def['label'],
+                            'tipo_dato': field_def['type'],
+                            'is_required': field_def['required'],
+                            'descripcion': field_def['description']
+                        }
+                    )
 
 
 class CampoMedioDePago(models.Model):
