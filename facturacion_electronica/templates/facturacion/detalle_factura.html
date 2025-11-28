@@ -86,15 +86,10 @@
                         <h5><i class="fas fa-hourglass-half fa-spin"></i> Procesando en SIFEN</h5>
                         <p>La factura está siendo procesada por el sistema SIFEN del Ministerio de Hacienda.</p>
                         <p><strong>Tiempo estimado:</strong> 30-60 segundos</p>
-                        <p class="mb-2">
-                            <a href="{% url 'facturacion:actualizar_estado' factura.id %}" class="btn btn-primary btn-sm">
-                                <i class="fas fa-sync"></i> Actualizar Estado Ahora
-                            </a>
-                        </p>
                         <hr>
                         <small class="text-muted">
                             <i class="fas fa-info-circle"></i> 
-                            Espere 30-60 segundos y presione <kbd>F5</kbd> o use el botón "Actualizar Estado" para verificar si la factura fue aprobada.
+                            La página se actualizará automáticamente cuando la factura sea aprobada.
                         </small>
                     </div>
                     {% endif %}
@@ -178,22 +173,6 @@
                     {% comment %}{% endif %}{% endcomment %}
                 </div>
             </div>
-
-            <!-- Acciones (Solo Staff) -->
-            {% if user.is_staff %}
-            <div class="card">
-                <div class="card-header bg-warning">
-                    <h5 class="mb-0"><i class="fas fa-cog"></i> Acciones</h5>
-                </div>
-                <div class="card-body">
-                    {% if perms.facturacion_electronica.sync_sifen %}
-                    <a href="{% url 'facturacion:actualizar_estado' factura.id %}" class="btn btn-primary btn-block w-100 mb-2">
-                        <i class="fas fa-sync"></i> Actualizar Estado
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
         </div>
     </div>
 </div>
