@@ -1066,8 +1066,68 @@ def procesar_pago(request, terminal_codigo, transaccion_id):
         messages.error(request, '❌ Esta transacción no puede ser procesada.')
         return redirect('tauser_external:menu_tauser', terminal_codigo=terminal_codigo)
     
+    # ✅ NUEVO: Obtener datos de billetes seleccionados
+    import json
+    billetes_data_str = request.POST.get('billetes_data', '{}')
+    
+    try:
+        billetes_data = json.loads(billetes_data_str)
+    except json.JSONDecodeError:
+        messages.error(request, '❌ Error al procesar los billetes seleccionados.')
+        return redirect('tauser_external:mostrar_detalle_deposito', terminal_codigo=terminal_codigo)
+    
+    # ✅ VALIDAR: Verificar que se ingresó el monto exacto
+    from decimal import Decimal
+    monto_ingresado = Decimal('0')
+    
+    for denom_id, info in billetes_data.items():
+        valor = Decimal(str(info.get('valor', 0)))
+        cantidad = int(info.get('cantidad', 0))
+        monto_ingresado += valor * cantidad
+    
+    if monto_ingresado != transaccion.monto_origen:
+        messages.error(
+            request,
+            f'❌ El monto ingresado ({monto_ingresado} {transaccion.divisa_origen.code}) '
+            f'no coincide con el monto requerido ({transaccion.monto_origen} {transaccion.divisa_origen.code}).'
+        )
+        return redirect('tauser_external:mostrar_detalle_deposito', terminal_codigo=terminal_codigo)
+    
     try:
         with transaction.atomic():
+            # ✅ NUEVO: Actualizar inventario de denominaciones
+            for denom_id, info in billetes_data.items():
+                cantidad = int(info.get('cantidad', 0))
+                
+                if cantidad > 0:
+                    # Buscar o crear inventario de denominación
+                    denominacion = Denominacion.objects.get(id=int(denom_id))
+                    inventario_denom, created = InventarioDenominacionTerminal.objects.get_or_create(
+                        terminal=terminal,
+                        denominacion=denominacion,
+                        defaults={'cantidad': 0}
+                    )
+                    
+                    # Incrementar cantidad
+                    inventario_denom.cantidad += cantidad
+                    inventario_denom.save()
+                    
+                    logger.info(
+                        f"[DEPOSITO] Terminal {terminal.codigo}: "
+                        f"Se agregaron {cantidad} billetes de {denominacion.valor} {denominacion.divisa.code}. "
+                        f"Stock actual: {inventario_denom.cantidad}"
+                    )
+            
+            # Actualizar inventario general de divisa (opcional, para referencia)
+            from tauser.models import InventarioDivisaTerminal
+            inventario_general, created = InventarioDivisaTerminal.objects.get_or_create(
+                terminal=terminal,
+                divisa=transaccion.divisa_origen,
+                defaults={'cantidad': Decimal('0')}
+            )
+            inventario_general.cantidad += transaccion.monto_origen
+            inventario_general.save()
+            
             # Registrar operación en el terminal
             RegistroTransaccionTerminal.objects.create(
                 terminal=terminal,
@@ -1094,17 +1154,42 @@ def procesar_pago(request, terminal_codigo, transaccion_id):
                 modificado_por=None  # Sistema TAUSER
             )
             
-            # Limpiar sesión
-            request.session.flush()
+            # Guardar información del depósito exitoso en sesión
+            desglose_depositado = []
+            for denom_id, info in billetes_data.items():
+                cantidad = int(info.get('cantidad', 0))
+                valor = info.get('valor', 0)
+                if cantidad > 0:
+                    desglose_depositado.append({
+                        'denominacion': str(valor),
+                        'cantidad': cantidad,
+                        'divisa_simbolo': transaccion.divisa_origen.simbolo,
+                    })
             
-            messages.success(
-                request,
-                f'✅ Depósito procesado exitosamente. '
-                f'Se han depositado {transaccion.monto_origen} {transaccion.divisa_origen.code}. '
-                f'Recibirás {transaccion.monto_destino} {transaccion.divisa_destino.code} según lo acordado.'
-            )
+            # Limpiar datos de MFA pero mantener info de depósito
+            request.session.pop('transaccion_mfa_verificada', None)
+            request.session.pop('transaccion_tauser_id', None)
+            request.session.pop('terminal_tauser_codigo', None)
             
-            return redirect('tauser_external:home')
+            request.session['deposito_exitoso'] = {
+                'terminal_codigo': terminal_codigo,
+                'terminal_nombre': terminal.nombre,
+                'monto_depositado': str(transaccion.monto_origen),
+                'divisa_depositada_code': transaccion.divisa_origen.code,
+                'divisa_depositada_nombre': transaccion.divisa_origen.nombre,
+                'divisa_depositada_simbolo': transaccion.divisa_origen.simbolo,
+                'monto_recibido': str(transaccion.monto_destino),
+                'divisa_recibida_code': transaccion.divisa_destino.code,
+                'divisa_recibida_nombre': transaccion.divisa_destino.nombre,
+                'divisa_recibida_simbolo': transaccion.divisa_destino.simbolo,
+                'numero_transaccion': transaccion.numero_transaccion,
+                'tauser_code': transaccion.tauser_code,
+                'cliente_nombre': transaccion.cliente.nombre_completo,
+                'desglose': desglose_depositado
+            }
+            request.session.modified = True
+            
+            return redirect('tauser_external:deposito_exitoso', terminal_codigo=terminal_codigo)
             
     except Exception as e:
         logger.error(f"Error al procesar depósito en terminal {terminal_codigo}: {e}", exc_info=True)
@@ -1141,6 +1226,35 @@ def retiro_exitoso(request, terminal_codigo):
     }
     
     return render(request, 'tauser_external/retiro_exitoso.html', context)
+
+
+# ==================== PANTALLA DE DEPÓSITO EXITOSO ====================
+
+@require_http_methods(["GET"])
+def deposito_exitoso(request, terminal_codigo):
+    """
+    Muestra una pantalla de confirmación después de un depósito exitoso.
+    """
+    terminal = get_object_or_404(Terminal, codigo=terminal_codigo, is_activa=True)
+    
+    # Obtener información del depósito de la sesión
+    deposito_info = request.session.get('deposito_exitoso')
+    
+    if not deposito_info:
+        messages.warning(request, '⚠️ No hay información de depósito disponible.')
+        return redirect('tauser_external:home')
+    
+    # Limpiar la información del depósito de la sesión después de obtenerla
+    request.session.pop('deposito_exitoso', None)
+    request.session.modified = True
+    
+    context = {
+        'terminal': terminal,
+        'terminal_codigo': terminal_codigo,
+        'deposito': deposito_info,
+    }
+    
+    return render(request, 'tauser_external/deposito_exitoso.html', context)
 
 
 # ==================== CERRAR SESIÓN ====================
