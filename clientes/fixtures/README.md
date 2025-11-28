@@ -12,6 +12,7 @@ Contiene los datos base de clientes del sistema.
 python manage.py loaddata clientes_data
 ```
 
+
 ---
 
 ### 💳 mediosfinancieroscliente_data.json
