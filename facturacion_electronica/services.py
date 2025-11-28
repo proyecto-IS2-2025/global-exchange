@@ -70,6 +70,82 @@ class SQLProxyService:
             logger.error(f"✗ Configuración usada: {SQL_PROXY_CONFIG}")
             return False
     
+    def buscar_pdf_en_kude(self, numero_factura, fecha_emision):
+        """
+        Busca el PDF de una factura en el servidor KuDE consultando el directorio HTTP
+        
+        Args:
+            numero_factura: Número completo de factura (ej: "001-003-0000092")
+            fecha_emision: datetime de emisión de la factura
+            
+        Returns:
+            str: URL completa del PDF si se encuentra, None si no existe
+        """
+        try:
+            import urllib.request
+            import urllib.error
+            import base64
+            from html.parser import HTMLParser
+            import logging
+            
+            logger = logging.getLogger(__name__)
+            
+            # Construir URL del directorio (formato YYYYMM)
+            fecha_dir = fecha_emision.strftime('%Y%m')
+            dir_url = f"{KUDE_CONFIG['url']}{fecha_dir}/"
+            
+            logger.info(f"[KUDE] Buscando PDF en: {dir_url}")
+            
+            # Preparar autenticación
+            credentials = f"{KUDE_CONFIG['username']}:{KUDE_CONFIG['password']}"
+            encoded = base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
+            
+            # Parsear HTML para buscar el archivo
+            class LinkParser(HTMLParser):
+                def __init__(self):
+                    super().__init__()
+                    self.links = []
+                
+                def handle_starttag(self, tag, attrs):
+                    if tag == 'a':
+                        for attr, value in attrs:
+                            if attr == 'href':
+                                self.links.append(value)
+            
+            # Listar directorio
+            req = urllib.request.Request(dir_url)
+            req.add_header('Authorization', f'Basic {encoded}')
+            
+            with urllib.request.urlopen(req, timeout=5) as response:
+                content = response.read().decode('utf-8')
+                parser = LinkParser()
+                parser.feed(content)
+                
+                # Buscar archivo que contenga el número de factura
+                pdfs = [link for link in parser.links 
+                       if numero_factura in link and '.pdf' in link.lower()]
+                
+                if pdfs:
+                    pdf_name = pdfs[0]  # Tomar el primero
+                    pdf_url = f"{dir_url}{pdf_name}"
+                    logger.info(f"[KUDE] ✅ PDF encontrado: {pdf_url}")
+                    
+                    # Convertir a URL pública para que sea accesible desde el navegador
+                    pdf_url_publica = convertir_a_url_publica(pdf_url)
+                    logger.info(f"[KUDE] URL pública: {pdf_url_publica}")
+                    
+                    return pdf_url_publica
+                else:
+                    logger.warning(f"[KUDE] ⚠️ PDF no encontrado para {numero_factura}")
+                    return None
+                    
+        except urllib.error.HTTPError as e:
+            logger.warning(f"[KUDE] HTTP Error {e.code}: {e.reason}")
+            return None
+        except Exception as e:
+            logger.error(f"[KUDE] Error buscando PDF: {e}")
+            return None
+    
     def desconectar(self):
         """Cierra la conexión con la base de datos"""
         if self.cursor:
@@ -607,7 +683,7 @@ def generar_factura_automatica(transaccion):
             # Preparar items de la factura
             # ✅ IMPORTANTE: La compraventa de divisas es EXENTA de IVA según la ley paraguaya
             # Por lo tanto, afectacion_iva='3' (EXENTO), tasa_iva='0', proporcion_iva='0'
-            descripcion = f"Compra de {transaccion.monto_destino} {transaccion.divisa_destino.code}"
+            descripcion = f"Compra de Divisas - {transaccion.divisa_destino.code}"
             monto_pyg = float(transaccion.monto_origen)  # Monto en guaraníes
             
             items = [{

@@ -23,19 +23,6 @@ services:
       - SECURE_SSL_REDIRECT=False
       - SESSION_COOKIE_SECURE=False
       - CSRF_COOKIE_SECURE=False
-      # Configuración de SQL Proxy para facturación electrónica
-      - SQL_PROXY_HOST=host.docker.internal
-      - SQL_PROXY_PORT=40080
-      - SQL_PROXY_DB_HOST=host.docker.internal
-      - SQL_PROXY_DB_PORT=45432
-      - SQL_PROXY_DB_NAME=fs_proxy_bd
-      - SQL_PROXY_DB_USER=fs_proxy_user
-      - SQL_PROXY_DB_PASSWORD=p123456
-      # Configuración de KUDE (acceso a PDFs/XMLs)
-      - KUDE_USERNAME=sqlproxy
-      - KUDE_PASSWORD=kude1234
-      # URL pública de KUDE (para navegador del usuario)
-      - KUDE_PUBLIC_URL=http://localhost:40080/kude/
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:

@@ -11,13 +11,16 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Instala Gunicorn, Poetry y las dependencias necesarias para PostgreSQL
+# Instala dependencias del sistema necesarias para compilar psycopg2
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     ca-certificates \
     gcc \
-    postgresql-client \
+    g++ \
+    make \
+    libc6-dev \
     libpq-dev \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir gunicorn "poetry==${POETRY_VERSION}"
 
@@ -32,7 +35,7 @@ RUN python manage.py collectstatic --noinput
 # --- Etapa 2: Final (la imagen ligera de producción) ---
 FROM python:3.13-slim
 
-# Instala las dependencias de runtime para PostgreSQL
+# Instala las dependencias de runtime necesarias para psycopg2
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     libpq5 \

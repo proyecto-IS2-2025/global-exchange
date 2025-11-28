@@ -43,9 +43,9 @@ def generar_factura_desde_transaccion(transaccion):
     
     # Preparar descripción del servicio
     if transaccion.tipo_operacion == 'compra':
-        descripcion = f"COMPRA DE {transaccion.divisa_destino.code} - VENTA DE {transaccion.divisa_origen.code}"
+        descripcion = f"Compra de Divisas - {transaccion.divisa_destino.code}"
     else:  # venta
-        descripcion = f"VENTA DE {transaccion.divisa_origen.code} - COMPRA DE {transaccion.divisa_destino.code}"
+        descripcion = f"Venta de Divisas - {transaccion.divisa_origen.code}"
     
     # Calcular monto para la factura
     # En Paraguay, las facturas deben estar en Guaraníes (PYG)
@@ -181,7 +181,7 @@ def actualizar_estado_factura(factura):
 
 def buscar_y_actualizar_pdf(factura):
     """
-    Busca el archivo PDF en el filesystem y actualiza la URL en la factura.
+    Busca el archivo PDF consultando el directorio KuDE via HTTP y actualiza la URL en la factura.
     
     Esta función se ejecuta automáticamente cada vez que se accede a una factura
     aprobada que aún no tiene la URL del PDF completa.
@@ -201,27 +201,55 @@ def buscar_y_actualizar_pdf(factura):
         return True
     
     try:
-        # Construir patrón de búsqueda
+        import requests
+        from bs4 import BeautifulSoup
+        
+        # Construir URL del directorio KuDE
         fecha_str = factura.fecha_emision.strftime('%Y%m')
-        pdf_pattern = f'/home/jose/proyecto_is2/sql-proxy01/volumes/web/kude/{fecha_str}/{factura.numero_factura}_*.pdf'
+        dir_url = f"{KUDE_CONFIG['url']}{fecha_str}/"
         
-        # Buscar archivos que coincidan
-        pdfs = glob.glob(pdf_pattern)
+        # Hacer request con autenticación
+        auth = (KUDE_CONFIG['username'], KUDE_CONFIG['password'])
+        response = requests.get(dir_url, auth=auth, timeout=10)
         
-        if pdfs:
-            # Tomar el primer archivo encontrado
-            pdf_file = os.path.basename(pdfs[0])
-            nueva_url = f"http://localhost:40080/kude/{fecha_str}/{pdf_file}"
+        if response.status_code == 200:
+            # Parsear HTML para buscar archivos
+            soup = BeautifulSoup(response.text, 'html.parser')
             
-            # Actualizar solo si cambió
-            if factura.url_kude_pdf != nueva_url:
-                factura.url_kude_pdf = nueva_url
-                factura.save(update_fields=['url_kude_pdf'])
-                logger.info(f"📄 PDF encontrado y actualizado para {factura.numero_factura}: {pdf_file}")
+            # Buscar enlaces que contengan el número de factura y terminen en .pdf
+            patron_pdf = f"{factura.numero_factura}_"
+            patron_xml = f"{factura.numero_factura}_"
             
-            return True
+            pdf_encontrado = None
+            xml_encontrado = None
+            
+            for link in soup.find_all('a'):
+                href = link.get('href', '')
+                if patron_pdf in href and href.endswith('.pdf'):
+                    pdf_encontrado = href
+                elif patron_xml in href and href.endswith('.xml'):
+                    xml_encontrado = href
+            
+            # Actualizar URLs si se encontraron archivos
+            # Nota: Reemplazar host.docker.internal por localhost para que funcione desde el navegador
+            if pdf_encontrado:
+                nueva_url_pdf = f"{dir_url}{pdf_encontrado}".replace('host.docker.internal', 'localhost')
+                factura.url_kude_pdf = nueva_url_pdf
+                logger.info(f"📄 PDF encontrado para {factura.numero_factura}: {pdf_encontrado}")
+            
+            if xml_encontrado:
+                nueva_url_xml = f"{dir_url}{xml_encontrado}".replace('host.docker.internal', 'localhost')
+                factura.url_kude_xml = nueva_url_xml
+                logger.info(f"📄 XML encontrado para {factura.numero_factura}: {xml_encontrado}")
+            
+            if pdf_encontrado or xml_encontrado:
+                factura.save(update_fields=['url_kude_pdf', 'url_kude_xml'])
+                return True
+            else:
+                logger.debug(f"PDF/XML no encontrado aún para {factura.numero_factura} en {dir_url}")
+                return False
         else:
-            logger.debug(f"PDF no encontrado aún para {factura.numero_factura} en {pdf_pattern}")
+            logger.warning(f"Error HTTP {response.status_code} al consultar directorio KuDE: {dir_url}")
             return False
             
     except Exception as e:

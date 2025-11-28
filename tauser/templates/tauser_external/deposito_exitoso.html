@@ -1,0 +1,403 @@
+{% extends 'base_tauser.html' %}
+{% load static %}
+{% load tauser_filters %}
+
+{% block title %}Depósito Exitoso - {{ terminal.nombre }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        min-height: 100vh;
+    }
+
+    .success-container {
+        max-width: 700px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .success-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .success-header {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 3rem 2rem;
+        text-align: center;
+    }
+
+    .success-icon {
+        width: 100px;
+        height: 100px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        animation: checkmark 0.8s ease-in-out;
+    }
+
+    @keyframes checkmark {
+        0% {
+            transform: scale(0);
+            opacity: 0;
+        }
+        50% {
+            transform: scale(1.2);
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .success-icon i {
+        font-size: 4rem;
+        color: #10b981;
+    }
+
+    .success-header h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+    }
+
+    .success-header p {
+        font-size: 1.1rem;
+        opacity: 0.95;
+        margin: 0;
+    }
+
+    .success-body {
+        padding: 2.5rem;
+    }
+
+    .amount-display {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border: 3px solid #10b981;
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .amount-label {
+        font-size: 1rem;
+        color: #065f46;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+
+    .amount-value {
+        font-size: 3rem;
+        font-weight: 700;
+        color: #047857;
+        line-height: 1;
+    }
+
+    .amount-currency {
+        font-size: 1.2rem;
+        color: #059669;
+        margin-left: 0.5rem;
+    }
+
+    .exchange-info {
+        background: #fff7ed;
+        border: 2px solid #fb923c;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .exchange-info .label {
+        font-size: 0.9rem;
+        color: #9a3412;
+        margin-bottom: 0.5rem;
+    }
+
+    .exchange-info .value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #ea580c;
+    }
+
+    .info-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-section h3 {
+        font-size: 1.1rem;
+        color: #1e293b;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .info-value {
+        color: #1e293b;
+        font-weight: 600;
+        text-align: right;
+    }
+
+    .desglose-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .desglose-section h3 {
+        font-size: 1.1rem;
+        color: #1e293b;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .desglose-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: white;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+        border-left: 4px solid #10b981;
+    }
+
+    .desglose-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .desglose-denom {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .desglose-qty {
+        font-size: 1rem;
+        color: #059669;
+        font-weight: 600;
+    }
+
+    .instruction-box {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        border: 2px solid #3b82f6;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .instruction-box i {
+        font-size: 2.5rem;
+        color: #1e40af;
+        margin-bottom: 1rem;
+    }
+
+    .instruction-box p {
+        color: #1e40af;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .btn-home {
+        width: 100%;
+        padding: 1.25rem;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: block;
+        text-align: center;
+    }
+
+    .btn-home:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        color: white;
+    }
+
+    .countdown-text {
+        text-align: center;
+        color: #64748b;
+        margin-top: 1.5rem;
+        font-size: 0.95rem;
+    }
+
+    .countdown-number {
+        font-weight: 700;
+        color: #10b981;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="success-container">
+    <div class="success-card">
+        <!-- Header de éxito -->
+        <div class="success-header">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h1>¡Depósito Exitoso!</h1>
+            <p>Su operación ha sido procesada correctamente</p>
+        </div>
+
+        <div class="success-body">
+            <!-- Monto depositado -->
+            <div class="amount-display">
+                <div class="amount-label">
+                    <i class="fas fa-coins me-2"></i>
+                    Monto Depositado
+                </div>
+                <div class="amount-value">
+                    {{ deposito.monto_depositado|currency }}
+                    <span class="amount-currency">{{ deposito.divisa_depositada_code }}</span>
+                </div>
+            </div>
+
+            <!-- Información de intercambio -->
+            <div class="exchange-info">
+                <div class="label">
+                    <i class="fas fa-hand-holding-usd me-2"></i>
+                    Recibirás
+                </div>
+                <div class="value">
+                    {{ deposito.monto_recibido|floatformat:0 }} {{ deposito.divisa_recibida_code }}
+                </div>
+            </div>
+
+            <!-- Desglose de billetes depositados -->
+            {% if deposito.desglose %}
+            <div class="desglose-section">
+                <h3>
+                    <i class="fas fa-list me-2"></i>
+                    Billetes Depositados
+                </h3>
+                {% for item in deposito.desglose %}
+                <div class="desglose-item">
+                    <div class="desglose-denom">
+                        <i class="fas fa-money-bill-wave me-2"></i>
+                        {{ item.denominacion }} {{ deposito.divisa_depositada_code }}
+                    </div>
+                    <div class="desglose-qty">
+                        x{{ item.cantidad }} billetes
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Información de la transacción -->
+            <div class="info-section">
+                <h3>
+                    <i class="fas fa-info-circle me-2"></i>
+                    Información de la Transacción
+                </h3>
+                <div class="info-row">
+                    <div class="info-label">Cliente</div>
+                    <div class="info-value">{{ deposito.cliente_nombre }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Número de Transacción</div>
+                    <div class="info-value font-monospace">{{ deposito.numero_transaccion }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Código TAUSER</div>
+                    <div class="info-value font-monospace">{{ deposito.tauser_code }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Terminal</div>
+                    <div class="info-value">{{ deposito.terminal_nombre }}</div>
+                </div>
+            </div>
+
+            <!-- Instrucción final -->
+            <div class="instruction-box">
+                <i class="fas fa-info-circle"></i>
+                <p>Los {{ deposito.divisa_recibida_code }} estarán disponibles según lo acordado en su operación de venta.</p>
+            </div>
+
+            <!-- Botón para volver al inicio -->
+            <a href="{% url 'tauser_external:home' %}" class="btn-home">
+                <i class="fas fa-home me-2"></i>
+                Volver al Inicio
+            </a>
+
+            <!-- Contador de redirección automática -->
+            <div class="countdown-text">
+                Redirigiendo automáticamente en <span class="countdown-number" id="countdown">10</span> segundos...
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Contador regresivo para redirección automática
+    let timeLeft = 10;
+    const countdownElement = document.getElementById('countdown');
+    
+    const countdownInterval = setInterval(function() {
+        timeLeft--;
+        countdownElement.textContent = timeLeft;
+        
+        if (timeLeft <= 0) {
+            clearInterval(countdownInterval);
+            window.location.href = "{% url 'tauser_external:home' %}";
+        }
+    }, 1000);
+    
+    // Limpiar el intervalo si el usuario navega manualmente
+    window.addEventListener('beforeunload', function() {
+        clearInterval(countdownInterval);
+    });
+});
+</script>
+{% endblock %}
