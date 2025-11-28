@@ -93,6 +93,11 @@ urlpatterns = [
         views_external.retiro_exitoso,
         name='retiro_exitoso'
     ),
+    path(
+        'terminal/<str:terminal_codigo>/deposito-exitoso/',
+        views_external.deposito_exitoso,
+        name='deposito_exitoso'
+    ),
     
     # ==================== REPOSICIÓN (NUEVO) ====================
     path(
