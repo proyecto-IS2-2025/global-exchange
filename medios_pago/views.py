@@ -120,13 +120,16 @@ class MedioDePagoCreateAdminView(LoginRequiredMixin, CreateView):  # ← ELIMINA
                 # Aplicar template si fue seleccionado (solo en creación)
                 template_key = form.cleaned_data.get('aplicar_template')
                 if template_key:
-                    self.object.aplicar_template(template_key)
+                    # Aplicar configuración del template pero NO crear los campos automáticamente
+                    # ya que usaremos los que vienen en el formset (que pueden haber sido editados)
+                    self.object.aplicar_template(template_key, crear_campos=False)
                     messages.info(self.request, f'Template aplicado automáticamente.')
-                else:
-                    # Si no hay template, guardar los campos del formset
-                    campos_formset.instance = self.object
-                    campos_formset.save()
-                    
+                
+                # SIEMPRE guardar los campos del formset, haya template o no
+                campos_formset.instance = self.object
+                campos_formset.save()
+
+                if not template_key:
                     # Si no se seleccionó template pero no hay tipo_medio, requerir uno
                     if not self.object.tipo_medio:
                         messages.warning(
