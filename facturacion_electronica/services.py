@@ -683,7 +683,7 @@ def generar_factura_automatica(transaccion):
             # Preparar items de la factura
             # ✅ IMPORTANTE: La compraventa de divisas es EXENTA de IVA según la ley paraguaya
             # Por lo tanto, afectacion_iva='3' (EXENTO), tasa_iva='0', proporcion_iva='0'
-            descripcion = f"Compra de {transaccion.monto_destino} {transaccion.divisa_destino.code}"
+            descripcion = f"Compra de Divisas - {transaccion.divisa_destino.code}"
             monto_pyg = float(transaccion.monto_origen)  # Monto en guaraníes
             
             items = [{

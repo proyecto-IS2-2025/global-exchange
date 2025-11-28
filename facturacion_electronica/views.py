@@ -508,6 +508,37 @@ def cancelar_factura(request, factura_id):
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# VERIFICACIÓN DE PDF
+# ═══════════════════════════════════════════════════════════════════════════
+
+@login_required
+def verificar_pdf_disponible(request, factura_id):
+    """
+    Endpoint AJAX para verificar si el PDF ya está disponible en KuDE
+    Retorna JSON con el estado
+    """
+    from django.http import JsonResponse
+    from .utils import buscar_y_actualizar_pdf
+    
+    factura = get_object_or_404(FacturaElectronica, pk=factura_id)
+    
+    # Verificar permisos
+    if not request.user.is_staff:
+        from clientes.models import Cliente
+        clientes_usuario = Cliente.objects.filter(usuarios=request.user)
+        if not clientes_usuario.filter(id=factura.transaccion.cliente.id).exists():
+            return JsonResponse({'error': 'No tiene permisos para ver esta factura'}, status=403)
+    
+    # Intentar buscar y actualizar el PDF
+    pdf_encontrado = buscar_y_actualizar_pdf(factura)
+    
+    return JsonResponse({
+        'disponible': pdf_encontrado,
+        'url_pdf': factura.url_kude_pdf if pdf_encontrado else None
+    })
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # REPORTES
 # ═══════════════════════════════════════════════════════════════════════════
 
