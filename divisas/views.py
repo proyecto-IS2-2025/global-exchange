@@ -340,6 +340,154 @@ def visualizador_tasas_admin(request):
     })
 
 
+@login_required
+@require_permission("divisas.view_cotizaciones_segmento", check_client_assignment=False)
+def historico_tasas(request):
+    """
+    🔐 PROTEGIDA: divisas.view_cotizaciones_segmento
+    
+    Vista para mostrar el histórico de tasas de cambio con gráficos.
+    Muestra solo las tasas del segmento del cliente activo.
+    """
+    # Detectar segmento activo
+    segmento_activo = None
+    cliente_activo = None
+    
+    cliente_id = request.session.get("cliente_id")
+    if cliente_id:
+        try:
+            cliente_activo = Cliente.objects.get(id=cliente_id, esta_activo=True)
+            segmento_activo = cliente_activo.segmento
+        except Cliente.DoesNotExist:
+            pass
+    
+    if not segmento_activo:
+        segmento_activo, _ = Segmento.objects.get_or_create(name="general")
+    
+    # Obtener divisas activas
+    divisas_activas = Divisa.objects.filter(is_active=True).order_by('code')
+    
+    # Obtener cotizaciones actuales para el tablero
+    divisas_data = []
+    for divisa in divisas_activas:
+        ultimas_cotizaciones = ultimas_por_segmento(divisa)
+        cotizaciones_segmento = [
+            cot for cot in ultimas_cotizaciones
+            if cot.segmento == segmento_activo
+        ]
+        
+        if cotizaciones_segmento:
+            divisas_data.append({
+                "divisa": divisa,
+                "cotizaciones": cotizaciones_segmento
+            })
+    
+    return render(request, 'historico_tasas.html', {
+        'divisas_data': divisas_data,
+        'divisas_activas': divisas_activas,
+        'segmento_activo': segmento_activo,
+        'cliente_activo': cliente_activo
+    })
+
+
+@login_required
+@require_permission("divisas.view_cotizaciones_segmento", check_client_assignment=False)
+def api_historico_tasas(request):
+    """
+    🔐 PROTEGIDA: divisas.view_cotizaciones_segmento
+    
+    API endpoint para obtener datos históricos de tasas de cambio.
+    Retorna JSON con los datos filtrados por divisa, período y tipo de operación.
+    """
+    from datetime import datetime, timedelta
+    from django.utils import timezone
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    # Parámetros de filtro
+    divisa_id = request.GET.get('divisa_id')
+    periodo = request.GET.get('periodo', '30')  # días
+    tipo_operacion = request.GET.get('tipo', 'venta')  # 'compra' o 'venta'
+    
+    logger.info(f"API historico_tasas llamada: divisa_id={divisa_id}, periodo={periodo}, tipo={tipo_operacion}")
+    
+    # Detectar segmento activo
+    segmento_activo = None
+    cliente_id = request.session.get("cliente_id")
+    
+    if cliente_id:
+        try:
+            cliente = Cliente.objects.get(id=cliente_id, esta_activo=True)
+            segmento_activo = cliente.segmento
+            logger.info(f"Cliente encontrado: {cliente.nombre_completo}, segmento: {segmento_activo.name}")
+        except Cliente.DoesNotExist:
+            logger.warning(f"Cliente con id {cliente_id} no encontrado")
+            pass
+    
+    if not segmento_activo:
+        segmento_activo, _ = Segmento.objects.get_or_create(name="general")
+        logger.info(f"Usando segmento general")
+    
+    # Validar divisa
+    if not divisa_id:
+        logger.error("divisa_id no proporcionado")
+        return JsonResponse({'error': 'divisa_id es requerido'}, status=400)
+    
+    try:
+        divisa = Divisa.objects.get(id=divisa_id, is_active=True)
+        logger.info(f"Divisa encontrada: {divisa.code} - {divisa.nombre}")
+    except Divisa.DoesNotExist:
+        logger.error(f"Divisa con id {divisa_id} no encontrada o inactiva")
+        return JsonResponse({'error': 'Divisa no encontrada o inactiva'}, status=404)
+    
+    # Calcular rango de fechas
+    fecha_fin = timezone.now()
+    try:
+        dias = int(periodo)
+    except ValueError:
+        dias = 30
+    
+    fecha_inicio = fecha_fin - timedelta(days=dias)
+    logger.info(f"Buscando cotizaciones desde {fecha_inicio} hasta {fecha_fin}")
+    
+    # Obtener cotizaciones históricas
+    cotizaciones = CotizacionSegmento.objects.filter(
+        divisa=divisa,
+        segmento=segmento_activo,
+        fecha__gte=fecha_inicio,
+        fecha__lte=fecha_fin
+    ).order_by('fecha')
+    
+    # Logging para depuración
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Búsqueda histórico: divisa={divisa.code}, segmento={segmento_activo.name}, periodo={dias} días, cotizaciones encontradas={cotizaciones.count()}")
+    
+    # Preparar datos para el gráfico
+    datos = []
+    for cot in cotizaciones:
+        valor = cot.valor_venta_unit if tipo_operacion == 'venta' else cot.valor_compra_unit
+        datos.append({
+            'fecha': cot.fecha.strftime('%Y-%m-%d %H:%M'),
+            'valor': float(valor),
+            'descuento': float(cot.porcentaje_descuento)
+        })
+    
+    return JsonResponse({
+        'divisa': {
+            'code': divisa.code,
+            'nombre': divisa.nombre,
+            'decimales': divisa.decimales
+        },
+        'segmento': segmento_activo.name,
+        'tipo_operacion': tipo_operacion,
+        'periodo_dias': dias,
+        'datos': datos,
+        'total_registros': len(datos)
+    })
+
+
 # ═══════════════════════════════════════════════════════════════════
 # FUNCIONES AUXILIARES
 # ═══════════════════════════════════════════════════════════════════
