@@ -31,6 +31,7 @@ urlpatterns = [
     path("terminal/", include("tauser.urls", namespace="tauser")),  # Admin interno (casa de cambios)
     path("tauser/", include("tauser.urls_external", namespace="tauser_external")),  # Acceso externo público
     path('stripe/', include('stripe_payments.urls', namespace='stripe_payments')),
+    path('ganancias/', include('ganancias.urls', namespace='ganancias')),
 ]
 
 # Handler personalizado para error 403

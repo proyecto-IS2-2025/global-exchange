@@ -963,6 +963,48 @@ def crear_transaccion_desde_venta(request):
             return redirect('operacion_divisas:venta_sumario')
 
         medio_datos = preparar_datos_medio(medio_inst)
+        
+        # 📊 Obtener comisión del medio de pago para venta
+        comision_porcentaje = Decimal('0')
+        comision_monto = Decimal('0')
+        
+        if isinstance(medio_inst, dict) and medio_inst.get("id"):
+            try:
+                from clientes.models import ClienteMedioDePago
+                medio_real = ClienteMedioDePago.objects.select_related('medio_de_pago').get(
+                    id=medio_inst.get("id")
+                )
+                medio_model = medio_real.medio_de_pago
+                try:
+                    comision_porcentaje = Decimal(str(medio_model.comision_porcentaje))
+                except (ValueError, TypeError):
+                    comision_porcentaje = Decimal('0')
+                
+                # En venta, la comisión se descuenta del monto que recibe el cliente
+                comision_monto = (monto_destino * comision_porcentaje / Decimal('100')).quantize(
+                    Decimal('1'), rounding=ROUND_HALF_UP
+                )
+            except Exception as e:
+                logger.warning(f"No se pudo obtener comisión del medio: {e}")
+        
+        # 📊 Calcular datos de análisis de ganancias para venta
+        tasa_base_calculada = None
+        margen_spread_calculado = None
+        
+        try:
+            from divisas.models import CotizacionSegmento
+            cotizacion = CotizacionSegmento.objects.filter(
+                divisa=divisa_origen,
+                segmento=cliente.segmento
+            ).order_by('-fecha').first()
+            
+            if cotizacion:
+                # Para venta, el cliente recibe según valor_venta_unit
+                tasa_base_calculada = cotizacion.precio_base
+                # El margen es la diferencia entre el precio base y lo que recibe el cliente
+                margen_spread_calculado = tasa_base_calculada - tasa_cambio
+        except Exception as e:
+            logger.warning(f"No se pudo calcular tasa base para análisis: {e}")
 
         with transaction.atomic():
             transaccion = Transaccion.objects.create(
@@ -973,6 +1015,10 @@ def crear_transaccion_desde_venta(request):
                 monto_origen=monto_origen,
                 monto_destino=monto_destino,
                 tasa_de_cambio_aplicada=tasa_cambio,
+                tasa_base=tasa_base_calculada,  # 📊 Nuevo campo
+                margen_spread=margen_spread_calculado,  # 📊 Nuevo campo
+                comision_aplicada=comision_monto,  # 📊 Nuevo campo
+                porcentaje_comision=comision_porcentaje.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),  # 📊 Max 2 decimales
                 estado='pendiente',
                 medio_pago_datos=medio_datos,
                 procesado_por=request.user,
@@ -1174,6 +1220,27 @@ def crear_transaccion_desde_compra(request):
         )
         monto_origen_total = monto_origen_base + comision_monto  # Total a pagar por el cliente
         
+        # 📊 Calcular datos de análisis de ganancias (tasa base y margen)
+        # La tasa_cambio actual es la tasa aplicada al cliente (con spread incluido)
+        # Para obtener la tasa base, necesitamos buscar la cotización del segmento
+        tasa_base_calculada = None
+        margen_spread_calculado = None
+        
+        try:
+            from divisas.models import CotizacionSegmento
+            cotizacion = CotizacionSegmento.objects.filter(
+                divisa=divisa_destino,
+                segmento=cliente.segmento
+            ).order_by('-fecha').first()
+            
+            if cotizacion:
+                # Para compra, el cliente paga según valor_compra_unit
+                tasa_base_calculada = cotizacion.precio_base
+                # El margen es la diferencia entre lo que paga el cliente y el precio base
+                margen_spread_calculado = tasa_cambio - tasa_base_calculada
+        except Exception as e:
+            logger.warning(f"No se pudo calcular tasa base para análisis: {e}")
+        
         # Crear la transacción
         with transaction.atomic():
             # Agregar info del tauser a medio_datos
@@ -1194,6 +1261,10 @@ def crear_transaccion_desde_compra(request):
                 monto_origen=monto_origen_total,  # 💰 Usar el total con comisión
                 monto_destino=monto_destino,
                 tasa_de_cambio_aplicada=tasa_cambio,
+                tasa_base=tasa_base_calculada,  # 📊 Nuevo campo
+                margen_spread=margen_spread_calculado,  # 📊 Nuevo campo
+                comision_aplicada=comision_monto,  # 📊 Nuevo campo
+                porcentaje_comision=comision_porcentaje.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),  # 📊 Nuevo campo (máx 2 decimales)
                 estado='pendiente',
                 medio_pago_datos=medio_datos,
                 tauser_terminal=terminal_obj,  # NUEVO: Asignar terminal

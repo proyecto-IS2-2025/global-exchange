@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% load humanize %}
 
 {% block title %}Detalle de Transacción - {{ transaccion.numero_transaccion }}{% endblock %}
@@ -408,6 +409,95 @@
                 <div class="card-body">
                     <div class="bg-light p-3 rounded">
                         {{ transaccion.observaciones|linebreaks }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Análisis de Ganancias (Solo Administradores) -->
+            {% if user.is_superuser or 'admin' in user.groups.values_list|first or 'Administrador' in user.groups.values_list|first %}
+            <div class="card info-card shadow-sm mb-4 border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up me-2"></i>
+                        Análisis de Ganancias <span class="badge bg-light text-success ms-2">Solo Admin</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-3">
+                        <i class="bi bi-shield-lock-fill me-2"></i>
+                        <small>Esta información es confidencial y solo visible para administradores</small>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="text-muted small">Tasa Base (Sin Margen)</label>
+                                <p class="mb-0 fw-bold">
+                                    {% if transaccion.tasa_base %}
+                                        Gs. {{ transaccion.tasa_base|floatformat:0|intcomma }}
+                                    {% else %}
+                                        <span class="text-muted">No disponible</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">Tasa Aplicada al Cliente</label>
+                                <p class="mb-0 fw-bold text-primary">
+                                    Gs. {{ transaccion.tasa_de_cambio_aplicada|floatformat:0|intcomma }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="text-muted small">Margen de Spread</label>
+                                <p class="mb-0 fw-bold {% if transaccion.margen_spread > 0 %}text-success{% elif transaccion.margen_spread < 0 %}text-danger{% endif %}">
+                                    {% if transaccion.margen_spread %}
+                                        Gs. {{ transaccion.margen_spread|floatformat:0|intcomma }}
+                                    {% else %}
+                                        <span class="text-muted">No disponible</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">Porcentaje de Comisión</label>
+                                <p class="mb-0 fw-bold">{{ transaccion.porcentaje_comision|floatformat:2 }}%</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="text-muted small">Comisión del Medio de Pago <span class="badge bg-secondary">Informativa</span></label>
+                                <p class="mb-0">
+                                    <span class="fs-5 fw-bold text-muted">
+                                        ₲ {{ transaccion.comision_aplicada|floatformat:0|intcomma }}
+                                    </span>
+                                    <br>
+                                    <small class="text-muted">Esta comisión no es ganancia de la casa de cambio</small>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-success mb-0 mt-3">
+                        <div class="row text-center">
+                            <div class="col-12">
+                                <small class="text-muted d-block mb-1">GANANCIA REAL DE LA CASA DE CAMBIO</small>
+                                <h4 class="mb-0 fw-bold">
+                                    {% if transaccion.margen_spread and transaccion.monto_destino %}
+                                        {% widthratio transaccion.margen_spread 1 transaccion.monto_destino as ganancia_spread %}
+                                        ₲ {{ ganancia_spread|floatformat:0|intcomma }}
+                                    {% else %}
+                                        <span class="text-muted">No calculada</span>
+                                    {% endif %}
+                                </h4>
+                                <small class="text-muted">Margen de Spread × Monto Comprado</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
