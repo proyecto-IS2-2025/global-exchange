@@ -538,6 +538,131 @@ class LogRecargaInventario(models.Model):
         super().save(*args, **kwargs)
 
 
+class MovimientoInventarioTerminal(models.Model):
+    """
+    Registro unificado de todos los movimientos de stock en el TAUSER.
+    Incluye recargas manuales, depósitos de clientes y extracciones.
+    """
+    TIPO_MOVIMIENTO_CHOICES = [
+        ('RECARGA', 'Recarga Manual'),
+        ('DEPOSITO', 'Depósito de Cliente'),
+        ('EXTRACCION', 'Extracción/Retiro'),
+    ]
+    
+    terminal = models.ForeignKey(
+        Terminal,
+        on_delete=models.CASCADE,
+        related_name='movimientos_inventario',
+        verbose_name='Terminal'
+    )
+    tipo_movimiento = models.CharField(
+        max_length=15,
+        choices=TIPO_MOVIMIENTO_CHOICES,
+        verbose_name='Tipo de Movimiento'
+    )
+    fecha = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Fecha y hora'
+    )
+    cliente = models.ForeignKey(
+        Cliente,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='movimientos_tauser',
+        verbose_name='Cliente',
+        help_text='Cliente asociado (solo para depósitos y extracciones)'
+    )
+    transaccion = models.ForeignKey(
+        Transaccion,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='movimientos_tauser',
+        verbose_name='Transacción',
+        help_text='Transacción relacionada (solo para depósitos y extracciones)'
+    )
+    usuario = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='movimientos_inventario_tauser',
+        verbose_name='Usuario',
+        help_text='Usuario que realizó la recarga (solo para recargas manuales)'
+    )
+    observaciones = models.TextField(
+        blank=True,
+        default='',
+        verbose_name='Observaciones'
+    )
+    
+    class Meta:
+        verbose_name = "Movimiento de Inventario"
+        verbose_name_plural = "Movimientos de Inventario"
+        ordering = ['-fecha']
+        indexes = [
+            models.Index(fields=['terminal', '-fecha']),
+            models.Index(fields=['tipo_movimiento', '-fecha']),
+            models.Index(fields=['cliente', '-fecha']),
+        ]
+    
+    def __str__(self):
+        return f"{self.get_tipo_movimiento_display()} - {self.terminal.codigo} ({self.fecha.strftime('%d/%m/%Y %H:%M')})"
+    
+    @property
+    def cantidad_total_billetes(self):
+        """Retorna la cantidad total de billetes del movimiento"""
+        return sum(d.cantidad for d in self.detalles.all())
+    
+    @property
+    def valor_total(self):
+        """Retorna el valor total del movimiento"""
+        return sum(d.subtotal for d in self.detalles.all())
+
+
+class DetalleMovimientoInventario(models.Model):
+    """
+    Detalle de cada denominación involucrada en un movimiento de inventario.
+    """
+    movimiento = models.ForeignKey(
+        MovimientoInventarioTerminal,
+        on_delete=models.CASCADE,
+        related_name='detalles',
+        verbose_name='Movimiento'
+    )
+    denominacion = models.ForeignKey(
+        Denominacion,
+        on_delete=models.PROTECT,
+        verbose_name='Denominación'
+    )
+    cantidad = models.IntegerField(
+        verbose_name='Cantidad',
+        help_text='Cantidad de billetes (positivo para ingreso, se usa para extracciones también)'
+    )
+    cantidad_anterior = models.IntegerField(
+        verbose_name='Stock anterior',
+        help_text='Cantidad en stock antes del movimiento'
+    )
+    cantidad_nueva = models.IntegerField(
+        verbose_name='Stock nuevo',
+        help_text='Cantidad en stock después del movimiento'
+    )
+    
+    class Meta:
+        verbose_name = "Detalle de Movimiento"
+        verbose_name_plural = "Detalles de Movimientos"
+        ordering = ['-denominacion__valor']
+    
+    def __str__(self):
+        return f"{self.cantidad}x {self.denominacion.valor_formateado}"
+    
+    @property
+    def subtotal(self):
+        """Calcula el subtotal de esta línea"""
+        return self.denominacion.valor * self.cantidad
+
+
 class ReservaDenominacion(models.Model):
     """
     Representa la reserva de denominaciones en un tauser para una transacción.

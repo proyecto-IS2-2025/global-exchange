@@ -134,6 +134,11 @@ urlpatterns = [
         views_external.historial_recargas_externo,
         name='historial_recargas'
     ),
+    path(
+        'terminal/<str:terminal_codigo>/movimiento/<int:movimiento_id>/',
+        views_external.detalle_movimiento_inventario,
+        name='detalle_movimiento'
+    ),
     
     # ==================== CERRAR SESIÓN ====================
     path(
