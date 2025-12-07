@@ -21,6 +21,7 @@ def tablero_ganancias(request):
     fecha_inicio = request.GET.get('fecha_inicio')
     fecha_fin = request.GET.get('fecha_fin')
     periodo = request.GET.get('periodo', 'mes_actual')  # dia, semana, mes_actual, mes_anterior, año
+    divisa_id = request.GET.get('divisa')  # Nuevo filtro por divisa
     
     # Definir el rango de fechas según el período seleccionado
     hoy = timezone.now().date()
@@ -57,6 +58,10 @@ def tablero_ganancias(request):
         transaccion__estado__in=['completado', 'pagada']  # Solo transacciones válidas
     )
     
+    # Aplicar filtro por divisa si está seleccionado
+    if divisa_id:
+        ganancias = ganancias.filter(divisa_referencia_id=divisa_id)
+    
     # Calcular totales
     totales = ganancias.aggregate(
         total_comisiones=Sum('monto_comision'),
@@ -64,6 +69,33 @@ def tablero_ganancias(request):
         total_general=Sum('monto_total'),
         cantidad_transacciones=Count('id')
     )
+    
+    # Ganancias por tipo de operación (compra vs venta)
+    ganancias_por_operacion = ganancias.values('transaccion__tipo_operacion').annotate(
+        total=Sum('monto_spread'),
+        cantidad=Count('id')
+    ).order_by('-total')
+    
+    # Calcular totales por tipo de operación
+    total_compras = ganancias.filter(transaccion__tipo_operacion='compra').aggregate(
+        total=Sum('monto_spread'),
+        cantidad=Count('id')
+    )
+    # Asegurar valores por defecto
+    if total_compras['total'] is None:
+        total_compras['total'] = Decimal('0.00')
+    if total_compras['cantidad'] is None:
+        total_compras['cantidad'] = 0
+    
+    total_ventas = ganancias.filter(transaccion__tipo_operacion='venta').aggregate(
+        total=Sum('monto_spread'),
+        cantidad=Count('id')
+    )
+    # Asegurar valores por defecto
+    if total_ventas['total'] is None:
+        total_ventas['total'] = Decimal('0.00')
+    if total_ventas['cantidad'] is None:
+        total_ventas['cantidad'] = 0
     
     # Ganancias por divisa
     ganancias_por_divisa = ganancias.values(
@@ -126,11 +158,25 @@ def tablero_ganancias(request):
     if totales['cantidad_transacciones'] and totales['cantidad_transacciones'] > 0:
         promedio_por_transaccion = (totales['total_spread'] or Decimal('0.00')) / totales['cantidad_transacciones']
     
+    # Obtener lista de divisas para el filtro
+    divisas = Divisa.objects.filter(is_active=True).order_by('nombre')
+    divisa_seleccionada = None
+    if divisa_id:
+        try:
+            divisa_seleccionada = Divisa.objects.get(id=divisa_id)
+        except Divisa.DoesNotExist:
+            pass
+    
     context = {
         'fecha_inicio': fecha_inicio,
         'fecha_fin': fecha_fin,
         'periodo': periodo,
+        'divisas': divisas,
+        'divisa_seleccionada': divisa_seleccionada,
         'totales': totales,
+        'total_compras': total_compras,
+        'total_ventas': total_ventas,
+        'ganancias_por_operacion': ganancias_por_operacion,
         'ganancias_por_divisa': ganancias_por_divisa,
         'ganancias_por_tipo': ganancias_por_tipo,
         'evolucion_diaria': evolucion_diaria,

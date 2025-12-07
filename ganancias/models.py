@@ -13,7 +13,7 @@ class RegistroGanancia(models.Model):
     """
     TIPO_GANANCIA_CHOICES = [
         ('comision', 'Comisión'),
-        ('spread', 'Spread'),
+        ('spread', 'Margen'),
     ]
     
     transaccion = models.OneToOneField(
@@ -38,7 +38,7 @@ class RegistroGanancia(models.Model):
     )
     
     monto_spread = models.DecimalField(
-        'Monto de Spread',
+        'Monto de Margen',
         max_digits=20,
         decimal_places=2,
         default=Decimal('0.00'),
@@ -137,7 +137,7 @@ class RegistroGanancia(models.Model):
         if hasattr(transaccion, 'porcentaje_comision') and transaccion.porcentaje_comision:
             porcentaje_comision = transaccion.porcentaje_comision
         
-        # Calcular spread (ESTA ES LA GANANCIA REAL)
+        # Calcular margen (ESTA ES LA GANANCIA REAL)
         monto_spread = Decimal('0.00')
         
         if hasattr(transaccion, 'margen_spread') and transaccion.margen_spread and hasattr(transaccion, 'monto_destino'):
@@ -159,7 +159,7 @@ class RegistroGanancia(models.Model):
             defaults={
                 'tipo_ganancia': 'spread' if monto_spread > 0 else 'comision',
                 'monto_comision': Decimal('0.00'),  # No contamos comisión como ganancia
-                'monto_spread': monto_spread,  # Esta es la ganancia real
+                'monto_spread': monto_spread,  # Esta es la ganancia real (margen)
                 'divisa_referencia': divisa_extranjera,
                 'porcentaje_comision': porcentaje_comision,
                 'fecha_transaccion': transaccion.fecha_creacion,
@@ -187,7 +187,7 @@ class ResumenGananciaDiaria(models.Model):
     )
     
     total_spread = models.DecimalField(
-        'Total Spread',
+        'Total Margen',
         max_digits=20,
         decimal_places=2,
         default=Decimal('0.00')
@@ -262,7 +262,7 @@ class ResumenGananciaMensual(models.Model):
     )
     
     total_spread = models.DecimalField(
-        'Total Spread',
+        'Total Margen',
         max_digits=20,
         decimal_places=2,
         default=Decimal('0.00')

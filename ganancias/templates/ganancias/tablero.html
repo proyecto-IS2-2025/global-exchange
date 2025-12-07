@@ -8,7 +8,14 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h2 class="mb-0"><i class="fas fa-chart-line me-2"></i>Tablero de Control de Ganancias</h2>
-                    <p class="text-muted">Análisis detallado de ingresos y comisiones</p>
+                    <p class="text-muted">
+                        Análisis detallado de ingresos y comisiones
+                        {% if divisa_seleccionada %}
+                        <span class="badge bg-info ms-2">
+                            <i class="fas fa-filter me-1"></i>Filtrado por: {{ divisa_seleccionada.code }} - {{ divisa_seleccionada.nombre }}
+                        </span>
+                        {% endif %}
+                    </p>
                 </div>
                 <div>
                     <a href="{% url 'ganancias:comparacion' %}" class="btn btn-outline-primary me-2">
@@ -28,7 +35,7 @@
             <div class="card shadow-sm">
                 <div class="card-body">
                     <form method="get" class="row g-3">
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label class="form-label fw-bold">Período Rápido</label>
                             <select name="periodo" class="form-select" onchange="this.form.submit()">
                                 <option value="dia" {% if periodo == 'dia' %}selected{% endif %}>Hoy</option>
@@ -38,18 +45,34 @@
                                 <option value="año" {% if periodo == 'año' %}selected{% endif %}>Año Actual</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold">Divisa</label>
+                            <select name="divisa" class="form-select" onchange="this.form.submit()">
+                                <option value="">Todas las divisas</option>
+                                {% for divisa in divisas %}
+                                <option value="{{ divisa.id }}" {% if divisa_seleccionada and divisa.id == divisa_seleccionada.id %}selected{% endif %}>
+                                    {{ divisa.code }} - {{ divisa.nombre }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
                             <label class="form-label fw-bold">Desde</label>
                             <input type="date" name="fecha_inicio" class="form-control" value="{{ fecha_inicio|date:'Y-m-d' }}">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label class="form-label fw-bold">Hasta</label>
                             <input type="date" name="fecha_fin" class="form-control" value="{{ fecha_fin|date:'Y-m-d' }}">
                         </div>
-                        <div class="col-md-3 d-flex align-items-end">
+                        <div class="col-md-2 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary w-100">
                                 <i class="fas fa-filter me-1"></i>Filtrar
                             </button>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <a href="{% url 'ganancias:tablero' %}" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-times me-1"></i>Limpiar
+                            </a>
                         </div>
                     </form>
                 </div>
@@ -64,7 +87,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <p class="text-muted mb-1 small">GANANCIA TOTAL (SPREAD)</p>
+                            <p class="text-muted mb-1 small">GANANCIA TOTAL</p>
                             <h3 class="mb-0 fw-bold">₲ {{ totales.total_spread|floatformat:0|default:"0" }}</h3>
                         </div>
                         <div class="bg-primary bg-opacity-10 rounded-circle p-3">
@@ -85,19 +108,38 @@
         </div>
         
         <div class="col-md-3">
-            <div class="card shadow-sm border-0 h-100">
+            <div class="card shadow-sm border-0 h-100 border-start border-primary border-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <p class="text-muted mb-1 small">COMISIONES MP <span class="badge bg-secondary">Info</span></p>
-                            <h3 class="mb-0 fw-bold text-muted">₲ {{ totales.total_comisiones|floatformat:0|default:"0" }}</h3>
+                            <p class="text-muted mb-1 small">GANANCIA POR COMPRAS</p>
+                            <h3 class="mb-0 fw-bold text-primary">₲ {{ total_compras.total|floatformat:0|default:"0" }}</h3>
                         </div>
-                        <div class="bg-secondary bg-opacity-10 rounded-circle p-3">
-                            <i class="fas fa-info-circle fa-2x text-secondary"></i>
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-shopping-cart fa-2x text-primary"></i>
                         </div>
                     </div>
                     <div class="mt-3">
-                        <small class="text-muted"><i class="fas fa-exclamation-triangle me-1"></i>No es ganancia de la casa de cambio</small>
+                        <small class="text-muted">{{ total_compras.cantidad|default:"0" }} transacciones</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100 border-start border-info border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">GANANCIA POR VENTAS</p>
+                            <h3 class="mb-0 fw-bold text-info">₲ {{ total_ventas.total|floatformat:0|default:"0" }}</h3>
+                        </div>
+                        <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-hand-holding-usd fa-2x text-info"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">{{ total_ventas.cantidad|default:"0" }} transacciones</small>
                     </div>
                 </div>
             </div>
@@ -108,35 +150,15 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <p class="text-muted mb-1 small">GANANCIA POR SPREAD <span class="badge bg-success">Real</span></p>
-                            <h3 class="mb-0 fw-bold text-success">₲ {{ totales.total_spread|floatformat:0|default:"0" }}</h3>
-                        </div>
-                        <div class="bg-success bg-opacity-10 rounded-circle p-3">
-                            <i class="fas fa-exchange-alt fa-2x text-success"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <small class="text-success"><i class="fas fa-check-circle me-1"></i>Ganancia neta de la casa de cambio</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="text-muted mb-1 small">TRANSACCIONES</p>
-                            <h3 class="mb-0 fw-bold">{{ totales.cantidad_transacciones|default:"0" }}</h3>
+                            <p class="text-muted mb-1 small">PROMEDIO POR TRANSACCIÓN</p>
+                            <h3 class="mb-0 fw-bold">₲ {{ promedio_por_transaccion|floatformat:0 }}</h3>
                         </div>
                         <div class="bg-warning bg-opacity-10 rounded-circle p-3">
-                            <i class="fas fa-receipt fa-2x text-warning"></i>
+                            <i class="fas fa-chart-line fa-2x text-warning"></i>
                         </div>
                     </div>
                     <div class="mt-3">
-                        <small class="text-muted">Promedio por transacción:</small>
-                        <p class="mb-0 fw-bold">₲ {{ promedio_por_transaccion|floatformat:0 }}</p>
+                        <small class="text-muted">Total: {{ totales.cantidad_transacciones|default:"0" }} operaciones</small>
                     </div>
                 </div>
             </div>
@@ -159,10 +181,28 @@
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-header bg-white">
-                    <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Distribución por Tipo</h5>
+                    <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Compras vs Ventas</h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="graficoPorTipo" height="200"></canvas>
+                    <div style="position: relative; height: 200px;">
+                        <canvas id="graficoPorTipo"></canvas>
+                    </div>
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center">
+                                <div style="width: 20px; height: 20px; background-color: rgb(54, 162, 235); border-radius: 3px;" class="me-2"></div>
+                                <span class="text-muted small">Compras</span>
+                            </div>
+                            <span class="fw-bold">{{ total_compras.cantidad|default:"0" }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div style="width: 20px; height: 20px; background-color: rgb(255, 159, 64); border-radius: 3px;" class="me-2"></div>
+                                <span class="text-muted small">Ventas</span>
+                            </div>
+                            <span class="fw-bold">{{ total_ventas.cantidad|default:"0" }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -233,7 +273,7 @@
                                     <th>Cliente</th>
                                     <th>Divisa</th>
                                     <th>Tipo</th>
-                                    <th class="text-end">Spread (Ganancia)</th>
+                                    <th class="text-end">Margen (Ganancia)</th>
                                     <th class="text-end">Comisión MP <span class="badge bg-secondary">Info</span></th>
                                     <th>Fecha</th>
                                 </tr>
@@ -284,7 +324,7 @@
                                     <th>Divisa</th>
                                     <th class="text-end">Monto Operación</th>
                                     <th class="text-end">Tasa Aplicada</th>
-                                    <th class="text-end">Margen Spread</th>
+                                    <th class="text-end">Margen</th>
                                     <th class="text-end">Ganancia</th>
                                     <th class="text-center">Estado</th>
                                 </tr>
@@ -370,29 +410,16 @@ const ctxEvolucion = document.getElementById('graficoEvolucion').getContext('2d'
 const graficoEvolucion = new Chart(ctxEvolucion, {
     type: 'line',
     data: {
-        labels: [{% for dia in evolucion_diaria %}'{{ dia.fecha|date:"d/m" }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        labels: [{% for dia in evolucion_diaria %}'{{ dia.fecha|date:"d/m" }}'{% if not forloop.last %},{% endif %}{% empty %}'Sin datos'{% endfor %}],
         datasets: [
             {
-                label: 'Comisiones',
-                data: [{% for dia in evolucion_diaria %}{{ dia.total_comisiones }}{% if not forloop.last %},{% endif %}{% endfor %}],
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                tension: 0.4
-            },
-            {
-                label: 'Spread',
-                data: [{% for dia in evolucion_diaria %}{{ dia.total_spread }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                label: 'Margen (Ganancia)',
+                data: [{% for dia in evolucion_diaria %}{{ dia.total_spread|default:0 }}{% if not forloop.last %},{% endif %}{% empty %}0{% endfor %}],
                 borderColor: 'rgb(54, 162, 235)',
                 backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                tension: 0.4
-            },
-            {
-                label: 'Total',
-                data: [{% for dia in evolucion_diaria %}{{ dia.total_general }}{% if not forloop.last %},{% endif %}{% endfor %}],
-                borderColor: 'rgb(255, 99, 132)',
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
                 tension: 0.4,
-                borderWidth: 3
+                borderWidth: 3,
+                fill: true
             }
         ]
     },
@@ -419,26 +446,43 @@ const graficoEvolucion = new Chart(ctxEvolucion, {
     }
 });
 
-// Gráfico por tipo
+// Gráfico por tipo de operación (Compras vs Ventas)
 const ctxTipo = document.getElementById('graficoPorTipo').getContext('2d');
 const graficoPorTipo = new Chart(ctxTipo, {
     type: 'doughnut',
     data: {
-        labels: [{% for item in ganancias_por_tipo %}'{{ item.get_tipo_ganancia_display }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        labels: ['Compras', 'Ventas'],
         datasets: [{
-            data: [{% for item in ganancias_por_tipo %}{{ item.total }}{% if not forloop.last %},{% endif %}{% endfor %}],
-            backgroundColor: [
-                'rgba(75, 192, 192, 0.8)',
-                'rgba(54, 162, 235, 0.8)',
+            data: [
+                {{ total_compras.total|default:"0" }},
+                {{ total_ventas.total|default:"0" }}
             ],
-            borderWidth: 2
+            backgroundColor: [
+                'rgba(54, 162, 235, 0.8)',
+                'rgba(255, 159, 64, 0.8)',
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
         }]
     },
     options: {
         responsive: true,
+        maintainAspectRatio: true,
         plugins: {
             legend: {
                 position: 'bottom',
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        let label = context.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        label += '₲ ' + context.parsed.toLocaleString();
+                        return label;
+                    }
+                }
             }
         }
     }
