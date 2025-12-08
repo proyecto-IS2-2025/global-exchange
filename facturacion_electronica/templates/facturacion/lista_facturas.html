@@ -16,22 +16,11 @@
     <div class="card mb-4">
         <div class="card-body">
             <form method="get" class="row g-3">
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label"><i class="fas fa-search"></i> Buscar</label>
                     <input type="text" name="q" class="form-control" placeholder="Número, CDC, Cliente..." value="{{ busqueda }}">
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label"><i class="fas fa-tags"></i> Segmento</label>
-                    <select name="segmento" class="form-select">
-                        <option value="">Todos los segmentos</option>
-                        {% for segmento in segmentos %}
-                        <option value="{{ segmento.id }}" {% if segmento_filtro == segmento.id|stringformat:"s" %}selected{% endif %}>
-                            {{ segmento.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label"><i class="fas fa-traffic-light"></i> Estado</label>
                     <select name="estado" class="form-select">
                         <option value="">Todos los estados</option>
@@ -40,7 +29,7 @@
                         <option value="rechazado" {% if estado_filtro == 'rechazado' %}selected{% endif %}>❌ Rechazado</option>
                     </select>
                 </div>
-                <div class="col-md-3 d-flex align-items-end gap-2">
+                <div class="col-md-4 d-flex align-items-end gap-2">
                     <button type="submit" class="btn btn-primary flex-grow-1">
                         <i class="fas fa-filter"></i> Filtrar
                     </button>
