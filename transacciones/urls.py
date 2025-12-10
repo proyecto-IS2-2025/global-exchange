@@ -13,9 +13,11 @@ urlpatterns = [
     
     # Historial cliente
     path('historial/', views.HistorialTransaccionesClienteView.as_view(), name='historial_cliente'),
+    path('historial/exportar-excel/', views.exportar_historial_excel, name='exportar_historial_excel'),
     
     # Historial administrativo
     path('admin/historial/', views.historial_admin, name='historial_admin'),
+    path('admin/historial/exportar-excel/', views.exportar_admin_excel, name='exportar_admin_excel'),
     
     # Detalle de transacción
     path('detalle/<str:numero_transaccion>/', views.DetalleTransaccionView.as_view(), name='detalle'),

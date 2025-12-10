@@ -90,6 +90,41 @@ class Transaccion(models.Model):
         decimal_places=8
     )
     
+    # Campos de análisis de ganancias (solo visible para administradores)
+    tasa_base = models.DecimalField(
+        'Tasa Base (Sin Margen)',
+        max_digits=20,
+        decimal_places=8,
+        null=True,
+        blank=True,
+        help_text='Tasa de cambio base sin spread ni comisión aplicada'
+    )
+    
+    comision_aplicada = models.DecimalField(
+        'Comisión Aplicada',
+        max_digits=20,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text='Monto de comisión cobrada al cliente en PYG'
+    )
+    
+    porcentaje_comision = models.DecimalField(
+        'Porcentaje de Comisión',
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text='Porcentaje de comisión aplicado'
+    )
+    
+    margen_spread = models.DecimalField(
+        'Margen de Spread',
+        max_digits=20,
+        decimal_places=8,
+        null=True,
+        blank=True,
+        help_text='Diferencia entre tasa aplicada y tasa base'
+    )
+    
     # Estado y fechas
     estado = models.CharField(
         'Estado',
@@ -163,6 +198,16 @@ class Transaccion(models.Model):
         blank=True,
         related_name='transacciones_asignadas',
         help_text='Terminal TAUSER donde el cliente debe retirar la divisa (solo compras)'
+    )
+    
+    # Terminal TAUSER donde se depositó (solo para ventas)
+    tauser_deposito = models.ForeignKey(
+        'tauser.Terminal',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='transacciones_depositos',
+        help_text='Terminal TAUSER donde el cliente depositó la divisa (solo ventas)'
     )
 
     class Meta:

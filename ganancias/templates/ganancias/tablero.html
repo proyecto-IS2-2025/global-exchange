@@ -1,0 +1,702 @@
+{% extends "base.html" %}
+{% load static %}
+{% load l10n %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0"><i class="fas fa-chart-line me-2"></i>Tablero de Control de Ganancias</h2>
+                    <p class="text-muted">
+                        Análisis detallado de ingresos y comisiones
+                        {% if divisa_seleccionada %}
+                        <span class="badge bg-info ms-2">
+                            <i class="fas fa-filter me-1"></i>Filtrado por: {{ divisa_seleccionada.code }} - {{ divisa_seleccionada.nombre }}
+                        </span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <button onclick="confirmarExportacionExcel()" class="btn btn-success me-2">
+                        <i class="fas fa-file-excel me-1"></i>Exportar Excel
+                    </button>
+                    <a href="{% url 'ganancias:comparacion' %}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-balance-scale me-1"></i>Comparar Períodos
+                    </a>
+                    <button class="btn btn-primary" onclick="actualizarGanancias()">
+                        <i class="fas fa-sync me-1"></i>Actualizar Datos
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros de período -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold">Período Rápido</label>
+                            <select name="periodo" class="form-select" onchange="this.form.submit()">
+                                <option value="dia" {% if periodo == 'dia' %}selected{% endif %}>Hoy</option>
+                                <option value="semana" {% if periodo == 'semana' %}selected{% endif %}>Última Semana</option>
+                                <option value="mes_actual" {% if periodo == 'mes_actual' %}selected{% endif %}>Mes Actual</option>
+                                <option value="mes_anterior" {% if periodo == 'mes_anterior' %}selected{% endif %}>Mes Anterior</option>
+                                <option value="año" {% if periodo == 'año' %}selected{% endif %}>Año Actual</option>
+                                <option value="todo" {% if periodo == 'todo' %}selected{% endif %}>Todos los Tiempos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold">Divisa</label>
+                            <select name="divisa" class="form-select" onchange="this.form.submit()">
+                                <option value="">Todas las divisas</option>
+                                {% for divisa in divisas %}
+                                <option value="{{ divisa.id }}" {% if divisa_seleccionada and divisa.id == divisa_seleccionada.id %}selected{% endif %}>
+                                    {{ divisa.code }} - {{ divisa.nombre }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold">Desde</label>
+                            <input type="date" name="fecha_inicio" class="form-control" value="{{ fecha_inicio|date:'Y-m-d' }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold">Hasta</label>
+                            <input type="date" name="fecha_fin" class="form-control" value="{{ fecha_fin|date:'Y-m-d' }}">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter me-1"></i>Filtrar
+                            </button>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <a href="{% url 'ganancias:tablero' %}" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-times me-1"></i>Limpiar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación de exportación -->
+    <div class="modal fade" id="modalExportarExcel" tabindex="-1" aria-labelledby="modalExportarExcelLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="modalExportarExcelLabel">
+                        <i class="fas fa-file-excel me-2"></i>Exportar Ganancias a Excel
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">¿Desea exportar las ganancias a Excel?</p>
+                    <div class="bg-light p-3 rounded">
+                        <div class="mb-2">
+                            <strong>Período:</strong> <span id="exportPeriodo"></span>
+                        </div>
+                        <div class="mb-2" id="exportFechasContainer" style="display: none;">
+                            <strong>Desde:</strong> <span id="exportFechaInicio"></span><br>
+                            <strong>Hasta:</strong> <span id="exportFechaFin"></span>
+                        </div>
+                        <div>
+                            <strong>Divisa:</strong> <span id="exportDivisa"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="ejecutarExportacion()">
+                        <i class="fas fa-download me-1"></i>Aceptar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjetas de resumen -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">GANANCIA TOTAL</p>
+                            <h3 class="mb-0 fw-bold">₲ {{ totales.total_spread|floatformat:0|default:"0" }}</h3>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-coins fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                    {% if variacion_porcentual != 0 %}
+                    <div class="mt-3">
+                        <span class="badge {% if variacion_porcentual > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                            <i class="fas fa-{% if variacion_porcentual > 0 %}arrow-up{% else %}arrow-down{% endif %} me-1"></i>
+                            {{ variacion_porcentual|floatformat:1 }}%
+                        </span>
+                        <small class="text-muted ms-2">vs período anterior</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100 border-start border-primary border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">GANANCIA POR COMPRAS</p>
+                            <h3 class="mb-0 fw-bold text-primary">₲ {{ total_compras.total|floatformat:0|default:"0" }}</h3>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-shopping-cart fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">{{ total_compras.cantidad|default:"0" }} transacciones</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100 border-start border-4" style="border-color: #ff6f00 !important;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">GANANCIA POR VENTAS</p>
+                            <h3 class="mb-0 fw-bold" style="color: #ff6f00;">₲ {{ total_ventas.total|floatformat:0|default:"0" }}</h3>
+                        </div>
+                        <div class="rounded-circle p-3" style="background-color: rgba(255, 111, 0, 0.1);">
+                            <i class="fas fa-hand-holding-usd fa-2x" style="color: #ff6f00;"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">{{ total_ventas.cantidad|default:"0" }} transacciones</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">PROMEDIO POR TRANSACCIÓN</p>
+                            <h3 class="mb-0 fw-bold">₲ {{ promedio_por_transaccion|floatformat:0 }}</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-chart-line fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">Total: {{ totales.cantidad_transacciones|default:"0" }} operaciones</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-area me-2"></i>Evolución de Ganancias</h5>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <input type="radio" class="btn-check" name="tipoGrafico" id="radioTotal" value="total" checked>
+                            <label class="btn btn-outline-primary" for="radioTotal">Total</label>
+                            
+                            <input type="radio" class="btn-check" name="tipoGrafico" id="radioCompras" value="compras">
+                            <label class="btn btn-outline-primary" for="radioCompras">Compras</label>
+                            
+                            <input type="radio" class="btn-check" name="tipoGrafico" id="radioVentas" value="ventas">
+                            <label class="btn btn-outline-primary" for="radioVentas">Ventas</label>
+                            
+                            <input type="radio" class="btn-check" name="tipoGrafico" id="radioAmbos" value="ambos">
+                            <label class="btn btn-outline-primary" for="radioAmbos">Ambos</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="graficoEvolucion" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Compras vs Ventas</h5>
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; height: 200px;">
+                        <canvas id="graficoPorTipo"></canvas>
+                    </div>
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center">
+                                <div style="width: 20px; height: 20px; background-color: rgb(54, 162, 235); border-radius: 3px;" class="me-2"></div>
+                                <span class="text-muted small">Compras</span>
+                            </div>
+                            <span class="fw-bold">{{ total_compras.cantidad|default:"0" }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div style="width: 20px; height: 20px; background-color: rgb(255, 111, 0); border-radius: 3px;" class="me-2"></div>
+                                <span class="text-muted small">Ventas</span>
+                            </div>
+                            <span class="fw-bold">{{ total_ventas.cantidad|default:"0" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ganancias por divisa -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Ganancias por Divisa</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Divisa</th>
+                                    <th>Nombre</th>
+                                    <th class="text-end">Total Ganancia</th>
+                                    <th class="text-end">Cantidad Transacciones</th>
+                                    <th class="text-end">Promedio</th>
+                                    <th>% del Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in ganancias_por_divisa %}
+                                <tr>
+                                    <td><span class="badge bg-primary">{{ item.divisa_referencia__code }}</span></td>
+                                    <td>{{ item.divisa_referencia__nombre }}</td>
+                                    <td class="text-end fw-bold">₲ {{ item.total|floatformat:0 }}</td>
+                                    <td class="text-end">{{ item.cantidad }}</td>
+                                    <td class="text-end">₲ {% widthratio item.total item.cantidad 1 as promedio %}{{ promedio|floatformat:0 }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            {% widthratio item.total totales.total_general 100 as porcentaje %}
+                                            <div class="progress-bar" style="width: {{ porcentaje }}%">{{ porcentaje }}%</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">No hay datos disponibles</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top transacciones -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Top 10 Transacciones con Mayor Ganancia</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Nº Transacción</th>
+                                    <th>Cliente</th>
+                                    <th>Divisa</th>
+                                    <th class="text-end">Margen (Ganancia)</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ganancia in top_transacciones %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td><code>{{ ganancia.transaccion.numero_transaccion }}</code></td>
+                                    <td>{{ ganancia.transaccion.cliente.nombre_fantasia }}</td>
+                                    <td><span class="badge bg-info">{{ ganancia.divisa_referencia.code }}</span></td>
+                                    <td class="text-end fw-bold text-success">₲ {{ ganancia.monto_spread|floatformat:0 }}</td>
+                                    <td>{{ ganancia.fecha_transaccion|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">No hay transacciones disponibles</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Listado completo de transacciones con ganancias -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Todas las Transacciones del Período</h5>
+                    <span class="badge bg-primary">{{ todas_transacciones.count }} transacciones</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Fecha</th>
+                                    <th>Nº Transacción</th>
+                                    <th>Cliente</th>
+                                    <th>Tipo Operación</th>
+                                    <th>Divisa</th>
+                                    <th class="text-end">Monto Operación</th>
+                                    <th class="text-end">Tasa Aplicada</th>
+                                    <th class="text-end">Margen</th>
+                                    <th class="text-end">Ganancia</th>
+                                    <th class="text-center">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ganancia in todas_transacciones %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <small>{{ ganancia.fecha_transaccion|date:"d/m/Y" }}</small><br>
+                                        <small class="text-muted">{{ ganancia.fecha_transaccion|date:"H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'transacciones:detalle' ganancia.transaccion.numero_transaccion %}" class="text-decoration-none">
+                                            <code>{{ ganancia.transaccion.numero_transaccion }}</code>
+                                        </a>
+                                    </td>
+                                    <td>{{ ganancia.transaccion.cliente.nombre_fantasia|truncatewords:3 }}</td>
+                                    <td>
+                                        <span class="badge {% if ganancia.transaccion.tipo_operacion == 'compra' %}bg-primary{% else %}bg-info{% endif %}">
+                                            {{ ganancia.transaccion.get_tipo_operacion_display }}
+                                        </span>
+                                    </td>
+                                    <td><span class="badge bg-dark">{{ ganancia.divisa_referencia.code }}</span></td>
+                                    <td class="text-end">
+                                        {% if ganancia.transaccion.tipo_operacion == 'compra' %}
+                                            {{ ganancia.transaccion.monto_destino|floatformat:2 }} {{ ganancia.divisa_referencia.code }}
+                                        {% else %}
+                                            {{ ganancia.transaccion.monto_origen|floatformat:2 }} {{ ganancia.divisa_referencia.code }}
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">₲ {{ ganancia.transaccion.tasa_de_cambio_aplicada|floatformat:0 }}</td>
+                                    <td class="text-end">
+                                        {% if ganancia.transaccion.margen_spread %}
+                                            <span class="{% if ganancia.transaccion.margen_spread > 0 %}text-success{% else %}text-danger{% endif %}">
+                                                ₲ {{ ganancia.transaccion.margen_spread|floatformat:0 }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end fw-bold text-success">₲ {{ ganancia.monto_spread|floatformat:0 }}</td>
+                                    <td class="text-center">
+                                        <span class="badge 
+                                            {% if ganancia.transaccion.estado == 'completado' %}bg-success
+                                            {% elif ganancia.transaccion.estado == 'pendiente' %}bg-warning
+                                            {% elif ganancia.transaccion.estado == 'cancelado' %}bg-danger
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ ganancia.transaccion.get_estado_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="11" class="text-center text-muted py-4">
+                                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                                        <p class="mb-0">No hay transacciones en el período seleccionado</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            {% if todas_transacciones.count > 0 %}
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="9" class="text-end fw-bold">TOTAL DEL PERÍODO:</td>
+                                    <td class="text-end fw-bold text-success fs-5">₲ {{ totales.total_spread|floatformat:0 }}</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Datos para el gráfico de evolución
+const fechas = [{% for dia in evolucion_diaria %}'{{ dia.fecha|date:"d/m" }}'{% if not forloop.last %},{% endif %}{% empty %}'Sin datos'{% endfor %}];
+const datosTotal = [{% for dia in evolucion_diaria %}{{ dia.total_spread|unlocalize }}{% if not forloop.last %},{% endif %}{% empty %}0{% endfor %}];
+const datosCompras = [{% for dia in evolucion_diaria %}{% for comp in evolucion_compras %}{% if comp.fecha == dia.fecha %}{{ comp.total|unlocalize }}{% endif %}{% endfor %}{% if not forloop.last %},{% endif %}{% empty %}0{% endfor %}];
+const datosVentas = [{% for dia in evolucion_diaria %}{% for ven in evolucion_ventas %}{% if ven.fecha == dia.fecha %}{{ ven.total|unlocalize }}{% endif %}{% endfor %}{% if not forloop.last %},{% endif %}{% empty %}0{% endfor %}];
+
+console.log('Fechas:', fechas);
+console.log('Datos Total:', datosTotal);
+console.log('Datos Compras:', datosCompras);
+console.log('Datos Ventas:', datosVentas);
+// Configuración de datasets
+const datasets = {
+    total: {
+        label: 'Ganancia Total',
+        data: datosTotal,
+        borderColor: 'rgb(75, 192, 192)',
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        tension: 0.4,
+        borderWidth: 3,
+        fill: true
+    },
+    compras: {
+        label: 'Ganancia por Compras',
+        data: datosCompras,
+        borderColor: 'rgb(54, 162, 235)',
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        tension: 0.4,
+        borderWidth: 3,
+        fill: true
+    },
+    ventas: {
+        label: 'Ganancia por Ventas',
+        data: datosVentas,
+        borderColor: 'rgb(255, 159, 64)',
+        backgroundColor: 'rgba(255, 159, 64, 0.2)',
+        tension: 0.4,
+        borderWidth: 3,
+        fill: true
+    }
+};
+
+// Gráfico de evolución
+const ctxEvolucion = document.getElementById('graficoEvolucion').getContext('2d');
+const graficoEvolucion = new Chart(ctxEvolucion, {
+    type: 'line',
+    data: {
+        labels: fechas,
+        datasets: [datasets.total]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+            title: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '₲ ' + value.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Función para actualizar el gráfico según la selección
+function actualizarGrafico(tipo) {
+    let nuevosDatasets = [];
+    
+    switch(tipo) {
+        case 'total':
+            nuevosDatasets = [datasets.total];
+            break;
+        case 'compras':
+            nuevosDatasets = [datasets.compras];
+            break;
+        case 'ventas':
+            nuevosDatasets = [datasets.ventas];
+            break;
+        case 'ambos':
+            nuevosDatasets = [datasets.compras, datasets.ventas];
+            break;
+    }
+    
+    graficoEvolucion.data.datasets = nuevosDatasets;
+    graficoEvolucion.update();
+}
+
+// Event listeners para los botones de radio
+document.querySelectorAll('input[name="tipoGrafico"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        actualizarGrafico(this.value);
+    });
+});
+
+// Gráfico por tipo de operación (Compras vs Ventas)
+const ctxTipo = document.getElementById('graficoPorTipo').getContext('2d');
+const graficoPorTipo = new Chart(ctxTipo, {
+    type: 'doughnut',
+    data: {
+        labels: ['Compras', 'Ventas'],
+        datasets: [{
+            data: [
+                {{ total_compras.total|unlocalize|default:"0" }},
+                {{ total_ventas.total|unlocalize|default:"0" }}
+            ],
+            backgroundColor: [
+                'rgb(54, 162, 235)',
+                'rgb(255, 111, 0)',
+            ],
+            hoverBackgroundColor: [
+                'rgb(54, 162, 235)',
+                'rgb(255, 111, 0)',
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        let label = context.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        label += '₲ ' + context.parsed.toLocaleString();
+                        return label;
+                    }
+                }
+            }
+        }
+    }
+});
+
+function confirmarExportacionExcel() {
+    // Obtener información del período seleccionado
+    const periodoSelect = document.querySelector('select[name="periodo"]');
+    const divisaSelect = document.querySelector('select[name="divisa"]');
+    const fechaInicio = document.querySelector('input[name="fecha_inicio"]');
+    const fechaFin = document.querySelector('input[name="fecha_fin"]');
+    
+    // Actualizar contenido del modal
+    document.getElementById('exportPeriodo').textContent = periodoSelect.options[periodoSelect.selectedIndex].text;
+    document.getElementById('exportDivisa').textContent = divisaSelect.options[divisaSelect.selectedIndex].text;
+    
+    // Mostrar fechas personalizadas si están establecidas
+    if (fechaInicio.value && fechaFin.value) {
+        document.getElementById('exportFechaInicio').textContent = formatearFecha(fechaInicio.value);
+        document.getElementById('exportFechaFin').textContent = formatearFecha(fechaFin.value);
+        document.getElementById('exportFechasContainer').style.display = 'block';
+    } else {
+        document.getElementById('exportFechasContainer').style.display = 'none';
+    }
+    
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById('modalExportarExcel'));
+    modal.show();
+}
+
+function ejecutarExportacion() {
+    // Cerrar el modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalExportarExcel'));
+    modal.hide();
+    
+    // Redirigir a la URL de exportación
+    window.location.href = "{% url 'ganancias:exportar_excel' %}?{{ request.GET.urlencode }}";
+}
+
+function formatearFecha(fecha) {
+    const partes = fecha.split('-');
+    return partes[2] + '/' + partes[1] + '/' + partes[0];
+}
+
+function actualizarGanancias() {
+    if (!confirm('¿Está seguro de que desea actualizar los registros de ganancias?')) {
+        return;
+    }
+    
+    fetch("{% url 'ganancias:actualizar' %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al actualizar los datos');
+    });
+}
+</script>
+
+<style>
+.card {
+    border-radius: 12px;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.progress {
+    border-radius: 8px;
+}
+
+.badge {
+    padding: 0.5em 0.8em;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+</style>
+{% endblock %}

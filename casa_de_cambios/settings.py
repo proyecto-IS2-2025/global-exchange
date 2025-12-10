@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'interfaz',
     'stripe_payments',
     'facturacion_electronica',  # ✅ Facturación Electrónica
+    'ganancias',  # ✅ Tablero de Control de Ganancias
 ]
 
 # ═════════════════════════════════════════════════════════════════════
