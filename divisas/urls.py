@@ -25,6 +25,10 @@ urlpatterns = [
     # Visualizador tasas - Administradores (todos los segmentos)
     path("tasas/admin/", views.visualizador_tasas_admin, name="visualizador_tasas_admin"),
     
+    # Histórico de tasas
+    path("tasas/historico/", views.historico_tasas, name="historico_tasas"),
+    path("api/historico-tasas/", views.api_historico_tasas, name="api_historico_tasas"),
+    
     # Denominaciones
     #path('denominaciones/', views.DenominacionListView.as_view(), name='denominacion_list'),
     #path('denominaciones/nueva/', views.DenominacionCreateView.as_view(), name='denominacion_create'),
