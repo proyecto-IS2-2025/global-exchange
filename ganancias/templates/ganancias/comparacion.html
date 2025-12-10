@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0"><i class="fas fa-balance-scale me-2"></i>Comparación de Períodos</h2>
+                    <p class="text-muted">Análisis comparativo de ganancias entre diferentes períodos</p>
+                </div>
+                <div>
+                    <a href="{% url 'ganancias:tablero' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-1"></i>Volver al Tablero
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comparación Mes Actual vs Mes Anterior -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Mes Actual vs Mes Anterior</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-center fw-bold mb-3">Mes Actual</h6>
+                            <div class="text-center mb-3">
+                                <h2 class="display-4 fw-bold text-primary">₲ {{ ganancias_mes_actual.total|floatformat:0|default:"0" }}</h2>
+                                <p class="text-muted">Ganancia Total</p>
+                            </div>
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="p-3 bg-light rounded">
+                                        <p class="text-muted mb-1 small">Comisiones</p>
+                                        <h5 class="mb-0">₲ {{ ganancias_mes_actual.comisiones|floatformat:0|default:"0" }}</h5>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-3 bg-light rounded">
+                                        <p class="text-muted mb-1 small">Spread</p>
+                                        <h5 class="mb-0">₲ {{ ganancias_mes_actual.spread|floatformat:0|default:"0" }}</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-center mt-3">
+                                <p class="text-muted mb-1 small">Transacciones</p>
+                                <h5>{{ ganancias_mes_actual.cantidad|default:"0" }}</h5>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-center fw-bold mb-3">Mes Anterior</h6>
+                            <div class="text-center mb-3">
+                                <h2 class="display-4 fw-bold text-secondary">₲ {{ ganancias_mes_anterior.total|floatformat:0|default:"0" }}</h2>
+                                <p class="text-muted">Ganancia Total</p>
+                            </div>
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="p-3 bg-light rounded">
+                                        <p class="text-muted mb-1 small">Comisiones</p>
+                                        <h5 class="mb-0">₲ {{ ganancias_mes_anterior.comisiones|floatformat:0|default:"0" }}</h5>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-3 bg-light rounded">
+                                        <p class="text-muted mb-1 small">Spread</p>
+                                        <h5 class="mb-0">₲ {{ ganancias_mes_anterior.spread|floatformat:0|default:"0" }}</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-center mt-3">
+                                <p class="text-muted mb-1 small">Transacciones</p>
+                                <h5>{{ ganancias_mes_anterior.cantidad|default:"0" }}</h5>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if ganancias_mes_anterior.total %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="alert alert-info text-center">
+                                {% widthratio ganancias_mes_actual.total ganancias_mes_anterior.total 100 as variacion_mes %}
+                                {% if variacion_mes > 100 %}
+                                <i class="fas fa-arrow-up fa-2x text-success mb-2"></i>
+                                <h4 class="mb-0">Incremento del {{ variacion_mes|add:"-100" }}%</h4>
+                                {% elif variacion_mes < 100 %}
+                                <i class="fas fa-arrow-down fa-2x text-danger mb-2"></i>
+                                <h4 class="mb-0">Disminución del {{ 100|add:variacion_mes|add:"-200"|floatformat:0 }}%</h4>
+                                {% else %}
+                                <i class="fas fa-equals fa-2x text-warning mb-2"></i>
+                                <h4 class="mb-0">Sin cambios</h4>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comparación Año Actual vs Año Anterior -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar me-2"></i>Año Actual vs Año Anterior</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-center fw-bold mb-3">Año Actual</h6>
+                            <div class="text-center mb-3">
+                                <h2 class="display-4 fw-bold text-success">₲ {{ ganancias_año_actual.total|floatformat:0|default:"0" }}</h2>
+                                <p class="text-muted">Ganancia Total</p>
+                            </div>
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="p-3 bg-light rounded">
+                                        <p class="text-muted mb-1 small">Comisiones</p>
+                                        <h5 class="mb-0">₲ {{ ganancias_año_actual.comisiones|floatformat:0|default:"0" }}</h5>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-3 bg-light rounded">
+                                        <p class="text-muted mb-1 small">Spread</p>
+                                        <h5 class="mb-0">₲ {{ ganancias_año_actual.spread|floatformat:0|default:"0" }}</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-center mt-3">
+                                <p class="text-muted mb-1 small">Transacciones</p>
+                                <h5>{{ ganancias_año_actual.cantidad|default:"0" }}</h5>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-center fw-bold mb-3">Año Anterior</h6>
+                            <div class="text-center mb-3">
+                                <h2 class="display-4 fw-bold text-secondary">₲ {{ ganancias_año_anterior.total|floatformat:0|default:"0" }}</h2>
+                                <p class="text-muted">Ganancia Total</p>
+                            </div>
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="p-3 bg-light rounded">
+                                        <p class="text-muted mb-1 small">Comisiones</p>
+                                        <h5 class="mb-0">₲ {{ ganancias_año_anterior.comisiones|floatformat:0|default:"0" }}</h5>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-3 bg-light rounded">
+                                        <p class="text-muted mb-1 small">Spread</p>
+                                        <h5 class="mb-0">₲ {{ ganancias_año_anterior.spread|floatformat:0|default:"0" }}</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-center mt-3">
+                                <p class="text-muted mb-1 small">Transacciones</p>
+                                <h5>{{ ganancias_año_anterior.cantidad|default:"0" }}</h5>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if ganancias_año_anterior.total %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="alert alert-success text-center">
+                                {% widthratio ganancias_año_actual.total ganancias_año_anterior.total 100 as variacion_año %}
+                                {% if variacion_año > 100 %}
+                                <i class="fas fa-arrow-up fa-2x text-success mb-2"></i>
+                                <h4 class="mb-0">Incremento del {{ variacion_año|add:"-100" }}%</h4>
+                                {% elif variacion_año < 100 %}
+                                <i class="fas fa-arrow-down fa-2x text-danger mb-2"></i>
+                                <h4 class="mb-0">Disminución del {{ 100|add:variacion_año|add:"-200"|floatformat:0 }}%</h4>
+                                {% else %}
+                                <i class="fas fa-equals fa-2x text-warning mb-2"></i>
+                                <h4 class="mb-0">Sin cambios</h4>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Últimos 12 meses -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Evolución Últimos 12 Meses</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="grafico12Meses" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla comparativa -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-table me-2"></i>Detalle Mensual</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Período</th>
+                                    <th class="text-end">Comisiones</th>
+                                    <th class="text-end">Spread</th>
+                                    <th class="text-end">Total</th>
+                                    <th class="text-end">Transacciones</th>
+                                    <th class="text-end">Promedio/Transacción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for mes in ultimos_12_meses %}
+                                <tr>
+                                    <td><strong>{{ mes.periodo }}</strong></td>
+                                    <td class="text-end">₲ {{ mes.comisiones|floatformat:0 }}</td>
+                                    <td class="text-end">₲ {{ mes.spread|floatformat:0 }}</td>
+                                    <td class="text-end fw-bold">₲ {{ mes.total|floatformat:0 }}</td>
+                                    <td class="text-end">{{ mes.cantidad }}</td>
+                                    <td class="text-end">
+                                        {% if mes.cantidad > 0 %}
+                                        ₲ {% widthratio mes.total mes.cantidad 1 as promedio %}{{ promedio|floatformat:0 }}
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Gráfico de 12 meses
+const ctx12Meses = document.getElementById('grafico12Meses').getContext('2d');
+const grafico12Meses = new Chart(ctx12Meses, {
+    type: 'bar',
+    data: {
+        labels: [{% for mes in ultimos_12_meses %}'{{ mes.periodo }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [
+            {
+                label: 'Comisiones',
+                data: [{% for mes in ultimos_12_meses %}{{ mes.comisiones }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                backgroundColor: 'rgba(75, 192, 192, 0.7)',
+            },
+            {
+                label: 'Spread',
+                data: [{% for mes in ultimos_12_meses %}{{ mes.spread }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top',
+            }
+        },
+        scales: {
+            x: {
+                stacked: true,
+            },
+            y: {
+                stacked: true,
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '₲ ' + value.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+
+<style>
+.card {
+    border-radius: 12px;
+}
+
+.display-4 {
+    font-size: 2.5rem;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+</style>
+{% endblock %}

@@ -5,13 +5,16 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, DetailView, View
 from django.db.models import Q
 from django.core.paginator import Paginator
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.db import transaction
 from django.contrib import messages
 from django.utils.decorators import method_decorator
+from django.utils import timezone
 from datetime import datetime, timedelta
 from decimal import Decimal, ROUND_HALF_UP
 import logging
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 
 from roles.decorators import require_permission  # ← IMPORT PRINCIPAL
 from .models import Transaccion, HistorialTransaccion
@@ -963,6 +966,48 @@ def crear_transaccion_desde_venta(request):
             return redirect('operacion_divisas:venta_sumario')
 
         medio_datos = preparar_datos_medio(medio_inst)
+        
+        # 📊 Obtener comisión del medio de pago para venta
+        comision_porcentaje = Decimal('0')
+        comision_monto = Decimal('0')
+        
+        if isinstance(medio_inst, dict) and medio_inst.get("id"):
+            try:
+                from clientes.models import ClienteMedioDePago
+                medio_real = ClienteMedioDePago.objects.select_related('medio_de_pago').get(
+                    id=medio_inst.get("id")
+                )
+                medio_model = medio_real.medio_de_pago
+                try:
+                    comision_porcentaje = Decimal(str(medio_model.comision_porcentaje))
+                except (ValueError, TypeError):
+                    comision_porcentaje = Decimal('0')
+                
+                # En venta, la comisión se descuenta del monto que recibe el cliente
+                comision_monto = (monto_destino * comision_porcentaje / Decimal('100')).quantize(
+                    Decimal('1'), rounding=ROUND_HALF_UP
+                )
+            except Exception as e:
+                logger.warning(f"No se pudo obtener comisión del medio: {e}")
+        
+        # 📊 Calcular datos de análisis de ganancias para venta
+        tasa_base_calculada = None
+        margen_spread_calculado = None
+        
+        try:
+            from divisas.models import CotizacionSegmento
+            cotizacion = CotizacionSegmento.objects.filter(
+                divisa=divisa_origen,
+                segmento=cliente.segmento
+            ).order_by('-fecha').first()
+            
+            if cotizacion:
+                # Para venta, el cliente recibe según valor_venta_unit
+                tasa_base_calculada = cotizacion.precio_base
+                # El margen es la diferencia entre el precio base y lo que recibe el cliente
+                margen_spread_calculado = tasa_base_calculada - tasa_cambio
+        except Exception as e:
+            logger.warning(f"No se pudo calcular tasa base para análisis: {e}")
 
         with transaction.atomic():
             transaccion = Transaccion.objects.create(
@@ -973,6 +1018,10 @@ def crear_transaccion_desde_venta(request):
                 monto_origen=monto_origen,
                 monto_destino=monto_destino,
                 tasa_de_cambio_aplicada=tasa_cambio,
+                tasa_base=tasa_base_calculada,  # 📊 Nuevo campo
+                margen_spread=margen_spread_calculado,  # 📊 Nuevo campo
+                comision_aplicada=comision_monto,  # 📊 Nuevo campo
+                porcentaje_comision=comision_porcentaje.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),  # 📊 Max 2 decimales
                 estado='pendiente',
                 medio_pago_datos=medio_datos,
                 procesado_por=request.user,
@@ -1174,6 +1223,27 @@ def crear_transaccion_desde_compra(request):
         )
         monto_origen_total = monto_origen_base + comision_monto  # Total a pagar por el cliente
         
+        # 📊 Calcular datos de análisis de ganancias (tasa base y margen)
+        # La tasa_cambio actual es la tasa aplicada al cliente (con spread incluido)
+        # Para obtener la tasa base, necesitamos buscar la cotización del segmento
+        tasa_base_calculada = None
+        margen_spread_calculado = None
+        
+        try:
+            from divisas.models import CotizacionSegmento
+            cotizacion = CotizacionSegmento.objects.filter(
+                divisa=divisa_destino,
+                segmento=cliente.segmento
+            ).order_by('-fecha').first()
+            
+            if cotizacion:
+                # Para compra, el cliente paga según valor_compra_unit
+                tasa_base_calculada = cotizacion.precio_base
+                # El margen es la diferencia entre lo que paga el cliente y el precio base
+                margen_spread_calculado = tasa_cambio - tasa_base_calculada
+        except Exception as e:
+            logger.warning(f"No se pudo calcular tasa base para análisis: {e}")
+        
         # Crear la transacción
         with transaction.atomic():
             # Agregar info del tauser a medio_datos
@@ -1194,6 +1264,10 @@ def crear_transaccion_desde_compra(request):
                 monto_origen=monto_origen_total,  # 💰 Usar el total con comisión
                 monto_destino=monto_destino,
                 tasa_de_cambio_aplicada=tasa_cambio,
+                tasa_base=tasa_base_calculada,  # 📊 Nuevo campo
+                margen_spread=margen_spread_calculado,  # 📊 Nuevo campo
+                comision_aplicada=comision_monto,  # 📊 Nuevo campo
+                porcentaje_comision=comision_porcentaje.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),  # 📊 Nuevo campo (máx 2 decimales)
                 estado='pendiente',
                 medio_pago_datos=medio_datos,
                 tauser_terminal=terminal_obj,  # NUEVO: Asignar terminal
@@ -1760,6 +1834,7 @@ def historial_admin(request):
         'page_obj': page_obj,
         'transacciones': page_obj,
         'clientes': Cliente.objects.filter(esta_activo=True).order_by('nombre_completo'),
+        'terminales_tauser': Terminal.objects.filter(is_activa=True).order_by('nombre'),
         'estadisticas': estadisticas,
         'filtros': {
             'cliente': cliente_id or '',
@@ -1773,6 +1848,164 @@ def historial_admin(request):
     }
     
     return render(request, 'historial_admin.html', context)
+
+
+@login_required
+def exportar_admin_excel(request):
+    """
+    Exporta las transacciones del panel administrativo a Excel con los filtros aplicados
+    """
+    # Obtener transacciones con los mismos filtros que historial_admin
+    transacciones = Transaccion.objects.select_related(
+        'cliente', 'divisa_origen', 'divisa_destino', 'procesado_por', 'tauser_terminal'
+    ).order_by('-fecha_creacion')
+    
+    # Aplicar filtros
+    cliente_id = request.GET.get('cliente')
+    if cliente_id:
+        transacciones = transacciones.filter(cliente_id=cliente_id)
+    
+    tipo_filtro = request.GET.get('tipo')
+    if tipo_filtro in ['compra', 'venta']:
+        transacciones = transacciones.filter(tipo_operacion=tipo_filtro)
+    
+    estado_filtro = request.GET.get('estado')
+    if estado_filtro:
+        transacciones = transacciones.filter(estado=estado_filtro)
+    
+    # Filtros de fecha
+    fecha_desde = request.GET.get('fecha_desde')
+    fecha_hasta = request.GET.get('fecha_hasta')
+    
+    if fecha_desde:
+        try:
+            fecha_desde_dt = datetime.strptime(fecha_desde, '%Y-%m-%d')
+            transacciones = transacciones.filter(fecha_creacion__gte=fecha_desde_dt)
+        except ValueError:
+            pass
+    
+    if fecha_hasta:
+        try:
+            fecha_hasta_dt = datetime.strptime(fecha_hasta, '%Y-%m-%d') + timedelta(days=1)
+            transacciones = transacciones.filter(fecha_creacion__lt=fecha_hasta_dt)
+        except ValueError:
+            pass
+    
+    # Búsqueda
+    busqueda = request.GET.get('busqueda')
+    if busqueda:
+        transacciones = transacciones.filter(
+            Q(numero_transaccion__icontains=busqueda) |
+            Q(cliente__nombre_completo__icontains=busqueda) |
+            Q(cliente__cedula__icontains=busqueda)
+        )
+    
+    # Crear workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Transacciones Admin"
+    
+    # Estilos
+    header_fill = PatternFill(start_color="DC3545", end_color="DC3545", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    # Título
+    ws.merge_cells('A1:M1')
+    title_cell = ws['A1']
+    title_cell.value = 'PANEL ADMINISTRATIVO - REPORTE DE TRANSACCIONES'
+    title_cell.font = Font(bold=True, size=14)
+    title_cell.alignment = Alignment(horizontal='center', vertical='center')
+    
+    # Subtítulo
+    ws.merge_cells('A2:M2')
+    subtitle_cell = ws['A2']
+    subtitle_cell.value = f'Generado el {timezone.now().strftime("%d/%m/%Y %H:%M")}'
+    subtitle_cell.alignment = Alignment(horizontal='center')
+    
+    # Encabezados
+    headers = [
+        'Nº Transacción',
+        'Fecha',
+        'Cliente',
+        'Tipo',
+        'Estado',
+        'Divisa Origen',
+        'Monto Origen',
+        'Divisa Destino',
+        'Monto Destino',
+        'Tasa Aplicada',
+        'Código TAUSER',
+        'Terminal',
+        'Procesado Por'
+    ]
+    
+    for col, header in enumerate(headers, start=1):
+        cell = ws.cell(row=3, column=col)
+        cell.value = header
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.border = border
+    
+    # Datos
+    row = 4
+    for transaccion in transacciones:
+        ws.cell(row=row, column=1, value=transaccion.numero_transaccion)
+        ws.cell(row=row, column=2, value=transaccion.fecha_creacion.strftime('%d/%m/%Y %H:%M'))
+        ws.cell(row=row, column=3, value=transaccion.cliente.nombre_completo if transaccion.cliente else 'N/A')
+        ws.cell(row=row, column=4, value=transaccion.tipo_operacion.upper())
+        ws.cell(row=row, column=5, value=transaccion.get_estado_display())
+        ws.cell(row=row, column=6, value=transaccion.divisa_origen.code if transaccion.divisa_origen else 'N/A')
+        ws.cell(row=row, column=7, value=float(transaccion.monto_origen) if transaccion.monto_origen else 0)
+        ws.cell(row=row, column=8, value=transaccion.divisa_destino.code if transaccion.divisa_destino else 'N/A')
+        ws.cell(row=row, column=9, value=float(transaccion.monto_destino) if transaccion.monto_destino else 0)
+        ws.cell(row=row, column=10, value=float(transaccion.tasa_de_cambio_aplicada) if transaccion.tasa_de_cambio_aplicada else 0)
+        ws.cell(row=row, column=11, value=transaccion.tauser_code or 'N/A')
+        
+        # Terminal: compras usan tauser_terminal, ventas usan tauser_deposito
+        if transaccion.tipo_operacion == 'compra':
+            terminal_value = str(transaccion.tauser_terminal) if transaccion.tauser_terminal else 'N/A'
+        else:  # venta
+            terminal_value = str(transaccion.tauser_deposito) if transaccion.tauser_deposito else 'N/A'
+        ws.cell(row=row, column=12, value=terminal_value)
+        
+        ws.cell(row=row, column=13, value=transaccion.procesado_por.get_full_name() if transaccion.procesado_por else 'N/A')
+        
+        # Bordes
+        for col in range(1, 14):
+            ws.cell(row=row, column=col).border = border
+        
+        # Formato números
+        ws.cell(row=row, column=7).number_format = '#,##0.00'
+        ws.cell(row=row, column=9).number_format = '#,##0.00'
+        ws.cell(row=row, column=10).number_format = '#,##0.00'
+        
+        row += 1
+    
+    # Ajustar anchos
+    column_widths = {
+        'A': 18, 'B': 16, 'C': 25, 'D': 10, 'E': 15,
+        'F': 12, 'G': 15, 'H': 12, 'I': 15, 'J': 12,
+        'K': 15, 'L': 20, 'M': 20
+    }
+    for col, width in column_widths.items():
+        ws.column_dimensions[col].width = width
+    
+    # Respuesta
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    filename = f'transacciones_admin_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    response['Content-Disposition'] = f'attachment; filename={filename}'
+    
+    wb.save(response)
+    return response
 
 
 @method_decorator(require_permission("transacciones.view_transacciones_asignadas"), name="dispatch")  # ✅ SIN check_client_assignment
@@ -1820,6 +2053,9 @@ class DetalleTransaccionView(LoginRequiredMixin, DetailView):
         context['puede_cancelar'] = self.object.puede_cancelarse
         context['puede_anular'] = self.object.puede_anularse
         context['es_admin'] = self.request.user.is_staff
+        
+        # Agregar terminales TAUSER para el selector de depósito
+        context['terminales_tauser'] = Terminal.objects.filter(is_activa=True).order_by('nombre')
 
         # NUEVO: medio listo para renderizado y alias/flags de ayuda
         medio_raw = self.object.get_medio_pago_info()
@@ -1841,6 +2077,162 @@ class DetalleTransaccionView(LoginRequiredMixin, DetailView):
         context['medio_datos'] = medio_raw
 
         return context
+
+
+@login_required
+def exportar_historial_excel(request):
+    """
+    Exporta el historial de transacciones del cliente activo a Excel
+    """
+    # Obtener cliente activo
+    cliente_id = request.session.get('cliente_id')
+    if not cliente_id:
+        messages.error(request, "Debe seleccionar un cliente primero")
+        return redirect('clientes:seleccionar_cliente')
+    
+    try:
+        cliente = Cliente.objects.get(id=cliente_id, esta_activo=True)
+    except Cliente.DoesNotExist:
+        messages.error(request, "Cliente no encontrado")
+        return redirect('clientes:seleccionar_cliente')
+    
+    # Obtener transacciones con los mismos filtros que la vista
+    queryset = Transaccion.objects.filter(
+        cliente=cliente
+    ).select_related(
+        'divisa_origen', 'divisa_destino', 'cliente'
+    ).order_by('-fecha_creacion')
+    
+    # Aplicar filtros
+    tipo_filtro = request.GET.get('tipo', 'todos')
+    if tipo_filtro in ['compra', 'venta']:
+        queryset = queryset.filter(tipo_operacion=tipo_filtro)
+    
+    estado_filtro = request.GET.get('estado')
+    if estado_filtro:
+        queryset = queryset.filter(estado=estado_filtro)
+    
+    fecha_desde = request.GET.get('fecha_desde')
+    fecha_hasta = request.GET.get('fecha_hasta')
+    
+    if fecha_desde:
+        try:
+            fecha_desde_dt = datetime.strptime(fecha_desde, '%Y-%m-%d')
+            queryset = queryset.filter(fecha_creacion__gte=fecha_desde_dt)
+        except ValueError:
+            pass
+    
+    if fecha_hasta:
+        try:
+            fecha_hasta_dt = datetime.strptime(fecha_hasta, '%Y-%m-%d') + timedelta(days=1)
+            queryset = queryset.filter(fecha_creacion__lt=fecha_hasta_dt)
+        except ValueError:
+            pass
+    
+    # Crear workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Historial Transacciones"
+    
+    # Estilos
+    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    # Título
+    ws.merge_cells('A1:L1')
+    title_cell = ws['A1']
+    title_cell.value = f'HISTORIAL DE TRANSACCIONES - {cliente.nombre_completo}'
+    title_cell.font = Font(bold=True, size=14)
+    title_cell.alignment = Alignment(horizontal='center', vertical='center')
+    
+    # Subtítulo
+    ws.merge_cells('A2:L2')
+    subtitle_cell = ws['A2']
+    subtitle_cell.value = f'Generado el {timezone.now().strftime("%d/%m/%Y %H:%M")}'
+    subtitle_cell.alignment = Alignment(horizontal='center')
+    
+    # Encabezados
+    headers = [
+        'Nº Transacción',
+        'Fecha',
+        'Tipo',
+        'Estado',
+        'Divisa Origen',
+        'Monto Origen',
+        'Divisa Destino',
+        'Monto Destino',
+        'Tasa Aplicada',
+        'Código TAUSER',
+        'Terminal',
+        'Procesado Por'
+    ]
+    
+    for col, header in enumerate(headers, start=1):
+        cell = ws.cell(row=3, column=col)
+        cell.value = header
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.border = border
+    
+    # Datos
+    row = 4
+    for transaccion in queryset:
+        ws.cell(row=row, column=1, value=transaccion.numero_transaccion)
+        ws.cell(row=row, column=2, value=transaccion.fecha_creacion.strftime('%d/%m/%Y %H:%M'))
+        ws.cell(row=row, column=3, value=transaccion.tipo_operacion.upper())
+        ws.cell(row=row, column=4, value=transaccion.get_estado_display())
+        ws.cell(row=row, column=5, value=transaccion.divisa_origen.code if transaccion.divisa_origen else 'N/A')
+        ws.cell(row=row, column=6, value=float(transaccion.monto_origen) if transaccion.monto_origen else 0)
+        ws.cell(row=row, column=7, value=transaccion.divisa_destino.code if transaccion.divisa_destino else 'N/A')
+        ws.cell(row=row, column=8, value=float(transaccion.monto_destino) if transaccion.monto_destino else 0)
+        ws.cell(row=row, column=9, value=float(transaccion.tasa_de_cambio_aplicada) if transaccion.tasa_de_cambio_aplicada else 0)
+        ws.cell(row=row, column=10, value=transaccion.tauser_code or 'N/A')
+        
+        # Terminal: compras usan tauser_terminal, ventas usan tauser_deposito
+        if transaccion.tipo_operacion == 'compra':
+            terminal_value = str(transaccion.tauser_terminal) if transaccion.tauser_terminal else 'N/A'
+        else:  # venta
+            terminal_value = str(transaccion.tauser_deposito) if transaccion.tauser_deposito else 'N/A'
+        ws.cell(row=row, column=11, value=terminal_value)
+        
+        ws.cell(row=row, column=12, value=transaccion.procesado_por.get_full_name() if transaccion.procesado_por else 'N/A')
+        
+        # Aplicar bordes
+        for col in range(1, 13):
+            ws.cell(row=row, column=col).border = border
+        
+        # Formato de números
+        ws.cell(row=row, column=6).number_format = '#,##0.00'
+        ws.cell(row=row, column=8).number_format = '#,##0.00'
+        ws.cell(row=row, column=9).number_format = '#,##0.00'
+        
+        row += 1
+    
+    # Ajustar anchos
+    column_widths = {
+        'A': 18, 'B': 16, 'C': 10, 'D': 15, 'E': 12,
+        'F': 15, 'G': 12, 'H': 15, 'I': 12, 'J': 15,
+        'K': 20, 'L': 20
+    }
+    for col, width in column_widths.items():
+        ws.column_dimensions[col].width = width
+    
+    # Crear respuesta
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    filename = f'historial_transacciones_{cliente.cedula}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    response['Content-Disposition'] = f'attachment; filename={filename}'
+    
+    wb.save(response)
+    return response
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -1925,11 +2317,31 @@ def cambiar_estado_transaccion(request, numero_transaccion):
     transaccion = get_object_or_404(Transaccion, numero_transaccion=numero_transaccion)
     nuevo_estado = request.POST.get('nuevo_estado')
     observaciones = request.POST.get('observaciones', '')
+    tauser_deposito_id = request.POST.get('tauser_deposito', '')
     
     if nuevo_estado not in dict(Transaccion.ESTADO_CHOICES):
         return JsonResponse({'success': False, 'error': 'Estado no válido'})
     
     try:
+        # Si se está completando una venta, verificar y registrar el TAUSER de depósito
+        if nuevo_estado == 'completado' and transaccion.tipo_operacion == 'venta':
+            if not tauser_deposito_id:
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'Debe seleccionar el terminal TAUSER donde se depositó la divisa'
+                })
+            
+            try:
+                terminal = Terminal.objects.get(id=tauser_deposito_id, is_activa=True)
+                transaccion.tauser_deposito = terminal
+                transaccion.save()
+                logger.info(f"TAUSER de depósito registrado: {terminal.nombre} para transacción {numero_transaccion}")
+            except Terminal.DoesNotExist:
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'Terminal TAUSER no encontrado o inactivo'
+                })
+        
         transaccion.cambiar_estado(
             nuevo_estado=nuevo_estado,
             observacion=observaciones,
@@ -1944,6 +2356,7 @@ def cambiar_estado_transaccion(request, numero_transaccion):
         })
         
     except Exception as e:
+        logger.error(f"Error al cambiar estado de transacción {numero_transaccion}: {e}")
         return JsonResponse({'success': False, 'error': str(e)})
 
 
