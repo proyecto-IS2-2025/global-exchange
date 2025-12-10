@@ -140,16 +140,20 @@ class RegistroGanancia(models.Model):
         # Calcular margen (ESTA ES LA GANANCIA REAL)
         monto_spread = Decimal('0.00')
         
-        if hasattr(transaccion, 'margen_spread') and transaccion.margen_spread and hasattr(transaccion, 'monto_destino'):
-            # Ganancia = margen_spread × cantidad de divisa
+        if hasattr(transaccion, 'margen_spread') and transaccion.margen_spread:
+            # Ganancia = margen_spread × cantidad de divisa extranjera
             if transaccion.tipo_operacion == 'compra':
-                # En compra: margen_spread × monto_destino (divisa comprada)
-                monto_spread = (transaccion.margen_spread * transaccion.monto_destino).quantize(
+                # En compra: compramos divisa extranjera (monto_destino)
+                # margen_spread × monto_destino (divisa comprada)
+                cantidad_divisa = transaccion.monto_destino
+                monto_spread = (transaccion.margen_spread * cantidad_divisa).quantize(
                     Decimal('0.01'), rounding=ROUND_HALF_UP
                 )
             else:
-                # En venta: margen_spread × monto_origen (divisa vendida)
-                monto_spread = (transaccion.margen_spread * transaccion.monto_origen).quantize(
+                # En venta: vendemos divisa extranjera (monto_origen)
+                # margen_spread × monto_origen (divisa vendida)
+                cantidad_divisa = transaccion.monto_origen
+                monto_spread = (transaccion.margen_spread * cantidad_divisa).quantize(
                     Decimal('0.01'), rounding=ROUND_HALF_UP
                 )
         

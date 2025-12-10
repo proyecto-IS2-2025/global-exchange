@@ -132,6 +132,11 @@
                         <p class="text-muted mb-0">{{ cliente_activo.nombre_completo }} - {{ cliente_activo.cedula }}</p>
                     {% endif %}
                 </div>
+                <div>
+                    <button onclick="confirmarExportacionHistorial()" class="btn btn-success">
+                        <i class="bi bi-file-earmark-excel me-1"></i>Exportar a Excel
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -221,6 +226,46 @@
                             </div>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación de exportación -->
+    <div class="modal fade" id="modalExportarHistorial" tabindex="-1" aria-labelledby="modalExportarHistorialLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="modalExportarHistorialLabel">
+                        <i class="bi bi-file-earmark-excel me-2"></i>Exportar Historial a Excel
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">¿Desea exportar su historial de transacciones a Excel?</p>
+                    <div class="bg-light p-3 rounded">
+                        <div class="mb-2">
+                            <strong>Cliente:</strong> <span id="exportCliente">{{ cliente_activo.nombre_completo }}</span>
+                        </div>
+                        <div class="mb-2">
+                            <strong>Tipo:</strong> <span id="exportTipo"></span>
+                        </div>
+                        <div class="mb-2" id="exportEstadoContainer" style="display: none;">
+                            <strong>Estado:</strong> <span id="exportEstado"></span>
+                        </div>
+                        <div id="exportFechasContainer" style="display: none;">
+                            <strong>Desde:</strong> <span id="exportFechaDesde"></span><br>
+                            <strong>Hasta:</strong> <span id="exportFechaHasta"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="ejecutarExportacionHistorial()">
+                        <i class="bi bi-download me-1"></i>Aceptar
+                    </button>
                 </div>
             </div>
         </div>
@@ -462,6 +507,55 @@
 </div>
 
 <script>
+function confirmarExportacionHistorial() {
+    // Obtener valores de los filtros
+    const tipoSelect = document.getElementById('tipo');
+    const estadoSelect = document.getElementById('estado');
+    const fechaDesde = document.getElementById('fecha_desde');
+    const fechaHasta = document.getElementById('fecha_hasta');
+    
+    // Actualizar contenido del modal
+    const tipoTexto = tipoSelect.options[tipoSelect.selectedIndex].text;
+    document.getElementById('exportTipo').textContent = tipoTexto;
+    
+    // Mostrar estado si está seleccionado
+    if (estadoSelect.value) {
+        const estadoTexto = estadoSelect.options[estadoSelect.selectedIndex].text;
+        document.getElementById('exportEstado').textContent = estadoTexto;
+        document.getElementById('exportEstadoContainer').style.display = 'block';
+    } else {
+        document.getElementById('exportEstadoContainer').style.display = 'none';
+    }
+    
+    // Mostrar fechas si están seleccionadas
+    if (fechaDesde.value && fechaHasta.value) {
+        document.getElementById('exportFechaDesde').textContent = formatearFecha(fechaDesde.value);
+        document.getElementById('exportFechaHasta').textContent = formatearFecha(fechaHasta.value);
+        document.getElementById('exportFechasContainer').style.display = 'block';
+    } else {
+        document.getElementById('exportFechasContainer').style.display = 'none';
+    }
+    
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById('modalExportarHistorial'));
+    modal.show();
+}
+
+function ejecutarExportacionHistorial() {
+    // Cerrar el modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalExportarHistorial'));
+    modal.hide();
+    
+    // Construir URL con los parámetros de filtro actuales
+    const params = new URLSearchParams(window.location.search);
+    window.location.href = "{% url 'transacciones:exportar_historial_excel' %}?" + params.toString();
+}
+
+function formatearFecha(fecha) {
+    const partes = fecha.split('-');
+    return partes[2] + '/' + partes[1] + '/' + partes[0];
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Auto-refresh cada 30 segundos si hay transacciones pendientes
     const pendienteCards = document.querySelectorAll('.transaction-card .status-pendiente');

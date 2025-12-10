@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load l10n %}
 
 {% block content %}
 <div class="container-fluid mt-4">
@@ -18,6 +19,9 @@
                     </p>
                 </div>
                 <div>
+                    <button onclick="confirmarExportacionExcel()" class="btn btn-success me-2">
+                        <i class="fas fa-file-excel me-1"></i>Exportar Excel
+                    </button>
                     <a href="{% url 'ganancias:comparacion' %}" class="btn btn-outline-primary me-2">
                         <i class="fas fa-balance-scale me-1"></i>Comparar Períodos
                     </a>
@@ -43,6 +47,7 @@
                                 <option value="mes_actual" {% if periodo == 'mes_actual' %}selected{% endif %}>Mes Actual</option>
                                 <option value="mes_anterior" {% if periodo == 'mes_anterior' %}selected{% endif %}>Mes Anterior</option>
                                 <option value="año" {% if periodo == 'año' %}selected{% endif %}>Año Actual</option>
+                                <option value="todo" {% if periodo == 'todo' %}selected{% endif %}>Todos los Tiempos</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -75,6 +80,43 @@
                             </a>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación de exportación -->
+    <div class="modal fade" id="modalExportarExcel" tabindex="-1" aria-labelledby="modalExportarExcelLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="modalExportarExcelLabel">
+                        <i class="fas fa-file-excel me-2"></i>Exportar Ganancias a Excel
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">¿Desea exportar las ganancias a Excel?</p>
+                    <div class="bg-light p-3 rounded">
+                        <div class="mb-2">
+                            <strong>Período:</strong> <span id="exportPeriodo"></span>
+                        </div>
+                        <div class="mb-2" id="exportFechasContainer" style="display: none;">
+                            <strong>Desde:</strong> <span id="exportFechaInicio"></span><br>
+                            <strong>Hasta:</strong> <span id="exportFechaFin"></span>
+                        </div>
+                        <div>
+                            <strong>Divisa:</strong> <span id="exportDivisa"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="ejecutarExportacion()">
+                        <i class="fas fa-download me-1"></i>Aceptar
+                    </button>
                 </div>
             </div>
         </div>
@@ -127,15 +169,15 @@
         </div>
         
         <div class="col-md-3">
-            <div class="card shadow-sm border-0 h-100 border-start border-info border-4">
+            <div class="card shadow-sm border-0 h-100 border-start border-4" style="border-color: #ff6f00 !important;">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <p class="text-muted mb-1 small">GANANCIA POR VENTAS</p>
-                            <h3 class="mb-0 fw-bold text-info">₲ {{ total_ventas.total|floatformat:0|default:"0" }}</h3>
+                            <h3 class="mb-0 fw-bold" style="color: #ff6f00;">₲ {{ total_ventas.total|floatformat:0|default:"0" }}</h3>
                         </div>
-                        <div class="bg-info bg-opacity-10 rounded-circle p-3">
-                            <i class="fas fa-hand-holding-usd fa-2x text-info"></i>
+                        <div class="rounded-circle p-3" style="background-color: rgba(255, 111, 0, 0.1);">
+                            <i class="fas fa-hand-holding-usd fa-2x" style="color: #ff6f00;"></i>
                         </div>
                     </div>
                     <div class="mt-3">
@@ -170,7 +212,22 @@
         <div class="col-md-8">
             <div class="card shadow-sm">
                 <div class="card-header bg-white">
-                    <h5 class="mb-0"><i class="fas fa-chart-area me-2"></i>Evolución de Ganancias</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-area me-2"></i>Evolución de Ganancias</h5>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <input type="radio" class="btn-check" name="tipoGrafico" id="radioTotal" value="total" checked>
+                            <label class="btn btn-outline-primary" for="radioTotal">Total</label>
+                            
+                            <input type="radio" class="btn-check" name="tipoGrafico" id="radioCompras" value="compras">
+                            <label class="btn btn-outline-primary" for="radioCompras">Compras</label>
+                            
+                            <input type="radio" class="btn-check" name="tipoGrafico" id="radioVentas" value="ventas">
+                            <label class="btn btn-outline-primary" for="radioVentas">Ventas</label>
+                            
+                            <input type="radio" class="btn-check" name="tipoGrafico" id="radioAmbos" value="ambos">
+                            <label class="btn btn-outline-primary" for="radioAmbos">Ambos</label>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body">
                     <canvas id="graficoEvolucion" height="80"></canvas>
@@ -197,7 +254,7 @@
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center">
-                                <div style="width: 20px; height: 20px; background-color: rgb(255, 159, 64); border-radius: 3px;" class="me-2"></div>
+                                <div style="width: 20px; height: 20px; background-color: rgb(255, 111, 0); border-radius: 3px;" class="me-2"></div>
                                 <span class="text-muted small">Ventas</span>
                             </div>
                             <span class="fw-bold">{{ total_ventas.cantidad|default:"0" }}</span>
@@ -272,9 +329,7 @@
                                     <th>Nº Transacción</th>
                                     <th>Cliente</th>
                                     <th>Divisa</th>
-                                    <th>Tipo</th>
                                     <th class="text-end">Margen (Ganancia)</th>
-                                    <th class="text-end">Comisión MP <span class="badge bg-secondary">Info</span></th>
                                     <th>Fecha</th>
                                 </tr>
                             </thead>
@@ -285,14 +340,12 @@
                                     <td><code>{{ ganancia.transaccion.numero_transaccion }}</code></td>
                                     <td>{{ ganancia.transaccion.cliente.nombre_fantasia }}</td>
                                     <td><span class="badge bg-info">{{ ganancia.divisa_referencia.code }}</span></td>
-                                    <td><span class="badge {% if ganancia.tipo_ganancia == 'comision' %}bg-secondary{% else %}bg-success{% endif %}">{{ ganancia.get_tipo_ganancia_display }}</span></td>
                                     <td class="text-end fw-bold text-success">₲ {{ ganancia.monto_spread|floatformat:0 }}</td>
-                                    <td class="text-end text-muted">₲ {{ ganancia.monto_comision|floatformat:0 }}</td>
                                     <td>{{ ganancia.fecha_transaccion|date:"d/m/Y H:i" }}</td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted">No hay transacciones disponibles</td>
+                                    <td colspan="6" class="text-center text-muted">No hay transacciones disponibles</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -405,23 +458,54 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+// Datos para el gráfico de evolución
+const fechas = [{% for dia in evolucion_diaria %}'{{ dia.fecha|date:"d/m" }}'{% if not forloop.last %},{% endif %}{% empty %}'Sin datos'{% endfor %}];
+const datosTotal = [{% for dia in evolucion_diaria %}{{ dia.total_spread|unlocalize }}{% if not forloop.last %},{% endif %}{% empty %}0{% endfor %}];
+const datosCompras = [{% for dia in evolucion_diaria %}{% for comp in evolucion_compras %}{% if comp.fecha == dia.fecha %}{{ comp.total|unlocalize }}{% endif %}{% endfor %}{% if not forloop.last %},{% endif %}{% empty %}0{% endfor %}];
+const datosVentas = [{% for dia in evolucion_diaria %}{% for ven in evolucion_ventas %}{% if ven.fecha == dia.fecha %}{{ ven.total|unlocalize }}{% endif %}{% endfor %}{% if not forloop.last %},{% endif %}{% empty %}0{% endfor %}];
+
+console.log('Fechas:', fechas);
+console.log('Datos Total:', datosTotal);
+console.log('Datos Compras:', datosCompras);
+console.log('Datos Ventas:', datosVentas);
+// Configuración de datasets
+const datasets = {
+    total: {
+        label: 'Ganancia Total',
+        data: datosTotal,
+        borderColor: 'rgb(75, 192, 192)',
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        tension: 0.4,
+        borderWidth: 3,
+        fill: true
+    },
+    compras: {
+        label: 'Ganancia por Compras',
+        data: datosCompras,
+        borderColor: 'rgb(54, 162, 235)',
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        tension: 0.4,
+        borderWidth: 3,
+        fill: true
+    },
+    ventas: {
+        label: 'Ganancia por Ventas',
+        data: datosVentas,
+        borderColor: 'rgb(255, 159, 64)',
+        backgroundColor: 'rgba(255, 159, 64, 0.2)',
+        tension: 0.4,
+        borderWidth: 3,
+        fill: true
+    }
+};
+
 // Gráfico de evolución
 const ctxEvolucion = document.getElementById('graficoEvolucion').getContext('2d');
 const graficoEvolucion = new Chart(ctxEvolucion, {
     type: 'line',
     data: {
-        labels: [{% for dia in evolucion_diaria %}'{{ dia.fecha|date:"d/m" }}'{% if not forloop.last %},{% endif %}{% empty %}'Sin datos'{% endfor %}],
-        datasets: [
-            {
-                label: 'Margen (Ganancia)',
-                data: [{% for dia in evolucion_diaria %}{{ dia.total_spread|default:0 }}{% if not forloop.last %},{% endif %}{% empty %}0{% endfor %}],
-                borderColor: 'rgb(54, 162, 235)',
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                tension: 0.4,
-                borderWidth: 3,
-                fill: true
-            }
-        ]
+        labels: fechas,
+        datasets: [datasets.total]
     },
     options: {
         responsive: true,
@@ -446,6 +530,36 @@ const graficoEvolucion = new Chart(ctxEvolucion, {
     }
 });
 
+// Función para actualizar el gráfico según la selección
+function actualizarGrafico(tipo) {
+    let nuevosDatasets = [];
+    
+    switch(tipo) {
+        case 'total':
+            nuevosDatasets = [datasets.total];
+            break;
+        case 'compras':
+            nuevosDatasets = [datasets.compras];
+            break;
+        case 'ventas':
+            nuevosDatasets = [datasets.ventas];
+            break;
+        case 'ambos':
+            nuevosDatasets = [datasets.compras, datasets.ventas];
+            break;
+    }
+    
+    graficoEvolucion.data.datasets = nuevosDatasets;
+    graficoEvolucion.update();
+}
+
+// Event listeners para los botones de radio
+document.querySelectorAll('input[name="tipoGrafico"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        actualizarGrafico(this.value);
+    });
+});
+
 // Gráfico por tipo de operación (Compras vs Ventas)
 const ctxTipo = document.getElementById('graficoPorTipo').getContext('2d');
 const graficoPorTipo = new Chart(ctxTipo, {
@@ -454,12 +568,16 @@ const graficoPorTipo = new Chart(ctxTipo, {
         labels: ['Compras', 'Ventas'],
         datasets: [{
             data: [
-                {{ total_compras.total|default:"0" }},
-                {{ total_ventas.total|default:"0" }}
+                {{ total_compras.total|unlocalize|default:"0" }},
+                {{ total_ventas.total|unlocalize|default:"0" }}
             ],
             backgroundColor: [
-                'rgba(54, 162, 235, 0.8)',
-                'rgba(255, 159, 64, 0.8)',
+                'rgb(54, 162, 235)',
+                'rgb(255, 111, 0)',
+            ],
+            hoverBackgroundColor: [
+                'rgb(54, 162, 235)',
+                'rgb(255, 111, 0)',
             ],
             borderWidth: 2,
             borderColor: '#fff'
@@ -487,6 +605,45 @@ const graficoPorTipo = new Chart(ctxTipo, {
         }
     }
 });
+
+function confirmarExportacionExcel() {
+    // Obtener información del período seleccionado
+    const periodoSelect = document.querySelector('select[name="periodo"]');
+    const divisaSelect = document.querySelector('select[name="divisa"]');
+    const fechaInicio = document.querySelector('input[name="fecha_inicio"]');
+    const fechaFin = document.querySelector('input[name="fecha_fin"]');
+    
+    // Actualizar contenido del modal
+    document.getElementById('exportPeriodo').textContent = periodoSelect.options[periodoSelect.selectedIndex].text;
+    document.getElementById('exportDivisa').textContent = divisaSelect.options[divisaSelect.selectedIndex].text;
+    
+    // Mostrar fechas personalizadas si están establecidas
+    if (fechaInicio.value && fechaFin.value) {
+        document.getElementById('exportFechaInicio').textContent = formatearFecha(fechaInicio.value);
+        document.getElementById('exportFechaFin').textContent = formatearFecha(fechaFin.value);
+        document.getElementById('exportFechasContainer').style.display = 'block';
+    } else {
+        document.getElementById('exportFechasContainer').style.display = 'none';
+    }
+    
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById('modalExportarExcel'));
+    modal.show();
+}
+
+function ejecutarExportacion() {
+    // Cerrar el modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalExportarExcel'));
+    modal.hide();
+    
+    // Redirigir a la URL de exportación
+    window.location.href = "{% url 'ganancias:exportar_excel' %}?{{ request.GET.urlencode }}";
+}
+
+function formatearFecha(fecha) {
+    const partes = fecha.split('-');
+    return partes[2] + '/' + partes[1] + '/' + partes[0];
+}
 
 function actualizarGanancias() {
     if (!confirm('¿Está seguro de que desea actualizar los registros de ganancias?')) {

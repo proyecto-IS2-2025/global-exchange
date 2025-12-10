@@ -199,6 +199,16 @@ class Transaccion(models.Model):
         related_name='transacciones_asignadas',
         help_text='Terminal TAUSER donde el cliente debe retirar la divisa (solo compras)'
     )
+    
+    # Terminal TAUSER donde se depositó (solo para ventas)
+    tauser_deposito = models.ForeignKey(
+        'tauser.Terminal',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='transacciones_depositos',
+        help_text='Terminal TAUSER donde el cliente depositó la divisa (solo ventas)'
+    )
 
     class Meta:
         verbose_name = 'Transacción'
