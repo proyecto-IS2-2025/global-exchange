@@ -180,17 +180,31 @@ LOGOUT_REDIRECT_URL = 'inicio'
 # ═════════════════════════════════════════════════════════════════════
 # EMAIL
 # ═════════════════════════════════════════════════════════════════════
-# Usar Gmail SMTP (desarrollo y producción)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
-EMAIL_TIMEOUT = 30
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'glex.globalexchange.respaldo@gmail.com')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'itlf keib ybar gyds')
-DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER', 'glex.globalexchange.respaldo@gmail.com')
-SERVER_EMAIL = os.environ.get('EMAIL_HOST_USER', 'glex.globalexchange.respaldo@gmail.com')
+
+# Usar SendGrid si está configurado (producción), sino Gmail (desarrollo)
+if os.environ.get('SENDGRID_API_KEY'):
+    # ✅ PRODUCCIÓN: SendGrid
+    EMAIL_HOST = 'smtp.sendgrid.net'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_USE_SSL = False
+    EMAIL_TIMEOUT = 30
+    EMAIL_HOST_USER = 'apikey'  # ← Literalmente la palabra "apikey"
+    EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_API_KEY')
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'glex.globalexchange.respaldo@gmail.com')
+    SERVER_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'glex.globalexchange.respaldo@gmail.com')
+else:
+    # ✅ DESARROLLO: Gmail SMTP
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_USE_SSL = False
+    EMAIL_TIMEOUT = 30
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'glex.globalexchange.respaldo@gmail.com')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'itlf keib ybar gyds')
+    DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER', 'glex.globalexchange.respaldo@gmail.com')
+    SERVER_EMAIL = os.environ.get('EMAIL_HOST_USER', 'glex.globalexchange.respaldo@gmail.com')
 # ═════════════════════════════════════════════════════════════════════
 # INTERNACIONALIZACIÓN
 # ═════════════════════════════════════════════════════════════════════

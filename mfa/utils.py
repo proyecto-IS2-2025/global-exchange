@@ -51,21 +51,23 @@ def generate_and_send_otp(user, request=None):
                 f"Es válido por {OTP_EXPIRATION_TIME} min."
             )
     except Exception as e:
+        # Registrar el error completo
         logger.error(f"Error enviando OTP a {user.email}: {str(e)}")
+        
+        # ⚠️ FALLBACK: Mostrar código en logs cuando falla el envío
+        logger.warning(f"⚠️ CÓDIGO OTP PARA {user.email}: {otp_code} (válido {OTP_EXPIRATION_TIME} min)")
+        print(f"\n{'='*60}")
+        print(f"⚠️ ERROR ENVIANDO EMAIL - CÓDIGO EN LOGS")
+        print(f"Usuario: {user.email}")
+        print(f"Código OTP: {otp_code}")
+        print(f"Válido por: {OTP_EXPIRATION_TIME} minutos")
+        print(f"{'='*60}\n")
         
         if request:
             messages.warning(
                 request, 
-                "Hubo un problema al enviar el email. "
-                "Por favor, contacta al soporte si el problema persiste."
+                "⚠️ No se pudo enviar el email. Verifica los logs del sistema para obtener el código MFA."
             )
-        
-        # En desarrollo, mostrar el código en consola
-        if settings.DEBUG:
-            print(f"\n{'='*60}")
-            print(f"⚠️  ERROR ENVIANDO EMAIL - MODO DEBUG")
-            print(f"CÓDIGO OTP PARA {user.email}: {otp_code}")
-            print(f"{'='*60}\n")
 
     return True  # SIEMPRE retornar True para no bloquear el login
 
