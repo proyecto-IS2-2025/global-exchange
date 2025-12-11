@@ -40,7 +40,7 @@ def generate_and_send_otp(user, request=None):
             message, 
             settings.DEFAULT_FROM_EMAIL, 
             [user.email],
-            fail_silently=True  # ← NO BLOQUEAR si falla el envío
+            fail_silently=False  # ← Capturar errores para diagnóstico
         )
         logger.info(f"OTP enviado exitosamente a {user.email}")
         
