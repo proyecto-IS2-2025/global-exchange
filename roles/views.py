@@ -827,7 +827,7 @@ def bad_request_view(request, exception=None):
         'titulo': 'Solicitud incorrecta',
         'mensaje': 'La solicitud enviada no es válida.',
         'url_redireccion': url_redireccion,
-        'usuario_autenticado': request.user.is_authenticated,
+        'usuario_autenticado': hasattr(request, 'user') and request.user.is_authenticated,
     }
     
     return render(request, '400.html', context, status=400)
