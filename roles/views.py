@@ -812,7 +812,7 @@ def bad_request_view(request, exception=None):
     """
     Vista personalizada para error 400 (Bad Request).
     """
-    if not request.user.is_authenticated:
+    if not hasattr(request, 'user') or not request.user.is_authenticated:
         url_redireccion = '/'
     else:
         user = request.user

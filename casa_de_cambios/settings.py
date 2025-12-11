@@ -27,7 +27,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'cambia_esto_por_una_clave_secreta_seg
 DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
 # Hosts permitidos
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,global-exchange-atrg.onrender.com').split(',')
 
 # ═════════════════════════════════════════════════════════════════════
 # APLICACIONES
