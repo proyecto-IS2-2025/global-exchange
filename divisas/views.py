@@ -340,14 +340,11 @@ def visualizador_tasas_admin(request):
     })
 
 
-@login_required
-@require_permission("divisas.view_cotizaciones_segmento", check_client_assignment=False)
 def historico_tasas(request):
     """
-    🔐 PROTEGIDA: divisas.view_cotizaciones_segmento
-    
     Vista para mostrar el histórico de tasas de cambio con gráficos.
     Muestra solo las tasas del segmento del cliente activo.
+    Accesible públicamente para usuarios no autenticados.
     """
     # Detectar segmento activo
     segmento_activo = None
@@ -390,14 +387,11 @@ def historico_tasas(request):
     })
 
 
-@login_required
-@require_permission("divisas.view_cotizaciones_segmento", check_client_assignment=False)
 def api_historico_tasas(request):
     """
-    🔐 PROTEGIDA: divisas.view_cotizaciones_segmento
-    
     API endpoint para obtener datos históricos de tasas de cambio.
     Retorna JSON con los datos filtrados por divisa, período y tipo de operación.
+    Accesible públicamente para usuarios no autenticados.
     """
     from datetime import datetime, timedelta
     from django.utils import timezone

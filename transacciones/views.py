@@ -1009,6 +1009,9 @@ def crear_transaccion_desde_venta(request):
         except Exception as e:
             logger.warning(f"No se pudo calcular tasa base para análisis: {e}")
 
+        # En venta, el monto_destino debe ser el total a recibir (base - comisión)
+        monto_destino_total = monto_destino - comision_monto
+
         with transaction.atomic():
             transaccion = Transaccion.objects.create(
                 tipo_operacion='venta',
@@ -1016,7 +1019,7 @@ def crear_transaccion_desde_venta(request):
                 divisa_origen=divisa_origen,
                 divisa_destino=divisa_destino,
                 monto_origen=monto_origen,
-                monto_destino=monto_destino,
+                monto_destino=monto_destino_total,
                 tasa_de_cambio_aplicada=tasa_cambio,
                 tasa_base=tasa_base_calculada,  # 📊 Nuevo campo
                 margen_spread=margen_spread_calculado,  # 📊 Nuevo campo
