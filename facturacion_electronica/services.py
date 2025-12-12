@@ -659,21 +659,35 @@ def generar_factura_automatica(transaccion):
         # Mantener formato original: cantidad=1, precio=monto_total
         monto_pyg = float(transaccion.monto_origen)
         divisa_operacion = transaccion.divisa_destino  # La divisa que compra
+        cantidad_divisas = float(transaccion.monto_destino)  # Cantidad que recibe
+        comision = float(transaccion.comision_aplicada) if transaccion.comision_aplicada else 0
         cantidad_item = 1
         precio_unitario_item = monto_pyg
-        descripcion = f"Compra de Divisas - {divisa_operacion.code}"
-        logger.info(f"[FACTURA_AUTO] COMPRA: {monto_pyg} PYG por {transaccion.monto_destino} {divisa_operacion.code}")
+        
+        # Descripción detallada con cantidad comprada y comisión
+        descripcion = f"Compra de {cantidad_divisas:,.2f} {divisa_operacion.code}"
+        if comision > 0:
+            descripcion += f" (Comisión medio de pago: Gs. {comision:,.0f})"
+        
+        logger.info(f"[FACTURA_AUTO] COMPRA: {monto_pyg} PYG por {cantidad_divisas} {divisa_operacion.code} (Comisión: {comision})")
     else:
         # VENTA: Cliente entrega divisa (monto_origen) → recibe PYG (monto_destino)
-        # Formato nuevo: cantidad=divisas vendidas, precio=tipo de cambio
+        # Formato: cantidad=1, precio_unitario=total_a_recibir, descripción detallada
         monto_pyg = float(transaccion.monto_destino)
         divisa_operacion = transaccion.divisa_origen  # La divisa que vende
         cantidad_divisas = float(transaccion.monto_origen)  # Cantidad que entrega
-        tipo_cambio = monto_pyg / cantidad_divisas if cantidad_divisas > 0 else monto_pyg
-        cantidad_item = cantidad_divisas
-        precio_unitario_item = tipo_cambio
-        descripcion = f"Venta de Divisas - {divisa_operacion.code}"
-        logger.info(f"[FACTURA_AUTO] VENTA: {cantidad_divisas} {divisa_operacion.code} por {monto_pyg} PYG (TC: {tipo_cambio})")
+        comision = float(transaccion.comision_aplicada) if transaccion.comision_aplicada else 0
+        
+        # Precio unitario = total a recibir
+        cantidad_item = 1
+        precio_unitario_item = monto_pyg
+        
+        # Descripción detallada con cantidad vendida y comisión
+        descripcion = f"Venta de {cantidad_divisas:,.2f} {divisa_operacion.code}"
+        if comision > 0:
+            descripcion += f" (Comisión medio de pago: Gs. {comision:,.0f})"
+        
+        logger.info(f"[FACTURA_AUTO] VENTA: {cantidad_divisas} {divisa_operacion.code} por {monto_pyg} PYG (Comisión: {comision})")
     
     logger.info(f"[FACTURA_AUTO] Item: cantidad={cantidad_item}, precio_unitario={precio_unitario_item}, total={monto_pyg} PYG")
     
