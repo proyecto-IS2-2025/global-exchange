@@ -101,6 +101,12 @@
                                             <label class="text-muted small fw-bold">Número de Transacción</label>
                                             <p class="mb-0 font-monospace fs-5 fw-bold text-success">{{ transaccion.numero_transaccion }}</p>
                                         </div>
+                                        {% if transaccion.tauser_code %}
+                                        <div class="mb-3">
+                                            <label class="text-muted small fw-bold">Código TAUSER</label>
+                                            <p class="mb-0 font-monospace fs-5 fw-bold text-primary">{{ transaccion.tauser_code }}</p>
+                                        </div>
+                                        {% endif %}
                                         <div class="mb-3">
                                             <label class="text-muted small fw-bold">Tipo de Operación</label>
                                             <p class="mb-0 text-capitalize">{{ transaccion.get_tipo_operacion_display }}</p>
@@ -258,6 +264,16 @@
                                     <div class="mb-2">
                                         <label class="text-muted small">Comisión aplicada</label>
                                         <p class="mb-0">{{ transaccion.medio_pago_datos.comision|default:"No aplica" }}</p>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="text-muted small">Monto de Comisión</label>
+                                        <p class="mb-0 fw-bold">
+                                            {% if transaccion.comision_aplicada and transaccion.comision_aplicada > 0 %}
+                                                Gs. {{ transaccion.comision_aplicada|floatformat:0|intcomma }}
+                                            {% else %}
+                                                No aplica
+                                            {% endif %}
+                                        </p>
                                     </div>
                                     {% if transaccion.medio_pago_datos.es_principal %}
                                     <div class="mb-2">
