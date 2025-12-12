@@ -37,7 +37,8 @@ class Command(BaseCommand):
             self._configure_cliente(verbose)
             self._configure_usuario_registrado(verbose)
             self._configure_observador(verbose)
-            self._configure_usuario_no_registrado(verbose)  # ← NUEVO
+            self._configure_analista(verbose)  # ← NUEVO ROL ANALISTA
+            self._configure_usuario_no_registrado(verbose)
         
         self.stdout.write('')
         self.stdout.write(self.style.SUCCESS('=' * 60))
@@ -213,8 +214,30 @@ class Command(BaseCommand):
             'export_reporte_facturacion',
             'manage_config_facturacion',
             'sync_sifen',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # GANANCIAS (4 custom - TODOS)
+            # ═══════════════════════════════════════════════════════════════
+            'view_tablero_ganancias',
+            'view_comparacion_ganancias',
+            'export_ganancias',
+            'actualizar_ganancias',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # TAUSER (10 custom - TODOS)
+            # ═══════════════════════════════════════════════════════════════
+            'manage_terminales',
+            'view_terminales',
+            'manage_inventario_divisa',
+            'view_inventario_divisa',
+            'manage_denominaciones_inventario',
+            'view_denominaciones_inventario',
+            'manage_pins_terminal',
+            'view_pins_terminal',
+            'view_registros_terminal',
+            'export_registros_terminal',
         ]
-        # Total: 57 permisos custom (44 anteriores + 13 de facturación)
+        # Total: 71 permisos custom (61 anteriores + 10 de tauser)
         
         self._assign_permissions('dev', codenames, verbose)
 
@@ -310,8 +333,30 @@ class Command(BaseCommand):
             'export_reporte_facturacion',
             'manage_config_facturacion',  # ✅ Configurar sistema
             'sync_sifen',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # GANANCIAS (4 custom - TODOS)
+            # ═══════════════════════════════════════════════════════════════
+            'view_tablero_ganancias',
+            'view_comparacion_ganancias',
+            'export_ganancias',
+            'actualizar_ganancias',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # TAUSER (10 custom - TODOS)
+            # ═══════════════════════════════════════════════════════════════
+            'manage_terminales',
+            'view_terminales',
+            'manage_inventario_divisa',
+            'view_inventario_divisa',
+            'manage_denominaciones_inventario',
+            'view_denominaciones_inventario',
+            'manage_pins_terminal',
+            'view_pins_terminal',
+            'view_registros_terminal',
+            'export_registros_terminal',
         ]
-        # Total: 55 permisos custom (43 anteriores + 12 de facturación)
+        # Total: 69 permisos custom (59 anteriores + 10 de tauser)
         
         self._assign_permissions('administrador', codenames, verbose)
 
@@ -364,8 +409,22 @@ class Command(BaseCommand):
             'generar_factura',
             'download_kude_pdf',
             'view_reporte_facturacion',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # GANANCIAS (2 custom - solo visualización)
+            # ═══════════════════════════════════════════════════════════════
+            'view_tablero_ganancias',
+            'view_comparacion_ganancias',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # TAUSER (4 custom - solo visualización)
+            # ═══════════════════════════════════════════════════════════════
+            'view_terminales',
+            'view_inventario_divisa',
+            'view_denominaciones_inventario',
+            'view_registros_terminal',
         ]
-        # Total: 21 permisos custom (16 anteriores + 5 de facturación)
+        # Total: 28 permisos custom (24 anteriores + 4 de tauser)
         
         self._assign_permissions('operador', codenames, verbose)
 
@@ -482,10 +541,48 @@ class Command(BaseCommand):
             'view_todas_facturas',
             'download_kude_pdf',
             'view_reporte_facturacion',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # GANANCIAS (2 custom - SOLO LECTURA, sin exportación)
+            # ═══════════════════════════════════════════════════════════════
+            'view_tablero_ganancias',
+            'view_comparacion_ganancias',
         ]
-        # Total: 19 permisos custom (17 anteriores - 1 transacción + 3 de facturación)
+        # Total: 21 permisos custom (19 anteriores + 2 de ganancias)
         
         self._assign_permissions('observador', codenames, verbose)
+
+    def _configure_analista(self, verbose):
+        """
+        ✅ ANALISTA - Acceso limitado a reportes financieros
+        Solo: Ganancias, Visualizador Tasas, Divisas y Facturación Electrónica
+        """
+        codenames = [
+            # ═══════════════════════════════════════════════════════════════
+            # DIVISAS (3 custom - visualización de tasas y divisas)
+            # ═══════════════════════════════════════════════════════════════
+            'view_cotizaciones_segmento',  # Visualizador Tasas
+            'view_divisas',                 # Divisas
+            'view_tasas_cambio',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # FACTURACIÓN ELECTRÓNICA (4 custom - lectura y exportación)
+            # ═══════════════════════════════════════════════════════════════
+            'view_todas_facturas',
+            'download_kude_pdf',
+            'view_reporte_facturacion',
+            'export_reporte_facturacion',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # GANANCIAS (3 custom - COMPLETO para análisis)
+            # ═══════════════════════════════════════════════════════════════
+            'view_tablero_ganancias',
+            'view_comparacion_ganancias',
+            'export_ganancias',
+        ]
+        # Total: 10 permisos custom (Ganancias + Tasas + Divisas + Facturación)
+        
+        self._assign_permissions('analista', codenames, verbose)
 
     def _configure_usuario_no_registrado(self, verbose):
         """

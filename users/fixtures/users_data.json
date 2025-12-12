@@ -198,5 +198,25 @@
       "groups": [1],
       "user_permissions": []
     }
+  },
+  {
+    "model": "users.customuser",
+    "pk": 11,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$jIRXr1HvZbtMX6eBxEowBv$VbkJvB8clLm/rzDzpBG1tWVBVikY9xz0RV/lLoJxDQM=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "test_analista",
+      "first_name": "Test",
+      "last_name": "Analista",
+      "email": "analista@test.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2025-12-12T10:00:00Z",
+      "is_cambista": false,
+      "ultimo_cliente_id": null,
+      "groups": [8],
+      "user_permissions": []
+    }
   }
 ]

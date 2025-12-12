@@ -54,5 +54,13 @@
       "name": "administrador",
       "permissions": []
     }
+  },
+  {
+    "model": "auth.group",
+    "pk": 8,
+    "fields": {
+      "name": "analista",
+      "permissions": []
+    }
   }
 ]
