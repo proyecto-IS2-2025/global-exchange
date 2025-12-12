@@ -735,10 +735,15 @@ def permission_denied_view(request, exception=None):
         url_redireccion = '/'
         mostrar_menu_staff = False
     
+    # Obtener el permiso requerido de forma segura
+    permiso_requerido = None
+    if exception and hasattr(exception, 'args') and exception.args:
+        permiso_requerido = exception.args[0]
+    
     context = {
         'titulo': 'Acceso Denegado',
         'mensaje': mensaje,
-        'permiso_requerido': getattr(exception, 'args', [''])[0] if exception else None,
+        'permiso_requerido': permiso_requerido,
         'usuario': user,
         'usuario_autenticado': True,
         'es_superusuario': user.is_superuser,

@@ -5,6 +5,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from decimal import Decimal
 from datetime import timedelta
@@ -19,6 +20,17 @@ from clientes.models import Cliente, Segmento
 User = get_user_model()
 
 
+def get_or_create_permission(codename, name):
+    """Helper para obtener o crear permisos personalizados"""
+    content_type = ContentType.objects.get(app_label='ganancias', model='registroganancia')
+    permission, _ = Permission.objects.get_or_create(
+        codename=codename,
+        content_type=content_type,
+        defaults={'name': name}
+    )
+    return permission
+
+
 class ReporteTransaccionesGananciasTest(TestCase):
     """Tests para los reportes de transacciones y ganancias"""
     
@@ -30,7 +42,7 @@ class ReporteTransaccionesGananciasTest(TestCase):
             password='testpass123'
         )
         
-        permission = Permission.objects.get(codename='view_registroganancia')
+        permission = get_or_create_permission('view_tablero_ganancias', 'Puede ver el tablero de ganancias')
         self.user.user_permissions.add(permission)
         
         self.client = Client()
@@ -275,7 +287,7 @@ class ExportarReporteExcelTest(TestCase):
             password='testpass123'
         )
         
-        permission = Permission.objects.get(codename='view_registroganancia')
+        permission = get_or_create_permission('export_ganancias', 'Puede exportar reportes de ganancias')
         self.user.user_permissions.add(permission)
         
         self.client = Client()
