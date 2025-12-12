@@ -58,6 +58,11 @@ def grupo_usuario(request):
             'display_name': 'Observador',
             'es_admin': False,
         },
+        'analista': {
+            'prioridad': 5,
+            'display_name': 'Analista',
+            'es_admin': False,
+        },
     }
     
     # ═══════════════════════════════════════════════════════════════
