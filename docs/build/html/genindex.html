@@ -66,10 +66,14 @@
 </li>
       <li><a href="medios_pago.html#medios_pago.models.ActiveManager">ActiveManager (clase en medios_pago.models)</a>
 </li>
+      <li><a href="users.html#users.models.CustomUser.actualizaciones_inventario">actualizaciones_inventario (atributo de users.models.CustomUser)</a>
+</li>
       <li><a href="clientes.html#clientes.models.LimiteDiario.actualizado">actualizado (atributo de clientes.models.LimiteDiario)</a>
 
       <ul>
         <li><a href="clientes.html#clientes.models.LimiteMensual.actualizado">(atributo de clientes.models.LimiteMensual)</a>
+</li>
+        <li><a href="divisas.html#divisas.models.Denominacion.actualizado">(atributo de divisas.models.Denominacion)</a>
 </li>
         <li><a href="divisas.html#divisas.models.Divisa.actualizado">(atributo de divisas.models.Divisa)</a>
 </li>
@@ -88,6 +92,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="transacciones.html#transacciones.models.Transaccion.aplicar_redondeo_montos">aplicar_redondeo_montos() (método de transacciones.models.Transaccion)</a>
+</li>
       <li><a href="medios_pago.html#medios_pago.models.MedioDePago.aplicar_template">aplicar_template() (método de medios_pago.models.MedioDePago)</a>
 </li>
       <li><a href="clientes.html#clientes.models.AsignacionCliente">AsignacionCliente (clase en clientes.models)</a>
@@ -102,6 +108,8 @@
         <li><a href="users.html#users.models.CustomUser.asignacioncliente_set">(atributo de users.models.CustomUser)</a>
 </li>
       </ul></li>
+      <li><a href="transacciones.html#transacciones.models.Transaccion.asignar_tauser_code_si_corresponde">asignar_tauser_code_si_corresponde() (método de transacciones.models.Transaccion)</a>
+</li>
       <li><a href="vistas_cliente.html#clientes.views.asociar_clientes_usuarios_view">asociar_clientes_usuarios_view() (en el módulo clientes.views)</a>
 </li>
       <li>
@@ -124,6 +132,8 @@
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="roles.html#roles.views.bad_request_view">bad_request_view() (en el módulo roles.views)</a>
+</li>
       <li>
     banco.forms
 
@@ -151,16 +161,16 @@
 </li>
       <li><a href="banco.html#banco.models.BancoUser.MultipleObjectsReturned">BancoUser.MultipleObjectsReturned</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="divisas.html#divisas.forms.CompraDivisaForm.base_fields">base_fields (atributo de divisas.forms.CompraDivisaForm)</a>
+      <li><a href="divisas.html#divisas.forms.DenominacionForm.base_fields">base_fields (atributo de divisas.forms.DenominacionForm)</a>
 
       <ul>
+        <li><a href="divisas.html#divisas.forms.DenominacionQuickForm.base_fields">(atributo de divisas.forms.DenominacionQuickForm)</a>
+</li>
+        <li><a href="divisas.html#divisas.forms.DesgloseDenominacionForm.base_fields">(atributo de divisas.forms.DesgloseDenominacionForm)</a>
+</li>
         <li><a href="divisas.html#divisas.forms.DivisaForm.base_fields">(atributo de divisas.forms.DivisaForm)</a>
 </li>
         <li><a href="divisas.html#divisas.forms.TasaCambioForm.base_fields">(atributo de divisas.forms.TasaCambioForm)</a>
-</li>
-        <li><a href="divisas.html#divisas.forms.VentaDivisaForm.base_fields">(atributo de divisas.forms.VentaDivisaForm)</a>
 </li>
         <li><a href="medios_pago.html#medios_pago.forms.CampoMedioDePagoForm.base_fields">(atributo de medios_pago.forms.CampoMedioDePagoForm)</a>
 </li>
@@ -173,6 +183,12 @@
         <li><a href="users.html#users.forms.CustomUserCreationForm.base_fields">(atributo de users.forms.CustomUserCreationForm)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="banco.html#banco.models.PagoTarjeta.billetera">billetera (atributo de banco.models.PagoTarjeta)</a>
+</li>
+      <li><a href="banco.html#banco.models.PagoTarjeta.billetera_id">billetera_id (atributo de banco.models.PagoTarjeta)</a>
+</li>
       <li><a href="banco.html#banco.models.EntidadBancaria.billeteras">billeteras (atributo de banco.models.EntidadBancaria)</a>
 </li>
   </ul></td>
@@ -181,7 +197,9 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="vistas_cliente.html#clientes.views.calcular_similitud_medio">calcular_similitud_medio() (en el módulo clientes.views)</a>
+      <li><a href="divisas.html#divisas.views.CalculadoraDenominacionesView">CalculadoraDenominacionesView (clase en divisas.views)</a>
+</li>
+      <li><a href="transacciones.html#transacciones.views.calcular_monto_final">calcular_monto_final() (en el módulo transacciones.views)</a>
 </li>
       <li><a href="simulador.html#simulador.views.calcular_simulacion_api">calcular_simulacion_api() (en el módulo simulador.views)</a>
 </li>
@@ -217,6 +235,12 @@
 </li>
       <li><a href="transacciones.html#transacciones.models.cancelar_transacciones_pendientes_por_tasa">cancelar_transacciones_pendientes_por_tasa() (en el módulo transacciones.models)</a>
 </li>
+      <li><a href="divisas.html#divisas.models.DesgloseDenominacion.cantidad">cantidad (atributo de divisas.models.DesgloseDenominacion)</a>
+</li>
+      <li><a href="transacciones.html#transacciones.models.Transaccion.card_brand">card_brand (transacciones.models.Transaccion propiedad)</a>
+</li>
+      <li><a href="transacciones.html#transacciones.models.Transaccion.card_last4">card_last4 (transacciones.models.Transaccion propiedad)</a>
+</li>
       <li><a href="simulador.html#simulador.models.CategoriaCliente">CategoriaCliente (clase en simulador.models)</a>
 </li>
       <li><a href="simulador.html#simulador.models.CategoriaCliente.DoesNotExist">CategoriaCliente.DoesNotExist</a>
@@ -236,8 +260,12 @@
 </li>
         <li><a href="medios_pago.html#medios_pago.models.MedioDePago.clean">(método de medios_pago.models.MedioDePago)</a>
 </li>
+        <li><a href="transacciones.html#transacciones.models.Transaccion.clean">(método de transacciones.models.Transaccion)</a>
+</li>
       </ul></li>
       <li><a href="medios_pago.html#medios_pago.forms.CampoMedioDePagoForm.clean_campo_api">clean_campo_api() (método de medios_pago.forms.CampoMedioDePagoForm)</a>
+</li>
+      <li><a href="form_cliente.html#clientes.forms.ClienteForm.clean_cedula">clean_cedula() (método de clientes.forms.ClienteForm)</a>
 </li>
       <li><a href="divisas.html#divisas.forms.DivisaForm.clean_code">clean_code() (método de divisas.forms.DivisaForm)</a>
 </li>
@@ -249,11 +277,29 @@
 </li>
       <li><a href="medios_pago.html#medios_pago.forms.MedioDePagoForm.clean_crear_template">clean_crear_template() (método de medios_pago.forms.MedioDePagoForm)</a>
 </li>
+      <li><a href="form_cliente.html#clientes.forms.ClienteForm.clean_email">clean_email() (método de clientes.forms.ClienteForm)</a>
+</li>
+      <li><a href="form_cliente.html#clientes.forms.LimiteDiarioForm.clean_fecha">clean_fecha() (método de clientes.forms.LimiteDiarioForm)</a>
+</li>
+      <li><a href="form_cliente.html#clientes.forms.LimiteMensualForm.clean_mes">clean_mes() (método de clientes.forms.LimiteMensualForm)</a>
+</li>
+      <li><a href="form_cliente.html#clientes.forms.LimiteDiarioForm.clean_monto">clean_monto() (método de clientes.forms.LimiteDiarioForm)</a>
+
+      <ul>
+        <li><a href="form_cliente.html#clientes.forms.LimiteMensualForm.clean_monto">(método de clientes.forms.LimiteMensualForm)</a>
+</li>
+      </ul></li>
       <li><a href="medios_pago.html#medios_pago.forms.MedioDePagoForm.clean_nombre">clean_nombre() (método de medios_pago.forms.MedioDePagoForm)</a>
+</li>
+      <li><a href="form_cliente.html#clientes.forms.DescuentoForm.clean_porcentaje_descuento">clean_porcentaje_descuento() (método de clientes.forms.DescuentoForm)</a>
 </li>
       <li><a href="divisas.html#divisas.forms.TasaCambioForm.clean_precio_base">clean_precio_base() (método de divisas.forms.TasaCambioForm)</a>
 </li>
       <li><a href="medios_pago.html#medios_pago.forms.MedioDePagoForm.clean_tipo_medio">clean_tipo_medio() (método de medios_pago.forms.MedioDePagoForm)</a>
+</li>
+      <li><a href="divisas.html#divisas.forms.DenominacionForm.clean_valor">clean_valor() (método de divisas.forms.DenominacionForm)</a>
+</li>
+      <li><a href="divisas.html#divisas.forms.DenominacionQuickForm.clean_valores">clean_valores() (método de divisas.forms.DenominacionQuickForm)</a>
 </li>
       <li><a href="clientes.html#clientes.models.AsignacionCliente.cliente">cliente (atributo de clientes.models.AsignacionCliente)</a>
 
@@ -343,6 +389,8 @@
       </ul></li>
       <li><a href="vistas_cliente.html#clientes.views.ClienteUpdateView">ClienteUpdateView (clase en clientes.views)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="divisas.html#divisas.models.Divisa.code">code (atributo de divisas.models.Divisa)</a>
 </li>
       <li><a href="banco.html#banco.models.EntidadBancaria.codigo">codigo (atributo de banco.models.EntidadBancaria)</a>
@@ -351,8 +399,6 @@
 </li>
       <li><a href="banco.html#banco.models.EntidadBancaria.color_secundario">color_secundario (atributo de banco.models.EntidadBancaria)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="divisas.html#divisas.models.CotizacionSegmento.comision_compra">comision_compra (atributo de divisas.models.CotizacionSegmento)</a>
 
       <ul>
@@ -371,18 +417,14 @@
       </ul></li>
       <li><a href="divisas.html#divisas.models.CotizacionSegmento.comision_venta_ajustada">comision_venta_ajustada (divisas.models.CotizacionSegmento propiedad)</a>
 </li>
-      <li><a href="divisas.html#divisas.views.CompraConfirmacionView">CompraConfirmacionView (clase en divisas.views)</a>
-</li>
-      <li><a href="divisas.html#divisas.forms.CompraDivisaForm">CompraDivisaForm (clase en divisas.forms)</a>
-</li>
-      <li><a href="divisas.html#divisas.views.CompraDivisaView">CompraDivisaView (clase en divisas.views)</a>
-</li>
       <li><a href="banco.html#banco.models.PagoTarjeta.comprobante">comprobante (atributo de banco.models.PagoTarjeta)</a>
 
       <ul>
         <li><a href="banco.html#banco.models.Transferencia.comprobante">(atributo de banco.models.Transferencia)</a>
 </li>
       </ul></li>
+      <li><a href="users.html#users.models.CustomUser.configuraciongeneral">configuraciongeneral (atributo de users.models.CustomUser)</a>
+</li>
       <li><a href="transacciones.html#transacciones.models.ConfiguracionTransaccion">ConfiguracionTransaccion (clase en transacciones.models)</a>
 </li>
       <li><a href="transacciones.html#transacciones.models.ConfiguracionTransaccion.DoesNotExist">ConfiguracionTransaccion.DoesNotExist</a>
@@ -393,9 +435,15 @@
 </li>
       <li><a href="transacciones.html#transacciones.views.confirmacion_operacion">confirmacion_operacion() (en el módulo transacciones.views)</a>
 </li>
-      <li><a href="divisas.html#divisas.views.DivisaListView.context_object_name">context_object_name (atributo de divisas.views.DivisaListView)</a>
+      <li><a href="transacciones.html#transacciones.views.confirmar_transaccion_nueva_tasa">confirmar_transaccion_nueva_tasa() (en el módulo transacciones.views)</a>
+</li>
+      <li><a href="divisas.html#divisas.views.DenominacionesDivisaView.context_object_name">context_object_name (atributo de divisas.views.DenominacionesDivisaView)</a>
 
       <ul>
+        <li><a href="divisas.html#divisas.views.DenominacionListView.context_object_name">(atributo de divisas.views.DenominacionListView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DivisaListView.context_object_name">(atributo de divisas.views.DivisaListView)</a>
+</li>
         <li><a href="divisas.html#divisas.views.TasaCambioAllListView.context_object_name">(atributo de divisas.views.TasaCambioAllListView)</a>
 </li>
         <li><a href="divisas.html#divisas.views.TasaCambioListView.context_object_name">(atributo de divisas.views.TasaCambioListView)</a>
@@ -430,6 +478,10 @@
       <ul>
         <li><a href="clientes.html#clientes.models.LimiteMensual.creado">(atributo de clientes.models.LimiteMensual)</a>
 </li>
+        <li><a href="divisas.html#divisas.models.Denominacion.creado">(atributo de divisas.models.Denominacion)</a>
+</li>
+        <li><a href="divisas.html#divisas.models.DesgloseDenominacion.creado">(atributo de divisas.models.DesgloseDenominacion)</a>
+</li>
         <li><a href="divisas.html#divisas.models.Divisa.creado">(atributo de divisas.models.Divisa)</a>
 </li>
         <li><a href="divisas.html#divisas.models.TasaCambio.creado">(atributo de divisas.models.TasaCambio)</a>
@@ -453,6 +505,10 @@
       </ul></li>
       <li><a href="vistas_cliente.html#clientes.views.crear_cliente_view">crear_cliente_view() (en el módulo clientes.views)</a>
 </li>
+      <li><a href="vistas_cliente.html#clientes.views.crear_limite_diario">crear_limite_diario() (en el módulo clientes.views)</a>
+</li>
+      <li><a href="vistas_cliente.html#clientes.views.crear_limite_mensual">crear_limite_mensual() (en el módulo clientes.views)</a>
+</li>
       <li><a href="transacciones.html#transacciones.views.crear_transaccion_desde_compra">crear_transaccion_desde_compra() (en el módulo transacciones.views)</a>
 </li>
       <li><a href="transacciones.html#transacciones.views.crear_transaccion_desde_venta">crear_transaccion_desde_venta() (en el módulo transacciones.views)</a>
@@ -475,10 +531,18 @@
 </li>
       <li><a href="banco.html#banco.models.Cuenta.MultipleObjectsReturned">Cuenta.MultipleObjectsReturned</a>
 </li>
-      <li><a href="banco.html#banco.models.Transferencia.cuenta_destino">cuenta_destino (atributo de banco.models.Transferencia)</a>
+      <li><a href="banco.html#banco.models.PagoTarjeta.cuenta_destino">cuenta_destino (atributo de banco.models.PagoTarjeta)</a>
+
+      <ul>
+        <li><a href="banco.html#banco.models.Transferencia.cuenta_destino">(atributo de banco.models.Transferencia)</a>
 </li>
-      <li><a href="banco.html#banco.models.Transferencia.cuenta_destino_id">cuenta_destino_id (atributo de banco.models.Transferencia)</a>
+      </ul></li>
+      <li><a href="banco.html#banco.models.PagoTarjeta.cuenta_destino_id">cuenta_destino_id (atributo de banco.models.PagoTarjeta)</a>
+
+      <ul>
+        <li><a href="banco.html#banco.models.Transferencia.cuenta_destino_id">(atributo de banco.models.Transferencia)</a>
 </li>
+      </ul></li>
       <li><a href="banco.html#banco.models.TarjetaDebito.cuenta_id">cuenta_id (atributo de banco.models.TarjetaDebito)</a>
 </li>
       <li><a href="banco.html#banco.models.Transferencia.cuenta_origen">cuenta_origen (atributo de banco.models.Transferencia)</a>
@@ -539,18 +603,18 @@
 </li>
       <li><a href="clientes.html#clientes.models.HistorialClienteMedioDePago.datos_nuevos">datos_nuevos (atributo de clientes.models.HistorialClienteMedioDePago)</a>
 </li>
-      <li><a href="divisas.html#divisas.views.decimal_to_str">decimal_to_str() (en el módulo divisas.views)</a>
-</li>
       <li><a href="divisas.html#divisas.models.Divisa.decimales">decimales (atributo de divisas.models.Divisa)</a>
 </li>
-      <li><a href="divisas.html#divisas.forms.CompraDivisaForm.declared_fields">declared_fields (atributo de divisas.forms.CompraDivisaForm)</a>
+      <li><a href="divisas.html#divisas.forms.DenominacionForm.declared_fields">declared_fields (atributo de divisas.forms.DenominacionForm)</a>
 
       <ul>
+        <li><a href="divisas.html#divisas.forms.DenominacionQuickForm.declared_fields">(atributo de divisas.forms.DenominacionQuickForm)</a>
+</li>
+        <li><a href="divisas.html#divisas.forms.DesgloseDenominacionForm.declared_fields">(atributo de divisas.forms.DesgloseDenominacionForm)</a>
+</li>
         <li><a href="divisas.html#divisas.forms.DivisaForm.declared_fields">(atributo de divisas.forms.DivisaForm)</a>
 </li>
         <li><a href="divisas.html#divisas.forms.TasaCambioForm.declared_fields">(atributo de divisas.forms.TasaCambioForm)</a>
-</li>
-        <li><a href="divisas.html#divisas.forms.VentaDivisaForm.declared_fields">(atributo de divisas.forms.VentaDivisaForm)</a>
 </li>
         <li><a href="medios_pago.html#medios_pago.forms.CampoMedioDePagoForm.declared_fields">(atributo de medios_pago.forms.CampoMedioDePagoForm)</a>
 </li>
@@ -563,9 +627,47 @@
         <li><a href="users.html#users.forms.CustomUserCreationForm.declared_fields">(atributo de users.forms.CustomUserCreationForm)</a>
 </li>
       </ul></li>
+      <li><a href="roles.html#roles.views.GroupDeleteView.delete">delete() (método de roles.views.GroupDeleteView)</a>
+
+      <ul>
+        <li><a href="users.html#users.views.CustomUserDeleteView.delete">(método de users.views.CustomUserDeleteView)</a>
+</li>
+      </ul></li>
       <li><a href="medios_pago.html#medios_pago.forms.DeleteTemplateForm">DeleteTemplateForm (clase en medios_pago.forms)</a>
 </li>
       <li><a href="medios_pago.html#medios_pago.views.DeleteTemplateView">DeleteTemplateView (clase en medios_pago.views)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.DesgloseDenominacion.denominacion">denominacion (atributo de divisas.models.DesgloseDenominacion)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.Denominacion">Denominacion (clase en divisas.models)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.Denominacion.DoesNotExist">Denominacion.DoesNotExist</a>
+</li>
+      <li><a href="divisas.html#divisas.models.Denominacion.MultipleObjectsReturned">Denominacion.MultipleObjectsReturned</a>
+</li>
+      <li><a href="divisas.html#divisas.models.DesgloseDenominacion.denominacion_id">denominacion_id (atributo de divisas.models.DesgloseDenominacion)</a>
+</li>
+      <li><a href="divisas.html#divisas.views.DenominacionCreateView">DenominacionCreateView (clase en divisas.views)</a>
+</li>
+      <li><a href="divisas.html#divisas.views.DenominacionDeleteView">DenominacionDeleteView (clase en divisas.views)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.Divisa.denominaciones">denominaciones (atributo de divisas.models.Divisa)</a>
+</li>
+      <li><a href="divisas.html#divisas.views.denominaciones_disponibles_json">denominaciones_disponibles_json() (en el módulo divisas.views)</a>
+</li>
+      <li><a href="divisas.html#divisas.views.DenominacionesDivisaView">DenominacionesDivisaView (clase en divisas.views)</a>
+</li>
+      <li><a href="divisas.html#divisas.forms.DenominacionForm">DenominacionForm (clase en divisas.forms)</a>
+</li>
+      <li><a href="divisas.html#divisas.forms.DenominacionForm.Meta">DenominacionForm.Meta (clase en divisas.forms)</a>
+</li>
+      <li><a href="divisas.html#divisas.views.DenominacionListView">DenominacionListView (clase en divisas.views)</a>
+</li>
+      <li><a href="divisas.html#divisas.views.DenominacionQuickCreateView">DenominacionQuickCreateView (clase en divisas.views)</a>
+</li>
+      <li><a href="divisas.html#divisas.forms.DenominacionQuickForm">DenominacionQuickForm (clase en divisas.forms)</a>
+</li>
+      <li><a href="divisas.html#divisas.views.DenominacionUpdateView">DenominacionUpdateView (clase en divisas.views)</a>
 </li>
       <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.descripcion">descripcion (atributo de medios_pago.models.CampoMedioDePago)</a>
 
@@ -601,18 +703,88 @@
 </li>
       <li><a href="vistas_cliente.html#clientes.views.DescuentoUpdateView">DescuentoUpdateView (clase en clientes.views)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="transacciones.html#transacciones.models.Transaccion.desglose_denominaciones">desglose_denominaciones (atributo de transacciones.models.Transaccion)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.DesgloseDenominacion">DesgloseDenominacion (clase en divisas.models)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.DesgloseDenominacion.DoesNotExist">DesgloseDenominacion.DoesNotExist</a>
+</li>
+      <li><a href="divisas.html#divisas.models.DesgloseDenominacion.MultipleObjectsReturned">DesgloseDenominacion.MultipleObjectsReturned</a>
+</li>
+      <li><a href="divisas.html#divisas.forms.DesgloseDenominacionForm">DesgloseDenominacionForm (clase en divisas.forms)</a>
+</li>
+      <li><a href="divisas.html#divisas.forms.DesgloseDenominacionForm.Meta">DesgloseDenominacionForm.Meta (clase en divisas.forms)</a>
+</li>
       <li><a href="transacciones.html#transacciones.views.DetalleTransaccionView">DetalleTransaccionView (clase en transacciones.views)</a>
+</li>
+      <li><a href="transacciones.html#transacciones.views.determinar_decimales_divisa">determinar_decimales_divisa() (en el módulo transacciones.views)</a>
 </li>
       <li><a href="clientes.html#clientes.models.Cliente.direccion">direccion (atributo de clientes.models.Cliente)</a>
 </li>
-      <li><a href="vistas_cliente.html#clientes.views.ClienteMedioDePagoCreateView.dispatch">dispatch() (método de clientes.views.ClienteMedioDePagoCreateView)</a>
+      <li><a href="vistas_cliente.html#clientes.views.ClienteListView.dispatch">dispatch() (método de clientes.views.ClienteListView)</a>
 
       <ul>
+        <li><a href="vistas_cliente.html#clientes.views.ClienteMedioDePagoCreateView.dispatch">(método de clientes.views.ClienteMedioDePagoCreateView)</a>
+</li>
         <li><a href="vistas_cliente.html#clientes.views.ClienteMedioDePagoListView.dispatch">(método de clientes.views.ClienteMedioDePagoListView)</a>
 </li>
         <li><a href="vistas_cliente.html#clientes.views.ClienteMedioDePagoUpdateView.dispatch">(método de clientes.views.ClienteMedioDePagoUpdateView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionCreateView.dispatch">(método de divisas.views.DenominacionCreateView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionDeleteView.dispatch">(método de divisas.views.DenominacionDeleteView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionesDivisaView.dispatch">(método de divisas.views.DenominacionesDivisaView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionListView.dispatch">(método de divisas.views.DenominacionListView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionQuickCreateView.dispatch">(método de divisas.views.DenominacionQuickCreateView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionUpdateView.dispatch">(método de divisas.views.DenominacionUpdateView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DivisaCreateView.dispatch">(método de divisas.views.DivisaCreateView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DivisaListView.dispatch">(método de divisas.views.DivisaListView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DivisaToggleActivaView.dispatch">(método de divisas.views.DivisaToggleActivaView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DivisaUpdateView.dispatch">(método de divisas.views.DivisaUpdateView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.TasaCambioAllListView.dispatch">(método de divisas.views.TasaCambioAllListView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.TasaCambioCreateView.dispatch">(método de divisas.views.TasaCambioCreateView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.TasaCambioListView.dispatch">(método de divisas.views.TasaCambioListView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.DeleteTemplateView.dispatch">(método de medios_pago.views.DeleteTemplateView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoCreateAdminView.dispatch">(método de medios_pago.views.MedioDePagoCreateAdminView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoDeleteView.dispatch">(método de medios_pago.views.MedioDePagoDeleteView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoListView.dispatch">(método de medios_pago.views.MedioDePagoListView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoToggleActivoView.dispatch">(método de medios_pago.views.MedioDePagoToggleActivoView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoUpdateView.dispatch">(método de medios_pago.views.MedioDePagoUpdateView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.TemplateDataView.dispatch">(método de medios_pago.views.TemplateDataView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.TemplateListView.dispatch">(método de medios_pago.views.TemplateListView)</a>
+</li>
+        <li><a href="roles.html#roles.views.GroupDeleteView.dispatch">(método de roles.views.GroupDeleteView)</a>
+</li>
+        <li><a href="roles.html#roles.views.GroupDetailPermissionsView.dispatch">(método de roles.views.GroupDetailPermissionsView)</a>
+</li>
+        <li><a href="roles.html#roles.views.GroupDetailUsersView.dispatch">(método de roles.views.GroupDetailUsersView)</a>
+</li>
+        <li><a href="roles.html#roles.views.GroupUpdateView.dispatch">(método de roles.views.GroupUpdateView)</a>
+</li>
+        <li><a href="transacciones.html#transacciones.views.DetalleTransaccionView.dispatch">(método de transacciones.views.DetalleTransaccionView)</a>
+</li>
+        <li><a href="transacciones.html#transacciones.views.ExportarTransaccionesView.dispatch">(método de transacciones.views.ExportarTransaccionesView)</a>
+</li>
+        <li><a href="transacciones.html#transacciones.views.HistorialTransaccionesClienteView.dispatch">(método de transacciones.views.HistorialTransaccionesClienteView)</a>
 </li>
         <li><a href="users.html#users.views.CustomUserCreateView.dispatch">(método de users.views.CustomUserCreateView)</a>
 </li>
@@ -623,11 +795,15 @@
         <li><a href="users.html#users.views.CustomUserUpdateView.dispatch">(método de users.views.CustomUserUpdateView)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="banco.html#banco.models.TarjetaCredito.disponible">disponible() (método de banco.models.TarjetaCredito)</a>
 </li>
       <li><a href="divisas.html#divisas.models.CotizacionSegmento.divisa">divisa (atributo de divisas.models.CotizacionSegmento)</a>
 
       <ul>
+        <li><a href="divisas.html#divisas.models.Denominacion.divisa">(atributo de divisas.models.Denominacion)</a>
+</li>
         <li><a href="divisas.html#divisas.models.TasaCambio.divisa">(atributo de divisas.models.TasaCambio)</a>
 </li>
       </ul></li>
@@ -644,6 +820,8 @@
       <li><a href="divisas.html#divisas.models.CotizacionSegmento.divisa_id">divisa_id (atributo de divisas.models.CotizacionSegmento)</a>
 
       <ul>
+        <li><a href="divisas.html#divisas.models.Denominacion.divisa_id">(atributo de divisas.models.Denominacion)</a>
+</li>
         <li><a href="divisas.html#divisas.models.TasaCambio.divisa_id">(atributo de divisas.models.TasaCambio)</a>
 </li>
       </ul></li>
@@ -722,12 +900,12 @@
       </ul></li>
       <li><a href="banco.html#banco.models.EntidadBancaria">EntidadBancaria (clase en banco.models)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="banco.html#banco.models.EntidadBancaria.DoesNotExist">EntidadBancaria.DoesNotExist</a>
 </li>
       <li><a href="banco.html#banco.models.EntidadBancaria.MultipleObjectsReturned">EntidadBancaria.MultipleObjectsReturned</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="autenticacion.html#autenticacion.utils.enviar_verificacion">enviar_verificacion() (en el módulo autenticacion.utils)</a>
 </li>
       <li><a href="medios_pago.html#medios_pago.tests.ErrorSearchTest">ErrorSearchTest (clase en medios_pago.tests)</a>
@@ -735,6 +913,10 @@
       <li><a href="clientes.html#clientes.models.ClienteMedioDePago.es_activo">es_activo (atributo de clientes.models.ClienteMedioDePago)</a>
 </li>
       <li><a href="transacciones.html#transacciones.models.Transaccion.es_compra">es_compra (transacciones.models.Transaccion propiedad)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.Divisa.es_moneda_base">es_moneda_base (atributo de divisas.models.Divisa)</a>
+</li>
+      <li><a href="transacciones.html#transacciones.models.Transaccion.es_pago_stripe">es_pago_stripe (transacciones.models.Transaccion propiedad)</a>
 </li>
       <li><a href="clientes.html#clientes.models.ClienteMedioDePago.es_principal">es_principal (atributo de clientes.models.ClienteMedioDePago)</a>
 </li>
@@ -752,12 +934,16 @@
 </li>
       <li><a href="vistas_cliente.html#clientes.views.exportar_medios_pago">exportar_medios_pago() (en el módulo clientes.views)</a>
 </li>
+      <li><a href="transacciones.html#transacciones.views.ExportarTransaccionesView">ExportarTransaccionesView (clase en transacciones.views)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="transacciones.html#transacciones.models.Transaccion.factura_electronica">factura_electronica (atributo de transacciones.models.Transaccion)</a>
+</li>
       <li><a href="banco.html#banco.models.PagoTarjeta.fecha">fecha (atributo de banco.models.PagoTarjeta)</a>
 
       <ul>
@@ -798,9 +984,13 @@
         <li><a href="transacciones.html#transacciones.models.ConfiguracionTransaccion.fecha_modificacion">(atributo de transacciones.models.ConfiguracionTransaccion)</a>
 </li>
       </ul></li>
-      <li><a href="divisas.html#divisas.forms.DivisaForm.Meta.fields">fields (atributo de divisas.forms.DivisaForm.Meta)</a>
+      <li><a href="divisas.html#divisas.forms.DenominacionForm.Meta.fields">fields (atributo de divisas.forms.DenominacionForm.Meta)</a>
 
       <ul>
+        <li><a href="divisas.html#divisas.forms.DesgloseDenominacionForm.Meta.fields">(atributo de divisas.forms.DesgloseDenominacionForm.Meta)</a>
+</li>
+        <li><a href="divisas.html#divisas.forms.DivisaForm.Meta.fields">(atributo de divisas.forms.DivisaForm.Meta)</a>
+</li>
         <li><a href="divisas.html#divisas.forms.TasaCambioForm.Meta.fields">(atributo de divisas.forms.TasaCambioForm.Meta)</a>
 </li>
         <li><a href="medios_pago.html#medios_pago.forms.CampoMedioDePagoForm.Meta.fields">(atributo de medios_pago.forms.CampoMedioDePagoForm.Meta)</a>
@@ -829,7 +1019,7 @@
 </li>
         <li><a href="vistas_cliente.html#clientes.views.LimiteMensualUpdateView.form_class">(atributo de clientes.views.LimiteMensualUpdateView)</a>
 </li>
-        <li><a href="divisas.html#divisas.views.CompraDivisaView.form_class">(atributo de divisas.views.CompraDivisaView)</a>
+        <li><a href="divisas.html#divisas.views.DenominacionUpdateView.form_class">(atributo de divisas.views.DenominacionUpdateView)</a>
 </li>
         <li><a href="divisas.html#divisas.views.DivisaCreateView.form_class">(atributo de divisas.views.DivisaCreateView)</a>
 </li>
@@ -837,11 +1027,13 @@
 </li>
         <li><a href="divisas.html#divisas.views.TasaCambioCreateView.form_class">(atributo de divisas.views.TasaCambioCreateView)</a>
 </li>
-        <li><a href="divisas.html#divisas.views.VentaDivisaView.form_class">(atributo de divisas.views.VentaDivisaView)</a>
-</li>
         <li><a href="medios_pago.html#medios_pago.views.MedioDePagoCreateAdminView.form_class">(atributo de medios_pago.views.MedioDePagoCreateAdminView)</a>
 </li>
         <li><a href="medios_pago.html#medios_pago.views.MedioDePagoUpdateView.form_class">(atributo de medios_pago.views.MedioDePagoUpdateView)</a>
+</li>
+        <li><a href="roles.html#roles.views.GroupCreateView.form_class">(atributo de roles.views.GroupCreateView)</a>
+</li>
+        <li><a href="roles.html#roles.views.GroupUpdateView.form_class">(atributo de roles.views.GroupUpdateView)</a>
 </li>
         <li><a href="users.html#users.views.CustomUserCreateView.form_class">(atributo de users.views.CustomUserCreateView)</a>
 </li>
@@ -853,9 +1045,19 @@
       <li><a href="vistas_cliente.html#clientes.views.ClienteMedioDePagoCreateView.form_invalid">form_invalid() (método de clientes.views.ClienteMedioDePagoCreateView)</a>
 
       <ul>
+        <li><a href="vistas_cliente.html#clientes.views.ClienteUpdateView.form_invalid">(método de clientes.views.ClienteUpdateView)</a>
+</li>
+        <li><a href="vistas_cliente.html#clientes.views.LimiteDiarioUpdateView.form_invalid">(método de clientes.views.LimiteDiarioUpdateView)</a>
+</li>
+        <li><a href="vistas_cliente.html#clientes.views.LimiteMensualUpdateView.form_invalid">(método de clientes.views.LimiteMensualUpdateView)</a>
+</li>
         <li><a href="medios_pago.html#medios_pago.views.MedioDePagoCreateAdminView.form_invalid">(método de medios_pago.views.MedioDePagoCreateAdminView)</a>
 </li>
         <li><a href="medios_pago.html#medios_pago.views.MedioDePagoUpdateView.form_invalid">(método de medios_pago.views.MedioDePagoUpdateView)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserCreateView.form_invalid">(método de users.views.CustomUserCreateView)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserUpdateView.form_invalid">(método de users.views.CustomUserUpdateView)</a>
 </li>
       </ul></li>
       <li><a href="vistas_cliente.html#clientes.views.ClienteMedioDePagoCreateView.form_valid">form_valid() (método de clientes.views.ClienteMedioDePagoCreateView)</a>
@@ -863,19 +1065,31 @@
       <ul>
         <li><a href="vistas_cliente.html#clientes.views.ClienteMedioDePagoUpdateView.form_valid">(método de clientes.views.ClienteMedioDePagoUpdateView)</a>
 </li>
+        <li><a href="vistas_cliente.html#clientes.views.ClienteUpdateView.form_valid">(método de clientes.views.ClienteUpdateView)</a>
+</li>
         <li><a href="vistas_cliente.html#clientes.views.DescuentoUpdateView.form_valid">(método de clientes.views.DescuentoUpdateView)</a>
 </li>
-        <li><a href="divisas.html#divisas.views.CompraDivisaView.form_valid">(método de divisas.views.CompraDivisaView)</a>
+        <li><a href="vistas_cliente.html#clientes.views.LimiteDiarioUpdateView.form_valid">(método de clientes.views.LimiteDiarioUpdateView)</a>
+</li>
+        <li><a href="vistas_cliente.html#clientes.views.LimiteMensualUpdateView.form_valid">(método de clientes.views.LimiteMensualUpdateView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionUpdateView.form_valid">(método de divisas.views.DenominacionUpdateView)</a>
 </li>
         <li><a href="divisas.html#divisas.views.DivisaCreateView.form_valid">(método de divisas.views.DivisaCreateView)</a>
 </li>
         <li><a href="divisas.html#divisas.views.TasaCambioCreateView.form_valid">(método de divisas.views.TasaCambioCreateView)</a>
 </li>
-        <li><a href="divisas.html#divisas.views.VentaDivisaView.form_valid">(método de divisas.views.VentaDivisaView)</a>
-</li>
         <li><a href="medios_pago.html#medios_pago.views.MedioDePagoCreateAdminView.form_valid">(método de medios_pago.views.MedioDePagoCreateAdminView)</a>
 </li>
         <li><a href="medios_pago.html#medios_pago.views.MedioDePagoUpdateView.form_valid">(método de medios_pago.views.MedioDePagoUpdateView)</a>
+</li>
+        <li><a href="roles.html#roles.views.GroupCreateView.form_valid">(método de roles.views.GroupCreateView)</a>
+</li>
+        <li><a href="roles.html#roles.views.GroupUpdateView.form_valid">(método de roles.views.GroupUpdateView)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserCreateView.form_valid">(método de users.views.CustomUserCreateView)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserUpdateView.form_valid">(método de users.views.CustomUserUpdateView)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -884,12 +1098,22 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="transacciones.html#transacciones.views.generar_numero_transaccion">generar_numero_transaccion() (en el módulo transacciones.views)</a>
+</li>
       <li><a href="autenticacion.html#autenticacion.utils.generar_token">generar_token() (en el módulo autenticacion.utils)</a>
 </li>
-      <li><a href="medios_pago.html#medios_pago.views.TemplateDataView.get">get() (método de medios_pago.views.TemplateDataView)</a>
+      <li><a href="divisas.html#divisas.views.DenominacionCreateView.get">get() (método de divisas.views.DenominacionCreateView)</a>
 
       <ul>
+        <li><a href="divisas.html#divisas.views.DenominacionQuickCreateView.get">(método de divisas.views.DenominacionQuickCreateView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.TransaccionDesgloseDenominacionesView.get">(método de divisas.views.TransaccionDesgloseDenominacionesView)</a>
+</li>
+        <li><a href="medios_pago.html#medios_pago.views.TemplateDataView.get">(método de medios_pago.views.TemplateDataView)</a>
+</li>
         <li><a href="medios_pago.html#medios_pago.views.TemplateListView.get">(método de medios_pago.views.TemplateListView)</a>
+</li>
+        <li><a href="transacciones.html#transacciones.views.ExportarTransaccionesView.get">(método de transacciones.views.ExportarTransaccionesView)</a>
 </li>
       </ul></li>
       <li><a href="clientes.html#clientes.models.HistorialClienteMedioDePago.get_accion_display">get_accion_display() (método de clientes.models.HistorialClienteMedioDePago)</a>
@@ -902,7 +1126,7 @@
 </li>
       <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.get_campo_api_display">get_campo_api_display() (método de medios_pago.models.CampoMedioDePago)</a>
 </li>
-      <li><a href="vistas_cliente.html#clientes.views.get_cliente_activo">get_cliente_activo() (en el módulo clientes.views)</a>
+      <li><a href="transacciones.html#transacciones.views.get_cliente_from_session">get_cliente_from_session() (en el módulo transacciones.views)</a>
 </li>
       <li><a href="transacciones.html#transacciones.models.Transaccion.get_comision_aplicada">get_comision_aplicada() (método de transacciones.models.Transaccion)</a>
 </li>
@@ -915,17 +1139,17 @@
 </li>
         <li><a href="vistas_cliente.html#clientes.views.ClienteMedioDePagoUpdateView.get_context_data">(método de clientes.views.ClienteMedioDePagoUpdateView)</a>
 </li>
-        <li><a href="divisas.html#divisas.views.CompraConfirmacionView.get_context_data">(método de divisas.views.CompraConfirmacionView)</a>
+        <li><a href="divisas.html#divisas.views.CalculadoraDenominacionesView.get_context_data">(método de divisas.views.CalculadoraDenominacionesView)</a>
 </li>
-        <li><a href="divisas.html#divisas.views.SumarioCompraView.get_context_data">(método de divisas.views.SumarioCompraView)</a>
+        <li><a href="divisas.html#divisas.views.DenominacionesDivisaView.get_context_data">(método de divisas.views.DenominacionesDivisaView)</a>
 </li>
-        <li><a href="divisas.html#divisas.views.SumarioOperacionView.get_context_data">(método de divisas.views.SumarioOperacionView)</a>
+        <li><a href="divisas.html#divisas.views.DenominacionListView.get_context_data">(método de divisas.views.DenominacionListView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionUpdateView.get_context_data">(método de divisas.views.DenominacionUpdateView)</a>
 </li>
         <li><a href="divisas.html#divisas.views.TasaCambioAllListView.get_context_data">(método de divisas.views.TasaCambioAllListView)</a>
 </li>
         <li><a href="divisas.html#divisas.views.TasaCambioListView.get_context_data">(método de divisas.views.TasaCambioListView)</a>
-</li>
-        <li><a href="divisas.html#divisas.views.VentaConfirmacionView.get_context_data">(método de divisas.views.VentaConfirmacionView)</a>
 </li>
         <li><a href="medios_pago.html#medios_pago.views.MedioDePagoCreateAdminView.get_context_data">(método de medios_pago.views.MedioDePagoCreateAdminView)</a>
 </li>
@@ -933,9 +1157,23 @@
 </li>
         <li><a href="medios_pago.html#medios_pago.views.MedioDePagoUpdateView.get_context_data">(método de medios_pago.views.MedioDePagoUpdateView)</a>
 </li>
+        <li><a href="roles.html#roles.views.GroupDeleteView.get_context_data">(método de roles.views.GroupDeleteView)</a>
+</li>
+        <li><a href="roles.html#roles.views.GroupDetailPermissionsView.get_context_data">(método de roles.views.GroupDetailPermissionsView)</a>
+</li>
+        <li><a href="roles.html#roles.views.GroupDetailUsersView.get_context_data">(método de roles.views.GroupDetailUsersView)</a>
+</li>
+        <li><a href="roles.html#roles.views.GroupDetailView.get_context_data">(método de roles.views.GroupDetailView)</a>
+</li>
+        <li><a href="roles.html#roles.views.GroupListView.get_context_data">(método de roles.views.GroupListView)</a>
+</li>
+        <li><a href="roles.html#roles.views.PermissionMatrixView.get_context_data">(método de roles.views.PermissionMatrixView)</a>
+</li>
         <li><a href="transacciones.html#transacciones.views.DetalleTransaccionView.get_context_data">(método de transacciones.views.DetalleTransaccionView)</a>
 </li>
         <li><a href="transacciones.html#transacciones.views.HistorialTransaccionesClienteView.get_context_data">(método de transacciones.views.HistorialTransaccionesClienteView)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserListView.get_context_data">(método de users.views.CustomUserListView)</a>
 </li>
       </ul></li>
       <li><a href="clientes.html#clientes.models.ClienteMedioDePago.get_dato_campo">get_dato_campo() (método de clientes.models.ClienteMedioDePago)</a>
@@ -960,16 +1198,14 @@
 </li>
       <li><a href="banco.html#banco.views.get_logged_user">get_logged_user() (en el módulo banco.views)</a>
 </li>
-      <li><a href="vistas_cliente.html#clientes.views.get_medio_acreditacion_seleccionado">get_medio_acreditacion_seleccionado() (en el módulo clientes.views)</a>
-</li>
       <li><a href="transacciones.html#transacciones.models.Transaccion.get_medio_pago_info">get_medio_pago_info() (método de transacciones.models.Transaccion)</a>
-</li>
-      <li><a href="vistas_cliente.html#clientes.views.get_medio_pago_seleccionado">get_medio_pago_seleccionado() (en el módulo clientes.views)</a>
 </li>
       <li><a href="clientes.html#clientes.models.LimiteDiario.get_next_by_actualizado">get_next_by_actualizado() (método de clientes.models.LimiteDiario)</a>
 
       <ul>
         <li><a href="clientes.html#clientes.models.LimiteMensual.get_next_by_actualizado">(método de clientes.models.LimiteMensual)</a>
+</li>
+        <li><a href="divisas.html#divisas.models.Denominacion.get_next_by_actualizado">(método de divisas.models.Denominacion)</a>
 </li>
         <li><a href="divisas.html#divisas.models.Divisa.get_next_by_actualizado">(método de divisas.models.Divisa)</a>
 </li>
@@ -982,6 +1218,10 @@
 
       <ul>
         <li><a href="clientes.html#clientes.models.LimiteMensual.get_next_by_creado">(método de clientes.models.LimiteMensual)</a>
+</li>
+        <li><a href="divisas.html#divisas.models.Denominacion.get_next_by_creado">(método de divisas.models.Denominacion)</a>
+</li>
+        <li><a href="divisas.html#divisas.models.DesgloseDenominacion.get_next_by_creado">(método de divisas.models.DesgloseDenominacion)</a>
 </li>
         <li><a href="divisas.html#divisas.models.Divisa.get_next_by_creado">(método de divisas.models.Divisa)</a>
 </li>
@@ -1055,6 +1295,8 @@
       <ul>
         <li><a href="clientes.html#clientes.models.LimiteMensual.get_previous_by_actualizado">(método de clientes.models.LimiteMensual)</a>
 </li>
+        <li><a href="divisas.html#divisas.models.Denominacion.get_previous_by_actualizado">(método de divisas.models.Denominacion)</a>
+</li>
         <li><a href="divisas.html#divisas.models.Divisa.get_previous_by_actualizado">(método de divisas.models.Divisa)</a>
 </li>
         <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.get_previous_by_actualizado">(método de medios_pago.models.CampoMedioDePago)</a>
@@ -1066,6 +1308,10 @@
 
       <ul>
         <li><a href="clientes.html#clientes.models.LimiteMensual.get_previous_by_creado">(método de clientes.models.LimiteMensual)</a>
+</li>
+        <li><a href="divisas.html#divisas.models.Denominacion.get_previous_by_creado">(método de divisas.models.Denominacion)</a>
+</li>
+        <li><a href="divisas.html#divisas.models.DesgloseDenominacion.get_previous_by_creado">(método de divisas.models.DesgloseDenominacion)</a>
 </li>
         <li><a href="divisas.html#divisas.models.Divisa.get_previous_by_creado">(método de divisas.models.Divisa)</a>
 </li>
@@ -1139,6 +1385,12 @@
 </li>
         <li><a href="vistas_cliente.html#clientes.views.DescuentoListView.get_queryset">(método de clientes.views.DescuentoListView)</a>
 </li>
+        <li><a href="divisas.html#divisas.views.DenominacionesDivisaView.get_queryset">(método de divisas.views.DenominacionesDivisaView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionListView.get_queryset">(método de divisas.views.DenominacionListView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DivisaListView.get_queryset">(método de divisas.views.DivisaListView)</a>
+</li>
         <li><a href="divisas.html#divisas.views.TasaCambioAllListView.get_queryset">(método de divisas.views.TasaCambioAllListView)</a>
 </li>
         <li><a href="divisas.html#divisas.views.TasaCambioListView.get_queryset">(método de divisas.views.TasaCambioListView)</a>
@@ -1147,7 +1399,11 @@
 </li>
         <li><a href="medios_pago.html#medios_pago.views.MedioDePagoListView.get_queryset">(método de medios_pago.views.MedioDePagoListView)</a>
 </li>
+        <li><a href="roles.html#roles.views.GroupListView.get_queryset">(método de roles.views.GroupListView)</a>
+</li>
         <li><a href="transacciones.html#transacciones.views.HistorialTransaccionesClienteView.get_queryset">(método de transacciones.views.HistorialTransaccionesClienteView)</a>
+</li>
+        <li><a href="users.html#users.views.CustomUserListView.get_queryset">(método de users.views.CustomUserListView)</a>
 </li>
       </ul></li>
       <li><a href="medios_pago.html#medios_pago.models.MedioDePago.get_required_fields_for_type">get_required_fields_for_type() (método de medios_pago.models.MedioDePago)</a>
@@ -1157,7 +1413,11 @@
       <ul>
         <li><a href="vistas_cliente.html#clientes.views.ClienteMedioDePagoUpdateView.get_success_url">(método de clientes.views.ClienteMedioDePagoUpdateView)</a>
 </li>
+        <li><a href="divisas.html#divisas.views.DenominacionUpdateView.get_success_url">(método de divisas.views.DenominacionUpdateView)</a>
+</li>
         <li><a href="divisas.html#divisas.views.TasaCambioCreateView.get_success_url">(método de divisas.views.TasaCambioCreateView)</a>
+</li>
+        <li><a href="roles.html#roles.views.GroupDetailPermissionsView.get_success_url">(método de roles.views.GroupDetailPermissionsView)</a>
 </li>
       </ul></li>
       <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.get_tipo_dato_display">get_tipo_dato_display() (método de medios_pago.models.CampoMedioDePago)</a>
@@ -1168,23 +1428,29 @@
 </li>
       <li><a href="transacciones.html#transacciones.models.ConfiguracionTransaccion.get_valor">get_valor() (método de clase de transacciones.models.ConfiguracionTransaccion)</a>
 </li>
-      <li><a href="roles.html#roles.views.group_create">group_create() (en el módulo roles.views)</a>
+      <li><a href="roles.html#roles.views.GroupCreateView">GroupCreateView (clase en roles.views)</a>
 </li>
-      <li><a href="roles.html#roles.views.group_delete">group_delete() (en el módulo roles.views)</a>
+      <li><a href="roles.html#roles.views.GroupDeleteView">GroupDeleteView (clase en roles.views)</a>
 </li>
-      <li><a href="roles.html#roles.views.group_detail_permissions">group_detail_permissions() (en el módulo roles.views)</a>
+      <li><a href="roles.html#roles.views.GroupDetailPermissionsView">GroupDetailPermissionsView (clase en roles.views)</a>
 </li>
-      <li><a href="roles.html#roles.views.group_list">group_list() (en el módulo roles.views)</a>
+      <li><a href="roles.html#roles.views.GroupDetailUsersView">GroupDetailUsersView (clase en roles.views)</a>
 </li>
-      <li><a href="roles.html#roles.views.group_toggle_status">group_toggle_status() (en el módulo roles.views)</a>
-</li>
-      <li><a href="roles.html#roles.views.group_update">group_update() (en el módulo roles.views)</a>
+      <li><a href="roles.html#roles.views.GroupDetailView">GroupDetailView (clase en roles.views)</a>
 </li>
       <li><a href="roles.html#roles.forms.GroupForm">GroupForm (clase en roles.forms)</a>
 </li>
       <li><a href="roles.html#roles.forms.GroupForm.Meta">GroupForm.Meta (clase en roles.forms)</a>
 </li>
+      <li><a href="roles.html#roles.views.GroupListView">GroupListView (clase en roles.views)</a>
+</li>
       <li><a href="users.html#users.models.CustomUser.groups">groups (atributo de users.models.CustomUser)</a>
+</li>
+      <li><a href="roles.html#roles.views.GroupToggleStatusView">GroupToggleStatusView (clase en roles.views)</a>
+</li>
+      <li><a href="roles.html#roles.views.GroupUpdateView">GroupUpdateView (clase en roles.views)</a>
+</li>
+      <li><a href="roles.html#roles.context_processors.grupo_usuario">grupo_usuario() (en el módulo roles.context_processors)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1281,6 +1547,10 @@
 </li>
         <li><a href="divisas.html#divisas.models.CotizacionSegmento.id">(atributo de divisas.models.CotizacionSegmento)</a>
 </li>
+        <li><a href="divisas.html#divisas.models.Denominacion.id">(atributo de divisas.models.Denominacion)</a>
+</li>
+        <li><a href="divisas.html#divisas.models.DesgloseDenominacion.id">(atributo de divisas.models.DesgloseDenominacion)</a>
+</li>
         <li><a href="divisas.html#divisas.models.Divisa.id">(atributo de divisas.models.Divisa)</a>
 </li>
         <li><a href="divisas.html#divisas.models.TasaCambio.id">(atributo de divisas.models.TasaCambio)</a>
@@ -1310,9 +1580,17 @@
         <li><a href="clientes.html#clientes.models.LimiteMensual.inicio_vigencia">(atributo de clientes.models.LimiteMensual)</a>
 </li>
       </ul></li>
-      <li><a href="divisas.html#divisas.models.Divisa.is_active">is_active (atributo de divisas.models.Divisa)</a>
+      <li><a href="users.html#users.models.CustomUser.inventariodenominacionterminal_set">inventariodenominacionterminal_set (atributo de users.models.CustomUser)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.Divisa.inventariodivisaterminal_set">inventariodivisaterminal_set (atributo de divisas.models.Divisa)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.Denominacion.inventarios_terminal">inventarios_terminal (atributo de divisas.models.Denominacion)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.Denominacion.is_active">is_active (atributo de divisas.models.Denominacion)</a>
 
       <ul>
+        <li><a href="divisas.html#divisas.models.Divisa.is_active">(atributo de divisas.models.Divisa)</a>
+</li>
         <li><a href="medios_pago.html#medios_pago.models.MedioDePago.is_active">(atributo de medios_pago.models.MedioDePago)</a>
 </li>
         <li><a href="medios_pago.html#medios_pago.models.PaymentTemplate.is_active">(atributo de medios_pago.models.PaymentTemplate)</a>
@@ -1320,17 +1598,11 @@
         <li><a href="users.html#users.models.CustomUser.is_active">(atributo de users.models.CustomUser)</a>
 </li>
       </ul></li>
-      <li><a href="roles.html#roles.views.is_admin">is_admin() (en el módulo roles.views)</a>
-</li>
-      <li><a href="divisas.html#divisas.views.is_admin_or_staff">is_admin_or_staff() (en el módulo divisas.views)</a>
-</li>
       <li><a href="users.html#users.models.CustomUser.is_cambista">is_cambista (atributo de users.models.CustomUser)</a>
 </li>
       <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.is_required">is_required (atributo de medios_pago.models.CampoMedioDePago)</a>
 </li>
       <li><a href="users.html#users.models.CustomUser.is_staff">is_staff (atributo de users.models.CustomUser)</a>
-</li>
-      <li><a href="transacciones.html#transacciones.views.is_staff_or_admin">is_staff_or_admin() (en el módulo transacciones.views)</a>
 </li>
       <li><a href="users.html#users.models.CustomUser.is_superuser">is_superuser (atributo de users.models.CustomUser)</a>
 </li>
@@ -1340,9 +1612,11 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="users.html#users.forms.CustomUserChangeForm.Meta.labels">labels (atributo de users.forms.CustomUserChangeForm.Meta)</a>
+      <li><a href="divisas.html#divisas.forms.DenominacionForm.Meta.labels">labels (atributo de divisas.forms.DenominacionForm.Meta)</a>
 
       <ul>
+        <li><a href="users.html#users.forms.CustomUserChangeForm.Meta.labels">(atributo de users.forms.CustomUserChangeForm.Meta)</a>
+</li>
         <li><a href="users.html#users.forms.CustomUserCreationForm.Meta.labels">(atributo de users.forms.CustomUserCreationForm.Meta)</a>
 </li>
       </ul></li>
@@ -1364,17 +1638,21 @@
 </li>
       <li><a href="clientes.html#clientes.models.LimiteMensual">LimiteMensual (clase en clientes.models)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="clientes.html#clientes.models.LimiteMensual.DoesNotExist">LimiteMensual.DoesNotExist</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="clientes.html#clientes.models.LimiteMensual.MultipleObjectsReturned">LimiteMensual.MultipleObjectsReturned</a>
 </li>
       <li><a href="form_cliente.html#clientes.forms.LimiteMensualForm">LimiteMensualForm (clase en clientes.forms)</a>
 </li>
       <li><a href="vistas_cliente.html#clientes.views.LimiteMensualUpdateView">LimiteMensualUpdateView (clase en clientes.views)</a>
 </li>
-      <li><a href="vistas_cliente.html#clientes.views.lista_clientes">lista_clientes() (en el módulo clientes.views)</a>
+      <li><a href="transacciones.html#transacciones.views.limpiar_sesion_operacion">limpiar_sesion_operacion() (en el módulo transacciones.views)</a>
+</li>
+      <li><a href="vistas_cliente.html#clientes.views.lista_limites_diarios">lista_limites_diarios() (en el módulo clientes.views)</a>
+</li>
+      <li><a href="vistas_cliente.html#clientes.views.lista_limites_mensuales">lista_limites_mensuales() (en el módulo clientes.views)</a>
 </li>
       <li><a href="vistas_cliente.html#clientes.views.listar_asociaciones">listar_asociaciones() (en el módulo clientes.views)</a>
 </li>
@@ -1390,12 +1668,16 @@
 </li>
       <li><a href="banco.html#banco.views.logout_view">logout_view() (en el módulo banco.views)</a>
 </li>
+      <li><a href="divisas.html#divisas.models.Denominacion.logrecargainventario_set">logrecargainventario_set (atributo de divisas.models.Denominacion)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="transacciones.html#transacciones.models.Transaccion.marcar_como_requiere_confirmacion">marcar_como_requiere_confirmacion() (método de transacciones.models.Transaccion)</a>
+</li>
       <li><a href="banco.html#banco.forms.TransferenciaForm.media">media (banco.forms.TransferenciaForm propiedad)</a>
 
       <ul>
@@ -1415,13 +1697,15 @@
 </li>
         <li><a href="form_cliente.html#clientes.forms.SelectMedioDePagoForm.media">(clientes.forms.SelectMedioDePagoForm propiedad)</a>
 </li>
-        <li><a href="divisas.html#divisas.forms.CompraDivisaForm.media">(divisas.forms.CompraDivisaForm propiedad)</a>
+        <li><a href="divisas.html#divisas.forms.DenominacionForm.media">(divisas.forms.DenominacionForm propiedad)</a>
+</li>
+        <li><a href="divisas.html#divisas.forms.DenominacionQuickForm.media">(divisas.forms.DenominacionQuickForm propiedad)</a>
+</li>
+        <li><a href="divisas.html#divisas.forms.DesgloseDenominacionForm.media">(divisas.forms.DesgloseDenominacionForm propiedad)</a>
 </li>
         <li><a href="divisas.html#divisas.forms.DivisaForm.media">(divisas.forms.DivisaForm propiedad)</a>
 </li>
         <li><a href="divisas.html#divisas.forms.TasaCambioForm.media">(divisas.forms.TasaCambioForm propiedad)</a>
-</li>
-        <li><a href="divisas.html#divisas.forms.VentaDivisaForm.media">(divisas.forms.VentaDivisaForm propiedad)</a>
 </li>
         <li><a href="medios_pago.html#medios_pago.forms.CampoMedioDePagoForm.media">(medios_pago.forms.CampoMedioDePagoForm propiedad)</a>
 </li>
@@ -1518,6 +1802,10 @@
         <li><a href="banco.html#banco.models.TarjetaDebito.mes_vencimiento">(atributo de banco.models.TarjetaDebito)</a>
 </li>
       </ul></li>
+      <li><a href="transacciones.html#transacciones.models.Transaccion.metodo_pago">metodo_pago (atributo de transacciones.models.Transaccion)</a>
+</li>
+      <li><a href="users.html#users.models.CustomUser.mfa_config_updates">mfa_config_updates (atributo de users.models.CustomUser)</a>
+</li>
       <li><a href="vistas_cliente.html#clientes.views.ClienteListView.model">model (atributo de clientes.views.ClienteListView)</a>
 
       <ul>
@@ -1539,9 +1827,19 @@
 </li>
         <li><a href="vistas_cliente.html#clientes.views.LimiteMensualUpdateView.model">(atributo de clientes.views.LimiteMensualUpdateView)</a>
 </li>
+        <li><a href="divisas.html#divisas.forms.DenominacionForm.Meta.model">(atributo de divisas.forms.DenominacionForm.Meta)</a>
+</li>
+        <li><a href="divisas.html#divisas.forms.DesgloseDenominacionForm.Meta.model">(atributo de divisas.forms.DesgloseDenominacionForm.Meta)</a>
+</li>
         <li><a href="divisas.html#divisas.forms.DivisaForm.Meta.model">(atributo de divisas.forms.DivisaForm.Meta)</a>
 </li>
         <li><a href="divisas.html#divisas.forms.TasaCambioForm.Meta.model">(atributo de divisas.forms.TasaCambioForm.Meta)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionesDivisaView.model">(atributo de divisas.views.DenominacionesDivisaView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionListView.model">(atributo de divisas.views.DenominacionListView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionUpdateView.model">(atributo de divisas.views.DenominacionUpdateView)</a>
 </li>
         <li><a href="divisas.html#divisas.views.DivisaCreateView.model">(atributo de divisas.views.DivisaCreateView)</a>
 </li>
@@ -1566,6 +1864,22 @@
         <li><a href="medios_pago.html#medios_pago.views.MedioDePagoUpdateView.model">(atributo de medios_pago.views.MedioDePagoUpdateView)</a>
 </li>
         <li><a href="roles.html#roles.forms.GroupForm.Meta.model">(atributo de roles.forms.GroupForm.Meta)</a>
+</li>
+        <li><a href="roles.html#roles.views.GroupCreateView.model">(atributo de roles.views.GroupCreateView)</a>
+</li>
+        <li><a href="roles.html#roles.views.GroupDeleteView.model">(atributo de roles.views.GroupDeleteView)</a>
+</li>
+        <li><a href="roles.html#roles.views.GroupDetailPermissionsView.model">(atributo de roles.views.GroupDetailPermissionsView)</a>
+</li>
+        <li><a href="roles.html#roles.views.GroupDetailUsersView.model">(atributo de roles.views.GroupDetailUsersView)</a>
+</li>
+        <li><a href="roles.html#roles.views.GroupDetailView.model">(atributo de roles.views.GroupDetailView)</a>
+</li>
+        <li><a href="roles.html#roles.views.GroupListView.model">(atributo de roles.views.GroupListView)</a>
+</li>
+        <li><a href="roles.html#roles.views.GroupUpdateView.model">(atributo de roles.views.GroupUpdateView)</a>
+</li>
+        <li><a href="roles.html#roles.views.PermissionMatrixView.model">(atributo de roles.views.PermissionMatrixView)</a>
 </li>
         <li><a href="transacciones.html#transacciones.views.DetalleTransaccionView.model">(atributo de transacciones.views.DetalleTransaccionView)</a>
 </li>
@@ -1708,15 +2022,25 @@
 </li>
         <li><a href="transacciones.html#transacciones.models.ConfiguracionTransaccion.nombre">(atributo de transacciones.models.ConfiguracionTransaccion)</a>
 </li>
+        <li><a href="divisas.html#divisas.models.Denominacion.nombre">(divisas.models.Denominacion propiedad)</a>
+</li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.nombre_campo">nombre_campo (atributo de medios_pago.models.CampoMedioDePago)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="clientes.html#clientes.models.Cliente.nombre_completo">nombre_completo (atributo de clientes.models.Cliente)</a>
 </li>
-      <li><a href="vistas_cliente.html#clientes.views.normalizar_valor">normalizar_valor() (en el módulo clientes.views)</a>
+      <li><a href="divisas.html#divisas.models.Denominacion.notas">notas (atributo de divisas.models.Denominacion)</a>
 </li>
+      <li><a href="users.html#users.models.CustomUser.notificacion_set">notificacion_set (atributo de users.models.CustomUser)</a>
+</li>
+      <li><a href="clientes.html#clientes.models.Cliente.notificaciontasa_set">notificaciontasa_set (atributo de clientes.models.Cliente)</a>
+
+      <ul>
+        <li><a href="users.html#users.models.CustomUser.notificaciontasa_set">(atributo de users.models.CustomUser)</a>
+</li>
+      </ul></li>
       <li><a href="banco.html#banco.models.TarjetaCredito.numero">numero (atributo de banco.models.TarjetaCredito)</a>
 
       <ul>
@@ -1768,6 +2092,10 @@
 </li>
         <li><a href="divisas.html#divisas.models.CotizacionSegmento.objects">(atributo de divisas.models.CotizacionSegmento)</a>
 </li>
+        <li><a href="divisas.html#divisas.models.Denominacion.objects">(atributo de divisas.models.Denominacion)</a>
+</li>
+        <li><a href="divisas.html#divisas.models.DesgloseDenominacion.objects">(atributo de divisas.models.DesgloseDenominacion)</a>
+</li>
         <li><a href="divisas.html#divisas.models.Divisa.objects">(atributo de divisas.models.Divisa)</a>
 </li>
         <li><a href="divisas.html#divisas.models.TasaCambio.objects">(atributo de divisas.models.TasaCambio)</a>
@@ -1799,7 +2127,15 @@
         <li><a href="transacciones.html#transacciones.models.Transaccion.observaciones">(atributo de transacciones.models.Transaccion)</a>
 </li>
       </ul></li>
-      <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.orden">orden (atributo de medios_pago.models.CampoMedioDePago)</a>
+      <li><a href="clientes.html#clientes.models.Cliente.operaciones_terminal">operaciones_terminal (atributo de clientes.models.Cliente)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.Denominacion.orden">orden (atributo de divisas.models.Denominacion)</a>
+
+      <ul>
+        <li><a href="medios_pago.html#medios_pago.models.CampoMedioDePago.orden">(atributo de medios_pago.models.CampoMedioDePago)</a>
+</li>
+      </ul></li>
+      <li><a href="users.html#users.models.CustomUser.otp_codes">otp_codes (atributo de users.models.CustomUser)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1809,9 +2145,15 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="banco.html#banco.views.pagar">pagar() (en el módulo banco.views)</a>
 </li>
-      <li><a href="divisas.html#divisas.views.DivisaListView.paginate_by">paginate_by (atributo de divisas.views.DivisaListView)</a>
+      <li><a href="roles.html#roles.views.page_not_found_view">page_not_found_view() (en el módulo roles.views)</a>
+</li>
+      <li><a href="divisas.html#divisas.views.DenominacionesDivisaView.paginate_by">paginate_by (atributo de divisas.views.DenominacionesDivisaView)</a>
 
       <ul>
+        <li><a href="divisas.html#divisas.views.DenominacionListView.paginate_by">(atributo de divisas.views.DenominacionListView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DivisaListView.paginate_by">(atributo de divisas.views.DivisaListView)</a>
+</li>
         <li><a href="divisas.html#divisas.views.TasaCambioAllListView.paginate_by">(atributo de divisas.views.TasaCambioAllListView)</a>
 </li>
         <li><a href="divisas.html#divisas.views.TasaCambioListView.paginate_by">(atributo de divisas.views.TasaCambioListView)</a>
@@ -1821,6 +2163,10 @@
         <li><a href="transacciones.html#transacciones.views.HistorialTransaccionesClienteView.paginate_by">(atributo de transacciones.views.HistorialTransaccionesClienteView)</a>
 </li>
       </ul></li>
+      <li><a href="banco.html#banco.models.Cuenta.pagos_recibidos_billetera">pagos_recibidos_billetera (atributo de banco.models.Cuenta)</a>
+</li>
+      <li><a href="banco.html#banco.models.Cuenta.pagos_recibidos_tarjeta">pagos_recibidos_tarjeta (atributo de banco.models.Cuenta)</a>
+</li>
       <li><a href="banco.html#banco.models.PagoTarjeta">PagoTarjeta (clase en banco.models)</a>
 </li>
       <li><a href="banco.html#banco.models.PagoTarjeta.DoesNotExist">PagoTarjeta.DoesNotExist</a>
@@ -1833,6 +2179,8 @@
         <li><a href="banco.html#banco.models.TarjetaDebito.pagotarjeta_set">(atributo de banco.models.TarjetaDebito)</a>
 </li>
       </ul></li>
+      <li><a href="vistas_cliente.html#clientes.views.panel_limites">panel_limites() (en el módulo clientes.views)</a>
+</li>
       <li><a href="banco.html#banco.models.BancoUser.password">password (atributo de banco.models.BancoUser)</a>
 
       <ul>
@@ -1847,43 +2195,39 @@
 </li>
       <li><a href="users.html#users.models.CustomUser.paymenttemplate_set">paymenttemplate_set (atributo de users.models.CustomUser)</a>
 </li>
-      <li><a href="users.html#users.views.perfil_usuario">perfil_usuario() (en el módulo users.views)</a>
+      <li><a href="users.html#users.models.CustomUser.perfil_auth">perfil_auth (atributo de users.models.CustomUser)</a>
+</li>
+      <li><a href="users.html#users.views.perfil_usuario_view">perfil_usuario_view() (en el módulo users.views)</a>
 </li>
       <li><a href="users.html#users.models.CustomUser.perfilusuario">perfilusuario (atributo de users.models.CustomUser)</a>
 </li>
-      <li><a href="roles.html#roles.views.permission_create">permission_create() (en el módulo roles.views)</a>
+      <li><a href="roles.html#roles.views.permission_denied_view">permission_denied_view() (en el módulo roles.views)</a>
 </li>
-      <li><a href="divisas.html#divisas.views.DivisaCreateView.permission_required">permission_required (atributo de divisas.views.DivisaCreateView)</a>
+      <li><a href="divisas.html#divisas.views.DenominacionCreateView.permission_required">permission_required (atributo de divisas.views.DenominacionCreateView)</a>
 
       <ul>
+        <li><a href="divisas.html#divisas.views.DenominacionDeleteView.permission_required">(atributo de divisas.views.DenominacionDeleteView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionesDivisaView.permission_required">(atributo de divisas.views.DenominacionesDivisaView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionListView.permission_required">(atributo de divisas.views.DenominacionListView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionQuickCreateView.permission_required">(atributo de divisas.views.DenominacionQuickCreateView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionUpdateView.permission_required">(atributo de divisas.views.DenominacionUpdateView)</a>
+</li>
         <li><a href="divisas.html#divisas.views.DivisaListView.permission_required">(atributo de divisas.views.DivisaListView)</a>
-</li>
-        <li><a href="divisas.html#divisas.views.DivisaToggleActivaView.permission_required">(atributo de divisas.views.DivisaToggleActivaView)</a>
-</li>
-        <li><a href="divisas.html#divisas.views.DivisaUpdateView.permission_required">(atributo de divisas.views.DivisaUpdateView)</a>
-</li>
-        <li><a href="divisas.html#divisas.views.TasaCambioCreateView.permission_required">(atributo de divisas.views.TasaCambioCreateView)</a>
-</li>
-        <li><a href="medios_pago.html#medios_pago.views.DeleteTemplateView.permission_required">(atributo de medios_pago.views.DeleteTemplateView)</a>
-</li>
-        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoCreateAdminView.permission_required">(atributo de medios_pago.views.MedioDePagoCreateAdminView)</a>
-</li>
-        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoDeleteView.permission_required">(atributo de medios_pago.views.MedioDePagoDeleteView)</a>
-</li>
-        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoListView.permission_required">(atributo de medios_pago.views.MedioDePagoListView)</a>
-</li>
-        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoToggleActivoView.permission_required">(atributo de medios_pago.views.MedioDePagoToggleActivoView)</a>
-</li>
-        <li><a href="medios_pago.html#medios_pago.views.MedioDePagoUpdateView.permission_required">(atributo de medios_pago.views.MedioDePagoUpdateView)</a>
-</li>
-        <li><a href="medios_pago.html#medios_pago.views.TemplateDataView.permission_required">(atributo de medios_pago.views.TemplateDataView)</a>
-</li>
-        <li><a href="medios_pago.html#medios_pago.views.TemplateListView.permission_required">(atributo de medios_pago.views.TemplateListView)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="users.html#users.models.CustomUser.permissionchangelog_set">permissionchangelog_set (atributo de users.models.CustomUser)</a>
+</li>
       <li><a href="roles.html#roles.forms.PermissionForm">PermissionForm (clase en roles.forms)</a>
+</li>
+      <li><a href="roles.html#roles.views.PermissionMatrixView">PermissionMatrixView (clase en roles.views)</a>
+</li>
+      <li><a href="clientes.html#clientes.models.Cliente.pines_terminal">pines_terminal (atributo de clientes.models.Cliente)</a>
 </li>
       <li><a href="clientes.html#clientes.models.Descuento.porcentaje_descuento">porcentaje_descuento (atributo de clientes.models.Descuento)</a>
 
@@ -1895,16 +2239,18 @@
 </li>
       <li><a href="clientes.html#clientes.models.HistorialDescuentos.porcentaje_descuento_nuevo">porcentaje_descuento_nuevo (atributo de clientes.models.HistorialDescuentos)</a>
 </li>
-      <li><a href="divisas.html#divisas.views.post">post() (en el módulo divisas.views)</a>
+      <li><a href="divisas.html#divisas.views.CalculadoraDenominacionesView.post">post() (método de divisas.views.CalculadoraDenominacionesView)</a>
 
       <ul>
-        <li><a href="divisas.html#divisas.views.CompraConfirmacionView.post">(método de divisas.views.CompraConfirmacionView)</a>
+        <li><a href="divisas.html#divisas.views.DenominacionCreateView.post">(método de divisas.views.DenominacionCreateView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionDeleteView.post">(método de divisas.views.DenominacionDeleteView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionQuickCreateView.post">(método de divisas.views.DenominacionQuickCreateView)</a>
 </li>
         <li><a href="divisas.html#divisas.views.DivisaToggleActivaView.post">(método de divisas.views.DivisaToggleActivaView)</a>
 </li>
-        <li><a href="divisas.html#divisas.views.SumarioOperacionView.post">(método de divisas.views.SumarioOperacionView)</a>
-</li>
-        <li><a href="divisas.html#divisas.views.VentaConfirmacionView.post">(método de divisas.views.VentaConfirmacionView)</a>
+        <li><a href="divisas.html#divisas.views.TransaccionDesgloseDenominacionesView.post">(método de divisas.views.TransaccionDesgloseDenominacionesView)</a>
 </li>
         <li><a href="medios_pago.html#medios_pago.views.DeleteTemplateView.post">(método de medios_pago.views.DeleteTemplateView)</a>
 </li>
@@ -1916,6 +2262,10 @@
 </li>
         <li><a href="medios_pago.html#medios_pago.views.MedioDePagoUpdateView.post">(método de medios_pago.views.MedioDePagoUpdateView)</a>
 </li>
+        <li><a href="roles.html#roles.views.GroupDetailPermissionsView.post">(método de roles.views.GroupDetailPermissionsView)</a>
+</li>
+        <li><a href="roles.html#roles.views.GroupDetailUsersView.post">(método de roles.views.GroupDetailUsersView)</a>
+</li>
       </ul></li>
       <li><a href="divisas.html#divisas.models.CotizacionSegmento.precio_base">precio_base (atributo de divisas.models.CotizacionSegmento)</a>
 
@@ -1923,6 +2273,8 @@
         <li><a href="divisas.html#divisas.models.TasaCambio.precio_base">(atributo de divisas.models.TasaCambio)</a>
 </li>
       </ul></li>
+      <li><a href="transacciones.html#transacciones.views.preparar_datos_medio">preparar_datos_medio() (en el módulo transacciones.views)</a>
+</li>
       <li><a href="transacciones.html#transacciones.models.Transaccion.procesado_por">procesado_por (atributo de transacciones.models.Transaccion)</a>
 </li>
       <li><a href="transacciones.html#transacciones.models.Transaccion.procesado_por_id">procesado_por_id (atributo de transacciones.models.Transaccion)</a>
@@ -1937,13 +2289,41 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="transacciones.html#transacciones.views.realizar_pago_billetera">realizar_pago_billetera() (en el módulo transacciones.views)</a>
+</li>
+      <li><a href="transacciones.html#transacciones.views.realizar_pago_tarjeta">realizar_pago_tarjeta() (en el módulo transacciones.views)</a>
+</li>
+      <li><a href="transacciones.html#transacciones.views.realizar_transferencia_bancaria">realizar_transferencia_bancaria() (en el módulo transacciones.views)</a>
+</li>
+      <li><a href="transacciones.html#transacciones.models.Transaccion.recalcular_montos_con_tasa_actual">recalcular_montos_con_tasa_actual() (método de transacciones.models.Transaccion)</a>
+</li>
       <li><a href="banco.html#banco.models.TarjetaDebito.recargabilletera_set">recargabilletera_set (atributo de banco.models.TarjetaDebito)</a>
+</li>
+      <li><a href="users.html#users.models.CustomUser.recargas_realizadas">recargas_realizadas (atributo de users.models.CustomUser)</a>
 </li>
       <li><a href="divisas.html#divisas.models.CotizacionSegmentoQuerySet.recientes">recientes() (método de divisas.models.CotizacionSegmentoQuerySet)</a>
 </li>
+      <li><a href="divisas.html#divisas.views.redondear">redondear() (en el módulo divisas.views)</a>
+
+      <ul>
+        <li><a href="transacciones.html#transacciones.views.redondear">(en el módulo transacciones.views)</a>
+</li>
+      </ul></li>
+      <li><a href="transacciones.html#transacciones.models.Transaccion.redondear_monto">redondear_monto() (método de transacciones.models.Transaccion)</a>
+</li>
       <li><a href="autenticacion.html#autenticacion.views.registro_usuario">registro_usuario() (en el módulo autenticacion.views)</a>
 </li>
+      <li><a href="divisas.html#divisas.models.Divisa.registrotransaccionterminal_set">registrotransaccionterminal_set (atributo de divisas.models.Divisa)</a>
+
+      <ul>
+        <li><a href="transacciones.html#transacciones.models.Transaccion.registrotransaccionterminal_set">(atributo de transacciones.models.Transaccion)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="users.html#users.models.CustomUser.REQUIRED_FIELDS">REQUIRED_FIELDS (atributo de users.models.CustomUser)</a>
+</li>
+      <li><a href="transacciones.html#transacciones.models.Transaccion.reservas_denominaciones">reservas_denominaciones (atributo de transacciones.models.Transaccion)</a>
 </li>
       <li><a href="users.html#users.models.Role">Role (clase en users.models)</a>
 </li>
@@ -1951,8 +2331,6 @@
 </li>
       <li><a href="users.html#users.models.Role.MultipleObjectsReturned">Role.MultipleObjectsReturned</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     roles.context_processors
 
@@ -1999,6 +2377,8 @@
 </li>
         <li><a href="divisas.html#divisas.models.CotizacionSegmento.save">(método de divisas.models.CotizacionSegmento)</a>
 </li>
+        <li><a href="divisas.html#divisas.models.Denominacion.save">(método de divisas.models.Denominacion)</a>
+</li>
         <li><a href="divisas.html#divisas.models.Divisa.save">(método de divisas.models.Divisa)</a>
 </li>
         <li><a href="medios_pago.html#medios_pago.forms.CampoMedioDePagoForm.save">(método de medios_pago.forms.CampoMedioDePagoForm)</a>
@@ -2012,9 +2392,9 @@
         <li><a href="transacciones.html#transacciones.models.Transaccion.save">(método de transacciones.models.Transaccion)</a>
 </li>
       </ul></li>
-      <li><a href="roles.html#roles.views.search_permissions">search_permissions() (en el módulo roles.views)</a>
-</li>
       <li><a href="roles.html#roles.views.search_users">search_users() (en el módulo roles.views)</a>
+</li>
+      <li><a href="roles.html#roles.views.SearchPermissionsView">SearchPermissionsView (clase en roles.views)</a>
 </li>
       <li><a href="clientes.html#clientes.models.Cliente.segmento">segmento (atributo de clientes.models.Cliente)</a>
 
@@ -2038,7 +2418,7 @@
         <li><a href="divisas.html#divisas.models.CotizacionSegmento.segmento_id">(atributo de divisas.models.CotizacionSegmento)</a>
 </li>
       </ul></li>
-      <li><a href="divisas.html#divisas.views.seleccionar_operacion_view">seleccionar_operacion_view() (en el módulo divisas.views)</a>
+      <li><a href="vistas_cliente.html#clientes.views.seleccionar_cliente_view">seleccionar_cliente_view() (en el módulo clientes.views)</a>
 </li>
       <li><a href="vistas_cliente.html#clientes.views.SeleccionarMedioAcreditacionView">SeleccionarMedioAcreditacionView (clase en clientes.views)</a>
 </li>
@@ -2051,6 +2431,8 @@
       <li><a href="vistas_cliente.html#clientes.views.select_medio_pago_view">select_medio_pago_view() (en el módulo clientes.views)</a>
 </li>
       <li><a href="form_cliente.html#clientes.forms.SelectMedioDePagoForm">SelectMedioDePagoForm (clase en clientes.forms)</a>
+</li>
+      <li><a href="roles.html#roles.views.server_error_view">server_error_view() (en el módulo roles.views)</a>
 </li>
       <li><a href="clientes.html#clientes.models.ClienteMedioDePago.set_dato_campo">set_dato_campo() (método de clientes.models.ClienteMedioDePago)</a>
 </li>
@@ -2083,9 +2465,15 @@
 </li>
       <li><a href="transacciones.html#transacciones.views.DetalleTransaccionView.slug_url_kwarg">slug_url_kwarg (atributo de transacciones.views.DetalleTransaccionView)</a>
 </li>
-      <li><a href="divisas.html#divisas.views.DivisaCreateView.success_url">success_url (atributo de divisas.views.DivisaCreateView)</a>
+      <li><a href="users.html#users.models.CustomUser.stripe_transactions">stripe_transactions (atributo de users.models.CustomUser)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.DesgloseDenominacion.subtotal">subtotal (divisas.models.DesgloseDenominacion propiedad)</a>
+</li>
+      <li><a href="divisas.html#divisas.views.DenominacionUpdateView.success_url">success_url (atributo de divisas.views.DenominacionUpdateView)</a>
 
       <ul>
+        <li><a href="divisas.html#divisas.views.DivisaCreateView.success_url">(atributo de divisas.views.DivisaCreateView)</a>
+</li>
         <li><a href="divisas.html#divisas.views.DivisaUpdateView.success_url">(atributo de divisas.views.DivisaUpdateView)</a>
 </li>
         <li><a href="medios_pago.html#medios_pago.views.MedioDePagoCreateAdminView.success_url">(atributo de medios_pago.views.MedioDePagoCreateAdminView)</a>
@@ -2099,10 +2487,6 @@
         <li><a href="users.html#users.views.CustomUserUpdateView.success_url">(atributo de users.views.CustomUserUpdateView)</a>
 </li>
       </ul></li>
-      <li><a href="divisas.html#divisas.views.SumarioCompraView">SumarioCompraView (clase en divisas.views)</a>
-</li>
-      <li><a href="divisas.html#divisas.views.SumarioOperacionView">SumarioOperacionView (clase en divisas.views)</a>
-</li>
   </ul></td>
 </tr></table>
 
@@ -2167,12 +2551,26 @@
 </li>
       <li><a href="divisas.html#divisas.models.Divisa.tasas">tasas (atributo de divisas.models.Divisa)</a>
 </li>
+      <li><a href="transacciones.html#transacciones.models.Transaccion.tauser_code">tauser_code (atributo de transacciones.models.Transaccion)</a>
+</li>
+      <li><a href="transacciones.html#transacciones.models.Transaccion.tauser_terminal">tauser_terminal (atributo de transacciones.models.Transaccion)</a>
+</li>
+      <li><a href="transacciones.html#transacciones.models.Transaccion.tauser_terminal_id">tauser_terminal_id (atributo de transacciones.models.Transaccion)</a>
+</li>
       <li><a href="clientes.html#clientes.models.Cliente.telefono">telefono (atributo de clientes.models.Cliente)</a>
 </li>
-      <li><a href="divisas.html#divisas.views.CompraConfirmacionView.template_name">template_name (atributo de divisas.views.CompraConfirmacionView)</a>
+      <li><a href="divisas.html#divisas.views.CalculadoraDenominacionesView.template_name">template_name (atributo de divisas.views.CalculadoraDenominacionesView)</a>
 
       <ul>
-        <li><a href="divisas.html#divisas.views.CompraDivisaView.template_name">(atributo de divisas.views.CompraDivisaView)</a>
+        <li><a href="divisas.html#divisas.views.DenominacionCreateView.template_name">(atributo de divisas.views.DenominacionCreateView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionesDivisaView.template_name">(atributo de divisas.views.DenominacionesDivisaView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionListView.template_name">(atributo de divisas.views.DenominacionListView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionQuickCreateView.template_name">(atributo de divisas.views.DenominacionQuickCreateView)</a>
+</li>
+        <li><a href="divisas.html#divisas.views.DenominacionUpdateView.template_name">(atributo de divisas.views.DenominacionUpdateView)</a>
 </li>
         <li><a href="divisas.html#divisas.views.DivisaCreateView.template_name">(atributo de divisas.views.DivisaCreateView)</a>
 </li>
@@ -2180,21 +2578,11 @@
 </li>
         <li><a href="divisas.html#divisas.views.DivisaUpdateView.template_name">(atributo de divisas.views.DivisaUpdateView)</a>
 </li>
-        <li><a href="divisas.html#divisas.views.SumarioCompraView.template_name">(atributo de divisas.views.SumarioCompraView)</a>
-</li>
-        <li><a href="divisas.html#divisas.views.SumarioOperacionView.template_name">(atributo de divisas.views.SumarioOperacionView)</a>
-</li>
         <li><a href="divisas.html#divisas.views.TasaCambioAllListView.template_name">(atributo de divisas.views.TasaCambioAllListView)</a>
 </li>
         <li><a href="divisas.html#divisas.views.TasaCambioCreateView.template_name">(atributo de divisas.views.TasaCambioCreateView)</a>
 </li>
         <li><a href="divisas.html#divisas.views.TasaCambioListView.template_name">(atributo de divisas.views.TasaCambioListView)</a>
-</li>
-        <li><a href="divisas.html#divisas.views.VentaConfirmacionView.template_name">(atributo de divisas.views.VentaConfirmacionView)</a>
-</li>
-        <li><a href="divisas.html#divisas.views.VentaDivisaView.template_name">(atributo de divisas.views.VentaDivisaView)</a>
-</li>
-        <li><a href="divisas.html#divisas.views.VentaMediosView.template_name">(atributo de divisas.views.VentaMediosView)</a>
 </li>
         <li><a href="medios_pago.html#medios_pago.views.MedioDePagoCreateAdminView.template_name">(atributo de medios_pago.views.MedioDePagoCreateAdminView)</a>
 </li>
@@ -2217,11 +2605,13 @@
       </ul></li>
       <li><a href="medios_pago.html#medios_pago.models.MedioDePago.template_usado">template_usado (atributo de medios_pago.models.MedioDePago)</a>
 </li>
-      <li><a href="medios_pago.html#medios_pago.views.TemplateDataView">TemplateDataView (clase en medios_pago.views)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="medios_pago.html#medios_pago.views.TemplateDataView">TemplateDataView (clase en medios_pago.views)</a>
+</li>
       <li><a href="medios_pago.html#medios_pago.views.TemplateListView">TemplateListView (clase en medios_pago.views)</a>
+</li>
+      <li><a href="users.html#users.models.CustomUser.terminales_a_cargo">terminales_a_cargo (atributo de users.models.CustomUser)</a>
 </li>
       <li><a href="medios_pago.html#medios_pago.tests.CampoMedioDePagoModelTest.test_crear_campo_valido">test_crear_campo_valido() (método de medios_pago.tests.CampoMedioDePagoModelTest)</a>
 </li>
@@ -2249,11 +2639,7 @@
 </li>
       <li><a href="medios_pago.html#medios_pago.tests.EdgeCasesTest.test_relacion_medio_campos">test_relacion_medio_campos() (método de medios_pago.tests.EdgeCasesTest)</a>
 </li>
-      <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoModelTest.test_restaurar_medio_eliminado">test_restaurar_medio_eliminado() (método de medios_pago.tests.MedioDePagoModelTest)</a>
-</li>
       <li><a href="medios_pago.html#medios_pago.tests.CampoMedioDePagoModelTest.test_reutilizar_nombre_despues_eliminacion">test_reutilizar_nombre_despues_eliminacion() (método de medios_pago.tests.CampoMedioDePagoModelTest)</a>
-</li>
-      <li><a href="medios_pago.html#medios_pago.tests.MedioDePagoModelTest.test_soft_delete_basico">test_soft_delete_basico() (método de medios_pago.tests.MedioDePagoModelTest)</a>
 </li>
       <li><a href="medios_pago.html#medios_pago.tests.CampoMedioDePagoModelTest.test_soft_delete_campo">test_soft_delete_campo() (método de medios_pago.tests.CampoMedioDePagoModelTest)</a>
 </li>
@@ -2281,21 +2667,29 @@
 </li>
       <li><a href="medios_pago.html#medios_pago.models.PaymentTemplate.to_payment_template_format">to_payment_template_format() (método de medios_pago.models.PaymentTemplate)</a>
 </li>
-      <li><a href="vistas_cliente.html#clientes.views.to_serializable">to_serializable() (en el módulo clientes.views)</a>
-</li>
       <li><a href="medios_pago.html#medios_pago.models.MedioDePago.toggle_active">toggle_active() (método de medios_pago.models.MedioDePago)</a>
 </li>
       <li><a href="medios_pago.html#medios_pago.models.MedioDePago.total_campos_activos">total_campos_activos (medios_pago.models.MedioDePago propiedad)</a>
 </li>
-      <li><a href="transacciones.html#transacciones.models.HistorialTransaccion.transaccion">transaccion (atributo de transacciones.models.HistorialTransaccion)</a>
+      <li><a href="divisas.html#divisas.models.DesgloseDenominacion.transaccion">transaccion (atributo de divisas.models.DesgloseDenominacion)</a>
+
+      <ul>
+        <li><a href="transacciones.html#transacciones.models.HistorialTransaccion.transaccion">(atributo de transacciones.models.HistorialTransaccion)</a>
 </li>
+      </ul></li>
       <li><a href="transacciones.html#transacciones.models.Transaccion">Transaccion (clase en transacciones.models)</a>
 </li>
       <li><a href="transacciones.html#transacciones.models.Transaccion.DoesNotExist">Transaccion.DoesNotExist</a>
 </li>
       <li><a href="transacciones.html#transacciones.models.Transaccion.MultipleObjectsReturned">Transaccion.MultipleObjectsReturned</a>
 </li>
-      <li><a href="transacciones.html#transacciones.models.HistorialTransaccion.transaccion_id">transaccion_id (atributo de transacciones.models.HistorialTransaccion)</a>
+      <li><a href="divisas.html#divisas.models.DesgloseDenominacion.transaccion_id">transaccion_id (atributo de divisas.models.DesgloseDenominacion)</a>
+
+      <ul>
+        <li><a href="transacciones.html#transacciones.models.HistorialTransaccion.transaccion_id">(atributo de transacciones.models.HistorialTransaccion)</a>
+</li>
+      </ul></li>
+      <li><a href="divisas.html#divisas.views.TransaccionDesgloseDenominacionesView">TransaccionDesgloseDenominacionesView (clase en divisas.views)</a>
 </li>
       <li><a href="clientes.html#clientes.models.Cliente.transacciones">transacciones (atributo de clientes.models.Cliente)</a>
 </li>
@@ -2347,6 +2741,8 @@
 </li>
       <li><a href="users.html#users.models.CustomUser.user_permissions">user_permissions (atributo de users.models.CustomUser)</a>
 </li>
+      <li><a href="roles.html#roles.context_processors.user_permissions">user_permissions() (en el módulo roles.context_processors)</a>
+</li>
       <li><a href="users.html#users.models.CustomUser.username">username (atributo de users.models.CustomUser)</a>
 </li>
       <li><a href="users.html#users.models.CustomUser.USERNAME_FIELD">USERNAME_FIELD (atributo de users.models.CustomUser)</a>
@@ -2374,6 +2770,10 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="divisas.html#divisas.models.Denominacion.usos">usos (atributo de divisas.models.Denominacion)</a>
+</li>
+      <li><a href="divisas.html#divisas.models.Denominacion.usos_terminal">usos_terminal (atributo de divisas.models.Denominacion)</a>
+</li>
       <li><a href="banco.html#banco.models.Cuenta.usuario">usuario (atributo de banco.models.Cuenta)</a>
 
       <ul>
@@ -2408,21 +2808,19 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="medios_pago.html#medios_pago.models.MedioDePago.validate_required_fields">validate_required_fields() (método de medios_pago.models.MedioDePago)</a>
 </li>
-      <li><a href="transacciones.html#transacciones.models.ConfiguracionTransaccion.valor">valor (atributo de transacciones.models.ConfiguracionTransaccion)</a>
+      <li><a href="divisas.html#divisas.models.Denominacion.valor">valor (atributo de divisas.models.Denominacion)</a>
+
+      <ul>
+        <li><a href="transacciones.html#transacciones.models.ConfiguracionTransaccion.valor">(atributo de transacciones.models.ConfiguracionTransaccion)</a>
 </li>
+      </ul></li>
       <li><a href="divisas.html#divisas.models.CotizacionSegmento.valor_compra_unit">valor_compra_unit (atributo de divisas.models.CotizacionSegmento)</a>
 </li>
-      <li><a href="divisas.html#divisas.models.CotizacionSegmento.valor_venta_unit">valor_venta_unit (atributo de divisas.models.CotizacionSegmento)</a>
-</li>
-      <li><a href="divisas.html#divisas.views.VentaConfirmacionView">VentaConfirmacionView (clase en divisas.views)</a>
-</li>
-      <li><a href="divisas.html#divisas.forms.VentaDivisaForm">VentaDivisaForm (clase en divisas.forms)</a>
+      <li><a href="divisas.html#divisas.models.Denominacion.valor_formateado">valor_formateado (divisas.models.Denominacion propiedad)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="divisas.html#divisas.views.VentaDivisaView">VentaDivisaView (clase en divisas.views)</a>
-</li>
-      <li><a href="divisas.html#divisas.views.VentaMediosView">VentaMediosView (clase en divisas.views)</a>
+      <li><a href="divisas.html#divisas.models.CotizacionSegmento.valor_venta_unit">valor_venta_unit (atributo de divisas.models.CotizacionSegmento)</a>
 </li>
       <li><a href="autenticacion.html#autenticacion.views.verificar_correo">verificar_correo() (en el módulo autenticacion.views)</a>
 </li>
@@ -2438,9 +2836,13 @@
 <h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="divisas.html#divisas.forms.DivisaForm.Meta.widgets">widgets (atributo de divisas.forms.DivisaForm.Meta)</a>
+      <li><a href="divisas.html#divisas.forms.DenominacionForm.Meta.widgets">widgets (atributo de divisas.forms.DenominacionForm.Meta)</a>
 
       <ul>
+        <li><a href="divisas.html#divisas.forms.DesgloseDenominacionForm.Meta.widgets">(atributo de divisas.forms.DesgloseDenominacionForm.Meta)</a>
+</li>
+        <li><a href="divisas.html#divisas.forms.DivisaForm.Meta.widgets">(atributo de divisas.forms.DivisaForm.Meta)</a>
+</li>
         <li><a href="divisas.html#divisas.forms.TasaCambioForm.Meta.widgets">(atributo de divisas.forms.TasaCambioForm.Meta)</a>
 </li>
         <li><a href="medios_pago.html#medios_pago.forms.CampoMedioDePagoForm.Meta.widgets">(atributo de medios_pago.forms.CampoMedioDePagoForm.Meta)</a>

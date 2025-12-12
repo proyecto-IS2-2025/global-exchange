@@ -63,11 +63,57 @@
                             <p class="mb-0 text-white">Gestión completa de todas las transacciones del sistema</p>
                         </div>
                         <div>
+                            <button onclick="confirmarExportacionAdmin()" class="btn btn-success me-2">
+                                <i class="bi bi-file-earmark-excel me-1"></i>Exportar Excel
+                            </button>
                             <button class="btn btn-light" onclick="window.print()">
                                 <i class="bi bi-printer me-1"></i>Imprimir
                             </button>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación de exportación -->
+    <div class="modal fade" id="modalExportarAdmin" tabindex="-1" aria-labelledby="modalExportarAdminLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="modalExportarAdminLabel">
+                        <i class="bi bi-file-earmark-excel me-2"></i>Exportar Transacciones a Excel
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">¿Desea exportar las transacciones a Excel?</p>
+                    <div class="bg-light p-3 rounded">
+                        <div class="mb-2" id="exportClienteContainer" style="display: none;">
+                            <strong>Cliente:</strong> <span id="exportCliente"></span>
+                        </div>
+                        <div class="mb-2">
+                            <strong>Tipo:</strong> <span id="exportTipoAdmin"></span>
+                        </div>
+                        <div class="mb-2" id="exportEstadoAdminContainer" style="display: none;">
+                            <strong>Estado:</strong> <span id="exportEstadoAdmin"></span>
+                        </div>
+                        <div id="exportFechasAdminContainer" style="display: none;">
+                            <strong>Desde:</strong> <span id="exportFechaDesdeAdmin"></span><br>
+                            <strong>Hasta:</strong> <span id="exportFechaHastaAdmin"></span>
+                        </div>
+                        <div class="mt-2" id="exportBusquedaContainer" style="display: none;">
+                            <strong>Búsqueda:</strong> <span id="exportBusqueda"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="ejecutarExportacionAdmin()">
+                        <i class="bi bi-download me-1"></i>Aceptar
+                    </button>
                 </div>
             </div>
         </div>
@@ -432,6 +478,16 @@
                             {% endfor %}
                         </select>
                     </div>
+                    <div class="mb-3" id="tauser_deposito_container" style="display: none;">
+                        <label for="tauser_deposito" class="form-label">Terminal TAUSER de Depósito <span class="text-danger">*</span></label>
+                        <select name="tauser_deposito" id="tauser_deposito" class="form-select">
+                            <option value="">Seleccionar terminal donde se depositó...</option>
+                            {% for terminal in terminales_tauser %}
+                                <option value="{{ terminal.id }}">{{ terminal.nombre }} - {{ terminal.ubicacion }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Selecciona el terminal TAUSER donde el cliente depositó la divisa</small>
+                    </div>
                     <div class="mb-3">
                         <label for="observaciones" class="form-label">Observaciones</label>
                         <textarea name="observaciones" id="observaciones" class="form-control" rows="3" 
@@ -452,9 +508,98 @@
 <script>
 let changeStateModal;
 
+function confirmarExportacionAdmin() {
+    // Obtener valores de los filtros
+    const clienteSelect = document.querySelector('select[name="cliente"]');
+    const tipoSelect = document.querySelector('select[name="tipo"]');
+    const estadoSelect = document.querySelector('select[name="estado"]');
+    const fechaDesde = document.querySelector('input[name="fecha_desde"]');
+    const fechaHasta = document.querySelector('input[name="fecha_hasta"]');
+    const busquedaInput = document.querySelector('input[name="busqueda"]');
+    
+    // Actualizar tipo
+    const tipoTexto = tipoSelect ? tipoSelect.options[tipoSelect.selectedIndex].text : 'Todos';
+    document.getElementById('exportTipoAdmin').textContent = tipoTexto;
+    
+    // Mostrar cliente si está seleccionado
+    if (clienteSelect && clienteSelect.value) {
+        const clienteTexto = clienteSelect.options[clienteSelect.selectedIndex].text;
+        document.getElementById('exportCliente').textContent = clienteTexto;
+        document.getElementById('exportClienteContainer').style.display = 'block';
+    } else {
+        document.getElementById('exportClienteContainer').style.display = 'none';
+    }
+    
+    // Mostrar estado si está seleccionado
+    if (estadoSelect && estadoSelect.value) {
+        const estadoTexto = estadoSelect.options[estadoSelect.selectedIndex].text;
+        document.getElementById('exportEstadoAdmin').textContent = estadoTexto;
+        document.getElementById('exportEstadoAdminContainer').style.display = 'block';
+    } else {
+        document.getElementById('exportEstadoAdminContainer').style.display = 'none';
+    }
+    
+    // Mostrar fechas si están seleccionadas
+    if (fechaDesde && fechaHasta && fechaDesde.value && fechaHasta.value) {
+        document.getElementById('exportFechaDesdeAdmin').textContent = formatearFecha(fechaDesde.value);
+        document.getElementById('exportFechaHastaAdmin').textContent = formatearFecha(fechaHasta.value);
+        document.getElementById('exportFechasAdminContainer').style.display = 'block';
+    } else {
+        document.getElementById('exportFechasAdminContainer').style.display = 'none';
+    }
+    
+    // Mostrar búsqueda si existe
+    if (busquedaInput && busquedaInput.value) {
+        document.getElementById('exportBusqueda').textContent = busquedaInput.value;
+        document.getElementById('exportBusquedaContainer').style.display = 'block';
+    } else {
+        document.getElementById('exportBusquedaContainer').style.display = 'none';
+    }
+    
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById('modalExportarAdmin'));
+    modal.show();
+}
+
+function ejecutarExportacionAdmin() {
+    // Cerrar el modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalExportarAdmin'));
+    modal.hide();
+    
+    // Construir URL con los parámetros de filtro actuales
+    const params = new URLSearchParams(window.location.search);
+    window.location.href = "{% url 'transacciones:exportar_admin_excel' %}?" + params.toString();
+}
+
+function formatearFecha(fecha) {
+    const partes = fecha.split('-');
+    return partes[2] + '/' + partes[1] + '/' + partes[0];
+}
+
+let transaccionActualTipo = null;
+
 document.addEventListener('DOMContentLoaded', function() {
     // Inicializar modal
     changeStateModal = new bootstrap.Modal(document.getElementById('changeStateModal'));
+    
+    // Escuchar cambios en el selector de estado
+    document.getElementById('nuevo_estado').addEventListener('change', function() {
+        const nuevoEstado = this.value;
+        const tauserContainer = document.getElementById('tauser_deposito_container');
+        const tauserSelect = document.getElementById('tauser_deposito');
+        
+        // Mostrar selector de TAUSER solo si:
+        // 1. El nuevo estado es 'completado'
+        // 2. La transacción es de tipo 'venta'
+        if (nuevoEstado === 'completado' && transaccionActualTipo === 'venta') {
+            tauserContainer.style.display = 'block';
+            tauserSelect.required = true;
+        } else {
+            tauserContainer.style.display = 'none';
+            tauserSelect.required = false;
+            tauserSelect.value = '';
+        }
+    });
     
     // Auto-refresh para transacciones pendientes cada 60 segundos
     const pendienteRows = document.querySelectorAll('.transaction-row .bg-warning');

@@ -12,9 +12,9 @@ def grupo_usuario(request):
     """
     
     # ═══════════════════════════════════════════════════════════════
-    # USUARIOS NO AUTENTICADOS
+    # USUARIOS NO AUTENTICADOS O SIN MIDDLEWARE DE AUTENTICACIÓN
     # ═══════════════════════════════════════════════════════════════
-    if not request.user.is_authenticated:
+    if not hasattr(request, 'user') or not request.user.is_authenticated:
         return {
             'tipo_usuario': None,
             'usuario_es_staff': False,
