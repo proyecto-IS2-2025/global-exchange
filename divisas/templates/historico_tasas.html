@@ -323,9 +323,11 @@
       <div class="filter-group">
         <label class="filter-label">Divisa</label>
         <select id="divisaSelect" class="filter-select">
-          {% if divisas_activas %}
-            {% for divisa in divisas_activas %}
-              <option value="{{ divisa.id }}" {% if forloop.first %}selected{% endif %}>{{ divisa.nombre }} ({{ divisa.code }})</option>
+          {% if divisas_data %}
+            {% for data in divisas_data %}
+              {% if data.divisa.code != 'PYG' %}
+                <option value="{{ data.divisa.id }}" {% if forloop.first %}selected{% endif %}>{{ data.divisa.nombre }} ({{ data.divisa.code }})</option>
+              {% endif %}
             {% endfor %}
           {% else %}
             <option value="">No hay divisas disponibles</option>

@@ -49,6 +49,9 @@ def generate_and_send_otp(user, request=None):
     # 1. Intentar con SendGrid API (HTTP) si está configurado
     if SENDGRID_AVAILABLE and os.environ.get('SENDGRID_API_KEY'):
         try:
+            logger.info(f"Intentando enviar OTP a {user.email} via SendGrid API")
+            logger.info(f"From: {settings.DEFAULT_FROM_EMAIL}, To: {user.email}")
+            
             message_mail = Mail(
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to_emails=user.email,
@@ -58,9 +61,16 @@ def generate_and_send_otp(user, request=None):
             sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
             response = sg.send(message_mail)
             
+            logger.info(f"SendGrid response status: {response.status_code}")
+            logger.info(f"SendGrid response body: {response.body}")
+            logger.info(f"SendGrid response headers: {response.headers}")
+            
             if response.status_code in [200, 202]:
-                logger.info(f"OTP enviado exitosamente via SendGrid API a {user.email}")
+                logger.info(f"✅ OTP enviado exitosamente via SendGrid API a {user.email}")
                 email_sent = True
+                
+                # Mostrar código también en logs para debugging
+                logger.info(f"🔑 CÓDIGO OTP: {otp_code} (para {user.email})")
                 
                 if request:
                     messages.success(
@@ -68,8 +78,12 @@ def generate_and_send_otp(user, request=None):
                         f"Se ha enviado un código a {user.email[:3]}***@g***.com. "
                         f"Es válido por {OTP_EXPIRATION_TIME} min."
                     )
+            else:
+                logger.error(f"SendGrid retornó código inesperado: {response.status_code}")
         except Exception as e:
-            logger.error(f"Error enviando OTP via SendGrid API: {str(e)}")
+            logger.error(f"❌ Error enviando OTP via SendGrid API: {str(e)}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
     
     # 2. Fallback: Intentar con SMTP
     if not email_sent:

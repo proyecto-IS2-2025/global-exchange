@@ -227,6 +227,16 @@
                                 <label class="text-muted small">Comisión</label>
                                 <p class="mb-0">{{ transaccion.medio_pago_datos.comision|default:"No aplica" }}</p>
                             </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">Monto de Comisión</label>
+                                <p class="mb-0 fw-bold">
+                                    {% if transaccion.comision_aplicada and transaccion.comision_aplicada > 0 %}
+                                        Gs. {{ transaccion.comision_aplicada|floatformat:0|intcomma }}
+                                    {% else %}
+                                        No aplica
+                                    {% endif %}
+                                </p>
+                            </div>
                             {% if transaccion.medio_pago_datos.es_principal %}
                             <div class="mb-3">
                                 <span class="badge bg-primary">
@@ -523,6 +533,37 @@
                             <div class="mb-3">
                                 <label class="text-muted small">Porcentaje de Comisión</label>
                                 <p class="mb-0 fw-bold">{{ transaccion.porcentaje_comision|floatformat:2 }}%</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3 p-3 bg-light rounded">
+                                <label class="text-muted small">
+                                    {% if transaccion.tipo_operacion == 'compra' %}
+                                        Cantidad de Divisa Comprada
+                                    {% else %}
+                                        Cantidad de Divisa Vendida
+                                    {% endif %}
+                                </label>
+                                <p class="mb-0 fw-bold fs-5 text-primary">
+                                    {% if transaccion.tipo_operacion == 'compra' %}
+                                        {% if transaccion.divisa_destino.code == 'PYG' %}
+                                            {{ transaccion.monto_destino|floatformat:0|intcomma }}
+                                        {% else %}
+                                            {{ transaccion.monto_destino|floatformat:2|intcomma }}
+                                        {% endif %}
+                                        {{ transaccion.divisa_destino.code }}
+                                    {% else %}
+                                        {% if transaccion.divisa_origen.code == 'PYG' %}
+                                            {{ transaccion.monto_origen|floatformat:0|intcomma }}
+                                        {% else %}
+                                            {{ transaccion.monto_origen|floatformat:2|intcomma }}
+                                        {% endif %}
+                                        {{ transaccion.divisa_origen.code }}
+                                    {% endif %}
+                                </p>
                             </div>
                         </div>
                     </div>
