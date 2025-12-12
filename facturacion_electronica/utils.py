@@ -4,7 +4,7 @@ Utilidades para generar facturas electrónicas desde transacciones
 from decimal import Decimal
 from .services import SQLProxyService
 from .models import FacturaElectronica
-from .config import TIMBRADO_CONFIG, KUDE_CONFIG
+from .config import TIMBRADO_CONFIG, KUDE_CONFIG, FACTURACION_CONFIG
 from django.utils import timezone
 import glob
 import os
@@ -300,7 +300,8 @@ def generar_facturas_pendientes():
 
 def obtener_configuracion_facturacion():
     """
-    Obtiene la configuración de facturación desde las variables de entorno.
+    Obtiene la configuración de facturación desde las variables de entorno,
+    usando los valores de config.py como defaults.
     
     Returns:
         dict con la configuración:
@@ -311,10 +312,10 @@ def obtener_configuracion_facturacion():
     """
     import os
     return {
-        'numero_inicial': int(os.getenv('FACTURACION_NUMERO_INICIAL', '51')),
-        'numero_final': int(os.getenv('FACTURACION_NUMERO_FINAL', '100')),
-        'establecimiento': os.getenv('FACTURACION_ESTABLECIMIENTO', '001'),
-        'punto_expedicion': os.getenv('FACTURACION_PUNTO_EXPEDICION', '003')
+        'numero_inicial': int(os.getenv('FACTURACION_NUMERO_INICIAL', str(FACTURACION_CONFIG['numero_inicial']))),
+        'numero_final': int(os.getenv('FACTURACION_NUMERO_FINAL', str(FACTURACION_CONFIG['numero_final']))),
+        'establecimiento': os.getenv('FACTURACION_ESTABLECIMIENTO', TIMBRADO_CONFIG['establecimiento']),
+        'punto_expedicion': os.getenv('FACTURACION_PUNTO_EXPEDICION', TIMBRADO_CONFIG['punto_expedicion'])
     }
 
 

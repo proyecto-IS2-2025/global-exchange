@@ -654,28 +654,66 @@ def generar_factura_automatica(transaccion):
     # ═══════════════════════════════════════════════════════════════════════
     # DETERMINAR MONTO, DIVISA Y CANTIDAD SEGÚN TIPO DE OPERACIÓN
     # ═══════════════════════════════════════════════════════════════════════
+    items = []  # Lista de items para la factura
+    
     if tipo_op == 'compra':
         # COMPRA: Cliente paga PYG (monto_origen) → recibe divisa (monto_destino)
-        # Mantener formato original: cantidad=1, precio=monto_total
+        # Una sola fila: cantidad=1, precio=monto_total
         monto_pyg = float(transaccion.monto_origen)
-        divisa_operacion = transaccion.divisa_destino  # La divisa que compra
-        cantidad_item = 1
-        precio_unitario_item = monto_pyg
-        descripcion = f"Compra de Divisas - {divisa_operacion.code}"
-        logger.info(f"[FACTURA_AUTO] COMPRA: {monto_pyg} PYG por {transaccion.monto_destino} {divisa_operacion.code}")
+        divisa_operacion = transaccion.divisa_destino
+        cantidad_divisas = int(float(transaccion.monto_destino))  # Cantidad de divisas que recibe
+        
+        items.append({
+            'descripcion': f"Compra de {cantidad_divisas} {divisa_operacion.code}",
+            'cantidad': 1,
+            'precio_unitario': monto_pyg,
+            'descuento': 0,
+            'afectacion_iva': '3',
+            'proporcion_iva': '0',
+            'tasa_iva': '0'
+        })
+        
+        logger.info(f"[FACTURA_AUTO] COMPRA: {monto_pyg} PYG por {cantidad_divisas} {divisa_operacion.code}")
     else:
-        # VENTA: Cliente entrega divisa (monto_origen) → recibe PYG (monto_destino)
-        # Formato nuevo: cantidad=divisas vendidas, precio=tipo de cambio
-        monto_pyg = float(transaccion.monto_destino)
-        divisa_operacion = transaccion.divisa_origen  # La divisa que vende
-        cantidad_divisas = float(transaccion.monto_origen)  # Cantidad que entrega
-        tipo_cambio = monto_pyg / cantidad_divisas if cantidad_divisas > 0 else monto_pyg
-        cantidad_item = cantidad_divisas
-        precio_unitario_item = tipo_cambio
-        descripcion = f"Venta de Divisas - {divisa_operacion.code}"
-        logger.info(f"[FACTURA_AUTO] VENTA: {cantidad_divisas} {divisa_operacion.code} por {monto_pyg} PYG (TC: {tipo_cambio})")
+        # VENTA: Cliente entrega divisa → recibe PYG
+        # UNA SOLA FILA:
+        #   - Precio Unitario = total a recibir (196716)
+        #   - Cantidad = 1
+        #   - Descuento = 0
+        #   - Exentas = total a recibir (196716)
+        #   - Descripción incluye cantidad vendida y comisión
+        
+        divisa_operacion = transaccion.divisa_origen
+        cantidad_divisas = int(float(transaccion.monto_origen))  # 30 USD
+        monto_base = int(float(transaccion.monto_destino))  # 202800
+        comision = int(float(transaccion.comision_aplicada)) if transaccion.comision_aplicada else 0  # 6084
+        monto_neto = monto_base - comision  # 196716
+        
+        # Descripción con detalle de la operación
+        if comision > 0:
+            descripcion = f"Venta de {cantidad_divisas} {divisa_operacion.code} (Comisión medio de pago: {comision} Gs.)"
+        else:
+            descripcion = f"Venta de {cantidad_divisas} {divisa_operacion.code}"
+        
+        items.append({
+            'descripcion': descripcion,
+            'cantidad': 1,
+            'precio_unitario': monto_neto,  # 196716 (total a recibir)
+            'descuento': 0,
+            'afectacion_iva': '3',
+            'proporcion_iva': '0',
+            'tasa_iva': '0'
+        })
+        
+        monto_pyg = monto_neto  # Total final: 196716
+        
+        logger.info(f"[FACTURA_AUTO] VENTA: {cantidad_divisas} {divisa_operacion.code}")
+        logger.info(f"[FACTURA_AUTO]   Descripción: {descripcion}")
+        logger.info(f"[FACTURA_AUTO]   Precio Unitario: {monto_neto} PYG")
+        logger.info(f"[FACTURA_AUTO]   Descuento: 0")
+        logger.info(f"[FACTURA_AUTO]   Total (Exentas): {monto_neto} PYG")
     
-    logger.info(f"[FACTURA_AUTO] Item: cantidad={cantidad_item}, precio_unitario={precio_unitario_item}, total={monto_pyg} PYG")
+    logger.info(f"[FACTURA_AUTO] Items preparados: {len(items)} item(s), Total: {monto_pyg} PYG")
     
     try:
         # Verificar si ya tiene factura
@@ -714,28 +752,15 @@ def generar_factura_automatica(transaccion):
             #     cliente_dv = '0'
             
             # ═══════════════════════════════════════════════════════════════════
-            # PREPARAR ITEMS DE LA FACTURA
+            # ITEMS YA PREPARADOS ARRIBA
             # ═══════════════════════════════════════════════════════════════════
-            # ✅ IMPORTANTE: La compraventa de divisas es EXENTA de IVA según la ley paraguaya
-            # Por lo tanto, afectacion_iva='3' (EXENTO), tasa_iva='0', proporcion_iva='0'
-            #
-            # COMPRA: cantidad=1, precio_unitario=monto_total (formato original)
-            # VENTA: cantidad=divisas_vendidas, precio_unitario=tipo_cambio
-            #
-            items = [{
-                'descripcion': descripcion,
-                'cantidad': cantidad_item,
-                'precio_unitario': precio_unitario_item,
-                'descuento': 0,
-                'afectacion_iva': '3',  # ✅ EXENTO (compraventa de divisas)
-                'proporcion_iva': '0',  # ✅ 0% de proporción gravada
-                'tasa_iva': '0'  # ✅ Sin IVA
-            }]
+            # Los items ya fueron construidos en la sección anterior según el tipo de operación
+            # COMPRA: 1 item
+            # VENTA: 2 items (venta de divisas + comisión)
             
-            logger.info(f"[FACTURA_AUTO] Item: {descripcion}")
-            logger.info(f"[FACTURA_AUTO]   Cantidad: {cantidad_item}")
-            logger.info(f"[FACTURA_AUTO]   Precio unitario: {precio_unitario_item} PYG")
-            logger.info(f"[FACTURA_AUTO]   Total: {monto_pyg} PYG")
+            for i, item in enumerate(items):
+                logger.info(f"[FACTURA_AUTO] Item {i+1}: {item['descripcion']}")
+                logger.info(f"[FACTURA_AUTO]   Cantidad: {item['cantidad']}, Precio: {item['precio_unitario']}, Descuento: {item['descuento']}")
             
             # Datos para el SQL Proxy
             datos_factura = {
