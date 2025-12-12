@@ -485,8 +485,8 @@
             </div>
             {% endif %}
             
-            <!-- Análisis de Ganancias (Solo Administradores) -->
-            {% if user.is_superuser or 'admin' in user.groups.values_list|first or 'Administrador' in user.groups.values_list|first %}
+            <!-- Análisis de Ganancias (Solo usuarios con permiso view_tablero_ganancias) -->
+            {% if perms.ganancias.view_tablero_ganancias %}
             <div class="card info-card shadow-sm mb-4 border-success">
                 <div class="card-header bg-success text-white">
                     <h5 class="mb-0">
