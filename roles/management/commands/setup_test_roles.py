@@ -243,11 +243,13 @@ class Command(BaseCommand):
 
     def _configure_administrador(self, verbose):
         """
-        ✅ ADMINISTRADOR - Gestión completa excepto reversiones críticas
+        ✅ ADMINISTRADOR - Solo permisos de alto impacto administrativo
+        Gestión de: Usuarios, Roles, Clientes, MFA, Medios de Pago
+        SIN acceso a: Transacciones, Divisas, Facturación, Ganancias, TAUSER
         """
         codenames = [
             # ═══════════════════════════════════════════════════════════════
-            # USUARIOS (5 custom)
+            # USUARIOS (5 custom) - Gestión completa de usuarios
             # ═══════════════════════════════════════════════════════════════
             'manage_usuarios',
             'view_all_usuarios',
@@ -256,13 +258,13 @@ class Command(BaseCommand):
             'reset_usuario_password',
             
             # ═══════════════════════════════════════════════════════════════
-            # MFA (2 custom)
+            # MFA (2 custom) - Configuración de autenticación
             # ═══════════════════════════════════════════════════════════════
             'view_mfa_config',
             'manage_mfa_config',
             
             # ═══════════════════════════════════════════════════════════════
-            # ROLES (9 custom) ← NUEVO - TODOS los permisos de roles
+            # ROLES (9 custom) - Gestión completa de roles y permisos
             # ═══════════════════════════════════════════════════════════════
             'view_roles_list',
             'view_role_details',
@@ -275,7 +277,7 @@ class Command(BaseCommand):
             'manage_role_status',
             
             # ═══════════════════════════════════════════════════════════════
-            # CLIENTES (12 custom)
+            # CLIENTES (6 custom) - Ver, asignar y gestionar clientes
             # ═══════════════════════════════════════════════════════════════
             'view_all_clientes',
             'view_assigned_clientes',
@@ -283,80 +285,14 @@ class Command(BaseCommand):
             'manage_limites_operacion',
             'view_limites_operacion',
             'admin_manage_limites',
-            'manage_medios_pago',
-            'view_medios_pago',
-            'export_clientes',
-            'view_descuentos_segmento',
-            'manage_descuentos_segmento',
-            'view_historial_descuentos',
             
             # ═══════════════════════════════════════════════════════════════
-            # TRANSACCIONES (6 custom - sin reversiones)
-            # ═══════════════════════════════════════════════════════════════
-            'view_transacciones_globales',
-            'view_transacciones_asignadas',
-            'manage_estados_transacciones',
-            # 'manage_reversiones_transacciones',  # ❌ Solo dev
-            'view_historial_transacciones',
-            'export_transacciones',
-            
-            # ═══════════════════════════════════════════════════════════════
-            # DIVISAS (7 custom)
-            # ═══════════════════════════════════════════════════════════════
-            'view_cotizaciones_segmento',
-            'manage_cotizaciones_segmento',
-            'realizar_operacion',
-            'manage_divisas',
-            'view_divisas',
-            'manage_tasas_cambio',
-            'view_tasas_cambio',
-            
-            # ═══════════════════════════════════════════════════════════════
-            # MEDIOS DE PAGO (2 custom)
+            # MEDIOS DE PAGO (2 custom) - Catálogo de medios de pago
             # ═══════════════════════════════════════════════════════════════
             'view_catalogo_medios_pago',
             'manage_catalogo_medios_pago',
-            
-            # ═══════════════════════════════════════════════════════════════
-            # FACTURACIÓN ELECTRÓNICA (12 custom - sin generación manual)
-            # ═══════════════════════════════════════════════════════════════
-            'view_facturas_propias',
-            'view_facturas_asignadas',
-            'view_todas_facturas',
-            'generar_factura',
-            # 'generar_factura_manual',  # ❌ Solo dev
-            'cancelar_factura',
-            'inutilizar_numero',
-            'download_kude_pdf',
-            'download_kude_xml',
-            'view_reporte_facturacion',
-            'export_reporte_facturacion',
-            'manage_config_facturacion',  # ✅ Configurar sistema
-            'sync_sifen',
-            
-            # ═══════════════════════════════════════════════════════════════
-            # GANANCIAS (4 custom - TODOS)
-            # ═══════════════════════════════════════════════════════════════
-            'view_tablero_ganancias',
-            'view_comparacion_ganancias',
-            'export_ganancias',
-            'actualizar_ganancias',
-            
-            # ═══════════════════════════════════════════════════════════════
-            # TAUSER (10 custom - TODOS)
-            # ═══════════════════════════════════════════════════════════════
-            'manage_terminales',
-            'view_terminales',
-            'manage_inventario_divisa',
-            'view_inventario_divisa',
-            'manage_denominaciones_inventario',
-            'view_denominaciones_inventario',
-            'manage_pins_terminal',
-            'view_pins_terminal',
-            'view_registros_terminal',
-            'export_registros_terminal',
         ]
-        # Total: 69 permisos custom (59 anteriores + 10 de tauser)
+        # Total: 24 permisos custom (solo administrativos de alto impacto)
         
         self._assign_permissions('administrador', codenames, verbose)
 
