@@ -213,7 +213,7 @@
       "is_staff": true,
       "is_active": true,
       "date_joined": "2025-12-12T10:00:00Z",
-      "is_cambista": false,
+      "is_cambista": true,
       "ultimo_cliente_id": null,
       "groups": [8],
       "user_permissions": []

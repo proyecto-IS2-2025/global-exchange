@@ -296,6 +296,7 @@ def main():
     print_info("  - admin@gmail.com / 12345678 (Administrador)")
     print_info("  - operador@test.com / 12345678 (Operador)")
     print_info("  - observador@test.com / 12345678 (Observador)")
+    print_info("  - analista@test.com / 12345678 (Analista)")
     print_info("  - cliente@test.com / 12345678 (Cliente)")
     
     return 0
