@@ -121,4 +121,10 @@ migrate_decorators_safe.py
 check_context_vars.py
 find_obsolete_vars.py
 
+# ═════════════════════════════════════════════════════════════════════
+# DOCUMENTACIÓN GENERADA
+# ═════════════════════════════════════════════════════════════════════
+docs/build/
+docs/_build/
+
 #FIN DEL GITINORElogs/*.log

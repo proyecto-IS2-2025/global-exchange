@@ -361,8 +361,15 @@ class Command(BaseCommand):
             'export_transacciones',
             # Django estándar
             'view_transaccion',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # GANANCIAS (3 custom) - Ver ganancias en detalle de transacción
+            # ═══════════════════════════════════════════════════════════════
+            'view_tablero_ganancias',
+            'view_comparacion_ganancias',
+            'export_ganancias',
         ]
-        # Total: 71 permisos (24 base + 3 descuentos + 18 divisas + 18 tauser + 8 transacciones)
+        # Total: 74 permisos (24 base + 3 descuentos + 18 divisas + 18 tauser + 8 transacciones + 3 ganancias)
         
         self._assign_permissions('administrador', codenames, verbose)
 
