@@ -15,7 +15,7 @@ from openpyxl.utils import get_column_letter
 
 
 @login_required
-@permission_required('ganancias.view_registroganancia', raise_exception=True)
+@permission_required('ganancias.view_tablero_ganancias', raise_exception=True)
 def tablero_ganancias(request):
     """
     Vista principal del tablero de control de ganancias
@@ -255,7 +255,7 @@ def tablero_ganancias(request):
 
 
 @login_required
-@permission_required('ganancias.view_registroganancia', raise_exception=True)
+@permission_required('ganancias.view_tablero_ganancias', raise_exception=True)
 def api_ganancias_evolucion(request):
     """
     API para obtener datos de evolución de ganancias (para gráficos)
@@ -332,7 +332,7 @@ def api_ganancias_evolucion(request):
 
 
 @login_required
-@permission_required('ganancias.view_registroganancia', raise_exception=True)
+@permission_required('ganancias.view_tablero_ganancias', raise_exception=True)
 def api_ganancias_por_divisa(request):
     """
     API para obtener distribución de ganancias por divisa
@@ -381,7 +381,7 @@ def api_ganancias_por_divisa(request):
 
 
 @login_required
-@permission_required('ganancias.view_registroganancia', raise_exception=True)
+@permission_required('ganancias.view_comparacion_ganancias', raise_exception=True)
 def comparacion_periodos(request):
     """
     Vista para comparar ganancias entre diferentes períodos
@@ -479,7 +479,7 @@ def comparacion_periodos(request):
 
 
 @login_required
-@permission_required('ganancias.change_registroganancia', raise_exception=True)
+@permission_required('ganancias.actualizar_ganancias', raise_exception=True)
 def actualizar_ganancias(request):
     """
     Vista para actualizar los registros de ganancias y resúmenes
@@ -520,7 +520,7 @@ def actualizar_ganancias(request):
 
 
 @login_required
-@permission_required('ganancias.view_registroganancia', raise_exception=True)
+@permission_required('ganancias.export_ganancias', raise_exception=True)
 def exportar_ganancias_excel(request):
     """
     Exporta las ganancias del período seleccionado a un archivo Excel
