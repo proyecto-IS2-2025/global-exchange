@@ -356,6 +356,42 @@
                 </div>
             </div>
 
+            <!-- Información de la Factura -->
+            {% if factura_info %}
+            <div class="info-section" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border: 2px solid #10b981;">
+                <h3>
+                    <i class="fas fa-file-invoice me-2" style="color: #059669;"></i>
+                    Factura Electrónica Generada
+                </h3>
+                <div class="info-row">
+                    <div class="info-label">Número de Factura</div>
+                    <div class="info-value font-monospace" style="color: #059669;">{{ factura_info.numero_factura }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Estado</div>
+                    <div class="info-value">
+                        <span style="background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem;">
+                            <i class="fas fa-check-circle me-1"></i>{{ factura_info.estado|default:"Generada" }}
+                        </span>
+                    </div>
+                </div>
+                {% if factura_info.cdc %}
+                <div class="info-row">
+                    <div class="info-label">CDC</div>
+                    <div class="info-value font-monospace" style="font-size: 0.75rem; word-break: break-all;">{{ factura_info.cdc }}</div>
+                </div>
+                {% endif %}
+            </div>
+            {% elif factura_error %}
+            <div class="info-section" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #f59e0b;">
+                <h3>
+                    <i class="fas fa-exclamation-triangle me-2" style="color: #d97706;"></i>
+                    Aviso de Facturación
+                </h3>
+                <p style="color: #92400e; margin: 0;">{{ factura_error }}</p>
+            </div>
+            {% endif %}
+
             <!-- Instrucción final -->
             <div class="instruction-box">
                 <i class="fas fa-info-circle"></i>

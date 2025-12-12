@@ -4,7 +4,7 @@ Utilidades para generar facturas electrónicas desde transacciones
 from decimal import Decimal
 from .services import SQLProxyService
 from .models import FacturaElectronica
-from .config import TIMBRADO_CONFIG, KUDE_CONFIG
+from .config import TIMBRADO_CONFIG, KUDE_CONFIG, FACTURACION_CONFIG
 from django.utils import timezone
 import glob
 import os
@@ -43,9 +43,19 @@ def generar_factura_desde_transaccion(transaccion):
     
     # Preparar descripción del servicio
     if transaccion.tipo_operacion == 'compra':
-        descripcion = f"Compra de Divisas - {transaccion.divisa_destino.code}"
+        cantidad_divisas = float(transaccion.monto_destino)
+        divisa_code = transaccion.divisa_destino.code
+        comision = float(transaccion.comision_aplicada) if transaccion.comision_aplicada else 0
+        descripcion = f"Compra de {cantidad_divisas:,.2f} {divisa_code}"
+        if comision > 0:
+            descripcion += f" (Comisión medio de pago: Gs. {comision:,.0f})"
     else:  # venta
-        descripcion = f"Venta de Divisas - {transaccion.divisa_origen.code}"
+        cantidad_divisas = float(transaccion.monto_origen)
+        divisa_code = transaccion.divisa_origen.code
+        comision = float(transaccion.comision_aplicada) if transaccion.comision_aplicada else 0
+        descripcion = f"Venta de {cantidad_divisas:,.2f} {divisa_code}"
+        if comision > 0:
+            descripcion += f" (Comisión medio de pago: Gs. {comision:,.0f})"
     
     # Calcular monto para la factura
     # En Paraguay, las facturas deben estar en Guaraníes (PYG)
@@ -300,7 +310,8 @@ def generar_facturas_pendientes():
 
 def obtener_configuracion_facturacion():
     """
-    Obtiene la configuración de facturación desde las variables de entorno.
+    Obtiene la configuración de facturación desde las variables de entorno,
+    usando los valores de config.py como defaults.
     
     Returns:
         dict con la configuración:
@@ -311,10 +322,10 @@ def obtener_configuracion_facturacion():
     """
     import os
     return {
-        'numero_inicial': int(os.getenv('FACTURACION_NUMERO_INICIAL', '51')),
-        'numero_final': int(os.getenv('FACTURACION_NUMERO_FINAL', '100')),
-        'establecimiento': os.getenv('FACTURACION_ESTABLECIMIENTO', '001'),
-        'punto_expedicion': os.getenv('FACTURACION_PUNTO_EXPEDICION', '003')
+        'numero_inicial': int(os.getenv('FACTURACION_NUMERO_INICIAL', str(FACTURACION_CONFIG['numero_inicial']))),
+        'numero_final': int(os.getenv('FACTURACION_NUMERO_FINAL', str(FACTURACION_CONFIG['numero_final']))),
+        'establecimiento': os.getenv('FACTURACION_ESTABLECIMIENTO', TIMBRADO_CONFIG['establecimiento']),
+        'punto_expedicion': os.getenv('FACTURACION_PUNTO_EXPEDICION', TIMBRADO_CONFIG['punto_expedicion'])
     }
 
 

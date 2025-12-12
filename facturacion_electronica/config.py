@@ -48,11 +48,12 @@ TIMBRADO_CONFIG = {
 }
 
 # Rango de numeración asignado al equipo 7
+# DICIEMBRE 2025 - Nuevo rango: 701-750
 FACTURACION_CONFIG = {
-    'numero_inicial': 83,  # CAMBIADO: Empezar desde 83 porque 51-82 ya fueron usados por compañeros
-    'numero_final': 100,
-    'numero_actual': 83,  # Actualizado: últimas facturas usadas por compañeros fueron hasta 082
-    'formato_numero': '0000083'  # Formato de 7 dígitos con ceros a la izquierda - próxima factura será 083
+    'numero_inicial': 701,  # DICIEMBRE 2025: Nuevo rango 701-750
+    'numero_final': 750,
+    'numero_actual': 701,  # Primera factura del nuevo rango
+    'formato_numero': '0000701'  # Formato de 7 dígitos con ceros a la izquierda
 }
 
 # Actividades Económicas (según XML del profesor)

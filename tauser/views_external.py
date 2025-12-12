@@ -33,6 +33,7 @@ from .services import (
     validar_desglose_cliente,
     generar_resumen_desglose
 )
+from facturacion_electronica.services import generar_factura_automatica
 
 logger = logging.getLogger(__name__)
 
@@ -1196,6 +1197,30 @@ def procesar_pago(request, terminal_codigo, transaccion_id):
                 modificado_por=None  # Sistema TAUSER
             )
             
+            # ═══════════════════════════════════════════════════════════════
+            # GENERAR FACTURA ELECTRÓNICA PARA LA VENTA DE DIVISAS
+            # ═══════════════════════════════════════════════════════════════
+            factura_info = None
+            factura_error = None
+            try:
+                logger.info(f"[TAUSER] Generando factura para venta {transaccion.numero_transaccion}")
+                resultado_factura = generar_factura_automatica(transaccion)
+                
+                if resultado_factura and resultado_factura.get('exito'):
+                    factura_info = {
+                        'numero_factura': resultado_factura.get('numero_factura'),
+                        'cdc': resultado_factura.get('cdc'),
+                        'estado': resultado_factura.get('estado', 'procesando'),
+                        'mensaje': '✅ Factura generada exitosamente'
+                    }
+                    logger.info(f"[TAUSER] ✅ Factura generada: {factura_info['numero_factura']}")
+                else:
+                    factura_error = resultado_factura.get('error', 'Error desconocido al generar factura')
+                    logger.warning(f"[TAUSER] ⚠️ Error generando factura: {factura_error}")
+            except Exception as e:
+                factura_error = str(e)
+                logger.error(f"[TAUSER] ❌ Excepción al generar factura: {e}", exc_info=True)
+            
             # Guardar información del depósito exitoso en sesión
             desglose_depositado = []
             for denom_id, info in billetes_data.items():
@@ -1227,7 +1252,10 @@ def procesar_pago(request, terminal_codigo, transaccion_id):
                 'numero_transaccion': transaccion.numero_transaccion,
                 'tauser_code': transaccion.tauser_code,
                 'cliente_nombre': transaccion.cliente.nombre_completo,
-                'desglose': desglose_depositado
+                'desglose': desglose_depositado,
+                # Información de la factura generada
+                'factura_info': factura_info,
+                'factura_error': factura_error
             }
             request.session.modified = True
             
@@ -1281,6 +1309,8 @@ def deposito_exitoso(request, terminal_codigo):
     
     # Obtener información del depósito de la sesión
     deposito_info = request.session.get('deposito_exitoso')
+    factura_info = request.session.get('factura_info')
+    factura_error = request.session.get('factura_error')
     
     if not deposito_info:
         messages.warning(request, '⚠️ No hay información de depósito disponible.')
@@ -1288,12 +1318,16 @@ def deposito_exitoso(request, terminal_codigo):
     
     # Limpiar la información del depósito de la sesión después de obtenerla
     request.session.pop('deposito_exitoso', None)
+    request.session.pop('factura_info', None)
+    request.session.pop('factura_error', None)
     request.session.modified = True
     
     context = {
         'terminal': terminal,
         'terminal_codigo': terminal_codigo,
         'deposito': deposito_info,
+        'factura_info': factura_info,
+        'factura_error': factura_error,
     }
     
     return render(request, 'tauser_external/deposito_exitoso.html', context)

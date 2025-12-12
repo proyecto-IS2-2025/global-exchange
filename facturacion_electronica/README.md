@@ -5,7 +5,7 @@ Implementación de facturación electrónica usando **SQL Proxy** de Factura Seg
 ## 📌 Información del Equipo
 
 - **Email:** glex.globalexchange@gmail.com
-- **Rango de Facturas:** 51-100
+- **Rango de Facturas:** 701-750 (Diciembre 2025)
 - **Establecimiento-Punto:** 001-003
 - **RUC Emisor:** 2595733-3 (del profesor)
 - **Ambiente:** TEST

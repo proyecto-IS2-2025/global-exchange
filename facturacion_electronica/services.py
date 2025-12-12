@@ -627,7 +627,12 @@ class SQLProxyService:
 def generar_factura_automatica(transaccion):
     """
     Genera automáticamente una factura electrónica para una transacción.
-    Esta función es llamada desde el flujo de compra después de MFA o pago exitoso.
+    
+    Soporta tanto COMPRA como VENTA de divisas:
+    - COMPRA: Cliente paga PYG → recibe divisa extranjera
+             Factura por monto_origen (guaraníes pagados), cantidad=1
+    - VENTA: Cliente entrega divisa extranjera → recibe PYG
+             Factura por monto_destino, cantidad=divisas vendidas
     
     Args:
         transaccion: Objeto Transaccion (modelo Django)
@@ -640,9 +645,51 @@ def generar_factura_automatica(transaccion):
     
     logger = logging.getLogger(__name__)
     
+    tipo_op = transaccion.tipo_operacion  # 'compra' o 'venta'
+    
     logger.info(f"[FACTURA_AUTO] ═══ INICIO generar_factura_automatica para {transaccion.numero_transaccion} ═══")
+    logger.info(f"[FACTURA_AUTO] Tipo operación: {tipo_op.upper()}")
     logger.info(f"[FACTURA_AUTO] Cliente: {transaccion.cliente.nombre_completo}")
-    logger.info(f"[FACTURA_AUTO] Monto: {transaccion.monto_origen} {transaccion.divisa_origen.code}")
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # DETERMINAR MONTO, DIVISA Y CANTIDAD SEGÚN TIPO DE OPERACIÓN
+    # ═══════════════════════════════════════════════════════════════════════
+    if tipo_op == 'compra':
+        # COMPRA: Cliente paga PYG (monto_origen) → recibe divisa (monto_destino)
+        # Mantener formato original: cantidad=1, precio=monto_total
+        monto_pyg = float(transaccion.monto_origen)
+        divisa_operacion = transaccion.divisa_destino  # La divisa que compra
+        cantidad_divisas = float(transaccion.monto_destino)  # Cantidad que recibe
+        comision = float(transaccion.comision_aplicada) if transaccion.comision_aplicada else 0
+        cantidad_item = 1
+        precio_unitario_item = monto_pyg
+        
+        # Descripción detallada con cantidad comprada y comisión
+        descripcion = f"Compra de {cantidad_divisas:,.2f} {divisa_operacion.code}"
+        if comision > 0:
+            descripcion += f" (Comisión medio de pago: Gs. {comision:,.0f})"
+        
+        logger.info(f"[FACTURA_AUTO] COMPRA: {monto_pyg} PYG por {cantidad_divisas} {divisa_operacion.code} (Comisión: {comision})")
+    else:
+        # VENTA: Cliente entrega divisa (monto_origen) → recibe PYG (monto_destino)
+        # Formato: cantidad=1, precio_unitario=total_a_recibir, descripción detallada
+        monto_pyg = float(transaccion.monto_destino)
+        divisa_operacion = transaccion.divisa_origen  # La divisa que vende
+        cantidad_divisas = float(transaccion.monto_origen)  # Cantidad que entrega
+        comision = float(transaccion.comision_aplicada) if transaccion.comision_aplicada else 0
+        
+        # Precio unitario = total a recibir
+        cantidad_item = 1
+        precio_unitario_item = monto_pyg
+        
+        # Descripción detallada con cantidad vendida y comisión
+        descripcion = f"Venta de {cantidad_divisas:,.2f} {divisa_operacion.code}"
+        if comision > 0:
+            descripcion += f" (Comisión medio de pago: Gs. {comision:,.0f})"
+        
+        logger.info(f"[FACTURA_AUTO] VENTA: {cantidad_divisas} {divisa_operacion.code} por {monto_pyg} PYG (Comisión: {comision})")
+    
+    logger.info(f"[FACTURA_AUTO] Item: cantidad={cantidad_item}, precio_unitario={precio_unitario_item}, total={monto_pyg} PYG")
     
     try:
         # Verificar si ya tiene factura
@@ -680,21 +727,29 @@ def generar_factura_automatica(transaccion):
             #     cliente_ruc = str(cliente.cedula)
             #     cliente_dv = '0'
             
-            # Preparar items de la factura
+            # ═══════════════════════════════════════════════════════════════════
+            # PREPARAR ITEMS DE LA FACTURA
+            # ═══════════════════════════════════════════════════════════════════
             # ✅ IMPORTANTE: La compraventa de divisas es EXENTA de IVA según la ley paraguaya
             # Por lo tanto, afectacion_iva='3' (EXENTO), tasa_iva='0', proporcion_iva='0'
-            descripcion = f"Compra de Divisas - {transaccion.divisa_destino.code}"
-            monto_pyg = float(transaccion.monto_origen)  # Monto en guaraníes
-            
+            #
+            # COMPRA: cantidad=1, precio_unitario=monto_total (formato original)
+            # VENTA: cantidad=divisas_vendidas, precio_unitario=tipo_cambio
+            #
             items = [{
                 'descripcion': descripcion,
-                'cantidad': 1,
-                'precio_unitario': monto_pyg,
+                'cantidad': cantidad_item,
+                'precio_unitario': precio_unitario_item,
                 'descuento': 0,
                 'afectacion_iva': '3',  # ✅ EXENTO (compraventa de divisas)
                 'proporcion_iva': '0',  # ✅ 0% de proporción gravada
                 'tasa_iva': '0'  # ✅ Sin IVA
             }]
+            
+            logger.info(f"[FACTURA_AUTO] Item: {descripcion}")
+            logger.info(f"[FACTURA_AUTO]   Cantidad: {cantidad_item}")
+            logger.info(f"[FACTURA_AUTO]   Precio unitario: {precio_unitario_item} PYG")
+            logger.info(f"[FACTURA_AUTO]   Total: {monto_pyg} PYG")
             
             # Datos para el SQL Proxy
             datos_factura = {
