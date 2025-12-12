@@ -245,7 +245,7 @@ class Command(BaseCommand):
         """
         ✅ ADMINISTRADOR - Solo permisos de alto impacto administrativo
         Gestión de: Usuarios, Roles, Clientes, MFA, Medios de Pago
-        SIN acceso a: Transacciones, Divisas, Facturación, Ganancias, TAUSER
+        SIN acceso a: Transacciones, Divisas, Facturación, Ganancias
         """
         codenames = [
             # ═══════════════════════════════════════════════════════════════
@@ -291,8 +291,29 @@ class Command(BaseCommand):
             # ═══════════════════════════════════════════════════════════════
             'view_catalogo_medios_pago',
             'manage_catalogo_medios_pago',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # DESCUENTOS (3 custom) - Gestión de descuentos por segmento
+            # ═══════════════════════════════════════════════════════════════
+            'view_descuentos_segmento',
+            'manage_descuentos_segmento',
+            'view_historial_descuentos',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # TAUSER (10 custom) - Gestión completa de terminales
+            # ═══════════════════════════════════════════════════════════════
+            'manage_terminales',
+            'view_terminales',
+            'manage_inventario_divisa',
+            'view_inventario_divisa',
+            'manage_denominaciones_inventario',
+            'view_denominaciones_inventario',
+            'manage_pins_terminal',
+            'view_pins_terminal',
+            'view_registros_terminal',
+            'export_registros_terminal',
         ]
-        # Total: 24 permisos custom (solo administrativos de alto impacto)
+        # Total: 37 permisos custom (24 + 3 descuentos + 10 tauser)
         
         self._assign_permissions('administrador', codenames, verbose)
 
@@ -515,8 +536,14 @@ class Command(BaseCommand):
             'view_tablero_ganancias',
             'view_comparacion_ganancias',
             'export_ganancias',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # TRANSACCIONES (2 custom - historial para análisis)
+            # ═══════════════════════════════════════════════════════════════
+            'view_transacciones_globales',
+            'view_historial_transacciones',
         ]
-        # Total: 10 permisos custom (Ganancias + Tasas + Divisas + Facturación)
+        # Total: 12 permisos custom (Ganancias + Tasas + Divisas + Facturación + Historial)
         
         self._assign_permissions('analista', codenames, verbose)
 
