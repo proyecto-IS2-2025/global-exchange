@@ -19,9 +19,12 @@ Esta documentación incluye información detallada sobre los módulos, modelos y
    vistas_cliente
    form_cliente
    divisas
+   historico_tasas
    roles
    medios_pago
    users 
    simulador
    transacciones
+   ganancias
+   reportes
    banco
