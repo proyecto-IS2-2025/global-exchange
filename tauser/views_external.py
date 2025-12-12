@@ -974,10 +974,21 @@ def procesar_retiro(request, terminal_codigo, transaccion_id):
                 mensaje_error=''
             )
             
+            # Crear movimiento de inventario
+            from .models import MovimientoInventarioTerminal, DetalleMovimientoInventario
+            movimiento = MovimientoInventarioTerminal.objects.create(
+                terminal=terminal,
+                tipo_movimiento='EXTRACCION',
+                cliente=transaccion.cliente,
+                transaccion=transaccion,
+                observaciones=f'Retiro de {transaccion.monto_destino} {transaccion.divisa_destino.code}'
+            )
+            
             # Aplicar el desglose al inventario
             for datos in resultado['desglose'].values():
                 inventario = datos['inventario']
                 cantidad = datos['cantidad']
+                cantidad_anterior = inventario.cantidad
                 
                 inventario.cantidad -= cantidad
                 inventario.save()
@@ -988,6 +999,15 @@ def procesar_retiro(request, terminal_codigo, transaccion_id):
                     denominacion=inventario.denominacion,
                     cantidad=cantidad,
                     tipo_movimiento='ENTREGA'
+                )
+                
+                # Registrar detalle del movimiento
+                DetalleMovimientoInventario.objects.create(
+                    movimiento=movimiento,
+                    denominacion=inventario.denominacion,
+                    cantidad=cantidad,
+                    cantidad_anterior=cantidad_anterior,
+                    cantidad_nueva=inventario.cantidad
                 )
             
             # Cambiar estado de la transacción a completado
@@ -1095,6 +1115,16 @@ def procesar_pago(request, terminal_codigo, transaccion_id):
     
     try:
         with transaction.atomic():
+            # ✅ Crear movimiento de inventario
+            from .models import MovimientoInventarioTerminal, DetalleMovimientoInventario
+            movimiento = MovimientoInventarioTerminal.objects.create(
+                terminal=terminal,
+                tipo_movimiento='DEPOSITO',
+                cliente=transaccion.cliente,
+                transaccion=transaccion,
+                observaciones=f'Depósito de {transaccion.monto_origen} {transaccion.divisa_origen.code}'
+            )
+            
             # ✅ NUEVO: Actualizar inventario de denominaciones
             for denom_id, info in billetes_data.items():
                 cantidad = int(info.get('cantidad', 0))
@@ -1108,9 +1138,21 @@ def procesar_pago(request, terminal_codigo, transaccion_id):
                         defaults={'cantidad': 0}
                     )
                     
+                    # Guardar cantidad anterior
+                    cantidad_anterior = inventario_denom.cantidad
+                    
                     # Incrementar cantidad
                     inventario_denom.cantidad += cantidad
                     inventario_denom.save()
+                    
+                    # Registrar detalle del movimiento
+                    DetalleMovimientoInventario.objects.create(
+                        movimiento=movimiento,
+                        denominacion=denominacion,
+                        cantidad=cantidad,
+                        cantidad_anterior=cantidad_anterior,
+                        cantidad_nueva=inventario_denom.cantidad
+                    )
                     
                     logger.info(
                         f"[DEPOSITO] Terminal {terminal.codigo}: "
@@ -1527,6 +1569,14 @@ def recarga_masiva_externo(request, terminal_codigo):
     
     # Procesar cada denominación
     with transaction.atomic():
+        # Crear movimiento de inventario para agrupar todas las recargas
+        from .models import MovimientoInventarioTerminal, DetalleMovimientoInventario
+        movimiento = MovimientoInventarioTerminal.objects.create(
+            terminal=terminal,
+            tipo_movimiento='RECARGA',
+            observaciones=observaciones_generales or 'Recarga masiva (acceso público)'
+        )
+        
         for key, value in request.POST.items():
             if key.startswith('cantidad_') and value:
                 try:
@@ -1565,7 +1615,7 @@ def recarga_masiva_externo(request, terminal_codigo):
                     inventario.ultima_reposicion = timezone.now()
                     inventario.save()
                     
-                    # Crear log de recarga
+                    # Crear log de recarga (mantener compatibilidad)
                     from .models import LogRecargaInventario
                     log = LogRecargaInventario.objects.create(
                         terminal=terminal,
@@ -1575,6 +1625,15 @@ def recarga_masiva_externo(request, terminal_codigo):
                         cantidad_anterior=cantidad_anterior,
                         cantidad_nueva=inventario.cantidad,
                         observaciones=observaciones_generales or 'Recarga masiva (acceso público)'
+                    )
+                    
+                    # Registrar detalle del movimiento
+                    DetalleMovimientoInventario.objects.create(
+                        movimiento=movimiento,
+                        denominacion=denominacion,
+                        cantidad=cantidad,
+                        cantidad_anterior=cantidad_anterior,
+                        cantidad_nueva=inventario.cantidad
                     )
                     
                     recargas_realizadas.append({
@@ -1619,78 +1678,106 @@ def recarga_masiva_externo(request, terminal_codigo):
 
 def historial_recargas_externo(request, terminal_codigo):
     """
-    Vista pública del historial completo de recargas con filtros.
+    Vista pública del historial completo de movimientos de inventario (recargas, depósitos, extracciones).
     """
     terminal = get_object_or_404(Terminal, codigo=terminal_codigo)
     
-    from .models import LogRecargaInventario
+    from .models import MovimientoInventarioTerminal
     
-    # Obtener todos los logs (excluir PYG)
-    logs = LogRecargaInventario.objects.filter(
+    # Obtener todos los movimientos
+    movimientos = MovimientoInventarioTerminal.objects.filter(
         terminal=terminal
-    ).exclude(
-        denominacion__divisa__code='PYG'
     ).select_related(
-        'denominacion__divisa',
+        'cliente',
+        'transaccion',
         'usuario'
+    ).prefetch_related(
+        'detalles__denominacion__divisa'
     ).order_by('-fecha')
     
     # Filtros opcionales
+    tipo_filtro = request.GET.get('tipo')
     divisa_filtro = request.GET.get('divisa')
-    usuario_filtro = request.GET.get('usuario')
     fecha_desde = request.GET.get('fecha_desde')
     fecha_hasta = request.GET.get('fecha_hasta')
     
-    if divisa_filtro:
-        logs = logs.filter(denominacion__divisa__code=divisa_filtro)
+    if tipo_filtro:
+        movimientos = movimientos.filter(tipo_movimiento=tipo_filtro)
     
-    if usuario_filtro:
-        logs = logs.filter(usuario__id=usuario_filtro)
+    if divisa_filtro:
+        movimientos = movimientos.filter(detalles__denominacion__divisa__code=divisa_filtro).distinct()
     
     if fecha_desde:
         from datetime import datetime
-        logs = logs.filter(fecha__date__gte=datetime.strptime(fecha_desde, '%Y-%m-%d').date())
+        movimientos = movimientos.filter(fecha__date__gte=datetime.strptime(fecha_desde, '%Y-%m-%d').date())
     
     if fecha_hasta:
         from datetime import datetime
-        logs = logs.filter(fecha__date__lte=datetime.strptime(fecha_hasta, '%Y-%m-%d').date())
+        movimientos = movimientos.filter(fecha__date__lte=datetime.strptime(fecha_hasta, '%Y-%m-%d').date())
     
     # Estadísticas del período filtrado
     from django.db.models import Sum, Count
-    estadisticas = logs.aggregate(
-        total_recargas=Count('id'),
-        total_billetes=Sum('cantidad_agregada'),
-        valor_total=Sum('valor_total_agregado')
-    )
+    estadisticas = {
+        'total_movimientos': movimientos.count(),
+        'total_recargas': movimientos.filter(tipo_movimiento='RECARGA').count(),
+        'total_depositos': movimientos.filter(tipo_movimiento='DEPOSITO').count(),
+        'total_extracciones': movimientos.filter(tipo_movimiento='EXTRACCION').count(),
+    }
     
     # Paginación
     from django.core.paginator import Paginator
-    paginator = Paginator(logs, 25)  # 25 registros por página
+    paginator = Paginator(movimientos, 25)  # 25 registros por página
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Obtener listas para filtros (excluir PYG)
-    divisas_disponibles = Denominacion.objects.filter(
-        inventarios_terminal__terminal=terminal
+    # Obtener listas para filtros
+    from .models import DetalleMovimientoInventario
+    divisas_disponibles = DetalleMovimientoInventario.objects.filter(
+        movimiento__terminal=terminal
     ).exclude(
-        divisa__code='PYG'
-    ).values_list('divisa__code', flat=True).distinct()
-    
-    usuarios_disponibles = CustomUser.objects.filter(
-        recargas_realizadas__terminal=terminal
-    ).distinct()
+        denominacion__divisa__code='PYG'
+    ).values_list('denominacion__divisa__code', flat=True).distinct()
     
     context = {
         'terminal': terminal,
         'page_obj': page_obj,
         'estadisticas': estadisticas,
         'divisas_disponibles': divisas_disponibles,
-        'usuarios_disponibles': usuarios_disponibles,
         # Mantener valores de filtros
+        'tipo_filtro': tipo_filtro,
         'divisa_filtro': divisa_filtro,
-        'usuario_filtro': usuario_filtro,
         'fecha_desde': fecha_desde,
         'fecha_hasta': fecha_hasta,
+        # Opciones de tipo de movimiento
+        'tipos_movimiento': MovimientoInventarioTerminal.TIPO_MOVIMIENTO_CHOICES,
     }
     
     return render(request, 'tauser_external/historial_recargas.html', context)
+
+
+def detalle_movimiento_inventario(request, terminal_codigo, movimiento_id):
+    """
+    Vista de detalle de un movimiento de inventario específico.
+    """
+    terminal = get_object_or_404(Terminal, codigo=terminal_codigo)
+    
+    from .models import MovimientoInventarioTerminal
+    movimiento = get_object_or_404(
+        MovimientoInventarioTerminal.objects.select_related(
+            'terminal',
+            'cliente',
+            'transaccion',
+            'usuario'
+        ).prefetch_related(
+            'detalles__denominacion__divisa'
+        ),
+        id=movimiento_id,
+        terminal=terminal
+    )
+    
+    context = {
+        'terminal': terminal,
+        'movimiento': movimiento,
+    }
+    
+    return render(request, 'tauser_external/detalle_movimiento.html', context)

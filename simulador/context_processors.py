@@ -11,7 +11,7 @@ def simulador_context(request):
     Excluye la divisa Guaraní (PYG) del listado.
     """
     segmento_usuario = ''  # Asignación por defecto
-    if request.user.is_authenticated:
+    if hasattr(request, 'user') and request.user.is_authenticated:
         try:
             # Usar AsignacionCliente directamente como en la vista
             asignacion = AsignacionCliente.objects.select_related('cliente__segmento').filter(usuario=request.user).first()

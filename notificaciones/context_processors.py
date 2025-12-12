@@ -1,7 +1,7 @@
 from .models import Notificacion
 
 def notificaciones_usuario(request):
-    if request.user.is_authenticated:
+    if hasattr(request, 'user') and request.user.is_authenticated:
         # 🔹 Obtenemos solo las notificaciones pendientes del usuario
         notificaciones_pendientes = Notificacion.objects.filter(
             usuario=request.user,

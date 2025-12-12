@@ -2,7 +2,7 @@
 {% load static %}
 {% load tauser_filters %}
 
-{% block title %}Historial de Recargas - {{ terminal.nombre }}{% endblock %}
+{% block title %}Historial de Movimientos - {{ terminal.nombre }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -33,16 +33,22 @@
     .table-logs {
         font-size: 0.9rem;
     }
-    .badge-divisa {
+    .badge-tipo {
         font-size: 0.85rem;
-        padding: 0.4rem 0.6rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
     }
-    .cantidad-badge {
-        background-color: #d4edda;
-        color: #155724;
-        padding: 0.3rem 0.6rem;
-        border-radius: 4px;
-        font-weight: bold;
+    .badge-recarga {
+        background-color: #28a745;
+        color: white;
+    }
+    .badge-deposito {
+        background-color: #17a2b8;
+        color: white;
+    }
+    .badge-extraccion {
+        background-color: #dc3545;
+        color: white;
     }
     .pagination-wrapper {
         display: flex;
@@ -57,6 +63,10 @@
     .btn-filter {
         min-width: 100px;
     }
+    .btn-detalles {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.6rem;
+    }
 </style>
 {% endblock %}
 
@@ -65,7 +75,7 @@
     <!-- Header -->
     <div class="row mb-4">
         <div class="col-md-8">
-            <h2><i class="fas fa-history"></i> Historial de Recargas</h2>
+            <h2><i class="fas fa-history"></i> Historial de Movimientos de Inventario</h2>
             <p class="text-muted">
                 <strong>Terminal:</strong> {{ terminal.nombre }} ({{ terminal.codigo }})
             </p>
@@ -82,22 +92,28 @@
 
     <!-- Estadísticas del Período Filtrado -->
     <div class="row mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="stat-mini">
-                <div class="label">Total de Recargas</div>
-                <div class="value">{{ estadisticas.total_recargas|default:0 }}</div>
+                <div class="label">Total Movimientos</div>
+                <div class="value">{{ estadisticas.total_movimientos|default:0 }}</div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="stat-mini">
-                <div class="label">Total de Billetes</div>
-                <div class="value">{{ estadisticas.total_billetes|default:0 }}</div>
+                <div class="label">Recargas</div>
+                <div class="value text-success">{{ estadisticas.total_recargas|default:0 }}</div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="stat-mini">
-                <div class="label">Valor Total</div>
-                <div class="value">${{ estadisticas.valor_total|default:0|floatformat:2 }}</div>
+                <div class="label">Depósitos</div>
+                <div class="value text-info">{{ estadisticas.total_depositos|default:0 }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-mini">
+                <div class="label">Extracciones</div>
+                <div class="value text-danger">{{ estadisticas.total_extracciones|default:0 }}</div>
             </div>
         </div>
     </div>
@@ -106,24 +122,24 @@
     <div class="filter-card">
         <form method="get" class="row g-3" id="filterForm">
             <div class="col-md-3">
-                <label class="form-label"><i class="fas fa-coins"></i> Divisa</label>
-                <select name="divisa" class="form-select">
-                    <option value="">Todas las divisas</option>
-                    {% for divisa in divisas_disponibles %}
-                    <option value="{{ divisa }}" {% if divisa == divisa_filtro %}selected{% endif %}>
-                        {{ divisa }}
+                <label class="form-label"><i class="fas fa-exchange-alt"></i> Tipo de Movimiento</label>
+                <select name="tipo" class="form-select">
+                    <option value="">Todos los tipos</option>
+                    {% for codigo, nombre in tipos_movimiento %}
+                    <option value="{{ codigo }}" {% if codigo == tipo_filtro %}selected{% endif %}>
+                        {{ nombre }}
                     </option>
                     {% endfor %}
                 </select>
             </div>
             
-            <div class="col-md-3">
-                <label class="form-label"><i class="fas fa-user"></i> Usuario</label>
-                <select name="usuario" class="form-select">
-                    <option value="">Todos los usuarios</option>
-                    {% for user in usuarios_disponibles %}
-                    <option value="{{ user.id }}" {% if user.id|stringformat:"s" == usuario_filtro %}selected{% endif %}>
-                        {{ user.username }}
+            <div class="col-md-2">
+                <label class="form-label"><i class="fas fa-coins"></i> Divisa</label>
+                <select name="divisa" class="form-select">
+                    <option value="">Todas</option>
+                    {% for divisa in divisas_disponibles %}
+                    <option value="{{ divisa }}" {% if divisa == divisa_filtro %}selected{% endif %}>
+                        {{ divisa }}
                     </option>
                     {% endfor %}
                 </select>
@@ -139,7 +155,7 @@
                 <input type="date" name="fecha_hasta" class="form-control" value="{{ fecha_hasta }}">
             </div>
             
-            <div class="col-md-2 d-flex align-items-end">
+            <div class="col-md-3 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary btn-filter me-2">
                     <i class="fas fa-filter"></i> Filtrar
                 </button>
@@ -154,7 +170,7 @@
     <div class="card">
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0">
-                <i class="fas fa-list"></i> Registros de Recargas
+                <i class="fas fa-list"></i> Registro de Movimientos
                 {% if page_obj.paginator.count %}
                 <span class="badge bg-light text-dark float-end">{{ page_obj.paginator.count }} registros</span>
                 {% endif %}
@@ -166,60 +182,56 @@
                 <table class="table table-hover table-logs mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>ID</th>
                             <th>Fecha y Hora</th>
-                            <th>Denominación</th>
-                            <th>Cantidad</th>
-                            <th>Stock Anterior</th>
-                            <th>Stock Nuevo</th>
+                            <th>Tipo</th>
+                            <th>Cliente</th>
+                            <th>Billetes</th>
                             <th>Valor Total</th>
-                            <th>Usuario</th>
-                            <th>Observaciones</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for log in page_obj %}
+                        {% for movimiento in page_obj %}
                         <tr>
-                            <td><small class="text-muted">#{{ log.id }}</small></td>
                             <td>
-                                <div>{{ log.fecha|date:"d/m/Y" }}</div>
-                                <small class="text-muted">{{ log.fecha|date:"H:i:s" }}</small>
+                                <div>{{ movimiento.fecha|date:"d/m/Y" }}</div>
+                                <small class="text-muted">{{ movimiento.fecha|date:"H:i:s" }}</small>
                             </td>
                             <td>
-                                <span class="badge badge-divisa bg-primary">
-                                    {{ log.denominacion.divisa.code }} {{ log.denominacion.valor_formateado }}
+                                {% if movimiento.tipo_movimiento == 'RECARGA' %}
+                                <span class="badge badge-tipo badge-recarga">
+                                    <i class="fas fa-plus-circle"></i> Recarga
                                 </span>
-                            </td>
-                            <td>
-                                <span class="cantidad-badge">
-                                    <i class="fas fa-plus"></i> {{ log.cantidad_agregada }}
+                                {% elif movimiento.tipo_movimiento == 'DEPOSITO' %}
+                                <span class="badge badge-tipo badge-deposito">
+                                    <i class="fas fa-arrow-down"></i> Depósito
                                 </span>
-                            </td>
-                            <td class="text-center">{{ log.cantidad_anterior }}</td>
-                            <td class="text-center">
-                                <strong class="text-success">{{ log.cantidad_nueva }}</strong>
-                            </td>
-                            <td>
-                                <strong>${{ log.valor_total_agregado|currency }}</strong>
-                            </td>
-                            <td>
-                                <small>
-                                    <i class="fas fa-user-circle"></i> 
-                                    {{ log.usuario.username|default:"Sistema" }}
-                                </small>
-                            </td>
-                            <td>
-                                {% if log.observaciones %}
-                                <button type="button" 
-                                        class="btn btn-sm btn-outline-info" 
-                                        data-bs-toggle="tooltip" 
-                                        data-bs-placement="left" 
-                                        title="{{ log.observaciones }}">
-                                    <i class="fas fa-comment"></i>
-                                </button>
-                                {% else %}
-                                <small class="text-muted">-</small>
+                                {% elif movimiento.tipo_movimiento == 'EXTRACCION' %}
+                                <span class="badge badge-tipo badge-extraccion">
+                                    <i class="fas fa-arrow-up"></i> Extracción
+                                </span>
                                 {% endif %}
+                            </td>
+                            <td>
+                                {% if movimiento.cliente %}
+                                <i class="fas fa-user"></i> {{ movimiento.cliente.nombre_completo }}
+                                {% elif movimiento.usuario %}
+                                <i class="fas fa-user-shield"></i> {{ movimiento.usuario.username }}
+                                {% else %}
+                                <small class="text-muted">Sistema</small>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <strong>{{ movimiento.cantidad_total_billetes }}</strong>
+                            </td>
+                            <td>
+                                <strong>${{ movimiento.valor_total|floatformat:2 }}</strong>
+                            </td>
+                            <td>
+                                <a href="{% url 'tauser_external:detalle_movimiento' terminal.codigo movimiento.id %}" 
+                                   class="btn btn-sm btn-outline-primary btn-detalles">
+                                    <i class="fas fa-eye"></i> Ver Detalles
+                                </a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -234,12 +246,12 @@
                     <ul class="pagination">
                         {% if page_obj.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?page=1{% if divisa_filtro %}&divisa={{ divisa_filtro }}{% endif %}{% if usuario_filtro %}&usuario={{ usuario_filtro }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}">
+                            <a class="page-link" href="?page=1{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}{% if divisa_filtro %}&divisa={{ divisa_filtro }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}">
                                 <i class="fas fa-angle-double-left"></i>
                             </a>
                         </li>
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if divisa_filtro %}&divisa={{ divisa_filtro }}{% endif %}{% if usuario_filtro %}&usuario={{ usuario_filtro }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}{% if divisa_filtro %}&divisa={{ divisa_filtro }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}">
                                 <i class="fas fa-angle-left"></i>
                             </a>
                         </li>
@@ -252,7 +264,7 @@
                         </li>
                         {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ num }}{% if divisa_filtro %}&divisa={{ divisa_filtro }}{% endif %}{% if usuario_filtro %}&usuario={{ usuario_filtro }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}">
+                            <a class="page-link" href="?page={{ num }}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}{% if divisa_filtro %}&divisa={{ divisa_filtro }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}">
                                 {{ num }}
                             </a>
                         </li>
@@ -261,12 +273,12 @@
 
                         {% if page_obj.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if divisa_filtro %}&divisa={{ divisa_filtro }}{% endif %}{% if usuario_filtro %}&usuario={{ usuario_filtro }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}{% if divisa_filtro %}&divisa={{ divisa_filtro }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}">
                                 <i class="fas fa-angle-right"></i>
                             </a>
                         </li>
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if divisa_filtro %}&divisa={{ divisa_filtro }}{% endif %}{% if usuario_filtro %}&usuario={{ usuario_filtro }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}{% if divisa_filtro %}&divisa={{ divisa_filtro }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}">
                                 <i class="fas fa-angle-double-right"></i>
                             </a>
                         </li>
@@ -279,17 +291,14 @@
             {% else %}
             <div class="no-data">
                 <i class="fas fa-inbox fa-3x mb-3"></i>
-                <h5>No se encontraron recargas</h5>
+                <h5>No se encontraron movimientos</h5>
                 <p class="text-muted">
-                    {% if divisa_filtro or usuario_filtro or fecha_desde or fecha_hasta %}
+                    {% if tipo_filtro or divisa_filtro or fecha_desde or fecha_hasta %}
                     Intente ajustar los filtros de búsqueda
                     {% else %}
-                    Aún no se han registrado recargas para este terminal
+                    Aún no se han registrado movimientos para este terminal
                     {% endif %}
                 </p>
-                <a href="{% url 'tauser_external:recarga_masiva' terminal.codigo %}" class="btn btn-primary">
-                    <i class="fas fa-plus-circle"></i> Realizar Primera Recarga
-                </a>
             </div>
             {% endif %}
         </div>
@@ -300,9 +309,11 @@
         <div class="col-md-12">
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i> 
-                <strong>Nota:</strong> Este historial muestra todas las recargas realizadas al inventario del terminal. 
-                Los registros son permanentes y no pueden ser eliminados (auditoría). 
-                Cada recarga queda asociada al usuario que la realizó y la fecha exacta.
+                <strong>Nota:</strong> Este historial muestra todos los movimientos de inventario del terminal: 
+                <strong class="text-success">recargas manuales</strong>, 
+                <strong class="text-info">depósitos de clientes</strong> y 
+                <strong class="text-danger">extracciones/retiros</strong>. 
+                Haga clic en "Ver Detalles" para ver información específica de cada movimiento.
             </div>
         </div>
     </div>
