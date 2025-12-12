@@ -189,7 +189,7 @@ if os.environ.get('SENDGRID_API_KEY'):
     EMAIL_PORT = 587
     EMAIL_USE_TLS = True
     EMAIL_USE_SSL = False
-    EMAIL_TIMEOUT = 30
+    EMAIL_TIMEOUT = 10  # ← Reducido para evitar worker timeout
     EMAIL_HOST_USER = 'apikey'  # ← Literalmente la palabra "apikey"
     EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_API_KEY')
     DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'glex.globalexchange.respaldo@gmail.com')
@@ -200,7 +200,7 @@ else:
     EMAIL_PORT = 587
     EMAIL_USE_TLS = True
     EMAIL_USE_SSL = False
-    EMAIL_TIMEOUT = 30
+    EMAIL_TIMEOUT = 10
     EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'glex.globalexchange.respaldo@gmail.com')
     EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'itlf keib ybar gyds')
     DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER', 'glex.globalexchange.respaldo@gmail.com')
