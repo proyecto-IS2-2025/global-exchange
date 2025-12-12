@@ -10,25 +10,30 @@ from django.db import connection
 
 # Orden de carga de fixtures (respetando dependencias)
 FIXTURES_ORDER = [
-    # 1. Usuarios y roles primero
-    ('users', 'users/fixtures/users_data.json'),
+    # 1. Roles primero (grupos de auth)
     ('roles', 'roles/fixtures/roles_data.json'),
     
-    # 2. Divisas y denominaciones
+    # 2. Usuarios (dependen de roles para asignación)
+    ('users', 'users/fixtures/users_data.json'),
+    
+    # 3. Divisas y denominaciones
     ('divisas', 'divisas/fixtures/divisas_data.json'),
     ('denominaciones', 'divisas/fixtures/denominaciones_data.json'),
     
-    # 3. Medios de pago
+    # 4. Medios de pago
     ('medios de pago', 'medios_pago/fixtures/medios_data.json'),
     ('medios financieros', 'medios_pago/fixtures/mediosfinancieros_data.json'),
     
-    # 4. Clientes
+    # 5. Clientes
     ('clientes', 'clientes/fixtures/clientes_data.json'),
     ('medios financieros cliente', 'clientes/fixtures/mediosfinancieroscliente_data.json'),
     
-    # 5. Bancos y billeteras
+    # 6. Bancos y billeteras
     ('bancos', 'banco/fixtures/bancos_data.json'),
     ('billeteras', 'billetera/fixtures/billetera_data.json'),
+    
+    # 7. TAUser (terminales de autoservicio) - depende de divisas, usuarios y clientes
+    ('tausers', 'tauser/fixtures/tausers_data.json'),
 ]
 
 def check_encoding(filepath):

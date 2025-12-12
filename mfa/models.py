@@ -47,7 +47,7 @@ class MFAConfig(models.Model):
         help_text="Activar verificación MFA al confirmar una compra"
     )
     mfa_tauser_enabled = models.BooleanField(
-        default=True,
+        default=False,
         verbose_name="MFA en Tausers",
         help_text="Activar verificación MFA al acceder a transacciones en terminales TAUSER"
     )
