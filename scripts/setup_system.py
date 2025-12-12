@@ -138,9 +138,9 @@ def sync_permissions():
 def assign_group_permissions():
     """Asigna permisos a grupos según la matriz de permisos"""
     try:
-        print_info("Asignando permisos a grupos...")
-        call_command('assign_group_permissions', verbosity=0, force=True)
-        print_success("Permisos asignados a grupos correctamente")
+        print_info("Asignando permisos custom y creando RoleStatus...")
+        call_command('setup_test_roles', verbosity=0)
+        print_success("Permisos asignados correctamente")
         return True
     except Exception as e:
         print_error(f"Error asignando permisos a grupos: {e}")
