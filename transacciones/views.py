@@ -2056,6 +2056,7 @@ class DetalleTransaccionView(LoginRequiredMixin, DetailView):
         context['puede_cancelar'] = self.object.puede_cancelarse
         context['puede_anular'] = self.object.puede_anularse
         context['es_admin'] = self.request.user.is_staff
+        context['puede_cambiar_estado'] = self.request.user.has_perm('transacciones.manage_estados_transacciones')
         
         # Agregar terminales TAUSER para el selector de depósito
         context['terminales_tauser'] = Terminal.objects.filter(is_activa=True).order_by('nombre')
