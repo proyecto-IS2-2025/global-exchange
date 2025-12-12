@@ -347,8 +347,29 @@ class Command(BaseCommand):
             'add_inventariodenominacionterminal',
             'change_inventariodenominacionterminal',
             'delete_inventariodenominacionterminal',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # TRANSACCIONES (7 custom + 1 Django) - Gestión completa de transacciones
+            # ═══════════════════════════════════════════════════════════════
+            # Custom
+            'view_transacciones_asignadas',
+            'view_transacciones_globales',
+            'manage_estados_transacciones',
+            'manage_reversiones_transacciones',
+            'cancel_propias_transacciones',
+            'view_historial_transacciones',
+            'export_transacciones',
+            # Django estándar
+            'view_transaccion',
+            
+            # ═══════════════════════════════════════════════════════════════
+            # GANANCIAS (3 custom) - Ver ganancias en detalle de transacción
+            # ═══════════════════════════════════════════════════════════════
+            'view_tablero_ganancias',
+            'view_comparacion_ganancias',
+            'export_ganancias',
         ]
-        # Total: 63 permisos (24 base + 3 descuentos + 18 divisas + 18 tauser)
+        # Total: 74 permisos (24 base + 3 descuentos + 18 divisas + 18 tauser + 8 transacciones + 3 ganancias)
         
         self._assign_permissions('administrador', codenames, verbose)
 
@@ -551,11 +572,12 @@ class Command(BaseCommand):
         """
         codenames = [
             # ═══════════════════════════════════════════════════════════════
-            # DIVISAS (2 custom - solo visualizador de tasas, SIN divisas)
+            # DIVISAS (4 custom - solo visualización, SIN operar)
             # ═══════════════════════════════════════════════════════════════
             'view_cotizaciones_segmento',  # Visualizador Tasas
-            'view_tasas_cambio',
-            # 'view_divisas',  # ❌ NO acceso a divisas
+            'view_tasas_cambio',           # Historial de tasas
+            'view_divisas',                # Ver divisas del sistema
+            'view_denominaciones',         # Ver denominaciones
             
             # ═══════════════════════════════════════════════════════════════
             # FACTURACIÓN ELECTRÓNICA (4 custom - lectura y exportación)
@@ -581,7 +603,7 @@ class Command(BaseCommand):
             'view_transacciones_asignadas',
             'export_transacciones',          # Exportar para análisis
         ]
-        # Total: 14 permisos (Ganancias + Tasas + Facturación + Transacciones)
+        # Total: 16 permisos (Ganancias + Divisas visualización + Facturación + Transacciones)
         
         self._assign_permissions('analista', codenames, verbose)
 

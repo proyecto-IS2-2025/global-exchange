@@ -485,8 +485,8 @@
             </div>
             {% endif %}
             
-            <!-- Análisis de Ganancias (Solo Administradores) -->
-            {% if user.is_superuser or 'admin' in user.groups.values_list|first or 'Administrador' in user.groups.values_list|first %}
+            <!-- Análisis de Ganancias (Solo usuarios con permiso view_tablero_ganancias) -->
+            {% if perms.ganancias.view_tablero_ganancias %}
             <div class="card info-card shadow-sm mb-4 border-success">
                 <div class="card-header bg-success text-white">
                     <h5 class="mb-0">
@@ -699,8 +699,8 @@
                         
                     {% endif %}
 
-                    <!-- Acciones para admin -->
-                    {% if es_admin %}
+                    <!-- Acciones para admin (cambiar estado) -->
+                    {% if puede_cambiar_estado %}
                         <form method="post" action="{% url 'transacciones:cambiar_estado' numero_transaccion=transaccion.numero_transaccion %}" 
                               class="mb-3" id="estadoForm">
                             {% csrf_token %}
