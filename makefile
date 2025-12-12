@@ -1,4 +1,4 @@
-.PHONY: dev-up dev-down prod-up prod-up-foreground prod-logs prod-down docker-loaddata-dev docker-load-prod docker-exec-dev docker-exec-prod docker-migrate-dev docker-migrate-prod docs test-medios-pago test-divisas test-simulador local-loaddata local-migrate help
+loaddata.PHONY: dev-up dev-down prod-up prod-up-foreground prod-logs prod-down docker-loaddata-dev docker-load-prod docker-exec-dev docker-exec-prod docker-migrate-dev docker-migrate-prod docs test-medios-pago test-divisas test-simulador local-loaddata local-migrate help
 #Variables de los nombres de proyecto para mantener los entornos separados
 #Cada miembro del equipo usará el mismo nombre de proyecto, eliminando conflictos.
 
@@ -150,4 +150,4 @@ check:
 test-fact:
 	@echo "Ejecutando pruebas de facturación electrónica..."
 	poetry run python manage.py test facturacion_electronica.tests
-	@echo "Pruebas de facturación electrónica completadas."
+	@echo "Pruebas de facturación electrónica completadas. "
